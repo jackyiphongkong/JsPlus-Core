@@ -4,22 +4,33 @@ set -e
 # ------------------------------------------------------------------
 # JsPlus-Core automated test suite - TestAll.sh
 # Flow:
-#   1) Build the runtime classpath from every JAR under
+#   1) Start the H2 server on :3306 via BG_StartH2 (StartH2.sh ->
+#      script/StartH2.js -> org.h2.tools.Server, config from
+#      Appenv.properties: H2_PORT / H2_BASE_DIR=<PROJECT_ROOT>/Database/).
+#      Skipped when H2 is already listening so repeated runs reuse the
+#      running server.
+#   2) (Re)initialize the test database on the running H2 server: apply
+#      dbscript/fallback.sql (DROP all) then dbscript/change.sql (CREATE
+#      all) to jdbc:h2:tcp://localhost:3306/testdb (Database/testdb.mv.db
+#      served by H2) - same reset semantics as JsPlus-Tomcat's
+#      "StartH2Console init" step, over TCP.
+#   3) Build the runtime classpath from every JAR under
 #      <PROJECT_ROOT>/LibHome - script engines + deps, including the
 #      project JAR produced by 'ant build':
 #      <PROJECT_ROOT>/LibHome/jsplus/default/jsplus-core-<version>.jar
 #      (single Tomcat-standard JAR; com.killcoding.* + org.* replacements,
 #      version auto-bumped from <PROJECT_ROOT>/version.properties).
-#   2) Run TestAll.js in a standalone JsPlus console in THIS JVM
+#   4) Run TestAll.js in a standalone JsPlus console in THIS JVM
 #      (com.killcoding.jsplus.Main, same entry the JsPlus-Tomcat suite uses).
-#      No external server, H2 or Tomcat is required.
+#      No external Tomcat is required.
 #      JS_PLUS_PATH=<PROJECT_ROOT>/JsPlus/ (runtime anchor), so the suites
 #      resolve <PROJECT_ROOT>/test/TestBase.js + suites and write reports to
 #      <PROJECT_ROOT>/test_reports/ (logs land in <PROJECT_ROOT>/logs/app/).
 #      Stdin is redirected to /dev/null so com.killcoding.jsplus.Main exits
 #      right after the -Task completes (otherwise it blocks on the
 #      interactive scanner, see Main.java scanner loop).
-#   3) Exit with the JVM's exit code.
+#   5) Exit with the JVM's exit code (0 = all checks passed, 1 = failure),
+#      after stopping the H2 server started for this run.
 # Override via env (same convention as JsPlus-Tomcat):
 #      JsPlus_JavaDir_JsPlus-Core   - JDK directory under Java/ (default: default)
 #      JsPlus_JvmParams_JsPlus-Core - JVM params (default: -Xms256m -Xmx1024m -Xss256k)
@@ -80,7 +91,44 @@ fi
 echo "Using \"$JvmParams\""
 
 # ------------------------------------------------------------------
-# Run TestAll.js against this JVM.
+# Step 1: H2 server on :3306 via BG_StartH2 (skipped when already listening).
+# ------------------------------------------------------------------
+if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+    echo "[TestAll] H2 already listening on :3306."
+else
+    echo "[TestAll] Starting H2 server (port 3306)..."
+    "${JS_PLUS_PATH}bin/BG_StartH2.sh" "$SCRIPT_ENGINE"
+fi
+
+echo "[TestAll] Waiting for H2 :3306..."
+H2_READY=""
+for _ in $(seq 1 45); do
+    if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+        H2_READY=1
+        break
+    fi
+    sleep 2
+done
+if [ -z "$H2_READY" ]; then
+    echo "[TestAll] ERROR: H2 did not start on port 3306."
+    exit 1
+fi
+echo "[TestAll] H2 ready."
+
+# ------------------------------------------------------------------
+# Step 2: (Re)initialize the test database on the running H2 server.
+# fallback.sql drops every table, change.sql recreates them, applied to
+# jdbc:h2:tcp://localhost:3306/testdb (Database/testdb.mv.db served by H2)
+# so every TestAll run starts from a clean schema.
+# ------------------------------------------------------------------
+echo "[TestAll] Initializing database (fallback.sql -> change.sql)..."
+mkdir -p "${JS_PLUS_PATH}../Database"
+"$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:3306/testdb" -user sa -script "${JS_PLUS_PATH}../dbscript/fallback.sql" -checkResults
+"$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:3306/testdb" -user sa -script "${JS_PLUS_PATH}../dbscript/change.sql" -checkResults
+echo "[TestAll] testdb initialized (ghost_remote_command + 5 test tables)."
+
+# ------------------------------------------------------------------
+# Step 3: Run TestAll.js against this JVM.
 # JSPLUS_TEST_EXIT=1 tells TestAll.js to System.exit(0) after finishing
 # (interactive Console.eval runs skip it). "< /dev/null" closes stdin: the
 # JsPlus Main scanner gets EOF right after the -Task finishes and the JVM
@@ -94,4 +142,12 @@ set +e
 RC=$?
 set -e
 echo "TestAll exit code: $RC"
+
+# ------------------------------------------------------------------
+# Step 4: stop the H2 server started for this run (java ghost keyed by
+# script/StartH2.js) so TestAll leaves nothing behind. RC was captured
+# above. Deliberately not StopAll.sh: its AppRootDir path pattern could
+# match the VS Code Java Language Server's command line in this workspace.
+# ------------------------------------------------------------------
+pkill -f 'script/StartH2.js' 2>/dev/null || true
 exit "$RC"

@@ -5,6 +5,10 @@
 //   - Java type bindings (DiskFile, HashMap, ...)
 //   - pass/fail counters + beginTest() reset
 //   - check({name, ok, detail, objective, objectiveZh, command}) helper
+//   - dbVerify(sqlFn[, url, username, password]) — run a native SQL SELECT
+//     through the project's standard data path (DriverDataSource ->
+//     CacheDriverExecutor -> CacheArray) and append the result to the detail
+//     line (JsPlus-Tomcat's dbVerify, adapted to Core's data-access shape)
 //   - writeReport() -> <PROJECT_ROOT>/test_reports/<REPORT_NAME>.html via DiskFile
 //   - writeMd()     -> <PROJECT_ROOT>/test_reports/<REPORT_NAME>.md via DiskFile
 //   - writeCiSummary() -> <PROJECT_ROOT>/test_reports/<REPORT_NAME>.md (CI-facing)
@@ -13,14 +17,14 @@
 //   load(System.getProperty("JS_PLUS_PATH") + "../test/TestBase.js")
 // NOTE: Re-loading this file is harmless (var redeclaration is legal in JS);
 // always call beginTest() at the start of each run to reset counters.
-// The Tomcat-specific helpers of JsPlus-Tomcat (dbVerify/curlStatus/callTomcat)
-// are intentionally NOT carried over: JsPlus-Core has no server, no H2 and no
-// global `tomcat` object.
+// The Tomcat-only helpers of JsPlus-Tomcat (callTomcat/curlStatus) are
+// intentionally NOT carried over: JsPlus-Core has no server, no web layer
+// and no global `tomcat` object.
 // ============================================================================
 
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
-var HashMap = Java.type("java.util.HashMap");
+var StringBuilder = Java.type("java.lang.StringBuilder");
 var DiskFile = Java.type("com.killcoding.file.DiskFile");
 
 // Console mode = the suite is running inside the JsPlus console (global Console
@@ -33,6 +37,9 @@ var passCount = 0;
 var failCount = 0;
 var failures = [];
 var results = [];
+// Structured dbVerify outcome {sql, columns, rows} filled by dbVerify() and
+// consumed by check() into the current result row (for the report render).
+var dbvResult = null;
 
 // Reset counters - call at the start of every test run (from each suite).
 function beginTest() {
@@ -41,6 +48,7 @@ function beginTest() {
     failCount = 0;
     failures = [];
     results = [];
+    dbvResult = null;
 }
 
 function escapeHtml(s) {
@@ -99,8 +107,77 @@ function check(params) {
         detail: d,
         objective: (objective === null || objective === undefined) ? "" : ("" + objective),
         objectiveZh: (objectiveZh === null || objectiveZh === undefined) ? "" : ("" + objectiveZh),
-        command: (command === null || command === undefined) ? "" : ("" + command)
+        command: (command === null || command === undefined) ? "" : ("" + command),
+        dbv: dbvResult
     });
+    dbvResult = null;
+}
+
+// Optional DB verification: run a native SQL SELECT against the database so
+// testers can verify the persisted table state directly (JsPlus-Tomcat's
+// dbVerify, adapted to Core). sqlFn must return a SELECT statement.
+// The connection MUST come from Console.getDataSource() - the runtime's
+// configured project datasource (config/DataSource.properties ->
+// jdbc:h2:tcp://localhost:3306/testdb, sample_user), i.e. the same source
+// the runtime uses (ScriptConsole.getDataSource() reads DataSource.properties
+// into a DriverDataSource). The structured outcome {sql, columns, rows}
+// (max 30 rows) is stored in dbvResult for writeReport to render as a
+// nested table; the returned inline text keeps the console output readable.
+// NOTE: the query runs over plain JDBC (Connection.createStatement) instead
+// of CacheDriverExecutor.find(): Core's find() writes results into a
+// CacheArray whose worker-thread/filter design is async and is not suited to
+// the suite's synchronous assertion read (the GraalJS context forbids
+// multi-threaded access, and the filter thread removes entries / clears the
+// cache as it processes them). A plain JDBC query is deterministic here
+// while checking the same persisted state; the connection itself still
+// comes from the project datasource via Console.getDataSource().
+function dbVerify(sqlFn) {
+    var conn = null;
+    var stmt = null;
+    var rs = null;
+    var sql;
+    var result = { sql: "", columns: [], rows: [] };
+    try {
+        sql = sqlFn();
+        conn = Console.getDataSource().getConnection();
+        stmt = conn.createStatement();
+        rs = stmt.executeQuery(sql);
+        var rsmd = rs.getMetaData();
+        var c = rsmd.getColumnCount();
+        for (var k = 0; k < c; k++) {
+            result.columns.push(rsmd.getColumnLabel(k + 1) + "");
+        }
+        while (rs.next() && result.rows.length < 30) {
+            var row = [];
+            for (var k = 0; k < c; k++) {
+                var v = rs.getObject(k + 1);
+                row.push(v === null ? "null" : ("" + v));
+            }
+            result.rows.push(row);
+        }
+        result.sql = sql;
+        dbvResult = result;
+        var sb = new StringBuilder();
+        for (var i = 0; i < result.rows.length; i++) {
+            sb.append((i > 0 ? "\n" : "") + "[" + result.rows[i].join(" ") + "]");
+        }
+        return "\n | dbVerify: " + sql + "\n   -> " + (result.rows.length > 0 ? sb.toString() : "(0 rows)");
+    } catch (e) {
+        result.sql = (sql !== undefined ? sql : "<sqlFn failed>");
+        result.error = "" + e;
+        dbvResult = result;
+        return "\n | dbVerify: " + result.sql + "\n   -> (query failed) " + e;
+    } finally {
+        if (rs !== null && rs !== undefined) {
+            try { rs.close(); } catch (e2) {}
+        }
+        if (stmt !== null && stmt !== undefined) {
+            try { stmt.close(); } catch (e3) {}
+        }
+        if (conn !== null && conn !== undefined) {
+            try { conn.close(); } catch (e4) {}
+        }
+    }
 }
 
 // Read the runtime log config lines of <JS_PLUS_PATH>/config/Logger.properties
@@ -143,13 +220,41 @@ function writeReport() {
         var objective = escapeHtml(results[i].objective);
         var objectiveZh = escapeHtml(results[i].objectiveZh);
         var command = escapeHtml(results[i].command);
+        // dbVerify outcome rendered the JsPlus-Tomcat way: a yellow-tinted
+        // nested table (row num + columns) under the detail cell.
+        var dbvHtml = "";
+        var dbv = results[i].dbv;
+        if (dbv !== null && dbv !== undefined) {
+            var dbvSql = escapeHtml(dbv.sql);
+            if (dbv.error !== undefined && dbv.error !== null && ("" + dbv.error).length > 0) {
+                dbvHtml = "<span class=\"dbv\">dbVerify: " + dbvSql
+                    + "<br>(query failed) " + escapeHtml(dbv.error) + "</span>";
+            } else if (dbv.rows.length === 0) {
+                dbvHtml = "<span class=\"dbv\">dbVerify: " + dbvSql + "<br>(0 rows)</span>";
+            } else {
+                dbvHtml = "<span class=\"dbv\">dbVerify: " + dbvSql
+                    + "<br><table class=\"dbv-table\"><tr><th>row num</th>";
+                for (var ci = 0; ci < dbv.columns.length; ci++) {
+                    dbvHtml += "<th>" + escapeHtml(dbv.columns[ci]) + "</th>";
+                }
+                dbvHtml += "</tr>";
+                for (var ri = 0; ri < dbv.rows.length; ri++) {
+                    dbvHtml += "<tr><td>" + (ri + 1) + "</td>";
+                    for (var cj = 0; cj < dbv.columns.length; cj++) {
+                        dbvHtml += "<td>" + escapeHtml(dbv.rows[ri][cj]) + "</td>";
+                    }
+                    dbvHtml += "</tr>";
+                }
+                dbvHtml += "</table></span>";
+            }
+        }
         // Sequential, per-row case id: first row = C1, second = C2, ...
         var caseCell = "C" + (i + 1);
         rows += "<tr class=\"" + cls + "\"><td>" + caseCell + "</td><td class=\"name\">" + escapeHtml(results[i].name)
               + (objective.length > 0 ? "<br><span class=\"obj\">" + objective + "</span>" : "")
               + (objectiveZh.length > 0 ? "<br><span class=\"objZh\">" + objectiveZh + "</span>" : "")
               + (command.length > 0 ? "<br><span class=\"cmd\">" + command + "</span>" : "")
-              + "</td><td class=\"badge\">" + badge + "</td><td>" + detail + "</td></tr>\n";
+              + "</td><td class=\"badge\">" + badge + "</td><td>" + detail + dbvHtml + "</td></tr>\n";
     }
     var cfgLines = configSnapshot();
     var cfgSection = "";
@@ -181,6 +286,10 @@ function writeReport() {
         + "  td.name span.cmd { display: block; color: #8c959f; font-size: 11px; margin-top: 2px; font-family: Consolas, 'Courier New', monospace; word-break: break-all; }\n"
         + "  td.badge { width: 70px; }\n"
         + "  pre.cfg { background: #fff; border: 1px solid #d0d7de; padding: 10px; font-size: 12px; overflow-x: auto; }\n"
+        + "  td .dbv { display: block; color: #9a6700; font-size: 12px; margin-top: 8px; word-break: break-all; }\n"
+        + "  td .dbv table.dbv-table { border-collapse: collapse; width: auto; margin-top: 4px; font-size: 11px; }\n"
+        + "  td .dbv table.dbv-table th { background: #fef3c7; color: #9a6700; padding: 2px 8px; border: 1px solid #d0d7de; text-align: left; font-weight: normal; }\n"
+        + "  td .dbv table.dbv-table td { background: #fffdf5; color: #24292f; padding: 2px 8px; border: 1px solid #d0d7de; }\n"
         + "</style>\n"
         + "</head>\n"
         + "<body>\n"
@@ -233,6 +342,14 @@ function writeMd() {
     for (var i = 0; i < results.length; i++) {
         var badge = results[i].ok ? "**PASS**" : "**FAIL**";
         var detail = escapeMd(results[i].detail);
+        var dbv = results[i].dbv;
+        if (dbv !== null && dbv !== undefined) {
+            var dbvRowsTxt = dbv.rows.length === 0 ? "(0 rows)"
+                : dbv.rows.map(function (r) { return "[" + r.join(" ") + "]"; }).join(" ");
+            detail += " / dbVerify: `" + escapeMd(dbv.sql) + "` -> "
+                + ((dbv.error !== undefined && dbv.error !== null && ("" + dbv.error).length > 0)
+                    ? "(query failed) " + escapeMd(dbv.error) : dbvRowsTxt);
+        }
         var nameCell = escapeMd(results[i].name)
             + (results[i].objective.length > 0 ? " — " + escapeMd(results[i].objective) : "")
             + (results[i].objectiveZh.length > 0 ? " — " + escapeMd(results[i].objectiveZh) : "")

@@ -14,6 +14,7 @@
 //              4) TestTool.js       -> <PROJECT_ROOT>/test_reports/TestTool-Report.html
 //              5) TestLog.js        -> <PROJECT_ROOT>/test_reports/TestLog-Report.html
 //              6) TestDatasource.js -> <PROJECT_ROOT>/test_reports/TestDatasource-Report.html
+//              7) TestTables.js     -> <PROJECT_ROOT>/test_reports/TestTables-Report.html
 //            This entry point then prints an aggregate pass/fail summary and
 //            writes TestAll-Report.md / TestAll-Report.html / TestAll-CI-Summary.md.
 // NOTE     : Each suite calls beginTest() and reports its own counters, so
@@ -40,7 +41,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestConsole -> TestCache -> TestFile -> TestTool -> TestLog -> TestDatasource");
+print("Suites       : TestConsole -> TestCache -> TestFile -> TestTool -> TestLog -> TestDatasource -> TestTables");
 
 var suites = [
     { file: "TestConsole.js",    title: "TestConsole" },
@@ -48,7 +49,8 @@ var suites = [
     { file: "TestFile.js",       title: "TestFile" },
     { file: "TestTool.js",       title: "TestTool" },
     { file: "TestLog.js",        title: "TestLog" },
-    { file: "TestDatasource.js", title: "TestDatasource" }
+    { file: "TestDatasource.js", title: "TestDatasource" },
+    { file: "TestTables.js",     title: "TestTables" }
 ];
 
 var totalPass = 0;
@@ -85,7 +87,11 @@ if (cfgCheck.ok) {
     print("[FAIL] " + cfgCheck.detail);
 }
 
-for (var i = 0; i < suites.length; i++) {
+// The loop index is declared with let (block scope): suites loaded via
+// load() run in the SAME global scope, and their own top-level 'var i'
+// loops would otherwise clobber a 'var i' here (GraalJS: load() shares the
+// global lexical environment), re-running the loop forever from the middle.
+for (let i = 0; i < suites.length; i++) {
     var s = suites[i];
     print("");
     print("===== Running " + s.title + " =====");
@@ -204,9 +210,12 @@ try {
 }
 
 // TestAll.bat/.sh set JSPLUS_TEST_EXIT=1 so this JVM exits after the task.
-// System.exit(0) only terminates this process - JsPlus-Core has no ghost
-// console to keep alive. Interactive Console.eval runs skip the exit.
+// Exit code mirrors the test outcome: 0 when every check passed, 1 when any
+// check failed. (JsPlus-Tomcat's TestAll.js exits unconditionally with 0, so
+// its CI cannot see a failing suite; JsPlus-Core deliberately propagates the
+// failure so TestAll.bat/.sh and the CI workflow turn red on a real failure.)
+// Interactive Console.eval runs skip the exit.
 var testExit = System.getenv("JSPLUS_TEST_EXIT");
 if (testExit !== null && testExit !== undefined && ("" + testExit) === "1") {
-    System.exit(0);
+    System.exit(totalFail > 0 ? 1 : 0);
 }
