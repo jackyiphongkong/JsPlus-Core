@@ -1,6 +1,6 @@
 # JsPlus-Core
 
-JsPlus-Core is the **embedded console engine of JsPlus** — the core engine and utility libraries only (`com.killcoding.{jsplus,file,cache,tool,log,datasource}`), with **no web container dependency** and **no built-in H2 server process**. The full server runtime lives in the sister project (server edition); this repository adapts and aligns that project's start/operate/test logic to the embedded engine.
+JsPlus-Core is the **embedded console engine of JsPlus** — the core engine and utility libraries only (`com.killcoding.{jsplus,file,cache,tool,log,datasource}`), with **no web container dependency** and **no built-in H2 server process**.
 
 > `org/*` (log replacement classes) has been split into a separate project; this repository no longer contains `src/org`.
 
@@ -16,16 +16,16 @@ The toolchain is bundled with this project (no Java / Ant installation, no `JAVA
 
 Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **89 passed / 0 failed, exit 0** (includes H2 server TCP integration and connection-pool behaviour tests); cleanup releases `:3306` with no leftover process.
 
-## Alignment with the Sister Project (adapted items)
+## Alignment with the Server Edition (adapted items)
 
 | Item | JsPlus-Core status |
 | --- | --- |
-| `build.xml` | Fully consistent with the sister project's standard (single jar → `LibHome\jsplus\default`, `-Xlint:none`, clear/compile/package/build targets; the dead `org/*` include removed) |
-| Versioning | `version.properties` (6.1.x) auto-increments **patch +1** on every `ant build`; jar name `jsplus-core-${jr.version}.jar`; old jar removed before build (sister-project quirk: the jar name lags one patch behind — see `QUALITY-REVIEW.md`) |
+| `build.xml` | Fully consistent with the server edition's standard (single jar → `LibHome\jsplus\default`, `-Xlint:none`, clear/compile/package/build targets; the dead `org/*` include removed) |
+| Versioning | `version.properties` (6.1.x) auto-increments **patch +1** on every `ant build`; jar name `jsplus-core-${jr.version}.jar`; old jar removed before build (server-edition quirk: the jar name lags one patch behind — see `QUALITY-REVIEW.md`) |
 | `JsPlus\bin` | 18 bat/sh scripts adapted as-is; renamed family: `StartTomcat→StartCore`, `BG_StartTomcat→BG_StartCore`, `StopTomcat→StopCore`; H2 companions keep their original names (`BG_StartH2` / `StartH2` / `StartH2Console` / `StopH2` / `Stop` / `StopAll`) |
-| `JsPlus\config` | 7 files + 2 sub-directories copied (sister-project `Logger.properties`; the original Core version is backed up at `build\.logger-core-backup.properties`) |
+| `JsPlus\config` | 7 files + 2 sub-directories copied (server-edition `Logger.properties`; the original Core version is backed up at `build\.logger-core-backup.properties`) |
 | `dbscript\` | Rewritten: keeps only `ghost_remote_command` + 5 test tables; `tomcatdb` renamed everywhere to **`testdb`** |
-| Test framework | `TestBase.js` / `TestAll.js` renderer and report style aligned with the sister project (GitHub style + dbv nested tables) |
+| Test framework | `TestBase.js` / `TestAll.js` renderer and report style aligned with the server edition (GitHub style + dbv nested tables) |
 
 ## Directory Layout
 
@@ -75,7 +75,7 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **89 passed / 0 fa
 - **All CRUD goes through `CacheDriverExecutor`** (the DriverExecutor synchronous API: `execute()` / `first()` / `find()`); every phase is followed by a **re-select**;
 - **dbVerify always uses `SELECT *`** (full-column nested-table rendering, incl. row num); asserts 1 row after INSERT and 0 rows after DELETE;
 - **`ghost_remote_command` is not tested**: `fallback.sql` does not DROP it, `change.sql` uses `CREATE TABLE IF NOT EXISTS`, suites never touch its data — running tests while GhostConsole is up no longer hits `42104 Table not found`;
-- Reports use the GitHub-style four-column table (Case Id / Test Objective / Result / Detail) + Config Snapshot + yellow-toned dbv nested tables (renderer and style aligned with the sister project).
+- Reports use the GitHub-style four-column table (Case Id / Test Objective / Result / Detail) + Config Snapshot + yellow-toned dbv nested tables (renderer and style aligned with the server edition).
 
 ## Build & Versioning
 
@@ -100,9 +100,9 @@ MinPoolSize=1         MaxPoolSize=100
 
 ## Quality
 
-- `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — sister-project alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
+- `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — server-edition alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
 
-## Environment Overrides (same naming convention as the sister project)
+## Environment Overrides (same naming convention as the server edition)
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
