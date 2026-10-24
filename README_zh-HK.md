@@ -1,6 +1,6 @@
 # JsPlus-Core
 
-JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎與工具庫（`com.killcoding.{jsplus,file,cache,tool,log,datasource}`），不依賴 Web 容器、無內建 H2 服務端進程。完整的伺服器執行期在姊妹專案（伺服器版）；本倉庫將姊妹專案的啟動/運維/測試邏輯對標適配至嵌入式引擎。
+JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎與工具庫（`com.killcoding.{jsplus,file,cache,tool,log,datasource}`），不依賴 Web 容器、無內建 H2 服務端進程。
 
 > `org/*`（日誌替換類）已拆分為獨立專案，本倉庫不再包含 `src/org`。
 
@@ -16,16 +16,16 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 
 驗證基線：`ant build` → BUILD SUCCESSFUL；`TestAll.bat` → **89 passed / 0 failed、exit 0**（含 H2 服務端 tcp 整合、連接池參數行為測試）；收尾 `:3306` 釋放、無殘留進程。
 
-## 與姊妹專案的對標（已適配項目）
+## 與伺服器版的對標（已適配項目）
 
 | 項目 | JsPlus-Core 狀態 |
 | --- | --- |
-| `build.xml` | 與姊妹專案標準完全一致（單 jar → `LibHome\jsplus\default`、`-Xlint:none`、clear/compile/package/build；`org/*` include 為死配置已刪） |
-| 版本機制 | `version.properties`（6.1.x）每次 `ant build` 自動 patch+1，jar 名 `jsplus-core-${jr.version}.jar`，構建前刪舊 jar（姊妹專案怪癖：jar 名慢一個 patch，見 `QUALITY-REVIEW.md`） |
+| `build.xml` | 與伺服器版標準完全一致（單 jar → `LibHome\jsplus\default`、`-Xlint:none`、clear/compile/package/build；`org/*` include 為死配置已刪） |
+| 版本機制 | `version.properties`（6.1.x）每次 `ant build` 自動 patch+1，jar 名 `jsplus-core-${jr.version}.jar`，構建前刪舊 jar（伺服器版怪癖：jar 名慢一個 patch，見 `QUALITY-REVIEW.md`） |
 | `JsPlus\bin` | 18 個 bat/sh 原樣適配；改名族：`StartTomcat→StartCore`、`BG_StartTomcat→BG_StartCore`、`StopTomcat→StopCore`；H2 配套原名保留（`BG_StartH2` / `StartH2` / `StartH2Console` / `StopH2` / `Stop` / `StopAll`） |
-| `JsPlus\config` | 7 檔 + 2 子目錄複製（姊妹專案版 `Logger.properties`；Core 原版備份於 `build\.logger-core-backup.properties`） |
+| `JsPlus\config` | 7 檔 + 2 子目錄複製（伺服器版 `Logger.properties`；Core 原版備份於 `build\.logger-core-backup.properties`） |
 | `dbscript\` | 重寫：只保留 `ghost_remote_command` + 5 張測試表；`tomcatdb` 全域改名 **`testdb`** |
-| 測試體系 | `TestBase.js` / `TestAll.js` 渲染器與報告風格對齊姊妹專案（GitHub 風格 + dbv 嵌套表） |
+| 測試體系 | `TestBase.js` / `TestAll.js` 渲染器與報告風格對齊伺服器版（GitHub 風格 + dbv 嵌套表） |
 
 ## 目錄結構
 
@@ -75,7 +75,7 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 - **CRUD 全部經 `CacheDriverExecutor`**（DriverExecutor 同步 API：`execute()` / `first()` / `find()`）；每階段後 **re-select**；
 - **dbVerify 一律 `SELECT *`**（全列嵌套表渲染，含 row num）；INSERT 後斷言 1 行、DELETE 後斷言 0 行；
 - **`ghost_remote_command` 測試不碰**：`fallback.sql` 不 DROP 它、`change.sql` 用 `CREATE TABLE IF NOT EXISTS`、套件不清其資料——GhostConsole 運行中跑測試不再報 `42104 Table not found`；
-- 報告為 GitHub 風格四列表（Case Id / Test Objective / Result / Detail）+ Config Snapshot + 黃色調 dbv 嵌套表（渲染器與樣式對齊姊妹專案）。
+- 報告為 GitHub 風格四列表（Case Id / Test Objective / Result / Detail）+ Config Snapshot + 黃色調 dbv 嵌套表（渲染器與樣式對齊伺服器版）。
 
 ## 構建版本機制
 
@@ -100,9 +100,9 @@ MinPoolSize=1         MaxPoolSize=100
 
 ## 品質
 
-- `QUALITY-REVIEW.md`：70 分七維質量報告（P0 已全部完成）——含姊妹專案對標、工具鏈、測試閉環、版本機制、已知限制（如 GraalJS `load()` 共享全域作用域、CacheArray 全域 forceStop、PowerShell 須 `cmd /c` 傳 `< NUL`）。
+- `QUALITY-REVIEW.md`：70 分七維質量報告（P0 已全部完成）——含伺服器版對標、工具鏈、測試閉環、版本機制、已知限制（如 GraalJS `load()` 共享全域作用域、CacheArray 全域 forceStop、PowerShell 須 `cmd /c` 傳 `< NUL`）。
 
-## 環境變數覆蓋（與姊妹專案同名慣例）
+## 環境變數覆蓋（與伺服器版同名慣例）
 
 | 變數 | 預設 | 用途 |
 | --- | --- | --- |
