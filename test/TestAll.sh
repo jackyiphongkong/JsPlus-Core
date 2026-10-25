@@ -138,7 +138,7 @@ echo "[TestAll] testdb initialized (ghost_remote_command + 5 test tables)."
 # ------------------------------------------------------------------
 export JSPLUS_TEST_EXIT=1
 set +e
-"$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -Task "${JS_PLUS_PATH}../test/TestAll.js" < /dev/null
+"$JAVA_BIN" $JvmParams -DAPP_REMOTE_FILE="${JS_PLUS_PATH}../test/RemoteFile.properties" -DAPP_CLOCK="${JS_PLUS_PATH}config/AppClock.properties" -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -Task "${JS_PLUS_PATH}../test/TestAll.js" < /dev/null
 RC=$?
 set -e
 echo "TestAll exit code: $RC"

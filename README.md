@@ -14,14 +14,14 @@ The toolchain is bundled with this project (no Java / Ant installation, no `JAVA
 | 2. Test | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) | `test_reports\*` (HTML / MD / CI summary) |
 | 3. Slim runtime | `packJdk.bat` (Linux/macOS: `packJdk.sh`) | `Java\runtime` (jlink cut-down) |
 
-Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **38 passed / 0 failed, exit 0** (includes H2 server TCP integration, connection-pool behaviour tests and the `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` queue test); cleanup releases `:3306` with no leftover process.
+Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 failed, exit 0** (includes H2 server TCP integration, connection-pool behaviour tests and the `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` queue test); cleanup releases `:3306` with no leftover process.
 
 ## Alignment with the Server Edition (adapted items)
 
 | Item | JsPlus-Core status |
 | --- | --- |
 | `build.xml` | Fully consistent with the server edition's standard (single jar → `LibHome\jsplus\default`, `-Xlint:none`, clear/compile/package/build targets; the dead `org/*` include removed) |
-| Versioning | `version.properties` (6.1.x) auto-increments **patch +1** on every `ant build`; jar name `jsplus-core-${jr.version}.jar`; old jar removed before build (server-edition quirk: the jar name lags one patch behind — see `QUALITY-REVIEW.md`) |
+| Versioning | `version.properties` (6.1.x) auto-increments **patch +1** on every `ant build`; jar name `jsplus-core-${jr.version}.jar`; old jar removed before build; each build appends a version history entry to `changes.log` (EN) + `changes_zh-HK.log` (繁中) (`-Dchange.en` / `-Dchange.zh` / `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` / defaults) (server-edition quirk: the jar name lags one patch behind — see `QUALITY-REVIEW.md`) |
 | `JsPlus\bin` | 18 bat/sh scripts adapted as-is; renamed family: `StartTomcat→StartCore`, `BG_StartTomcat→BG_StartCore`, `StopTomcat→StopCore`; H2 companions keep their original names (`BG_StartH2` / `StartH2` / `StartH2Console` / `StopH2` / `Stop` / `StopAll`) |
 | `JsPlus\config` | 7 files + 2 sub-directories copied (server-edition `Logger.properties`; the original Core version is backed up at `build\.logger-core-backup.properties`) |
 | `dbscript\` | Rewritten: keeps only `ghost_remote_command` + 5 test tables; `tomcatdb` renamed everywhere to **`testdb`** |
@@ -77,6 +77,8 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **38 passed / 0 fa
 - `version.properties` (`jr.major` / `jr.minor` / `jr.patch`) auto-increments **patch +1** on every `ant build` (carry at 999, semver).
 - The version is written into `ConsoleImpl.VERSION` (placeholder `${BuildVersion.VERSION}(${BuildVersion.BUILD_DATE})` substituted before compile, restored after).
 - Each build removes the old `jsplus-core-*.jar` and outputs the versioned jar.
+- Each build appends one history entry (UTF-8) to **two** changelog files: `changes.log` (English) and `changes_zh-HK.log` (Traditional Chinese), each headed `## <version> (<builddate> <buildtime>)`. Entry priority per language: `-Dchange.en="..."` / `-Dchange.zh="..."` (CI) → `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` (local note, consumed and deleted) → default `- build: automatic version bump` / `- build: 自動版本遞增`.
+- Each build also diffs the Java sources against the sibling copy at `jr.diffroot` (default `../../Githubrepos/JsPlus-Core/src`, skipped when absent) and writes every differing file into both changelogs as `- found diffed: <path> (A|M|D)` — a temporary marker for later review/refinement (e.g. syncing the change to the Githubrepos checkout).
 
 ## Database & Configuration
 

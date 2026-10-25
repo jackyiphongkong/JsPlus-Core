@@ -59,8 +59,8 @@ check({
     name: "Clock().getDate() non-null",
     ok: d !== null && d !== undefined && dErr.length === 0,
     detail: dErr.length > 0 ? dErr : ("" + d),
-    objective: "Verify the local clock facade returns a date without a remote clock",
-    objectiveZh: "驗證本地時鐘外觀在無遠端時鐘時回傳日期",
+    objective: "Verify the clock facade returns a date",
+    objectiveZh: "驗證時鐘外觀回傳日期",
     command: "new Clock().getDate()"
 });
 

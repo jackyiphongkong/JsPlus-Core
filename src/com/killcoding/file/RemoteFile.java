@@ -332,6 +332,15 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		if (!exists()) {
 			log.mark(String.format("The remote file '%s' does not exist.", this.getPath()));
 		}
+		// Embedded engine: when no sync root is configured (server mode wires
+		// one in), derive a local lock root from the target file's parent so
+		// logicModify() can place its lock files under TEMP_DIR.
+		if (diskFile.syncRoot == null) {
+			File parent = diskFile.getOrigin().getParentFile();
+			if (parent != null) {
+				DiskFile.copyAttrs(diskFile, false, parent);
+			}
+		}
 		RemoteFile the = this;
 
 		Timestamp rfModifyTime = the.getModifyTime();
@@ -1073,7 +1082,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
     
     						partDataList.add(data);
     						if (partDataList.size() >= BATCH_SIZE) {
-    							diskFile.logicAccess();
+    							// Embedded engine: no sync root configured (server
+    							// mode wires one in) - skip the logic-access lock
+    							// file (toAccessTmpFilePath needs a syncRoot).
+    							if (diskFile.syncRoot != null) {
+    								diskFile.logicAccess();
+    							}
     							if(!the.writeToBatch(currentFilePartStartIndex, partDataList)){
     								throw new IOException(String.format("The remote file '%s' write failed.",the.getPath()));
     							}
@@ -2357,8 +2371,31 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		log.debug("MoveTo: {} -> {}", getPath(), toPath);
 		RemoteFile destRf = new RemoteFile(toPath);
 		copyTo(toPath);
+		// copyTo() drives merge() over the async CacheArray worker, so the
+		// destination only becomes complete after this method returns. Wait
+		// for the copy (bounded) before removing the source - otherwise the
+		// completed-check below always fails and moveTo silently degrades
+		// into copyTo (the source is never deleted).
+		boolean copied = false;
+		long deadline = System.currentTimeMillis() + 15000L;
+		while (System.currentTimeMillis() < deadline) {
+			try {
+				if (destRf.exists(true) && destRf.isCompleted()) {
+					copied = true;
+					break;
+				}
+			} catch (Exception e) {
+				log.debug(e.getMessage());
+			}
+			try {
+				Thread.sleep(200L);
+			} catch (InterruptedException ie) {
+				Thread.currentThread().interrupt();
+				break;
+			}
+		}
 		boolean exists = this.exists(true);
-		if (exists && destRf.exists(true) && destRf.isCompleted()) {
+		if (exists && copied) {
 			forceDeleteAll(true);
 		}
 	}

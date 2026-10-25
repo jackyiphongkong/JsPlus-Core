@@ -1,0 +1,40 @@
+
+## 6.1.15 (2026.10.25 11:39:17)
+- feat: build.xml 每次建構自動記錄版本歷史到 changes.log
+- fix: copyFrom/split 嵌入式引擎適配（syncRoot 為 null 時跳過 logicAccess 鎖）
+
+
+## 6.1.16 (2026.10.25 11:40:06)
+- build: 自動版本遞增
+
+
+## 6.1.17 (2026.10.25 11:40:36)
+- build: 自動版本遞增
+
+
+## 6.1.18 (2026.10.25 11:40:56)
+- manual-desc-test-ci
+
+
+## 6.1.19 (2026.10.25 11:45:52)
+- feat: changes.log 拆分為英文（changes.log）與繁體中文（changes_zh-HK.log）雙版本
+- fix: C15 大檔案自動分片測試改用正典 DiskFile.writeToRemote 路徑
+
+## 6.1.20 (2026.10.25 11:46:08)
+- build: 自動版本遞增
+
+
+## 6.1.21 (2026.10.25 11:46:24)
+- manual-zh-ci
+
+
+
+## 6.1.27 (2026.10.25 12:37:35)
+- found diffed: com/killcoding/file/RemoteFile.java (M) vs D:/Githubrepos/JsPlus-Core/src
+- fix: RemoteFile 嵌入式引擎適配 — writeToDisk 於 syncRoot 為 null 時派生本地鎖根；copyFrom 於 syncRoot 為 null 時跳過 logicAccess() 鎖；moveTo 輪詢 15s 待 copyTo 完成才刪除源
+- feat: 新增 TestClock.js 套件（11 用例）— Clock 外觀（com.killcoding.datasource.Clock）時間存取器、跨視圖毫秒一致性、遠端時鐘 DB 差距（同機 0ms）、AppClock 靜態存取器語義
+- feat: 生成 config/AppClock.properties（Enable=true）並配置 GetAppClockSql — 以 SELECT CURRENT_TIMESTAMP 取 DB 伺服器時間
+- refactor: TestCache.js 精簡為正典 Console.callback + CacheArray.getObject() 模式 — 兩個/三個 newBuilder console（find / callback / 插入 1000 行 callback delete），變數命名可讀
+- test: TestAll.js 聚合 6 套件（TestDatasource/TestTables/TestRemoteFile/TestDiskFile/TestCache/TestClock）— 79/79 全綠
+- build: 自動版本遞增
+

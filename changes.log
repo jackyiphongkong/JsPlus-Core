@@ -1,0 +1,40 @@
+
+## 6.1.15 (2026.10.25 11:39:17)
+- feat: build.xml records one version-history entry into changes.log on every build
+- fix: copyFrom/split embedded-engine adaptation (skip the logicAccess lock when syncRoot is null)
+
+
+## 6.1.16 (2026.10.25 11:40:06)
+- build: automatic version bump
+
+
+## 6.1.17 (2026.10.25 11:40:36)
+- build: automatic version bump
+
+
+## 6.1.18 (2026.10.25 11:40:56)
+- manual-desc-test-ci
+
+
+## 6.1.19 (2026.10.25 11:45:52)
+- feat: split changes.log into English (changes.log) and Traditional Chinese (changes_zh-HK.log) per build
+- fix: C15 large-file auto-split test now drives the canonical DiskFile.writeToRemote path
+
+## 6.1.20 (2026.10.25 11:46:08)
+- build: automatic version bump
+
+
+## 6.1.21 (2026.10.25 11:46:24)
+- manual-en-ci
+
+
+
+## 6.1.27 (2026.10.25 12:37:35)
+- found diffed: com/killcoding/file/RemoteFile.java (M) vs D:/Githubrepos/JsPlus-Core/src
+- fix: RemoteFile embedded-engine adaptations - writeToDisk derives a local sync root when null; copyFrom skips the logicAccess() lock when syncRoot is null; moveTo polls 15s for copyTo completion before deleting the source
+- feat: new TestClock.js suite (11 cases) - Clock facade (com.killcoding.datasource.Clock) time accessors, cross-view millis consistency, remote-clock DB gap (0ms on the same machine), AppClock static accessor semantics
+- feat: config/AppClock.properties generated (Enable=true) with GetAppClockSql - tracks the DB server time via SELECT CURRENT_TIMESTAMP
+- refactor: TestCache.js trimmed to the canonical Console.callback + CacheArray.getObject() pattern - two/three newBuilder consoles (find / callback / insert-1000 callback-delete), readable variable names
+- test: TestAll.js aggregates 6 suites (TestDatasource/TestTables/TestRemoteFile/TestDiskFile/TestCache/TestClock) - 79/79 green
+- build: automatic version bump
+

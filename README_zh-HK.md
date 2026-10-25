@@ -14,14 +14,14 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | 2. 測試 | `test\TestAll.bat`（Linux/macOS：`test\TestAll.sh`） | `test_reports\*`（HTML / MD / CI 摘要） |
 | 3. 精簡執行期 | `packJdk.bat`（Linux/macOS：`packJdk.sh`） | `Java\runtime`（jlink 裁剪） |
 
-驗證基線：`ant build` → BUILD SUCCESSFUL；`TestAll.bat` → **38 passed / 0 failed、exit 0**（含 H2 服務端 tcp 整合、連接池參數行為測試，及 `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` 佇列測試）；收尾 `:3306` 釋放、無殘留進程。
+驗證基線：`ant build` → BUILD SUCCESSFUL；`TestAll.bat` → **53 passed / 0 failed、exit 0**（含 H2 服務端 tcp 整合、連接池參數行為測試，及 `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` 佇列測試）；收尾 `:3306` 釋放、無殘留進程。
 
 ## 與伺服器版的對標（已適配項目）
 
 | 項目 | JsPlus-Core 狀態 |
 | --- | --- |
 | `build.xml` | 與伺服器版標準完全一致（單 jar → `LibHome\jsplus\default`、`-Xlint:none`、clear/compile/package/build；`org/*` include 為死配置已刪） |
-| 版本機制 | `version.properties`（6.1.x）每次 `ant build` 自動 patch+1，jar 名 `jsplus-core-${jr.version}.jar`，構建前刪舊 jar（伺服器版怪癖：jar 名慢一個 patch，見 `QUALITY-REVIEW.md`） |
+| 版本機制 | `version.properties`（6.1.x）每次 `ant build` 自動 patch+1，jar 名 `jsplus-core-${jr.version}.jar`，構建前刪舊 jar；每次構建向 `changes.log`（英）與 `changes_zh-HK.log`（繁中）各追加版本歷史（`-Dchange.en` / `-Dchange.zh` / `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` / 預設）（伺服器版怪癖：jar 名慢一個 patch，見 `QUALITY-REVIEW.md`） |
 | `JsPlus\bin` | 18 個 bat/sh 原樣適配；改名族：`StartTomcat→StartCore`、`BG_StartTomcat→BG_StartCore`、`StopTomcat→StopCore`；H2 配套原名保留（`BG_StartH2` / `StartH2` / `StartH2Console` / `StopH2` / `Stop` / `StopAll`） |
 | `JsPlus\config` | 7 檔 + 2 子目錄複製（伺服器版 `Logger.properties`；Core 原版備份於 `build\.logger-core-backup.properties`） |
 | `dbscript\` | 重寫：只保留 `ghost_remote_command` + 5 張測試表；`tomcatdb` 全域改名 **`testdb`** |
@@ -77,6 +77,8 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 - `version.properties`（`jr.major` / `jr.minor` / `jr.patch`）每次 `ant build` 自動 **patch +1**（999 進位，semver）。
 - 版本寫入 `ConsoleImpl.VERSION`（占位符 `${BuildVersion.VERSION}(${BuildVersion.BUILD_DATE})` 編譯前替換、編譯後還原）。
 - 每次構建刪除舊 `jsplus-core-*.jar`，輸出帶版本 jar。
+- 每次構建向 **兩個** changelog 檔（UTF-8）各追加一筆版本歷史：`changes.log`（英文）與 `changes_zh-HK.log`（繁體中文），標題 `## <版本> (<建構日期> <建構時間>)`。每語言之說明優先序：`-Dchange.en="..."` / `-Dchange.zh="..."`（CI）→ `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt`（本地註記，消費後刪除）→ 預設 `- build: automatic version bump` / `- build: 自動版本遞增`。
+- 每次構建亦會對比 Java 源碼與 `jr.diffroot`（預設 `../../Githubrepos/JsPlus-Core/src`，不存在時略過）的姊妹副本，將差異檔案以 `- found diffed: <path> (A|M|D)` 寫入兩個 changelog——作為稍後檢視/完善的臨時標記（例如將變更同步至 Githubrepos 工作副本）。
 
 ## 資料庫與配置
 

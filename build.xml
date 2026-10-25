@@ -91,6 +91,136 @@
 
 	<target name="version-bump" depends="version-final" />
 
+	<!-- ============================================================
+	     changes.log (English) + changes_zh-HK.log (Traditional Chinese) -
+	     one history entry per build, written to both files.
+	     Header line: ## <version> (<builddate> <buildtime>)
+	     English entry priority:
+	       1) -Dchange.en="..."            (CI / command line)
+	       2) build/changes-pending-en.txt (local note; consumed & removed)
+	       3) default "- build: automatic version bump"
+	     Traditional Chinese entry priority:
+	       1) -Dchange.zh="..."            (CI / command line)
+	       2) build/changes-pending-zh-HK.txt (local note; consumed & removed)
+	       3) default "- build: 自動版本遞增"
+	     Entries are appended with UTF-8 encoding so Chinese descriptions
+	     survive on Windows. -->
+	<target name="write-changelog" depends="version-bump">
+		<tstamp>
+			<format property="jr.buildtime" pattern="HH:mm:ss" />
+		</tstamp>
+		<mkdir dir="${jr.root}/build" />
+		<available file="${jr.root}/build/changes-pending-en.txt" property="jr.chg.enPending" />
+		<available file="${jr.root}/build/changes-pending-zh-HK.txt" property="jr.chg.zhPending" />
+		<!-- default entry only when neither the -D property nor the pending
+		     file supplied a description (AND semantics; target-level unless
+		     is OR across a comma-separated list) -->
+		<condition property="jr.chg.enNeedDefault">
+			<and>
+				<not>
+					<isset property="change.en" />
+				</not>
+				<not>
+					<isset property="jr.chg.enPending" />
+				</not>
+			</and>
+		</condition>
+		<condition property="jr.chg.zhNeedDefault">
+			<and>
+				<not>
+					<isset property="change.zh" />
+				</not>
+				<not>
+					<isset property="jr.chg.zhPending" />
+				</not>
+			</and>
+		</condition>
+		<concat destfile="${jr.root}/changes.log" append="true" encoding="UTF-8">
+			<string>&#10;## ${jr.version} (${jr.builddate} ${jr.buildtime})&#10;</string>
+		</concat>
+		<concat destfile="${jr.root}/changes_zh-HK.log" append="true" encoding="UTF-8">
+			<string>&#10;## ${jr.version} (${jr.builddate} ${jr.buildtime})&#10;</string>
+		</concat>
+	</target>
+
+	<!-- ============================================================
+	     changelog-diff - diff the Java sources of this project against the
+	     sibling Githubrepos copy on every build. When any Java file differs
+	     (A/M/D), the diff lines are written into both changelogs, each line
+	     marked "found diffed" so an agent/user can review and refine the
+	     entry later. The sibling root is optional: when it does not exist
+	     (e.g. CI checkouts) the diff step is skipped silently. -->
+	<property name="jr.diffroot" value="${jr.root}/../../Githubrepos/JsPlus-Core/src" />
+
+	<target name="changelog-diff" depends="write-changelog">
+		<available file="${jr.diffroot}" property="jr.diff.root.exists" />
+		<antcall target="changelog-diff-run" />
+	</target>
+
+	<target name="changelog-diff-run" if="jr.diff.root.exists">
+		<mkdir dir="${jr.build}/tools" />
+		<mkdir dir="${jr.build}/classes-tools" />
+		<javac srcdir="${jr.build}/tools" destdir="${jr.build}/classes-tools"
+			encoding="UTF-8" includeantruntime="false" fork="true"
+			includejavaruntime="false" />
+		<java classname="DiffScanner" classpath="${jr.build}/classes-tools"
+			fork="true" failonerror="false">
+			<arg value="${jr.src}" />
+			<arg value="${jr.diffroot}" />
+			<arg value="${jr.build}/.diff-changes.txt" />
+		</java>
+		<loadfile property="jr.diff.changes" srcFile="${jr.build}/.diff-changes.txt"
+			encoding="UTF-8" failonerror="false" />
+		<concat destfile="${jr.root}/changes.log" append="true" encoding="UTF-8">
+			<string>${jr.diff.changes}</string>
+		</concat>
+		<concat destfile="${jr.root}/changes_zh-HK.log" append="true" encoding="UTF-8">
+			<string>${jr.diff.changes}</string>
+		</concat>
+	</target>
+
+	<target name="changelog-en-manual" depends="write-changelog" if="change.en">
+		<concat destfile="${jr.root}/changes.log" append="true" encoding="UTF-8">
+			<string>- ${change.en}&#10;&#10;</string>
+		</concat>
+	</target>
+
+	<target name="changelog-en-pending" depends="write-changelog" unless="change.en" if="jr.chg.enPending">
+		<loadfile property="jr.pending.en" srcFile="${jr.root}/build/changes-pending-en.txt"
+			encoding="UTF-8" failonerror="false" />
+		<concat destfile="${jr.root}/changes.log" append="true" encoding="UTF-8">
+			<string>${jr.pending.en}</string>
+		</concat>
+		<delete file="${jr.root}/build/changes-pending-en.txt" />
+	</target>
+
+	<target name="changelog-en-default" depends="write-changelog" if="jr.chg.enNeedDefault">
+		<concat destfile="${jr.root}/changes.log" append="true" encoding="UTF-8">
+			<string>- build: automatic version bump&#10;&#10;</string>
+		</concat>
+	</target>
+
+	<target name="changelog-zh-manual" depends="write-changelog" if="change.zh">
+		<concat destfile="${jr.root}/changes_zh-HK.log" append="true" encoding="UTF-8">
+			<string>- ${change.zh}&#10;&#10;</string>
+		</concat>
+	</target>
+
+	<target name="changelog-zh-pending" depends="write-changelog" unless="change.zh" if="jr.chg.zhPending">
+		<loadfile property="jr.pending.zh" srcFile="${jr.root}/build/changes-pending-zh-HK.txt"
+			encoding="UTF-8" failonerror="false" />
+		<concat destfile="${jr.root}/changes_zh-HK.log" append="true" encoding="UTF-8">
+			<string>${jr.pending.zh}</string>
+		</concat>
+		<delete file="${jr.root}/build/changes-pending-zh-HK.txt" />
+	</target>
+
+	<target name="changelog-zh-default" depends="write-changelog" if="jr.chg.zhNeedDefault">
+		<concat destfile="${jr.root}/changes_zh-HK.log" append="true" encoding="UTF-8">
+			<string>- build: 自動版本遞增&#10;&#10;</string>
+		</concat>
+	</target>
+
 	<!-- Replace the ${BuildVersion.VERSION}(${BuildVersion.BUILD_DATE})
 	     placeholders in ConsoleImpl.java with the real build values before
 	     compilation. The regex first restores the placeholder in case a
@@ -135,7 +265,7 @@
 	</target>
 
 
-	<target name="package" depends="compile">
+	<target name="package" depends="compile,changelog-diff,changelog-en-manual,changelog-en-pending,changelog-en-default,changelog-zh-manual,changelog-zh-pending,changelog-zh-default">
 	    <manifestclasspath property="jar.classpath" jarfile="main.jar">
 	      <classpath>
 	        <fileset dir="${jr.lib}" includes="*.jar"/>

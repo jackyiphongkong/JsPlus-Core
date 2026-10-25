@@ -147,7 +147,9 @@ if (loadErr.length === 0) {
                 missing.push(expected[i]);
             }
         }
-        c1Ok = (missing.length === 0) && (found.length === expected.length);
+        // The 6 core tables must all exist; extra tables (e.g. the RemoteFile
+        // suite's remote_file / remote_file_data_*) do not fail this check.
+        c1Ok = (missing.length === 0);
         c1Detail = "tables=" + found.join(",") + (missing.length > 0 ? " MISSING:" + missing.join(",") : "");
     } catch (e) {
         c1Detail = "" + e;

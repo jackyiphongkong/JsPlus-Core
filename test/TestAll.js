@@ -25,6 +25,18 @@ var System = Java.type("java.lang.System");
 var testStart = Date.now();
 var basePath = System.getProperty("JS_PLUS_PATH");
 
+// Column-name case mode: aligned with GhostConsole.java:72
+// (CacheDriverExecutor.COLUMN_NAME_CASE_MODE = LOWER). JDBC exposes column
+// labels in the database's identifier case (H2 uppercases unquoted names);
+// business code such as RemoteFile reads rows with lowercase keys, so the
+// runtime sets LOWER globally. The suites do the same so RemoteFile works
+// against the H2 testdb exactly as it does in the server edition.
+// NOTE: the field is DECLARED on DriverExecutor (CacheDriverExecutor extends
+// it); GraalJS resolves Java static fields only on the declaring class, so we
+// must assign via DriverExecutor.
+var DriverExecutor = Java.type("com.killcoding.datasource.DriverExecutor");
+DriverExecutor.COLUMN_NAME_CASE_MODE = DriverExecutor.COLUMN_NAME_CASE_LOWER;
+
 try {
     if (basePath === null || basePath === undefined || basePath.length === 0) {
         throw "JS_PLUS_PATH is not set - cannot locate the test suites";
@@ -36,11 +48,15 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestDatasource -> TestTables");
+print("Suites       : TestDatasource -> TestTables -> TestRemoteFile -> TestDiskFile -> TestCache -> TestClock");
 
 var suites = [
-    { file: "TestDatasource.js", title: "TestDatasource" },
-    { file: "TestTables.js",     title: "TestTables" }
+    { file: "TestDatasource.js",  title: "TestDatasource" },
+    { file: "TestTables.js",      title: "TestTables" },
+    { file: "TestRemoteFile.js",  title: "TestRemoteFile" },
+    { file: "TestDiskFile.js",    title: "TestDiskFile" },
+    { file: "TestCache.js",       title: "TestCache" },
+    { file: "TestClock.js",       title: "TestClock" }
 ];
 
 var totalPass = 0;
