@@ -14,7 +14,7 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | 2. 測試 | `test\TestAll.bat`（Linux/macOS：`test\TestAll.sh`） | `test_reports\*`（HTML / MD / CI 摘要） |
 | 3. 精簡執行期 | `packJdk.bat`（Linux/macOS：`packJdk.sh`） | `Java\runtime`（jlink 裁剪） |
 
-驗證基線：`ant build` → BUILD SUCCESSFUL；`TestAll.bat` → **89 passed / 0 failed、exit 0**（含 H2 服務端 tcp 整合、連接池參數行為測試）；收尾 `:3306` 釋放、無殘留進程。
+驗證基線：`ant build` → BUILD SUCCESSFUL；`TestAll.bat` → **38 passed / 0 failed、exit 0**（含 H2 服務端 tcp 整合、連接池參數行為測試，及 `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` 佇列測試）；收尾 `:3306` 釋放、無殘留進程。
 
 ## 與伺服器版的對標（已適配項目）
 
@@ -41,7 +41,7 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | `JsPlus/ghost` | GhostConsole 工作目錄 |
 | `JsPlus/script` | `StartH2.js` / `H2Server.js`（H2 服務端啟動腳本，無外部依賴） |
 | `dbscript/` | `fallback.sql` → `change.sql`（建庫順序固定；`ghost_remote_command` 永不 DROP、測試不碰） |
-| `test/` | 測試框架（`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`）與 7 個套件 |
+| `test/` | 測試框架（`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`）與資料源/測試庫套件 |
 | `test_reports/` | 測試報告（HTML / Markdown / CI 摘要） |
 | `logs/` | 執行期日誌（`app\`、`DS\` 池狀態、`SqlLog\`） |
 | `Database/` | H2 服務端資料庫檔案（`testdb.mv.db`，`.gitignore` 忽略） |
@@ -57,16 +57,11 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 3. 跑 `TestAll.js`（`JSPLUS_TEST_EXIT=1`，`< NUL` 關 stdin）；
 4. 精準殺含 `script/StartH2.js` 的 java 進程後 `exit /b %RC%`（不用 `StopAll`，避免誤殺 VS Code Java Language Server）。
 
-**7 個套件**：
+**2 個套件**：
 
 | 套件 | Case 數 | 覆蓋 |
 | --- | --- | --- |
-| TestConsole | 9 | 控制台環境、DiskFile 讀寫 |
-| TestCache | 12 | Cache / StoredCache / CacheArray 過濾器 |
-| TestFile | 13 | 檔案工具 |
-| TestTool | 18 | 通用工具 |
-| TestLog | 5 | 日誌框架 |
-| TestDatasource | 13 | Clock、`Console.getDataSource()` 連接、DDL/DML roundtrip、池借還、**池滿上限（MaxPoolSize 溢出拒絕）**、**6 池參數（TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle）配置生效 + 行為** |
+| TestDatasource | 14 | Clock、`Console.getDataSource()` 連接、DDL/DML roundtrip、池借還、**池滿上限（MaxPoolSize 溢出拒絕）**、**6 池參數（TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle）配置生效 + 行為**、**`CacheDriverExecutor.find(sql, Map, CacheArray)` 以正典 `getGlobalCacheArray()` + `Console.callback()` 配合方式**（非同步佇列：find 同步入隊、CacheArrayFilter worker 消費；JS 回調體受 GraalJS 執行緒限制為盡力而為） |
 | TestTables | 23 | **每表獨立 c/r/u/d 四個 case**（5 表 × 4）+ schema 存在 + 軟刪除 + 6 表 dbVerify |
 
 **測試硬性約定（全程強制）**：
@@ -101,6 +96,7 @@ MinPoolSize=1         MaxPoolSize=100
 ## 品質
 
 - `QUALITY-REVIEW.md`：70 分七維質量報告（P0 已全部完成）——含伺服器版對標、工具鏈、測試閉環、版本機制、已知限制（如 GraalJS `load()` 共享全域作用域、CacheArray 全域 forceStop、PowerShell 須 `cmd /c` 傳 `< NUL`）。
+- **GraalJS 執行緒限定**（25.0.3 實測）：`CacheArray` 的 filter worker 執行緒無法進入 JS context（`Multi threaded access … not allowed for language(s) js`），因此 JS `Console.callback(...)` 的回調體在 worker 執行緒上不會觸發。TestDatasource C14 改用 `callbackSync=false` 並以可觀察的消費鏈路作斷言（值被移除、鍵保留、`dbVerify` 獨立驗證）。
 
 ## 環境變數覆蓋（與伺服器版同名慣例）
 

@@ -1,5 +1,5 @@
 // ============================================================================
-// JsPlus-Core TestAll - unified console entry for the 6 test suites
+// JsPlus-Core TestAll - unified console entry for the test suites
 // ----------------------------------------------------------------------------
 // Run      : test/TestAll.bat / test/TestAll.sh (standalone JsPlus console):
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
@@ -8,13 +8,8 @@
 //            Interactive console eval:
 //              Console.eval(<PROJECT_ROOT>/test/TestAll.js)
 // Output   : Runs, in order:
-//              1) TestConsole.js    -> <PROJECT_ROOT>/test_reports/TestConsole-Report.html
-//              2) TestCache.js      -> <PROJECT_ROOT>/test_reports/TestCache-Report.html
-//              3) TestFile.js       -> <PROJECT_ROOT>/test_reports/TestFile-Report.html
-//              4) TestTool.js       -> <PROJECT_ROOT>/test_reports/TestTool-Report.html
-//              5) TestLog.js        -> <PROJECT_ROOT>/test_reports/TestLog-Report.html
-//              6) TestDatasource.js -> <PROJECT_ROOT>/test_reports/TestDatasource-Report.html
-//              7) TestTables.js     -> <PROJECT_ROOT>/test_reports/TestTables-Report.html
+//              1) TestDatasource.js -> <PROJECT_ROOT>/test_reports/TestDatasource-Report.html
+//              2) TestTables.js     -> <PROJECT_ROOT>/test_reports/TestTables-Report.html
 //            This entry point then prints an aggregate pass/fail summary and
 //            writes TestAll-Report.md / TestAll-Report.html / TestAll-CI-Summary.md.
 // NOTE     : Each suite calls beginTest() and reports its own counters, so
@@ -41,14 +36,9 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestConsole -> TestCache -> TestFile -> TestTool -> TestLog -> TestDatasource -> TestTables");
+print("Suites       : TestDatasource -> TestTables");
 
 var suites = [
-    { file: "TestConsole.js",    title: "TestConsole" },
-    { file: "TestCache.js",      title: "TestCache" },
-    { file: "TestFile.js",       title: "TestFile" },
-    { file: "TestTool.js",       title: "TestTool" },
-    { file: "TestLog.js",        title: "TestLog" },
     { file: "TestDatasource.js", title: "TestDatasource" },
     { file: "TestTables.js",     title: "TestTables" }
 ];

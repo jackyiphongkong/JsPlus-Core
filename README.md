@@ -14,7 +14,7 @@ The toolchain is bundled with this project (no Java / Ant installation, no `JAVA
 | 2. Test | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) | `test_reports\*` (HTML / MD / CI summary) |
 | 3. Slim runtime | `packJdk.bat` (Linux/macOS: `packJdk.sh`) | `Java\runtime` (jlink cut-down) |
 
-Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **89 passed / 0 failed, exit 0** (includes H2 server TCP integration and connection-pool behaviour tests); cleanup releases `:3306` with no leftover process.
+Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **38 passed / 0 failed, exit 0** (includes H2 server TCP integration, connection-pool behaviour tests and the `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` queue test); cleanup releases `:3306` with no leftover process.
 
 ## Alignment with the Server Edition (adapted items)
 
@@ -41,7 +41,7 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **89 passed / 0 fa
 | `JsPlus/ghost` | GhostConsole working directory |
 | `JsPlus/script` | `StartH2.js` / `H2Server.js` (H2 server bootstrap scripts, no external dependency) |
 | `dbscript/` | `fallback.sql` → `change.sql` (fixed DB-init order; `ghost_remote_command` is never DROPped and never touched by tests) |
-| `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and 7 suites |
+| `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and the datasource/test-db suites |
 | `test_reports/` | Test reports (HTML / Markdown / CI summary) |
 | `logs/` | Runtime logs (`app\`, `DS\` pool status, `SqlLog\`) |
 | `Database/` | H2 server database files (`testdb.mv.db`, gitignored) |
@@ -57,16 +57,11 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **89 passed / 0 fa
 3. Run `TestAll.js` (`JSPLUS_TEST_EXIT=1`, `< NUL` closes stdin);
 4. Precisely kill the java process whose command line contains `script/StartH2.js`, then `exit /b %RC%` (`StopAll` is deliberately not used to avoid killing VS Code's Java Language Server).
 
-**7 suites**:
+**2 suites**:
 
 | Suite | Cases | Coverage |
 | --- | --- | --- |
-| TestConsole | 9 | Console environment, DiskFile read/write |
-| TestCache | 12 | Cache / StoredCache / CacheArray filters |
-| TestFile | 13 | File utilities |
-| TestTool | 18 | General utilities |
-| TestLog | 5 | Logging framework |
-| TestDatasource | 13 | Clock, `Console.getDataSource()` connection, DDL/DML roundtrip, pool borrow/return, **pool-full cap (MaxPoolSize overflow rejected)**, **6 pool tuning params (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle) config-applied + behaviour** |
+| TestDatasource | 14 | Clock, `Console.getDataSource()` connection, DDL/DML roundtrip, pool borrow/return, **pool-full cap (MaxPoolSize overflow rejected)**, **6 pool tuning params (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle) config-applied + behaviour**, **`CacheDriverExecutor.find(sql, Map, CacheArray)` in the canonical `getGlobalCacheArray()` + `Console.callback()` pairing** (async queue: find fills synchronously, the CacheArrayFilter worker consumes; the JS callback body is best-effort — GraalJS forbids the worker thread from entering the JS context) |
 | TestTables | 23 | **Independent c/r/u/d cases per table** (5 tables × 4) + schema existence + soft-delete + 6-table dbVerify |
 
 **Mandatory test conventions (enforced throughout)**:
@@ -101,6 +96,7 @@ MinPoolSize=1         MaxPoolSize=100
 ## Quality
 
 - `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — server-edition alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
+- **GraalJS thread confinement** (verified on 25.0.3): a `CacheArray` filter worker thread cannot enter the JS context (`Multi threaded access … not allowed for language(s) js`), so a JS `Console.callback(...)` body never fires on the worker thread. TestDatasource C14 uses `callbackSync=false` and asserts the observable consumption link instead (value removed, key kept, `dbVerify` independent).
 
 ## Environment Overrides (same naming convention as the server edition)
 

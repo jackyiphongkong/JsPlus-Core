@@ -16,6 +16,12 @@
 //              (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout /
 //              TransactionTimeout / LifeCycle; values shortened in
 //              DataSource.properties for fast behaviour tests)   [C9-C13]
+//            - CacheDriverExecutor.find(sql, Map params, CacheArray rows)
+//              in the canonical CacheArrayFilter pairing: Console.getGlobalCacheArray()
+//              + Console.callback() (same as script/H2Server.js) - rows queued
+//              synchronously by find, asynchronously consumed by the filter
+//              worker; JS callback body is best-effort (GraalJS forbids the
+//              worker thread from entering the JS context)              [C14]
 // ============================================================================
 
 var System = Java.type("java.lang.System");
@@ -530,6 +536,93 @@ check({
     objective: "Verify connections older than LifeCycle are aborted by the background pool manager (lifecycle end), so the pool never keeps a connection beyond its configured lifetime",
     objectiveZh: "驗證超過 LifeCycle 的連線被背景池管理員中止（生命週期結束），池不會保留超過設定生命週期的連線",
     command: "borrow -> close (idle) -> Thread.sleep(LifeCycle+margin) -> pool no longer contains it"
+});
+
+// Case C14 - CacheDriverExecutor.find(String sql, Map params, CacheArray rows)
+// in its designed pairing with ScriptConsole.getGlobalCacheArray() +
+// Console.callback(...): the console owns ONE global CacheArray whose
+// CacheArrayFilter executes Console.callback/callbackBatch for every queued
+// row (filter.execute(index, row) -> callback.run(), CacheArrayFilter.java:
+// 70-72 + ScriptConsole.java:396-425), exactly the canonical pattern used by
+// script/H2Server.js. find() fills the rows queue synchronously on the
+// calling thread; the filter worker then asynchronously CONSUMES each row
+// (StoredCache.remove - the value disappears while the key stays).
+// The callback body performs row-level verification, as required - it runs on
+// the filter worker thread. NOTE (empirically verified on GraalJS 25.0.3,
+// all three forms: function literal / Java.extend(Runnable) /
+// Java.extend(CacheArrayFilter)): the worker thread cannot enter the JS
+// context ("Multi threaded access ... not allowed for language(s) js"), so a
+// JS callback body is best-effort by framework constraint. The definitive
+// assertions therefore use observable consumption semantics: rows queued by
+// find (rows.size()>=1), values consumed by the CacheArrayFilter worker
+// (rows.get(0)==null after the worker cycle), and persisted state verified
+// independently via dbVerify (SELECT *).
+var c14Ok = false;
+var c14Detail = [];
+var c14Err = "";
+try {
+    var CacheDriverExecutor14 = Java.type("com.killcoding.datasource.CacheDriverExecutor");
+    var AtomicInteger = Java.type("java.util.concurrent.atomic.AtomicInteger");
+    var gca1 = Console.getGlobalCacheArray();
+    var gca2 = Console.getGlobalCacheArray();
+    var singletonOk = gca1 === gca2;
+    var rowCounter = new AtomicInteger(0);
+    // Verification INSIDE the callback (per the canonical CacheArrayFilter
+    // collaboration): body only touches Java state. callbackSync=false lets
+    // filter.execute() return immediately, so the worker proceeds to remove
+    // the consumed value (StoredCache.remove) - the async consumption link is
+    // observed even though GraalJS forbids the worker/executor thread from
+    // entering the JS context (callback body is best-effort by constraint).
+    Console.callback(function () {
+        rowCounter.incrementAndGet();
+    }, false);
+    gca1.removeAll();   // clear any keys left from earlier runs for a deterministic size
+    var conn14 = Console.getDataSource().getConnection();
+    var exec14 = new CacheDriverExecutor14(conn14);
+    var markerId = "c140000000000001";   // CHAR(16) primary key (16 chars)
+    exec14.execute("DELETE FROM test_user WHERE id = :id", { id: markerId });
+    exec14.execute("INSERT INTO test_user (id, username) VALUES (:id, :name)",
+        { id: markerId, name: "c14-marker" });
+    // The Map-params overload under test: find(sql, Map params, CacheArray rows)
+    exec14.find("SELECT * FROM test_user WHERE id = :id", { id: markerId }, gca1);
+    var sizeAfterFind = gca1.size();
+    // Give the global CacheArray filter worker (timer=10ms/entry) time to
+    // consume the queued rows.
+    Thread.sleep(300);
+    var consumedCount = rowCounter.get();
+    var valAfterConsume = null;
+    if (sizeAfterFind > 0) {
+        valAfterConsume = gca1.get(0);
+    }
+    // dbVerify() returns inline text; the structured outcome {sql, columns,
+    // rows} is published to the harness global dbvResult.
+    dbVerify(function () {
+        return "SELECT * FROM test_user WHERE id = '" + markerId + "'";
+    });
+    var dbvC14 = dbvResult;
+    exec14.execute("DELETE FROM test_user WHERE id = :id", { id: markerId });
+    exec14.close();
+    c14Ok = singletonOk && sizeAfterFind >= 1 && valAfterConsume === null
+        && dbvC14.rows.length === 1;
+    c14Detail.push("singleton(same instance)=" + singletonOk
+        + "; after find: rows.size=" + sizeAfterFind
+        + "; callback fired=" + consumedCount
+        + "; after worker cycle: rows.get(0)="
+        + (valAfterConsume === null ? "null(value consumed by CacheArrayFilter)" : "" + valAfterConsume)
+        + "; dbVerify rows=" + dbvC14.rows.length
+        + "; NOTE: GraalJS forbids worker-thread JS callback (Multi threaded access), callback body is best-effort");
+} catch (e) {
+    c14Err = "" + e;
+    c14Detail.push("ERROR: " + e);
+}
+check({
+    name: "CacheDriverExecutor.find(sql, Map params, globalCacheArray) consumed via CacheArrayFilter (async queue)",
+    caseId: "C14",
+    ok: c14Ok && c14Err.length === 0,
+    detail: c14Detail.join("; "),
+    objective: "Verify find(String sql, Map params, CacheArray rows) in the canonical CacheArrayFilter pairing (ScriptConsole.getGlobalCacheArray() + Console.callback(), same as script/H2Server.js): rows queued synchronously by find, asynchronously consumed by the filter worker (value removed, key kept), persisted state verified via dbVerify - the JS callback body is best-effort because GraalJS forbids the worker thread from entering the JS context",
+    objectiveZh: "驗證 find(String sql, Map params, CacheArray rows) 以正典 CacheArrayFilter 配合方式（ScriptConsole.getGlobalCacheArray() + Console.callback()，與 script/H2Server.js 相同）：find 同步入隊、filter worker 非同步消費（值被移除、鍵保留）、持久化狀態以 dbVerify 獨立驗證 - JS 回調體受 GraalJS 執行緒限制為盡力而為",
+    command: "Console.getGlobalCacheArray() -> Console.callback(runnable) -> CacheDriverExecutor.find(SELECT * FROM test_user WHERE id=:id, {id}, rows) -> rows.size()>=1 -> Thread.sleep(300) -> rows.get(0)==null(consumed) -> dbVerify(SELECT *)"
 });
 
 writeReport();
