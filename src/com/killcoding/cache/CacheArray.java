@@ -62,6 +62,12 @@ public class CacheArray implements java.io.Serializable {
 	
 	protected Integer INDEX = -1;
 	protected Integer SIZE = -1;
+
+	/** Global count of items processed by the filter thread. sweepProcessed()
+	 * never resets this counter, so callers can still observe a monotonic
+	 * order (getProcessedTotal()) even though the local index (getIndex())
+	 * cycles back to 0 after each head sweep. */
+	private long processedTotal = 0;
 	protected Object OBJECT = null;
 	protected Integer BATCH_INDEX = -1;
     protected final List BATCH = new ArrayList();
@@ -208,7 +214,8 @@ public class CacheArray implements java.io.Serializable {
 								}
 								lastItem = t;
                         	    the.INDEX = index;
-                        	    the.OBJECT = t;								
+                        	    the.OBJECT = t;
+                        	    the.processedTotal++;								
 								BATCH.add(t);
 								the.filter.execute(index, t);
 								String cacheKey = the.getCacheKey(index);
@@ -229,6 +236,11 @@ public class CacheArray implements java.io.Serializable {
 						BATCH_INDEX++;
 						the.filter.executeBatch(BATCH_INDEX,BATCH);
 						BATCH.clear();
+						// Reclaim the processed head items now that the batch
+						// has been persisted; keep the local index in sync so
+						// newly appended rows start again from position 0.
+						int swept = the.sweepProcessed(index);
+						index -= swept;
 						try {
 							Thread.sleep(the.filter.getLoopTimer());
 						} catch (InterruptedException e) {
@@ -346,6 +358,33 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
+	 * Reclaim 'count' items from the head of the cache after the filter
+	 * thread has persisted the batch. Thread-safe under concurrent add():
+	 * adds always append to the tail, this method only touches the head and
+	 * is synchronized, so new rows can never be swept away. The filter
+	 * thread must call this AFTER executeBatch (i.e. after the batch has
+	 * been persisted) and must keep its local index in sync.
+	 * @return - the number of items actually removed
+	 * @param count - number of processed head items to sweep
+	 * */
+	public synchronized int sweepProcessed(int count) {
+		if (count <= 0 || cacheKeys.isEmpty()) {
+			return 0;
+		}
+		if (count > cacheKeys.size()) {
+			count = cacheKeys.size();
+		}
+		List<String> removed = new ArrayList<String>(count);
+		for (int i = 0; i < count; i++) {
+			String key = cacheKeys.get(i);
+			StoredCache.remove(key);
+			removed.add(key);
+		}
+		cacheKeys.removeAll(removed);   // COW list: one snapshot pass, O(n), no per-item shift
+		return count;
+	}
+
+	/**
 	 * Get cache value by index
 	 * @return - Cache value
 	 * @param index - Cache index
@@ -415,6 +454,13 @@ public class CacheArray implements java.io.Serializable {
 	
 	public Integer getIndex(){
 	    return INDEX;
+	}
+
+	/** Monotonic count of items processed by the filter thread (never reset
+	 * by sweepProcessed()); the counterpart of getIndex(), which is local to
+	 * the current sweep cycle. */
+	public synchronized long getProcessedTotal(){
+	    return processedTotal;
 	}
 	
 	public Integer getSize(){

@@ -206,6 +206,7 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	    if(this.appRemoteFile == null){
     		this.appRemoteFile = CommonTools.getSystemProperties(RemoteFile.class, "APP_REMOTE_FILE",
     					"RemoteFile.properties");
+			log.info("appRemoteFile={}", this.appRemoteFile);
 	    }
 		init();
 	}
@@ -349,7 +350,7 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 		if (isLink()) {
 			if (isDebug(the)) {
-				LoggerFactory.getLogger(RemoteFile.class).mark("CreateDiskLink - {}", diskFile.getPath());
+				LoggerFactory.getLogger(RemoteFile.class).mark("DiskLink - {}", diskFile.getPath());
 			}
 			diskFile.createLink(new String(readAllBytes(),BaseFile.CHARSET));
 		} else if (isFile()) {

@@ -173,12 +173,12 @@ public final class CommonTools {
 			
 			String jarPath = new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().getPath();
 			File jarConfigFile = new File(String.format("%s/%s", jarPath, propFileName));
-
+			
 			if(!jarConfigFile.exists()) {
 			    jarConfigFile = new File(String.format("%s/config/%s", jarPath, propFileName));
 			}
-			
-            if (jarConfigFile.exists()) {
+
+			if (jarConfigFile.exists()) {
                 Logger.systemDebug(CommonTools.class,"Found %s",jarConfigFile.getPath());
 				return jarConfigFile;
 			}			
@@ -224,7 +224,13 @@ public final class CommonTools {
         			        return classParentConfigFile;
         			    }
     			    }
-    			}	
+    			}
+				String configPath = System.getenv("JS_PLUS_PATH") + "/config/" + propFileName;
+				File configFile = new File(configPath);
+				if (configFile.exists()) {
+					Logger.systemDebug(CommonTools.class,"Found %s",configFile.getPath());
+					return configFile;
+				}
 			}catch(Exception e){
 			    Logger.systemDebug(CommonTools.class,"Missing class path.");
 			    Logger.systemDebug(CommonTools.class, e.getMessage(),e);
@@ -232,7 +238,7 @@ public final class CommonTools {
 		} catch (Exception e) {
             Logger.systemError(CommonTools.class, e);
 		}
-		Logger.systemDebug(CommonTools.class,"Missing %s",propFileName);
+		Logger.systemError(CommonTools.class,"Missing %s",propFileName);
 		return null;
 	}
 
