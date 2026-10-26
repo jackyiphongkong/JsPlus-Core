@@ -1,21 +1,46 @@
+/*******************************************************************************
+The MIT License (MIT)
+Copyright (c) 2024 KILLCODING.COM
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
 package com.killcoding.jsplus;
 
 import java.io.File;
 import com.killcoding.tool.CommonTools;
-import com.killcoding.datasource.DriverDataSource;
+
 import java.util.Map;
 import java.util.HashMap;
-import com.killcoding.tool.FileTools;
-import java.io.StringReader;
-import java.nio.file.Path;
-import java.nio.file.Files;
+
+
+
+
 import com.killcoding.cache.CacheArray;
 import java.util.Scanner;
-import java.nio.file.Paths;
-import com.killcoding.tool.ConfigProperties;
+
+
 import com.killcoding.jsplus.GhostConsole;
 
 public final class Main { 
+    
+    /** Exit code for successful termination. */
+    private static final int EXIT_OK = 0;
+    /** Exit code for any startup or runtime failure. */
+    private static final int EXIT_ERROR = 1;
     
     private static ScriptConsole mainConsole = null;
     
@@ -69,7 +94,7 @@ public final class Main {
 		
 		if(mainConsole == null) {
 		    System.out.println(String.format("Invalid Env '%s'.",env));
-		    System.exit(1);
+		    System.exit(EXIT_ERROR);
 		}	
 		
 		int connectHashCode = mainConsole.hashCode();
@@ -81,15 +106,15 @@ public final class Main {
         
 		if (params.containsKey("help")) {
 			System.out.println(mainConsole.help());
-			System.exit(0);
+			System.exit(EXIT_OK);
 		}
 		if (params.containsKey("version")) {
 			System.out.println(mainConsole.version());
-			System.exit(0);
+			System.exit(EXIT_OK);
 		}
 		if (params.containsKey("exit")) {
 			System.out.println(ScriptConsole.exit());
-			System.exit(0);
+			System.exit(EXIT_OK);
 		}
 		
 		File datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/DataSource.properties");
@@ -101,7 +126,6 @@ public final class Main {
 			try {
 				mainConsole.datasourceVariables.load(datasourceConfigFile);
 			} catch (Exception e) {
-			    e.printStackTrace();
 				System.err.println(ScriptConsole.error(e));
 			}
 		}
@@ -134,7 +158,7 @@ public final class Main {
 		
 		if (mainConsole.isUseJdbcEnv() && havaTask) {
 			if (!mainConsole.open()) {
-				System.exit(1);
+				System.exit(EXIT_ERROR);
 			}
 			mainConsole.consoleVariables.putAndReturnSlef("CommandEnd", ";");
 			System.out.println("Changed CommandEnd to ';'");				
@@ -163,7 +187,6 @@ public final class Main {
 					mainConsole.taskExecute();
 				}
 			} catch (Exception e) {
-			    e.printStackTrace();
 				System.err.println(ScriptConsole.error(e));
 			}
 		}
@@ -176,7 +199,6 @@ public final class Main {
 					mainConsole.taskExecute();
 				}
 			} catch (Exception e) {
-			    e.printStackTrace();
 				System.err.println(ScriptConsole.error(e));
 			}
 		}		
@@ -286,7 +308,7 @@ public final class Main {
     
     				if (mainConsole.firstOpen) {
     					if (env.toUpperCase().equals("JDBC") && !mainConsole.open()) {
-    						System.exit(1);
+    						System.exit(EXIT_ERROR);
     					}
     				}
     

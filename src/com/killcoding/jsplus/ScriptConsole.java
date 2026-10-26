@@ -50,32 +50,33 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.killcoding.tool.ResultMap;
 import com.killcoding.cache.StoredCache;
-import java.util.stream.Stream;
+
 import java.io.InputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.Set;
-import java.nio.charset.StandardCharsets;
+
 import com.killcoding.tool.EscapeTools;
-import com.killcoding.tool.CodeEscapeLevel;
+
 import com.killcoding.cache.AbsCacheApi;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+
 import com.killcoding.cache.CacheArrayFilter;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.net.URLClassLoader;
+
 import java.sql.Clob;
-import java.io.Reader;
+
 import java.sql.Blob;
 import com.killcoding.cache.DataObject;
 import com.killcoding.tool.CipherTools;
 import com.killcoding.tool.Base64Tools;
-import java.nio.file.LinkOption;
+
 import com.killcoding.file.DiskFile;
 import java.sql.Timestamp;
 import com.killcoding.file.BaseFile;
-import java.nio.file.FileAlreadyExistsException;
+
 import com.killcoding.jsplus.JsPlusContext;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,9 +93,44 @@ import java.time.LocalTime;
 
 public class ScriptConsole implements ConsoleImpl {
 
+	/** Callback used instead of System.exit - lets embedded hosts control termination. */
+	public interface ExitPolicy {
+		void exit(int status);
+	}
+
 	protected Logger log = null;
 	
     protected static final Map<Integer,ScriptConsole> CONNECT_CONSOLES = new ConcurrentHashMap<Integer,ScriptConsole>();
+
+	/** Default policy keeps the historic behaviour (System.exit). */
+	private static volatile ExitPolicy EXIT_POLICY = new ExitPolicy() {
+		@Override
+		public void exit(int status) {
+			System.exit(status);
+		}
+	};
+
+	/**
+	 * Override the process-exit behaviour (e.g. tests/embedded runners want a
+	 * callback instead of killing the JVM). Pass null to restore the default.
+	 * */
+	public static void setExitPolicy(ExitPolicy policy) {
+		if (policy != null) {
+			EXIT_POLICY = policy;
+		} else {
+			EXIT_POLICY = new ExitPolicy() {
+				@Override
+				public void exit(int status) {
+					System.exit(status);
+				}
+			};
+		}
+	}
+
+	/** Single exit point for every "quit console" path (P2-4). */
+	protected static void exitConsole(int status) {
+		EXIT_POLICY.exit(status);
+	}
 	
 	private static DriverDataSource datasource = null;
 
@@ -259,7 +295,7 @@ public class ScriptConsole implements ConsoleImpl {
 					}
 					LoggerFactory.getLogger(ScriptConsole.class).mark("System exit - PID {}.",ProcessHandle.current().pid());
 					Logger.systemMark(ScriptConsole.class, "System exit - PID {}.",ProcessHandle.current().pid());
-    				System.exit(0);
+    				exitConsole(0);
 				}
 			});
 		}	    
@@ -1455,12 +1491,12 @@ public class ScriptConsole implements ConsoleImpl {
                     if(!cacheDriverExecutor.isClosed()){
                         System.out.println("ERROR: The connection is in use, please close the connection first.");
                     }else{
-                        System.exit(0);
+                        exitConsole(0);
                         return true;
                     }
 			    }
 			    if(cacheDriverExecutor == null)
-				    System.exit(0);
+				    exitConsole(0);
 				    
     				return true;
     		}
@@ -1572,12 +1608,12 @@ public class ScriptConsole implements ConsoleImpl {
                     if(!cacheDriverExecutor.isClosed()){
                         System.out.println("ERROR: The connection is in use, please close the connection first.");
                     }else{
-                        System.exit(0);
+                        exitConsole(0);
                         return true;
                     }
 			    }
 			    if(cacheDriverExecutor == null)
-				    System.exit(0);
+				    exitConsole(0);
 				    
     				return true;
     		}
@@ -1698,12 +1734,12 @@ public class ScriptConsole implements ConsoleImpl {
                     if(!cacheDriverExecutor.isClosed()){
                         System.out.println("ERROR: The connection is in use, please close the connection first.");
                     }else{
-                        System.exit(0);
+                        exitConsole(0);
                         return true;
                     }
 			    }
 			    if(cacheDriverExecutor == null)
-				    System.exit(0);
+				    exitConsole(0);
 				    
     				return true;
     		}
@@ -1804,7 +1840,7 @@ public class ScriptConsole implements ConsoleImpl {
 				}
 				
 				if(cacheDriverExecutor == null)
-				    System.exit(0);
+				    exitConsole(0);
 				    
 				return true;
 			}  
@@ -2179,17 +2215,28 @@ public class ScriptConsole implements ConsoleImpl {
 	}	
 
 	protected void task(String task,Long taskTimer) throws Exception {
+		String commandLines = null;
 		if (!CommonTools.isBlank(task)) {
 			long timeout = new java.util.Date().getTime() - preExecuteTime;
 			if (timeout >= taskTimer) {
 				preExecuteTime = new java.util.Date().getTime();
-				String taskFile = null;
-				if(Files.exists(Paths.get(task))){
-				    taskFile = task;
+				task = task.trim();
+				//check task content script "(...js...)"
+				if(task.indexOf("(") == 0){
+					commandLines = task; 
 				}else{
-				    taskFile = getJsPlusPath() + "/" + task;
+					String taskFilePath = null;
+					if(Files.exists(Paths.get(task))){
+						taskFilePath = task;
+					}else{
+						taskFilePath = getJsPlusPath() + "/" + task;
+					}
+					File taskFile = new File(taskFilePath);
+					if(!taskFile.exists()){
+						throw new FileNotFoundException(String.format("The task file '%s' missing."));
+					}
+					commandLines = decryptScript(taskFile);
 				}
-				String commandLines = decryptScript(new File(taskFile));
 				String commandEnd = consoleVariables.getString("CommandEnd", DEFAULT_CommandEnd);
 				if (!CommonTools.isBlank(commandLines) && !useScriptEnv) {
 					Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);

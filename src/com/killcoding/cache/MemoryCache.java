@@ -24,27 +24,27 @@ THE SOFTWARE.
 package com.killcoding.cache;
 
 import com.killcoding.cache.AbsCacheApi;
-import com.killcoding.tool.CommonTools;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.nio.file.Files;
-import java.io.File;
-import java.nio.file.Path;
-import java.util.stream.Stream;
-import java.util.Comparator;
-import java.nio.file.Paths;
+
+
+
+
+
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
-import com.killcoding.tool.FileTools;
+
 import java.util.Set;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.text.SimpleDateFormat;
+
+
 
 /**
  * This cache class is save to memory
@@ -81,6 +81,9 @@ public class MemoryCache extends AbsCacheApi {
      * Start remove expired thread
      * */
 	private synchronized void startRemoveExpiredThread() {
+		// Double-checked guard: the unsynchronized caller may race here, so a
+		// second thread must not rebuild the executor / spawn a second remover.
+		if (isStartRemoveExpiredThread) return;
 		isStartRemoveExpiredThread = true;
 		executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {

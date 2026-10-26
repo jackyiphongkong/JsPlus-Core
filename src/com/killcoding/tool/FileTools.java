@@ -26,10 +26,10 @@ package com.killcoding.tool;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.net.URI;
+
 import java.nio.file.Files;
 import java.io.IOException;
-import com.killcoding.log.Logger;
+
 import com.killcoding.file.DiskFile;
 
 public final class FileTools {

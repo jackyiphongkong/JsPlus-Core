@@ -351,7 +351,7 @@ check({
 writeReport();
 
 // NOTE: This suite NEVER calls System.exit() - same convention as the other
-// suites (TestDatasource/TestTables/TestRemoteFile): when loaded by TestAll.js
+// suites (TestDatasource/TestCrud/TestRemoteFile): when loaded by TestAll.js
 // the aggregate entry decides the JVM exit (JSPLUS_TEST_EXIT=1), otherwise an
 // interactive Console.eval(...) run finishes without killing the console.
 // Standalone launcher runs can rely on TestAll.js or the JsPlus scanner EOF.

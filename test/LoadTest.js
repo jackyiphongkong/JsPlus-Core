@@ -77,7 +77,7 @@ if (tableCount < 1) tableCount = 1;
 if (tableCount > 5) tableCount = 5;
 
 // ----------------------------------------------------------------------------
-// Per-table CRUD specs (same shape as TestTables.js, dynamic ids per round).
+// Per-table CRUD specs (same shape as TestCrud.js, dynamic ids per round).
 // id prefix + pad15(round) -> CHAR(16) primary key.
 // ----------------------------------------------------------------------------
 var SPECS = [

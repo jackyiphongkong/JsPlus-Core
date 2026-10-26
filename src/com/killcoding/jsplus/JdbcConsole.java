@@ -24,24 +24,24 @@ THE SOFTWARE.
 package com.killcoding.jsplus;
 
 import java.io.Console;
-import com.killcoding.datasource.DriverDataSource;
-import java.io.File;
-import com.killcoding.tool.CommonTools;
-import java.io.IOException;
-import com.killcoding.tool.FileTools;
-import java.io.StringReader;
-import com.killcoding.log.Logger;
-import com.killcoding.log.LoggerFactory;
-import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.HashMap;
-import java.nio.file.Path;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import com.killcoding.cache.CacheArray;
+
+
 
 public class JdbcConsole extends ScriptConsole {
 

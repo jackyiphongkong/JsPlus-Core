@@ -1,10 +1,10 @@
 // ============================================================================
-// JsPlus-Core TestTables - test tables CRUD suite (console mode)
+// JsPlus-Core TestCrud - test tables CRUD suite (console mode)
 // ----------------------------------------------------------------------------
 // Run      : test/TestAll.bat / test/TestAll.sh (or inside the JsPlus console:
-//              Console.eval(<PROJECT_ROOT>/test/TestTables.js))
+//              Console.eval(<PROJECT_ROOT>/test/TestCrud.js))
 // Harness  : Shared plumbing lives in TestBase.js and is loaded below.
-// Output   : <PROJECT_ROOT>/test_reports/TestTables-Report.html / .md
+// Output   : <PROJECT_ROOT>/test_reports/TestCrud-Report.html / .md
 // Coverage : The 6 tables defined in dbscript/change.sql
 //              (ghost_remote_command + test_user / test_product / test_order
 //              / test_log / test_kv)
@@ -38,8 +38,8 @@ try {
 }
 beginTest();
 
-var REPORT_NAME = "TestTables-Report.html";
-var REPORT_TITLE = "JsPlus-Core Test Tables CRUD Report";
+var REPORT_NAME = "TestCrud-Report.html";
+var REPORT_TITLE = "JsPlus-Core TestCrud Report";
 
 var CacheDriverExecutor = Java.type("com.killcoding.datasource.CacheDriverExecutor");
 
@@ -218,7 +218,7 @@ var CRUD_SPECS = [
         table: "test_log",
         id: "l000000000000001",
         insert: "INSERT INTO test_log (id, level, source, message, log_time, created_at, updated_at, deleted) "
-            + "VALUES ('l000000000000001', 'INFO', 'TestTables.js', 'hello from table test', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)",
+            + "VALUES ('l000000000000001', 'INFO', 'TestCrud.js', 'hello from table test', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)",
         selectInsert: "SELECT level FROM test_log WHERE id='l000000000000001'",
         insertCheck: "INFO",
         update: "UPDATE test_log SET level='WARN', message='updated message' WHERE id='l000000000000001'",

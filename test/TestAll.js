@@ -9,7 +9,7 @@
 //              Console.eval(<PROJECT_ROOT>/test/TestAll.js)
 // Output   : Runs, in order:
 //              1) TestDatasource.js -> <PROJECT_ROOT>/test_reports/TestDatasource-Report.html
-//              2) TestTables.js     -> <PROJECT_ROOT>/test_reports/TestTables-Report.html
+//              2) TestCrud.js      -> <PROJECT_ROOT>/test_reports/TestCrud-Report.html
 //            This entry point then prints an aggregate pass/fail summary and
 //            writes TestAll-Report.md / TestAll-Report.html / TestAll-CI-Summary.md.
 // NOTE     : Each suite calls beginTest() and reports its own counters, so
@@ -48,11 +48,11 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestDatasource -> TestTables -> TestRemoteFile -> TestDiskFile -> TestCacheArray -> TestClock -> TestIdentityCard");
+print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestDiskFile -> TestCacheArray -> TestClock -> TestIdentityCard");
 
 var suites = [
     // { file: "TestDatasource.js",  title: "TestDatasource" },
-    { file: "TestTables.js",      title: "TestTables" },
+    { file: "TestCrud.js",        title: "TestCrud" },
     { file: "TestRemoteFile.js",  title: "TestRemoteFile" },
     { file: "TestDiskFile.js",    title: "TestDiskFile" },
     { file: "TestClock.js",       title: "TestClock" },

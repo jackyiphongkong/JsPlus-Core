@@ -51,18 +51,18 @@ import java.util.Collections;
 import java.util.Set;
 import com.killcoding.tool.ConfigProperties;
 import com.killcoding.tool.FileTools;
-import java.io.Reader;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.concurrent.ExecutorService;
 import com.killcoding.tool.CommonTools;
 import java.text.SimpleDateFormat;
-import java.util.stream.Stream;
+
 import java.util.Comparator;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+
 import java.util.concurrent.Executor;
-import java.util.HashMap;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Enumeration;
@@ -1087,6 +1087,11 @@ public final class DriverDataSource implements DataSource {
 							Thread.sleep(refreshPoolTimer);
 						} catch (InterruptedException e) {
 							log.warn(e.getMessage(), e);
+							// Restore the interrupt flag and stop the loop - a
+							// swallowed interrupt would leave the pool-manager
+							// thread running forever after closeAll().
+							Thread.currentThread().interrupt();
+							break;
 						}
 					}
 				}
@@ -1114,6 +1119,11 @@ public final class DriverDataSource implements DataSource {
 							Thread.sleep(refreshPoolTimer);
 						} catch (InterruptedException e) {
 							log.warn(e.getMessage(), e);
+							// Restore the interrupt flag and stop the loop - a
+							// swallowed interrupt would leave the pool-manager
+							// thread running forever after closeAll().
+							Thread.currentThread().interrupt();
+							break;
 						}
 					}
 				}

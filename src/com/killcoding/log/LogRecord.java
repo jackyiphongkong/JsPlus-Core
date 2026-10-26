@@ -25,7 +25,7 @@ package com.killcoding.log;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.Map;
 import com.killcoding.tool.FileTools;
 import java.io.File;
@@ -39,23 +39,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.net.URI;
+
+
+
 import com.killcoding.tool.ConfigProperties;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import javax.sql.DataSource;
-import java.lang.reflect.Method;
+
 import com.killcoding.tool.CommonTools;
 import java.util.Arrays;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.killcoding.datasource.CacheDriverExecutor;
 import java.sql.Connection;
-import java.sql.SQLException;
-import javax.naming.Context;
-import javax.naming.InitialContext;
+
+
+
 import com.killcoding.datasource.DriverDataSource;
 import java.sql.Timestamp;
 import java.io.ByteArrayOutputStream;
@@ -71,7 +73,15 @@ public final class LogRecord {
 
 	protected final static String DEFAULT_MESSAGE_FORMAT = ":level :log_time_format [:log_thread_name-:log_thread_id] :log_class_name.:log_method_name(:log_file_name::log_line_number) **:message** \r\n:stack_trace";
 
-	private final static List<Map<String, Object>> LOG_RECORD_POOL = new ArrayList<Map<String, Object>>();
+	private final static Queue<Map<String, Object>> LOG_RECORD_POOL = new ConcurrentLinkedQueue<Map<String, Object>>();
+
+	/** Shared daemon pool for database log flushing - created once, reused by
+	 * every log cycle. Never re-create per cycle (leaks a thread per second). */
+	private static final ExecutorService DB_WRITE_POOL = Executors.newFixedThreadPool(1, r -> {
+		Thread t = new Thread(r, "LogRecord-DB-Writer");
+		t.setDaemon(true);
+		return t;
+	});
 
 	private static boolean started = false;
 	private static boolean firstRefreshConfig = false;
@@ -198,16 +208,16 @@ public final class LogRecord {
 		}
 	}
 
-	private static synchronized Object process(String action, Map<String, Object> o) {
+	private static Object process(String action, Map<String, Object> o) {
 		Integer outLogBatchLimit = config.getInteger("OutLogBatchLimit", 1000);
 		if (action.equals("ADD")) {
-			int size = LOG_RECORD_POOL.size();
-			if (size >= outLogBatchLimit) {
-				// Logger.systemDebug(LogRecord.class, "Over OutLogBatchLimit {} >= {}", size, outLogBatchLimit);
-				LOG_RECORD_POOL.remove(0);
+			if (LOG_RECORD_POOL.size() >= outLogBatchLimit) {
+				// Drop the oldest record when over the batch limit (ring-buffer
+				// semantics on a ConcurrentLinkedQueue - lock-free).
+				LOG_RECORD_POOL.poll();
 			}
 			o.put("system_name",config.getString("SystemName"));
-			LOG_RECORD_POOL.add(o);
+			LOG_RECORD_POOL.offer(o);
 		}
 
 		if (action.equals("SIZE")) {
@@ -215,9 +225,11 @@ public final class LogRecord {
 		}
 
 		if (action.equals("LIST")) {
-			List<Map<String, Object>> list = new ArrayList<Map<String, Object>>(
-					Collections.synchronizedList(LOG_RECORD_POOL));
-			LOG_RECORD_POOL.clear();
+			List<Map<String, Object>> list = new ArrayList<Map<String, Object>>(LOG_RECORD_POOL.size());
+			Map<String, Object> item = null;
+			while ((item = LOG_RECORD_POOL.poll()) != null) {
+				list.add(item);
+			}
 			return list;
 		}
 		return null;
@@ -297,6 +309,29 @@ public final class LogRecord {
 	
 	public static String getLogFileName() {
 	    return getLogFile().getName();
+	}
+	
+	/**
+	 * Force-restore the JVM-wide stdout/stderr streams captured by
+	 * LogRecord (SystemOut=false mode). Host applications should call this on
+	 * shutdown or on fatal error paths so their console output is not
+	 * permanently swallowed after the engine redirects the streams.
+	 * */
+	public static synchronized void restoreStdStreams() {
+		try {
+			if (customPrint != null) {
+				System.setOut(originalOut);
+				System.setErr(originalErr);
+				customOutput.flush();
+				customPrint.flush();
+				customOutput.close();
+				customPrint.close();
+				customOutput = null;
+				customPrint = null;
+			}
+		} catch (Exception e) {
+			Logger.systemError(LogRecord.class, e);
+		}
 	}
 	
 	protected static boolean isSystemOut(){
@@ -650,7 +685,7 @@ public final class LogRecord {
 							Map<String, List<String>> logBatch = getLogBatch(list);
 							writeLogBatch(logBatch);
 							if (config.getBoolean("DatabaseOut", false)) {
-    							Executors.newFixedThreadPool(1).execute(new Runnable(){
+    							DB_WRITE_POOL.execute(new Runnable(){
     							    @Override
     							    public void run(){
     							        LogRecord.writeLogBatchToDatabase(list);

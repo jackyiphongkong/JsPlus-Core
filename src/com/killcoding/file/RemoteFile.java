@@ -29,7 +29,7 @@ import com.killcoding.tool.ConfigProperties;
 import com.killcoding.tool.CommonTools;
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
-import java.io.FileInputStream;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -42,33 +42,33 @@ import java.nio.file.Files;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.io.ByteArrayOutputStream;
-import java.sql.Blob;
+
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.net.URI;
-import java.io.ByteArrayInputStream;
-import java.nio.ByteBuffer;
+
+
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.nio.file.LinkOption;
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESKeySpec;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+
+
+
+
+
+
+
+
+
+
+
 import com.killcoding.file.DiskFile;
-import java.util.Collection;
+
 import com.killcoding.cache.CacheArray;
 import com.killcoding.cache.CacheArrayFilter;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.concurrent.Callable;
+
+
 import com.killcoding.datasource.IdentityCard;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
@@ -77,6 +77,13 @@ import com.killcoding.cache.Cache;
 import java.util.Date;
 
 public class RemoteFile extends BaseFile implements RemoteFileSQL {
+
+	/** How long waitForCopy() polls for a remote copy to complete. */
+	private static final long COPY_WAIT_TIMEOUT = 15000L;
+	/** Poll interval used by the copy-wait loop. */
+	private static final long COPY_WAIT_POLL_MS = 200L;
+	/** Max time merge() waits for the async CacheArray worker to finish. */
+	private static final long MERGE_WAIT_TIMEOUT = 300 * 1000L;
 
 	private static final Map<String, DriverDataSource> DATASOURCE_REMOTE_FILE = new ConcurrentHashMap<String, DriverDataSource>();
 
@@ -1026,6 +1033,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				};
 				rows.filter(filter);
 				executor.find(formatSql(SQL_SELECT_FILE_HAVE_DATA), dataRecord, rows);
+				// P0-10: merge is synchronous from the caller's viewpoint -
+				// wait (bounded) for the async worker to drain the rows before
+				// returning, so the merged file is complete when merge() exits.
+				waitForCacheArray(rows, filter);
 			}
 		} catch (SQLException e) {
 			throw new IOException(e.getMessage(), e);
@@ -1036,6 +1047,28 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				} catch (Exception e) {
 					throw new IOException(e.getMessage(), e);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Boundedly wait for a CacheArray worker to finish (P0-10). On timeout the
+	 * merge degrades to the historic asynchronous behaviour with a warning -
+	 * never throws, so merge() semantics stay safe.
+	 * */
+	private void waitForCacheArray(CacheArray rows, CacheArrayFilter filter) {
+		long deadline = System.currentTimeMillis() + MERGE_WAIT_TIMEOUT;
+		while (!rows.isCompleted() && !filter.isForceTerminated()) {
+			if (System.currentTimeMillis() > deadline) {
+				log.warn("Merge worker did not complete within {}ms - continuing asynchronously.", MERGE_WAIT_TIMEOUT);
+				return;
+			}
+			try {
+				Thread.sleep(CACHE_ARRAY_FILTER_TIMER);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				log.warn("Merge wait interrupted.", e);
+				return;
 			}
 		}
 	}
@@ -2378,7 +2411,7 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		// completed-check below always fails and moveTo silently degrades
 		// into copyTo (the source is never deleted).
 		boolean copied = false;
-		long deadline = System.currentTimeMillis() + 15000L;
+		long deadline = System.currentTimeMillis() + COPY_WAIT_TIMEOUT;
 		while (System.currentTimeMillis() < deadline) {
 			try {
 				if (destRf.exists(true) && destRf.isCompleted()) {
@@ -2389,7 +2422,7 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				log.debug(e.getMessage());
 			}
 			try {
-				Thread.sleep(200L);
+				Thread.sleep(COPY_WAIT_POLL_MS);
 			} catch (InterruptedException ie) {
 				Thread.currentThread().interrupt();
 				break;

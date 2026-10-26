@@ -124,7 +124,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -137,7 +136,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -151,7 +149,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -165,7 +162,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -181,7 +177,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -197,7 +192,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -210,7 +204,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -223,7 +216,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -237,7 +229,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -251,7 +242,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -267,7 +257,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -283,7 +272,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -296,7 +284,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -309,7 +296,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -323,7 +309,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -337,7 +322,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -353,7 +337,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -369,7 +352,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -382,7 +364,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -395,7 +376,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -409,7 +389,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -423,7 +402,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -439,7 +417,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -455,7 +432,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -466,7 +442,6 @@ public final class Logger {
 			log(LEVEL_MARK, map);
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -477,7 +452,6 @@ public final class Logger {
 			log(LEVEL_MARK, map);
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -491,7 +465,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -505,7 +478,6 @@ public final class Logger {
 			log(LEVEL_MARK, map);
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -523,7 +495,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -542,7 +513,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -586,7 +556,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -603,7 +572,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -622,7 +590,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -641,7 +608,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -658,7 +624,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -677,7 +642,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -696,7 +660,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -713,7 +676,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -732,7 +694,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -751,7 +712,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -770,7 +730,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -789,7 +748,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -810,7 +768,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -831,7 +788,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -852,7 +808,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -873,7 +828,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -891,7 +845,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -909,7 +862,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -928,7 +880,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -947,7 +898,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -966,7 +916,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -985,7 +934,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1006,7 +954,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1027,7 +974,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1048,7 +994,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1069,7 +1014,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1087,7 +1031,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1105,7 +1048,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1124,7 +1066,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1143,7 +1084,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1162,7 +1102,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1181,7 +1120,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1202,7 +1140,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1223,7 +1160,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1244,7 +1180,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1265,7 +1200,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1283,7 +1217,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1301,7 +1234,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1320,7 +1252,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1339,7 +1270,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1358,7 +1288,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1377,7 +1306,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1398,7 +1326,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1419,7 +1346,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1440,7 +1366,6 @@ public final class Logger {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Worng msg format: " + message);
-			System.err.println(e.getMessage());
 		}
 	}
 
@@ -1461,7 +1386,6 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println(e.getMessage());
 		}
 	}
 

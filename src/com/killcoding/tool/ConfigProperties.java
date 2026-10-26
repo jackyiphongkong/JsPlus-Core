@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.Map;
-import java.util.Enumeration;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -42,14 +42,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Collection;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.LinkOption;
+
+
 import java.nio.file.Paths;
-import java.net.URI;
+
 import java.util.Date;
 import com.killcoding.file.BaseFile;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -70,6 +70,15 @@ public class ConfigProperties extends Properties {
 	
     public static Long AUTO_LOAD_TIMER = 5000L;
 	private static final List<Runnable> AUTO_LOAD_CP = new CopyOnWriteArrayList<Runnable>();
+
+	/** Unit-suffix time pattern used by parseTimeToSec/parseTimeToMs ("5s"/"12m"/"4h"/"1d"/"2w"). */
+	private static final Pattern TIME_UNIT_PATTERN = Pattern.compile("^([-\\+]{0,1}[0-9]+)(((?i)ms|s|m|h|d|w){1})$");
+
+	/** Unit-suffix size pattern used by parseFileSize ("1kb"/"5mb"/"2gb"/"1tb"). */
+	private static final Pattern FILE_SIZE_PATTERN = Pattern.compile("^([-\\+]{0,1}[0-9]+)(((?i)b|kb|mb|gb|tb){1})$");
+
+	/** Env-var substitution pattern (reused by getEnv - do not re-compile per call). */
+	private static final Pattern ENV_VAR_PATTERN = Pattern.compile(ENV_VAR_REGEX);
 
     private static ConfigCustomLoad CUSTOMLOAD = null;
     
@@ -573,8 +582,7 @@ public class ConfigProperties extends Properties {
 
 		Long value = null;
 		try {
-			Pattern pattern = Pattern.compile("^([-\\+]{0,1}[0-9]+)(((?i)ms|s|m|h|d|w){1})$");
-			Matcher matcher = pattern.matcher(stringValue);
+			Matcher matcher = TIME_UNIT_PATTERN.matcher(stringValue);
 			if (matcher.find()) {
 				Long originValue = Long.parseLong(matcher.group(1));
 				String unit = matcher.group(2).toLowerCase();
@@ -599,12 +607,12 @@ public class ConfigProperties extends Properties {
 			} else {
 				Logger.systemMark(ConfigProperties.class,
 						"Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).",
-						stringValue, defaultValue, stringValue, stringValue);
+						stringValue, defaultValue, stringValue);
 			}
 			return value == null ? defaultValue : value;
 		} catch (Exception e) {
 			Logger.systemError(ConfigProperties.class, e);
-			return null;
+			return defaultValue;
 		}
 	}
 
@@ -622,8 +630,7 @@ public class ConfigProperties extends Properties {
 
 		Long value = null;
 		try {
-			Pattern pattern = Pattern.compile("^([-\\+]{0,1}[0-9]+)(((?i)ms|s|m|h|d|w){1})$");
-			Matcher matcher = pattern.matcher(stringValue);
+			Matcher matcher = TIME_UNIT_PATTERN.matcher(stringValue);
 			if (matcher.find()) {
 				Long originValue = Long.parseLong(matcher.group(1));
 				String unit = matcher.group(2).toLowerCase();
@@ -648,12 +655,12 @@ public class ConfigProperties extends Properties {
 			} else {
 				Logger.systemMark(ConfigProperties.class,
 						"Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).",
-						stringValue, defaultValue, stringValue, stringValue);
+						stringValue, defaultValue, stringValue);
 			}
 			return value == null ? defaultValue : value;
 		} catch (Exception e) {
 			Logger.systemError(ConfigProperties.class, e);
-			return null;
+			return defaultValue;
 		}
 	}
 	
@@ -689,8 +696,7 @@ public class ConfigProperties extends Properties {
 
 		Long value = null;
 		try {
-			Pattern pattern = Pattern.compile("^([-\\+]{0,1}[0-9]+)(((?i)b|kb|mb|gb|tb){1})$");
-			Matcher matcher = pattern.matcher(stringValue);
+			Matcher matcher = FILE_SIZE_PATTERN.matcher(stringValue);
 			if (matcher.find()) {
 				Long originValue = Long.parseLong(matcher.group(1));
 				String unit = matcher.group(2).toLowerCase();
@@ -712,12 +718,12 @@ public class ConfigProperties extends Properties {
 			} else {
 				Logger.systemMark(ConfigProperties.class,
 						"Missing unit(b|kb|mb|gb|tb) '{}' will using default value '{}', (e.g. {}mb,{}kb,...).",
-						stringValue, defaultValue, stringValue, stringValue);
+						stringValue, defaultValue, stringValue);
 			}
 			return value == null ? defaultValue : value;
 		} catch (Exception e) {
 			Logger.systemError(ConfigProperties.class, e);
-			return null;
+			return defaultValue;
 		}
 	}
 
@@ -729,7 +735,7 @@ public class ConfigProperties extends Properties {
 		if (originValue == null)
 			return null;
 
-		Pattern p = Pattern.compile(ENV_VAR_REGEX);
+		Pattern p = ENV_VAR_PATTERN;
 		Matcher m = p.matcher(originValue.trim());
 		boolean findEnvFormat = m.find();
 		if (findEnvFormat) {

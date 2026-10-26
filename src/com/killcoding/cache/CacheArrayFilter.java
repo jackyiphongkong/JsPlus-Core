@@ -24,8 +24,8 @@ THE SOFTWARE.
 package com.killcoding.cache;
 
 import com.killcoding.cache.CacheArray;
-import com.killcoding.log.LoggerFactory;
-import com.killcoding.log.Logger;
+
+
 import java.util.List;
 
 /**

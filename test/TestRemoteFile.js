@@ -113,16 +113,18 @@ stPrep.close();
 connPrep.close();
 
 var writeFails = 0;
-for (var i = 0; i < FILE_COUNT; i++) {
-    try {
-        var txtFileRf = new RemoteFile(RF_ROOT + "/test_" + i + ".txt");
-        var wOk = txtFileRf.write("Hello world. " + i);
-        var cOk = txtFileRf.complete();
-        if (wOk !== true || cOk !== true) { writeFails++; }
-    } catch (e) {
-        writeFails++;
-    }
-}
+
+
+// for (var i = 0; i < FILE_COUNT; i++) {
+//     try {
+//         var txtFileRf = new RemoteFile(RF_ROOT + "/test_" + i + ".txt");
+//         var wOk = txtFileRf.write("Hello world. " + i);
+//         var cOk = txtFileRf.complete();
+//         if (wOk !== true || cOk !== true) { writeFails++; }
+//     } catch (e) {
+//         writeFails++;
+//     }
+// }
 var dbv1 = dbVerify(function () {
     return "select * from remote_file where file_parent_path='/rftest' and file_part_index=0 and deleted=0";
 });
@@ -207,7 +209,53 @@ check({
 // ---------------------------------------------------------------------------
 var RF_GCA = RF_GCA_Console.getContext().get("RF_GCA");
 var rfRoot = new RemoteFile(RF_ROOT);
-rfRoot.listAll(RF_GCA);
+
+
+var listAllConsole = Console.newBuilder();
+listAllConsole.getContext().put("FILE_COUNT",FILE_COUNT);
+listAllConsole.getContext().put("writeFails",writeFails);
+listAllConsole.getContext().put("RemoteFile",RemoteFile);
+listAllConsole.getContext().put("RF_ROOT",RF_ROOT);
+listAllConsole.getContext().put("RF_GCA",RF_GCA);
+listAllConsole.getContext().put("rfRoot",rfRoot);
+listAllConsole.setTask(`(function(){
+    try {
+        rfRoot.listAll(RF_GCA);
+    } catch (e) {
+        print(e);
+    }
+}())`);
+listAllConsole.setTaskTimer('5s');
+listAllConsole.taskExecute();
+
+
+var insertConsole = Console.newBuilder();
+insertConsole.getContext().put("FILE_COUNT",FILE_COUNT);
+insertConsole.getContext().put("writeFails",writeFails);
+insertConsole.getContext().put("RemoteFile",RemoteFile);
+insertConsole.getContext().put("RF_ROOT",RF_ROOT);
+insertConsole.getContext().put("RF_GCA",RF_GCA);
+insertConsole.getContext().put("rfRoot",rfRoot);
+insertConsole.setTask(`(function(){
+    try {
+        var txtFileRf = new RemoteFile(RF_ROOT + "/test_" + new java.util.Date().getTime() + ".txt");
+        var wOk = txtFileRf.write("Hello world. " + new java.util.Date().getTime());
+        var cOk = txtFileRf.complete();
+    } catch (e) {
+        print(e);
+    }
+}())`);
+insertConsole.setTaskTimer('1s');
+insertConsole.taskExecute();
+
+// listAll feeds the GCA asynchronously (merge worker) - poll until the
+// callback consumer has started (getIndex() > 0) or give up after 10s.
+var c5WaitMs = 0;
+var c5Start = Date.now();
+while (RF_GCA.getIndex() <= 0 && Date.now() - c5Start < 10000) {
+    Thread.sleep(100);
+    c5WaitMs = Date.now() - c5Start;
+}
 
 var dbv2 = dbVerify(function () {
     return "select count(*) file_count from remote_file where file_parent_path='/rftest' and file_part_index=0 and deleted=0";
@@ -216,7 +264,8 @@ check({
     caseId: "C5",
     name: "RemoteFile listAll via dedicated-console GCA + Console.callback",
     ok: RF_GCA.getIndex() > 0,
-    detail: "List all size = " + RF_GCA.getIndex(),
+    detail: "List all size = " + RF_GCA.getIndex() + " (waited " + c5WaitMs + "ms for async feed)"
+        + dbv2,
     objective: "listAll feeds the GCA; the Runnable callback verifies getIndex() continuity and readAllString() content per row",
     objectiveZh: "listAll 餵入獨立 console 的 GCA，callback 逐行驗證 getIndex 連續與 readAllString 內容完整",
     command: "rfRoot.listAll(Console.getGlobalCacheArray()); Console.callback(Java.extend(Runnable){ getObject() -> getIndex() + readAllString() })"

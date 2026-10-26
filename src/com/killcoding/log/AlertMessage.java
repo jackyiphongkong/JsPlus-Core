@@ -36,6 +36,14 @@ public class AlertMessage {
     public static Map<String, Object> msg = null;
     protected static Runnable sendRun = null;
 
+	/** Shared daemon pool - never create a new executor per message
+	 * (each call would leak a resident thread). */
+	private static final java.util.concurrent.ExecutorService SEND_POOL = java.util.concurrent.Executors.newFixedThreadPool(1, r -> {
+		Thread t = new Thread(r, "AlertMessage-Sender");
+		t.setDaemon(true);
+		return t;
+	});
+
 	public AlertMessage() {
 		super();
 	}
@@ -62,7 +70,7 @@ public class AlertMessage {
 				}
 			}
 		};
-		Executors.newSingleThreadExecutor().execute(runnable);
+		SEND_POOL.execute(runnable);
 	}
 
 }

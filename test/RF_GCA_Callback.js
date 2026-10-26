@@ -25,7 +25,8 @@ var CB6 = Java.extend(Runnable, {
             try {
                 var rf = new RemoteFile(o.file_parent_path + '/' + o.file_name);
                 var content = rf.readAllString();
-                print(RF_GCA.getIndex() + " : " + content);
+                rf.forceDelete();
+                print(RF_GCA.getProcessedTotal() + " ------------------------------- " + content);
             } catch (e) {
                 // RF_errors.add('' + e);
                 print(e);

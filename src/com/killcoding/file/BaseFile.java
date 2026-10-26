@@ -44,8 +44,8 @@ import java.time.format.DateTimeFormatter;
 import com.killcoding.cache.CacheArrayFilter;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.LinkOption;
+
+
 
 public abstract class BaseFile {
     
@@ -126,7 +126,10 @@ public abstract class BaseFile {
 	
 	public static long LOGIC_CHECK_TIMEOUT_MS = 60000L;
 	
-	protected static boolean stopSync = true;
+	protected static volatile boolean stopSync = true;
+
+	/** Poll interval of the stop-sync confirmation loop. */
+	private static final long STOP_SYNC_POLL_MS = 1000L;
 	
 	protected File syncRoot = null;
 
@@ -134,7 +137,7 @@ public abstract class BaseFile {
 	
 	public static Path TEMP_DIR = null;
 	
-	private static long debugLogTime = 0L;
+	private static volatile long debugLogTime = 0L;
 	
 	public static final List<String> SYNC_PATH_ALLOWED = new ArrayList<String>();
 	public static final List<String> SYNC_PATH_IGNORED = new ArrayList<String>();	
@@ -269,7 +272,7 @@ public abstract class BaseFile {
     		        stopSync();
     		        break;
     		    }
-    		    Thread.sleep(1000L);
+    		    Thread.sleep(STOP_SYNC_POLL_MS);
     		}catch(InterruptedException e){
     		    LoggerFactory.getLogger(BaseFile.class).error(e.getMessage(),e);
     		}

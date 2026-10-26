@@ -34,7 +34,7 @@ import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.nio.ByteBuffer;
 import com.killcoding.log.Logger;
-import java.net.URI;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
@@ -42,27 +42,27 @@ import java.nio.channels.SeekableByteChannel;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.time.Instant;
-import java.util.Arrays;
-import java.io.ByteArrayInputStream;
+
+
+
 import java.sql.Timestamp;
 import java.util.stream.Stream;
-import java.util.stream.Collectors;
-import java.util.HashSet;
-import java.util.Set;
+
+
+
 import java.nio.file.DirectoryStream;
-import java.nio.file.CopyOption;
-import java.nio.file.LinkOption;
+
+
 import com.killcoding.tool.CommonTools;
 import com.killcoding.file.RemoteFile;
 import com.killcoding.log.LoggerFactory;
-import java.util.concurrent.Future;
-import com.killcoding.tool.ConfigProperties;
+
+
 import com.killcoding.datasource.Clock;
-import java.util.concurrent.Callable;
+
 import com.killcoding.file.DiskFile;
-import java.nio.file.attribute.FileAttribute;
-import java.text.SimpleDateFormat;
+
+
 import com.killcoding.cache.CacheArray;
 import com.killcoding.cache.CacheArrayFilter;
 import java.util.Map;
@@ -70,19 +70,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.nio.file.NoSuchFileException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Iterator;
-import java.util.Date;
-import java.time.ZonedDateTime;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+
+
+
+
+
+
 import java.util.Calendar;
-import java.util.TimeZone;
-import java.text.ParseException;
+
+
 import java.util.Collections;
-import java.util.HashMap;
+
 import java.nio.file.FileAlreadyExistsException;
-import java.util.LinkedList;
+
 
 public class DiskFile extends BaseFile {
     
@@ -851,7 +851,8 @@ public class DiskFile extends BaseFile {
 				}
 			}
 		};
-		Executors.newFixedThreadPool(1).execute(runnable);
+		initDefaultPool();
+		splitPool.execute(runnable);
 
 		runnable = new Runnable() {
 			@Override
@@ -863,7 +864,8 @@ public class DiskFile extends BaseFile {
 				}
 			}
 		};
-		Executors.newFixedThreadPool(1).execute(runnable);
+		initDefaultPool();
+		splitPool.execute(runnable);
 	}
 
 	private synchronized void startFullSyncForDelete(final Integer filePartDataTable, final long timerMs,
@@ -901,7 +903,8 @@ public class DiskFile extends BaseFile {
 				}
 			}
 		};
-		Executors.newFixedThreadPool(1).execute(runnable);
+		initDefaultPool();
+		splitPool.execute(runnable);
 	}
 
 	private CacheArrayFilter getScanDeleteFilter(final RemoteFile rootDir, final Integer filePartDataTable,

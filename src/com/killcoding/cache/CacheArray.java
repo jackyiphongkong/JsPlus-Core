@@ -26,9 +26,9 @@ package com.killcoding.cache;
 import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
+
 import com.killcoding.tool.CommonTools;
-import java.util.Collection;
+
 import java.util.Collections;
 import com.killcoding.cache.CacheArrayFilter;
 import java.util.concurrent.ExecutorService;
@@ -39,8 +39,21 @@ import com.killcoding.cache.CacheArray;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * This class use asynchronous caching to handle large result and large list.
- * Need class CacheArrayFilter to use.
+ * Asynchronous cache-list for large results / large collections.
+ * Thread model:
+ *   - Producer(s): call add()/addAll() - synchronized, append-only.
+ *   - One worker per filter(): drains items on a shared fixed thread pool,
+ *     invoking CacheArrayFilter.execute()/executeBatch()/completed()/
+ *     terminated() on the worker thread (never call JS proxies from there -
+ *     GraalJS forbids worker-thread JS entry; use a Runnable proxy + the
+ *     owning console's callback queue instead).
+ *   - Consumer(s): poll getIndex()/getObject()/isCompleted()/getProcessedTotal()
+ *     from the owning (producer) thread; the volatile fields guarantee
+ *     visibility of the worker's writes.
+ * Lifecycle: initPool() optional -> filter() starts the worker -> the worker
+ * ends when the producer feed is exhausted (completed), on forceTerminate(),
+ * or when CacheArray.forceStop() is set globally. shutdownPool() releases the
+ * shared executor (lazily re-created on the next filter()).
  * */
 public class CacheArray implements java.io.Serializable {
     
@@ -50,27 +63,27 @@ public class CacheArray implements java.io.Serializable {
 
 	private static ExecutorService arrayPool = null;
 
-	protected Object lastItem = null;
+	protected volatile Object lastItem = null;
 
-	private static boolean stop = false;
+	private static volatile boolean stop = false;
 	
-	private static boolean forceStop = false;
+	private static volatile boolean forceStop = false;
 	
-	private CacheArrayFilter filter = null;
+	private volatile CacheArrayFilter filter = null;
 	
 	private boolean nullIsCompleted = true;
 	
-	protected Integer INDEX = -1;
-	protected Integer SIZE = -1;
+	protected volatile Integer INDEX = -1;
+	protected volatile Integer SIZE = -1;
 
 	/** Global count of items processed by the filter thread. sweepProcessed()
 	 * never resets this counter, so callers can still observe a monotonic
 	 * order (getProcessedTotal()) even though the local index (getIndex())
 	 * cycles back to 0 after each head sweep. */
 	private long processedTotal = 0;
-	protected Object OBJECT = null;
-	protected Integer BATCH_INDEX = -1;
-    protected final List BATCH = new ArrayList();
+	protected volatile Object OBJECT = null;
+	protected volatile Integer BATCH_INDEX = -1;
+    protected final List<Object> BATCH = new ArrayList<Object>();
     
 	/**
 	 * All cache keys list
@@ -80,7 +93,7 @@ public class CacheArray implements java.io.Serializable {
 	/**
 	 * 'true' is completed
 	 * */
-	private boolean completed = false;
+	private volatile boolean completed = false;
 
 	/**
 	 * New a CacheArray object
@@ -100,6 +113,17 @@ public class CacheArray implements java.io.Serializable {
 		    MAX_POOL_SIZE = poolSize;
 		    Logger.systemMark(CacheArray.class,"MAX_POOL_SIZE={}",MAX_POOL_SIZE);
 			arrayPool = Executors.newFixedThreadPool(MAX_POOL_SIZE);
+		}
+	}
+	
+	/**
+	 * Shut down the shared worker pool. Idempotent: safe to call multiple
+	 * times; subsequent filter() calls lazily re-create the pool via initPool().
+	 * */
+	public static synchronized void shutdownPool() {
+		if (arrayPool != null) {
+			arrayPool.shutdown();
+			arrayPool = null;
 		}
 	}
 	
@@ -173,6 +197,7 @@ public class CacheArray implements java.io.Serializable {
 		Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
+				boolean usageReturned = false;
 				int index = 0;
 				try {
 					while (!the.completed && !the.filter.isForceTerminated() && !isForceStoped()) {
@@ -256,16 +281,28 @@ public class CacheArray implements java.io.Serializable {
 					    the.SIZE = index;
 					    the.filter.completed(index);
 					    setUsingPoolSize(-1);
+					    usageReturned = true;
 					}
 					
 					if(the.filter.terminated){
 					    the.filter.terminated();
-					    setUsingPoolSize(-1);
+					    if(!usageReturned) {
+					        setUsingPoolSize(-1);
+					        usageReturned = true;
+					    }
 					}
+					
+					// Guard every other exit path: the pool usage slot must
+					// always be returned exactly once (never leaked, never
+					// double-released).
+					if(!usageReturned) setUsingPoolSize(-1);
 					
 					the.removeAll();
 					
-					Thread.currentThread().interrupt();
+					// NOTE: do NOT Thread.currentThread().interrupt() here - the
+					// worker runs on a shared fixed-thread-pool thread; marking
+					// it interrupted makes the next task on that thread exit
+					// immediately at its first isInterrupted() check.
 				}
 
 			}
@@ -299,7 +336,9 @@ public class CacheArray implements java.io.Serializable {
 	 * @value - It is object value
 	 * */
 	public synchronized String add(Object value) {
-	    if(nullIsCompleted || (!nullIsCompleted && value != null)) {
+	    // Reject adds once the worker has completed - otherwise data appended
+	    // after completion would be swept away by the worker's final removeAll().
+	    if(!completed && (nullIsCompleted || (!nullIsCompleted && value != null))) {
     	    if(this.filter != null && !this.filter.isForceTerminated() && !isForceStoped()){
         		String key = CommonTools.generateId(16);
         		StoredCache.set(key, value);
@@ -430,6 +469,7 @@ public class CacheArray implements java.io.Serializable {
 	
 	public static void start() {
 		stop = false;
+		forceStop = false;
 	}
 	
 	public void terminate(){

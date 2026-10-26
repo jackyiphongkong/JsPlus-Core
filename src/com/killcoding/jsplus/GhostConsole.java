@@ -1,22 +1,42 @@
+/*******************************************************************************
+The MIT License (MIT)
+Copyright (c) 2024 KILLCODING.COM
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
 package com.killcoding.jsplus;
 
 import java.util.concurrent.ExecutorService;
 import com.killcoding.jsplus.ScriptConsole;
-import java.util.concurrent.Executors;
-import com.killcoding.log.LoggerFactory;
+
+
 import com.killcoding.log.Logger;
 import com.killcoding.datasource.CacheDriverExecutor;
 import java.sql.Connection;
-import com.killcoding.datasource.DriverConnection;
+
 import com.killcoding.datasource.DriverDataSource;
-import java.sql.SQLException;
+
 import com.killcoding.cache.CacheArray;
 import java.util.HashMap;
 import java.util.Map;
-import com.killcoding.cache.CacheArrayFilter;
+
 import com.killcoding.tool.ConfigProperties;
 import java.io.File;
-import java.io.IOException;
+
 import com.killcoding.datasource.Clock;
 import java.sql.Timestamp;
 import com.killcoding.tool.CommonTools;
@@ -41,6 +61,9 @@ import com.killcoding.tool.CommonTools;
 public class GhostConsole extends ScriptConsole {
     
     public static int RESULT_SIZE = 500;
+    
+    /** Delay between printing response lines (per-line throttle). */
+    private static final long RESPONSE_LINE_DELAY_MS = 200L;
     
     private static String GHOST_REQUESTED_SQL = "SELECT * FROM %s WHERE deleted = 0 AND requested = 1 AND responsed = 0 AND processed = 0 AND ghost_name = :ghost_name ORDER BY created_at ASC";
     private static String GHOST_GET_PROCESSED_SQL = "SELECT * FROM %s WHERE deleted = 0 AND requested = 1 AND responsed = 0 AND processed = 1 AND ghost_name = :ghost_name ORDER BY created_at ASC";
@@ -112,7 +135,7 @@ public class GhostConsole extends ScriptConsole {
         }catch(Exception e){
            Logger.systemError(GhostConsole.class,e.getMessage(),e); 
         }finally{
-           if(cde != null) try{cde.close();}catch(Exception e){}
+           if(cde != null) try{cde.close();}catch(Exception e){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",e.getMessage(),e);}
         }
     }
     
@@ -151,7 +174,7 @@ public class GhostConsole extends ScriptConsole {
                 }catch(Exception e){
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
                 }finally{
-                    if(cde != null) try{cde.close();}catch(Exception e){}
+                    if(cde != null) try{cde.close();}catch(Exception e){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",e.getMessage(),e);}
                 } 
             }
         };
@@ -171,7 +194,7 @@ public class GhostConsole extends ScriptConsole {
                 }catch(Exception e){
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
                     
-                    if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee) {};
+                    if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
                     
                     if(!exit) the.start(the.autoClean);
                 }
@@ -208,14 +231,14 @@ public class GhostConsole extends ScriptConsole {
                              int len = responseMessgeArray.length;
                              for(int i = 0;i < len;i++){
                                  System.out.println(responseMessgeArray[i]);
-                                 Thread.sleep(200L);
+                                 Thread.sleep(RESPONSE_LINE_DELAY_MS);
                              }
                         }
                     }
                 }catch(Exception e){
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
                 }finally{
-                    if(cde != null) try{cde.close();}catch(Exception e){}
+                    if(cde != null) try{cde.close();}catch(Exception e){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",e.getMessage(),e);}
                 } 
             }
         };
@@ -235,7 +258,7 @@ public class GhostConsole extends ScriptConsole {
                 }catch(Exception e){
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
                     
-                    if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee) {};
+                    if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
                     
                     if(!exit) the.detect();                    
                 }
@@ -261,11 +284,11 @@ public class GhostConsole extends ScriptConsole {
             }catch(Exception e){
                 Logger.systemError(GhostConsole.class,e.getMessage(),e);
                 
-                if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee) {};
+                if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
                 
                 if(!exit) the.detect();
             }finally{
-                if(cde != null) try {cde.close();}catch(Exception ee){};
+                if(cde != null) try {cde.close();}catch(Exception ee){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",ee.getMessage(),ee);};
             }
         }
     }  
@@ -302,11 +325,11 @@ public class GhostConsole extends ScriptConsole {
             }catch(Exception e){
                 Logger.systemError(GhostConsole.class,e.getMessage(),e);
                 
-                if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee) {};
+                if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
                 
                 if(!exit) the.start(the.autoClean);
             }finally{
-                if(cde != null) try {cde.close();}catch(Exception ee){};
+                if(cde != null) try {cde.close();}catch(Exception ee){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",ee.getMessage(),ee);};
             }
         }
     }

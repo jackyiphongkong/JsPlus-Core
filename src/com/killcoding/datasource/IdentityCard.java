@@ -1,3 +1,23 @@
+/*******************************************************************************
+The MIT License (MIT)
+Copyright (c) 2024 KILLCODING.COM
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
 package com.killcoding.datasource;
 
 import java.io.File;
@@ -55,25 +75,25 @@ public final class IdentityCard {
 
 	private static final String SQL_FIRST_BY_GENERATE_TASK_ID = "SELECT * FROM %s WHERE deleted = 0 AND identity_name = :identity_name AND generate_task_id = :generate_task_id";
 
-	public static File APP_IDENTITY_CARD = null;
+	public static volatile File APP_IDENTITY_CARD = null;
 
 	private Logger log = LoggerFactory.getLogger(IdentityCard.class);
 
 	private CacheDriverExecutor driverExecutor = null;
 	
-	private static Long MAX_VALUE_LIMITED = Long.MAX_VALUE - 1;
-	private static Long MIN_VALUE_LIMITED = 1L;
-	private static Integer STEP_VALUE_LIMITED = 0;
+	private static volatile Long MAX_VALUE_LIMITED = Long.MAX_VALUE - 1;
+	private static volatile Long MIN_VALUE_LIMITED = 1L;
+	private static volatile Integer STEP_VALUE_LIMITED = 0;
 
-	private static boolean enable = false;
-	private static ConfigProperties configProperties = null;
-	private static DriverDataSource dataSource = null;
-	private static String dataSourcePath = null;
-	private static String tableName = null;
-	private static Long timeout = 10000L;
-	private static Long maxValue = MAX_VALUE_LIMITED;
-	private static Long minValue = MIN_VALUE_LIMITED;
-	private static Integer stepValue = STEP_VALUE_LIMITED;
+	private static volatile boolean enable = false;
+	private static volatile ConfigProperties configProperties = null;
+	private static volatile DriverDataSource dataSource = null;
+	private static volatile String dataSourcePath = null;
+	private static volatile String tableName = null;
+	private static volatile Long timeout = 10000L;
+	private static volatile Long maxValue = MAX_VALUE_LIMITED;
+	private static volatile Long minValue = MIN_VALUE_LIMITED;
+	private static volatile Integer stepValue = STEP_VALUE_LIMITED;
 
 	private String identityName = null;
 	private String generateTaskId = null;

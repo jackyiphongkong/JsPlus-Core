@@ -62,7 +62,7 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 | Suite | Cases | Coverage |
 | --- | --- | --- |
 | TestDatasource | 14 | Clock, `Console.getDataSource()` connection, DDL/DML roundtrip, pool borrow/return, **pool-full cap (MaxPoolSize overflow rejected)**, **6 pool tuning params (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle) config-applied + behaviour**, **`CacheDriverExecutor.find(sql, Map, CacheArray)` in the canonical `getGlobalCacheArray()` + `Console.callback()` pairing** (async queue: find fills synchronously, the CacheArrayFilter worker consumes; the JS callback body is best-effort — GraalJS forbids the worker thread from entering the JS context) |
-| TestTables | 23 | **Independent c/r/u/d cases per table** (5 tables × 4) + schema existence + soft-delete + 6-table dbVerify |
+| TestCrud | 23 | **Independent c/r/u/d cases per table** (5 tables × 4) + schema existence + soft-delete + 6-table dbVerify |
 
 **Mandatory test conventions (enforced throughout)**:
 

@@ -62,7 +62,7 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | 套件 | Case 數 | 覆蓋 |
 | --- | --- | --- |
 | TestDatasource | 14 | Clock、`Console.getDataSource()` 連接、DDL/DML roundtrip、池借還、**池滿上限（MaxPoolSize 溢出拒絕）**、**6 池參數（TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle）配置生效 + 行為**、**`CacheDriverExecutor.find(sql, Map, CacheArray)` 以正典 `getGlobalCacheArray()` + `Console.callback()` 配合方式**（非同步佇列：find 同步入隊、CacheArrayFilter worker 消費；JS 回調體受 GraalJS 執行緒限制為盡力而為） |
-| TestTables | 23 | **每表獨立 c/r/u/d 四個 case**（5 表 × 4）+ schema 存在 + 軟刪除 + 6 表 dbVerify |
+| TestCrud | 23 | **每表獨立 c/r/u/d 四個 case**（5 表 × 4）+ schema 存在 + 軟刪除 + 6 表 dbVerify |
 
 **測試硬性約定（全程強制）**：
 

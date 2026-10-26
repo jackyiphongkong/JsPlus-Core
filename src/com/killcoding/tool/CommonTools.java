@@ -30,13 +30,13 @@ import java.util.Random;
 import java.net.InetAddress;
 import com.killcoding.log.Logger;
 import java.net.URL;
-import java.net.URI;
-import java.net.URISyntaxException;
+
+
 import java.io.File;
 import com.killcoding.log.LoggerFactory;
 import java.net.URLClassLoader;
-import java.io.FileFilter;
-import java.net.MalformedURLException;
+
+
 import java.security.MessageDigest;
 import com.killcoding.file.BaseFile;
 import java.util.Arrays;
@@ -45,11 +45,11 @@ import java.util.stream.Collectors;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.io.IOException;
-import java.nio.file.LinkOption;
+
 
 public final class CommonTools {
     
-    private static String HOSTNAME = null;
+    private static volatile String HOSTNAME = null;
 
 
 	public static URLClassLoader loadJars(String libDirs) throws Exception {

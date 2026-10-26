@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import com.killcoding.log.LoggerFactory;
-import com.killcoding.log.Logger;
+
 import java.util.Date;
 import java.sql.Connection;
 import java.util.HashMap;

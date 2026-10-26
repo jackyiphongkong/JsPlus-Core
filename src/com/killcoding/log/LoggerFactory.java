@@ -25,19 +25,19 @@ package com.killcoding.log;
 
 import java.util.Map;
 import java.io.File;
-import java.io.FilenameFilter;
-import java.util.Arrays;
-import java.util.List;
+
+
+
 import java.io.IOException;
-import java.util.HashMap;
+
 import java.util.Properties;
-import java.io.StringReader;
+
 import com.killcoding.tool.ConfigProperties;
 import com.killcoding.log.Logger;
-import com.killcoding.tool.FileTools;
-import java.net.URL;
+
+
 import com.killcoding.tool.CommonTools;
-import java.io.Reader;
+
 
 public final class LoggerFactory {
 
