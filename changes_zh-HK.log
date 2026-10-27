@@ -1507,3 +1507,8 @@ ${jr.diff.changes}- build: 自動版本遞增
 - found diffed: com/killcoding/tool/XmlParser.java (M)
 - build: 自動版本遞增
 
+
+## 6.1.95 (2026.10.27 22:56:48)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+

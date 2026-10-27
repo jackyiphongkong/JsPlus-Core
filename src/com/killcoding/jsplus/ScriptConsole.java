@@ -47,6 +47,20 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledExecutorService;
 import com.killcoding.datasource.Clock;
+import java.io.FileOutputStream;
+import java.io.StringWriter;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.util.Random;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 
 /**
 * Script console: executes .js / .txt script files and inline scripts through the configured JS
@@ -77,6 +91,10 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 
 	private ScheduledExecutorService scheduleExecutor = null;
 	private final Map<String,Map<String,Object>> scheduleMap = new HashMap<String,Map<String,Object>>();
+
+	/** ClassLoaders created by evalJavaSource / evalJavaFile - kept referenced so evaluated
+	 *  classes stay usable (and their temporary jars stay open) for the life of this console. */
+	protected final List<ClassLoader> evalJavaClassLoaders = new ArrayList<ClassLoader>();
 
 	/**
 	* Performs the callback operation
@@ -336,6 +354,169 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	* */
 	public Object evalScript(String script) throws Exception {
 		return jsPlusContext.evalScript(script);
+	}
+
+	/**
+	* Dynamically compiles the given Java source code into a temporary jar and loads the compiled
+	* class into a dedicated ClassLoader. The returned Class can be instantiated from JS (e.g.
+	* clazz.newInstance()) when the console was built with allowAllAccess enabled.
+	* @param javaSource - the Java source code to compile (may carry a package declaration)
+	* @return the compiled and loaded Class
+	* */
+	public Class<?> evalJavaSource(String javaSource) throws Exception {
+		if (CommonTools.isBlank(javaSource)) {
+			throw new Exception("evalJavaSource: blank Java source code.");
+		}
+		return compileAndLoadJava(javaSource);
+	}
+
+	/**
+	* Dynamically compiles the given Java source file (.java) into a temporary jar and loads the
+	* compiled class into a dedicated ClassLoader.
+	* @param javaFilePath - the path of the .java file to compile
+	* @return the compiled and loaded Class
+	* */
+	public Class<?> evalJavaFile(String javaFilePath) throws Exception {
+		if (CommonTools.isBlank(javaFilePath)) {
+			throw new Exception("evalJavaFile: blank Java file path.");
+		}
+		return evalJavaFile(new File(javaFilePath));
+	}
+
+	/**
+	* Dynamically compiles the given Java source file (.java) into a temporary jar and loads the
+	* compiled class into a dedicated ClassLoader.
+	* @param javaFile - the .java file to compile
+	* @return the compiled and loaded Class
+	* */
+	public Class<?> evalJavaFile(File javaFile) throws Exception {
+		if (javaFile == null || !javaFile.exists() || !javaFile.getName().endsWith(".java")) {
+			throw new Exception("evalJavaFile: Java file not found: " + javaFile);
+		}
+		return compileAndLoadJava(new String(Files.readAllBytes(javaFile.toPath()), StandardCharsets.UTF_8));
+	}
+
+	/**
+	* Compiles a Java source string with the JDK system compiler, packages the produced .class
+	* files into a temporary jar and loads that jar with a dedicated URLClassLoader.
+	* @param javaSource - the Java source code to compile
+	* @return the compiled and loaded Class
+	* */
+	private Class<?> compileAndLoadJava(String javaSource) throws Exception {
+		// 1) Resolve the package and the primary class name from the source.
+		String packageName = null;
+		Matcher packageMatcher = Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)\\s*;").matcher(javaSource);
+		if (packageMatcher.find()) {
+			packageName = packageMatcher.group(1);
+		}
+		String className = null;
+		Matcher classMatcher = Pattern.compile("(?m)\\bclass\\s+(\\w+)").matcher(javaSource);
+		if (classMatcher.find()) {
+			className = classMatcher.group(1);
+		}
+		if (CommonTools.isBlank(className)) {
+			throw new Exception("evalJavaSource: cannot resolve a class name from the given source.");
+		}
+		String qualifiedName = CommonTools.isBlank(packageName) ? className : packageName + "." + className;
+
+		// 2) Create the temporary eval workspace under <PROJECT_ROOT>/work/evaljava.
+		File jsPlusHome = new File(getJsPlusPath());
+		File evalRoot = new File(jsPlusHome.getParentFile(), "work/evaljava");
+		File evalDir = new File(evalRoot, "eval-" + System.currentTimeMillis() + "-" + Math.abs(new Random().nextInt(100000)));
+		File srcDir = new File(evalDir, "src");
+		if (!CommonTools.isBlank(packageName)) {
+			srcDir = new File(srcDir, packageName.replace('.', File.separatorChar));
+		}
+		File classesDir = new File(evalDir, "classes");
+		srcDir.mkdirs();
+		classesDir.mkdirs();
+		File sourceFile = new File(srcDir, className + ".java");
+		Files.write(sourceFile.toPath(), javaSource.getBytes(StandardCharsets.UTF_8));
+
+		// 3) Compile with the JDK system compiler.
+		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+		if (compiler == null) {
+			throw new Exception("evalJavaSource: no system Java compiler available (run on a JDK, not a JRE).");
+		}
+		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+		StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
+		List<String> compileOptions = new ArrayList<String>();
+		compileOptions.add("-d");
+		compileOptions.add(classesDir.getAbsolutePath());
+		compileOptions.add("-encoding");
+		compileOptions.add("UTF-8");
+		compileOptions.add("-classpath");
+		compileOptions.add(buildEvalClassPath());
+		compileOptions.add("-Xlint:none");
+		StringWriter compilerOutput = new StringWriter();
+		boolean compiled = compiler.getTask(compilerOutput, fileManager, diagnostics, compileOptions, null,
+		        fileManager.getJavaFileObjects(sourceFile)).call();
+		fileManager.close();
+		if (!compiled) {
+			StringBuilder message = new StringBuilder("evalJavaSource: compilation failed for " + qualifiedName);
+			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+				message.append(System.lineSeparator()).append(diagnostic);
+			}
+			throw new Exception(message.toString());
+		}
+
+		// 4) Package the compiled .class files into a temporary jar.
+		File jarFile = new File(evalDir, qualifiedName + ".jar");
+		JarOutputStream jarOutput = new JarOutputStream(new FileOutputStream(jarFile));
+		try {
+			List<String> classFiles = CommonTools.findFiles(classesDir.getAbsolutePath(), ".class");
+			if (classFiles.isEmpty()) {
+				throw new Exception("evalJavaSource: no .class files produced for " + qualifiedName);
+			}
+			for (String classFilePath : classFiles) {
+				File classFile = new File(classFilePath);
+				String entryName = classesDir.toURI().relativize(classFile.toURI()).getPath().replace('\\', '/');
+				jarOutput.putNextEntry(new JarEntry(entryName));
+				jarOutput.write(Files.readAllBytes(classFile.toPath()));
+				jarOutput.closeEntry();
+			}
+		} finally {
+			jarOutput.close();
+		}
+
+		// 5) Load the jar with a dedicated URLClassLoader and keep the loader referenced so the
+		//    evaluated class stays usable for the life of this console.
+		URLClassLoader classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, getClass().getClassLoader());
+		evalJavaClassLoaders.add(classLoader);
+		Class<?> loadedClass = Class.forName(qualifiedName, true, classLoader);
+		log.info("evalJavaSource: compiled and loaded " + qualifiedName + " -> " + jarFile.getAbsolutePath());
+		return loadedClass;
+	}
+
+	/**
+	* Builds the -classpath for dynamic compilation: the process classpath plus every jar under the
+	* runtime LibHome, so evaluated sources can reference framework classes and their dependencies.
+	* @return the joined classpath
+	* */
+	private String buildEvalClassPath() {
+		StringBuilder classPath = new StringBuilder();
+		String processClassPath = System.getProperty("java.class.path");
+		if (!CommonTools.isBlank(processClassPath)) {
+			classPath.append(processClassPath);
+		}
+		String libHome = CommonTools.getJarPath(ScriptConsole.class);
+		if (!CommonTools.isBlank(libHome)) {
+			File libDir = new File(libHome);
+			File[] jars = libDir.listFiles(new java.io.FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".jar");
+				}
+			});
+			if (jars != null) {
+				for (File jar : jars) {
+					if (classPath.length() > 0) {
+						classPath.append(File.pathSeparatorChar);
+					}
+					classPath.append(jar.getAbsolutePath());
+				}
+			}
+		}
+		return classPath.toString();
 	}
 
 	/**

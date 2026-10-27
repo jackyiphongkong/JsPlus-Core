@@ -48,7 +48,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCacheArray");
+print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCacheArray -> TestEvalJava");
 
 var suites = [
     { file: "TestDatasource.js", title: "TestDatasource" },
@@ -66,7 +66,8 @@ var suites = [
     { file: "TestCipherTools.js",     title: "TestCipherTools" },
     { file: "TestEscapeTools.js",     title: "TestEscapeTools" },
     { file: "TestFileTools.js",       title: "TestFileTools" },
-    { file: "TestCacheArray.js",      title: "TestCacheArray" }
+    { file: "TestCacheArray.js",      title: "TestCacheArray" },
+    { file: "TestEvalJava.js",        title: "TestEvalJava" }
 ];
 
 var totalPass = 0;
