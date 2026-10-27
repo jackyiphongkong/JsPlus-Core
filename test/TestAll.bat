@@ -93,6 +93,24 @@ REM already listening so repeated runs reuse the running server.
 REM ------------------------------------------------------------------
 netstat -ano | findstr ":3306" | findstr "LISTENING" >nul 2>&1
 if not errorlevel 1 goto :h2_already
+
+REM ------------------------------------------------------------------
+REM Step 2: (Re)initialize the test database, then start the H2 server.
+REM The DB file is locked while a server holds it, so on a fresh run the
+REM database is first (re)built via the EMBEDDED local-file URL
+REM (jdbc:h2:<abs>/Database/testdb - StartH2Console init, same reset
+REM semantics as JsPlus-Tomcat's "StartH2Console init tomcatdb") and only
+REM then the TCP server is started on top of it. Embedded init
+REM auto-creates the file with the default admin (sa, empty password) and
+REM change.sql adds the application account sample_user - so a fresh CI
+REM checkout never hits the 28000 auth error (the 'sa' user always exists).
+REM ------------------------------------------------------------------
+echo [TestAll] Initializing database (fallback.sql -^> change.sql)...
+call "%JS_PLUS_PATH_ORIGIN%bin\StartH2Console.bat" init testdb
+if errorlevel 1 (
+    echo [TestAll] ERROR: Database initialization failed.
+    exit /b 1
+)
 echo [TestAll] Starting H2 server (port 3306)...
 call "%JS_PLUS_PATH_ORIGIN%bin\BG_StartH2.bat" %SCRIPT_ENGINE%
 
@@ -111,25 +129,6 @@ if not defined H2_READY (
     exit /b 1
 )
 echo [TestAll] H2 ready.
-
-REM ------------------------------------------------------------------
-REM Step 2: (Re)initialize the test database on the running H2 server.
-REM fallback.sql drops every table, change.sql recreates them, applied to
-REM jdbc:h2:tcp://localhost:3306/testdb (Database/testdb.mv.db served by H2)
-REM so every TestAll run starts from a clean schema (same reset semantics as
-REM JsPlus-Tomcat's "StartH2Console init" step, over TCP).
-REM ------------------------------------------------------------------
-echo [TestAll] Initializing database (fallback.sql -^> change.sql)...
-%JAVA_BIN% %JvmParams% -cp "%DEPEND_LIBS%" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:3306/testdb" -user sa -script "%JS_PLUS_PATH_ORIGIN%..\dbscript\fallback.sql" -checkResults
-if errorlevel 1 (
-    echo [TestAll] ERROR: fallback.sql failed.
-    exit /b 1
-)
-%JAVA_BIN% %JvmParams% -cp "%DEPEND_LIBS%" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:3306/testdb" -user sa -script "%JS_PLUS_PATH_ORIGIN%..\dbscript\change.sql" -checkResults
-if errorlevel 1 (
-    echo [TestAll] ERROR: change.sql failed.
-    exit /b 1
-)
 echo [TestAll] testdb initialized (ghost_remote_command + 5 test tables).
 
 REM ------------------------------------------------------------------
