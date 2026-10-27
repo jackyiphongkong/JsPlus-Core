@@ -15,7 +15,7 @@ function H2Server(){
     		if(cmd !== null) {
     		    if(cmd[0] === 'start') {
     		        print("Server -> " + cmd);
-    		        the.h2server = Server.createTcpServer("-tcpPort", cmd[1],"-tcpAllowOthers","-baseDir", cmd[2]).start();
+    		        the.h2server = Server.createTcpServer("-tcpPort", cmd[1],"-tcpAllowOthers","-ifNotExists","-baseDir", cmd[2]).start();
     		    }
     		    
     		    if(cmd[0] === 'stop') {
