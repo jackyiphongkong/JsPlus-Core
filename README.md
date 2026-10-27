@@ -100,7 +100,7 @@ MinPoolSize=1         MaxPoolSize=100
 - `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — server-edition alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
 - **GraalJS thread confinement** (verified on 25.0.3): a `CacheArray` filter worker thread cannot enter the JS context (`Multi threaded access … not allowed for language(s) js`), so a JS `Console.callback(...)` body never fires on the worker thread. TestDatasource C14 uses `callbackSync=false` and asserts the observable consumption link instead (value removed, key kept, `dbVerify` independent).
 
-## Architecture Reference: Related Open-Source Patterns
+## Architecture Reference: Open-Source Counterparts
 
 The CacheArray pipeline (async filter worker + producer/feeder/consumer consoles + callback proxy) maps onto a set of well-known open-source patterns:
 

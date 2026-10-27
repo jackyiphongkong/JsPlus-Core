@@ -100,7 +100,7 @@ MinPoolSize=1         MaxPoolSize=100
 - `QUALITY-REVIEW.md`：70 分七維質量報告（P0 已全部完成）——含伺服器版對標、工具鏈、測試閉環、版本機制、已知限制（如 GraalJS `load()` 共享全域作用域、CacheArray 全域 forceStop、PowerShell 須 `cmd /c` 傳 `< NUL`）。
 - **GraalJS 執行緒限定**（25.0.3 實測）：`CacheArray` 的 filter worker 執行緒無法進入 JS context（`Multi threaded access … not allowed for language(s) js`），因此 JS `Console.callback(...)` 的回調體在 worker 執行緒上不會觸發。TestDatasource C14 改用 `callbackSync=false` 並以可觀察的消費鏈路作斷言（值被移除、鍵保留、`dbVerify` 獨立驗證）。
 
-## 架構對照：相關開源模式
+## 架構參照：開源對應生態
 
 CacheArray 管線（異步 filter worker + 生產／餵入／消費三 console + 回調代理）對應一組成熟的開源模式，對照表如下：
 
