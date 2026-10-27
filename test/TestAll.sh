@@ -102,6 +102,20 @@ echo "Using \"$JvmParams\""
 if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
     echo "[TestAll] H2 already listening on :3306."
 else
+    # ------------------------------------------------------------------
+    # (Re)initialize the test database, then start the H2 server.
+    # The DB file is locked while a server holds it, so on a fresh run the
+    # database is first (re)built via the EMBEDDED local-file URL
+    # (jdbc:h2:<abs>/Database/testdb - StartH2Console init, same reset
+    # semantics as JsPlus-Tomcat's "StartH2Console init tomcatdb") and only
+    # then the TCP server is started on top of it. Embedded init
+    # auto-creates the file with the default admin (sa, empty password) and
+    # change.sql adds the application account sample_user - so a fresh CI
+    # checkout never hits the 28000 auth error (the 'sa' user always exists).
+    # ------------------------------------------------------------------
+    echo "[TestAll] Initializing database (fallback.sql -> change.sql)..."
+    mkdir -p "${JS_PLUS_PATH}../Database"
+    "${JS_PLUS_PATH}bin/StartH2Console.sh" init testdb
     echo "[TestAll] Starting H2 server (port 3306)..."
     "${JS_PLUS_PATH}bin/BG_StartH2.sh" "$SCRIPT_ENGINE"
 fi
@@ -120,18 +134,6 @@ if [ -z "$H2_READY" ]; then
     exit 1
 fi
 echo "[TestAll] H2 ready."
-
-# ------------------------------------------------------------------
-# Step 2: (Re)initialize the test database on the running H2 server.
-# fallback.sql drops every table, change.sql recreates them, applied to
-# jdbc:h2:tcp://localhost:3306/testdb (Database/testdb.mv.db served by H2)
-# so every TestAll run starts from a clean schema.
-# ------------------------------------------------------------------
-echo "[TestAll] Initializing database (fallback.sql -> change.sql)..."
-mkdir -p "${JS_PLUS_PATH}../Database"
-"$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:3306/testdb" -user sa -script "${JS_PLUS_PATH}../dbscript/fallback.sql" -checkResults
-"$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:3306/testdb" -user sa -script "${JS_PLUS_PATH}../dbscript/change.sql" -checkResults
-echo "[TestAll] testdb initialized (ghost_remote_command + 5 test tables)."
 
 # ------------------------------------------------------------------
 # Step 3: Run TestAll.js against this JVM.
