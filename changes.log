@@ -1106,3 +1106,16 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/tool/XmlParser.java (M)
 - build: automatic version bump
 
+
+## 6.1.74 (2026.10.27 14:13:33)
+- found diffed: com/killcoding/datasource/ConnectionPool.java (M)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- build: automatic version bump
+
+
+## 6.1.75 (2026.10.27 15:00:58)
+- found diffed: com/killcoding/datasource/ConnectionPool.java (M)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: automatic version bump
+

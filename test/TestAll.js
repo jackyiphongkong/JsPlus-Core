@@ -48,10 +48,10 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestCacheArray -> TestClock -> TestIdentityCard");
+print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard");
 
 var suites = [
-    // { file: "TestDatasource.js",  title: "TestDatasource" },
+    { file: "TestDatasource.js", title: "TestDatasource" },
     { file: "TestCrud.js",        title: "TestCrud" },
     { file: "TestRemoteFile.js",  title: "TestRemoteFile" },
     { file: "TestFind.js",        title: "TestFind" },

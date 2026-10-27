@@ -87,12 +87,12 @@ public final class DriverDataSource implements DataSource {
 	private long countAbortedInvalid = 0L;
 	private long countAbortedCloseFailed = 0L;
 	private long countClosed = 0L;
-	private double maxUsage = 0.0D;
+	private volatile double maxUsage = 0.0D;
 	
 	private final Map<String, Driver> DRIVER_MARK = new ConcurrentHashMap<String, Driver>();
 	private final Map<Integer, Long> CONN_ERROR_TIME = new ConcurrentHashMap<Integer, Long>();
 
-	private boolean inited = false;
+	private volatile boolean inited = false;
 
 	private Boolean enableStatusLog = false;
 	private Boolean enableFullStatusLog = true;
@@ -530,7 +530,7 @@ public final class DriverDataSource implements DataSource {
 	* Performs the getOpenConnectionSize operation
 	* @return the getOpenConnectionSize result
 	* */
-	private synchronized Integer getOpenConnectionSize() {
+	private Integer getOpenConnectionSize() {
 		return connectionPool.getOpenConnectionSize();
 	}
 
@@ -547,7 +547,7 @@ public final class DriverDataSource implements DataSource {
 	 * Abort timeout connection
 	 * Skip execute when 'timeout' is 0 or 'transactionTimeout' is 0
 	 * */
-	private synchronized void abortTimeoutConnection() {
+	private void abortTimeoutConnection() {
 		try {
 			if (timeout > 0 || transactionTimeout > 0) {
 				Date currentTime = new Date();
@@ -597,7 +597,7 @@ public final class DriverDataSource implements DataSource {
 	 * Abort life cycle connection
 	 * Skip execute when 'lifeCycle' is 0
 	 * */
-	private synchronized void abortLifeCycleEndedConnection() {
+	private void abortLifeCycleEndedConnection() {
 		if (lifeCycle > 0) {
 			Date currentTime = new Date();
 			List<Integer> abortList = new ArrayList<Integer>();
@@ -627,7 +627,7 @@ public final class DriverDataSource implements DataSource {
 	 * Abort idle timeout connection
 	 * Skip execute when 'idleTimeout' is 0
 	 * */
-	private synchronized void abortIdleTimeoutConnection() {
+	private void abortIdleTimeoutConnection() {
 		if (idleTimeout > 0) {
 			Date currentTime = new Date();
 			List<Integer> abortList = new ArrayList<Integer>();
@@ -662,7 +662,7 @@ public final class DriverDataSource implements DataSource {
 	 * Abort invalid connection
 	 * Skip execute when 'testValidTimeout' is 0
 	 * */
-	private synchronized void abortInvalidConnection() {
+	private void abortInvalidConnection() {
 		if (testValidTimeout > 0) {
 			try {
 				List<Integer> abortList = new ArrayList<Integer>();
@@ -1073,9 +1073,15 @@ public final class DriverDataSource implements DataSource {
 	/**
 	 * Manage connection pool
 	 * */
-	private synchronized void manageConnectionPool() {
+	private void manageConnectionPool() {
+		// Starts the single management thread exactly once. Double-checked
+		// locking keeps this off the borrow hot path after first init - the
+		// former method-level synchronized made every getConnection() contend
+		// on the same lock just to re-read an already-true flag.
 		if (!inited) {
-			inited = true;
+			synchronized (this) {
+				if (!inited) {
+					inited = true;
 
 			String threadName = this.name;
 			ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -1160,7 +1166,9 @@ public final class DriverDataSource implements DataSource {
 				}
 
 			});
+			}
 		}
+	}
 	}
 
 	/**
@@ -1169,18 +1177,22 @@ public final class DriverDataSource implements DataSource {
 	 * @return Connection
 	 * */
     @Override
-	public synchronized Connection getConnection() throws SQLException {
+	public Connection getConnection() throws SQLException {
 	    try{
     		manageConnectionPool();
-    		Date currentTime = new Date();
     		Connection conn = null;
-    		boolean allowedGetSingle = true;
-
-    		if(connectionPool.size() == 0){
-    		     loadConnectionToPool();
+    		// Borrow path is lock-free: ConnectionPool serializes only the
+    		// compound pick-and-remove on its own poolLock. Under contention
+    		// another thread may take the last idle connection right after our
+    		// empty-pool check, so retry once after (re)loading - preserves the
+    		// former fully-synchronized semantics (either a connection or an
+    		// error, never a spurious null).
+    		for (int attempt = 0; attempt < 2 && conn == null; attempt++) {
+	    		if(connectionPool.size() == 0){
+	    		     loadConnectionToPool();
+	    		}
+	    		conn = connectionPool.getConnection();
     		}
-
-    		conn = connectionPool.getConnection();
     		if (conn == null) {
     			throwConnIsNull();
     		}			
@@ -1274,7 +1286,7 @@ public final class DriverDataSource implements DataSource {
 	 * @exception SQLException
 	 * @return Connection
 	 * */
-	private synchronized Connection getConnectionFromDriver() throws SQLException {
+	private Connection getConnectionFromDriver() throws SQLException {
 		Properties props = getConnectionProperties();
 		Connection conn = null;
 		if (driverJar == null) {
@@ -1449,7 +1461,7 @@ public final class DriverDataSource implements DataSource {
 	 * @param driver - Driver
 	 * @param props - Connection properties ,var name is 'connProps'
 	 * */
-	private synchronized Connection tryGetConnection(Driver driver, Properties props) {
+	private Connection tryGetConnection(Driver driver, Properties props) {
 		Connection conn = null;
 		int urlLastIndex = urlList.size() - 1;
 
@@ -1700,7 +1712,7 @@ public final class DriverDataSource implements DataSource {
 	* Performs the getAveUsage operation
 	* @return the getAveUsage result
 	* */
-	public synchronized double getAveUsage(){
+	public double getAveUsage(){
 	    int size = aveUsageSum.size();
 	    double sum = 0.0D;
 	    for(int i = 0; i < size;i++){
@@ -1724,7 +1736,7 @@ public final class DriverDataSource implements DataSource {
 	* Performs the countUsage operation
 	* @param calAve - the calAve
 	* */
-	private synchronized void countUsage(boolean calAve) {
+	private void countUsage(boolean calAve) {
 		double usage = getUsage();
         if(calAve){
             if(aveUsageSum.size() >= maxAveUsageSize){
@@ -1741,7 +1753,7 @@ public final class DriverDataSource implements DataSource {
 	 * Get pool using 
 	 * @return double
 	 * */
-	public synchronized double getUsage() {
+	public double getUsage() {
 		Map<Integer, Date> CONNECTION_USING_AT_MARK_SYNC = connectionPool.getConnectionUsingAtMark();
 		int usingSize = CONNECTION_USING_AT_MARK_SYNC.keySet().size();
 

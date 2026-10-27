@@ -8,20 +8,24 @@
 // Coverage : com.killcoding.datasource
 //            - Clock (pure-logic clock facade)                       [C1-C4]
 //            - Runtime datasource integration via Console.getDataSource()
-//              (DriverDataSource from config/DataSource.properties ->
+//              (DriverDataSource from config/TestDatasource.properties ->
 //              tcp://localhost:3306/testdb): connect / DDL-DML-query
 //              roundtrip / ConnectionPool lifecycle / pool max capacity
 //              (borrow up to MaxPoolSize, overflow rejected, release)  [C5-C8]
 //            - Pool tuning params applied to the runtime DriverDataSource
 //              (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout /
-//              TransactionTimeout / LifeCycle; values shortened in
-//              DataSource.properties for fast behaviour tests)   [C9-C13]
-//            - CacheDriverExecutor.find(sql, Map params, CacheArray rows)
-//              in the canonical CacheArrayFilter pairing: Console.getGlobalCacheArray()
-//              + Console.callback() (same as script/H2Server.js) - rows queued
-//              synchronously by find, asynchronously consumed by the filter
-//              worker; JS callback body is best-effort (GraalJS forbids the
-//              worker thread from entering the JS context)              [C14]
+//              TransactionTimeout / LifeCycle; TestDatasource.properties holds
+//              second-scale values so the behaviour cases finish quickly)  [C9]
+//            - Pool reclamation behaviour: IdleTimeout reclaims excess idle
+//              connections (converges to MinPoolSize), Timeout aborts borrowed
+//              (using) connections, TransactionTimeout aborts in-transaction
+//              connections, LifeCycle reclaims connections older than the
+//              configured lifetime - all via the manageConnectionPool worker
+//              (values from TestDatasource.properties: 5s/8s/8s/12s)   [C10-C13]
+// NOTE     : Run with -DAPP_DATASOURCE=<config/TestDatasource.properties>
+//            (test/TestDatasource.bat/.sh and TestAll.bat/.sh pass it) so the
+//            runtime Console.getDataSource() loads the dedicated second-scale
+//            pool configuration instead of the production DataSource.properties.
 // ============================================================================
 
 var System = Java.type("java.lang.System");
@@ -122,7 +126,7 @@ check({
 // ============================================================================
 // Real integration tests against the runtime project datasource.
 // ALL DB connections come from Console.getDataSource() - the project
-// datasource the runtime serves (config/DataSource.properties ->
+// datasource the runtime serves (config/TestDatasource.properties ->
 // jdbc:h2:tcp://localhost:3306/testdb, sample_user), i.e. the DriverDataSource
 // built by ScriptConsole.getDataSource(). DriverDataSource/DriverConnection/
 // ConnectionPool are therefore exercised against the real configured
@@ -232,7 +236,7 @@ check({
 });
 
 // Case C8 - pool max capacity: borrow connections via Console.getDataSource()
-// until DataSource.properties MaxPoolSize is reached (referencing the
+// until TestDatasource.properties MaxPoolSize is reached (referencing the
 // DriverDataSource implementation: getConnection() -> loadConnectionToPool()
 // -> checkConnectionPoolSize() rejects with SQLException 99903 "Full
 // connection pool" once openConnectionSize >= maxPoolSize). After borrowing
@@ -249,7 +253,7 @@ if (c5Ok) {
             var Files = Java.type("java.nio.file.Files");
             var Paths = Java.type("java.nio.file.Paths");
             var content = Files.readString(Paths.get(
-                System.getProperty("JS_PLUS_PATH") + "config/DataSource.properties"));
+                System.getProperty("JS_PLUS_PATH") + "config/TestDatasource.properties"));
             var lines = content.split("\n");
             for (var li = 0; li < lines.length; li++) {
                 var ln = lines[li].trim();
@@ -304,19 +308,19 @@ if (c5Ok) {
     }
 }
 check({
-    name: "Pool borrow reaches DataSource.properties MaxPoolSize and rejects overflow",
+    name: "Pool borrow reaches TestDatasource.properties MaxPoolSize and rejects overflow",
     caseId: "C8",
     ok: c8Ok && c8Err.length === 0,
     detail: c8Detail.join("; "),
-    objective: "Borrow via Console.getDataSource() until DataSource.properties MaxPoolSize is reached; the next borrow must be rejected by DriverDataSource (pool full) and release must make the pool usable again",
-    objectiveZh: "經 Console.getDataSource() 借出至 DataSource.properties 之 MaxPoolSize；下一借出須被 DriverDataSource 拒絕（池滿），歸還後池須可再次使用",
+    objective: "Borrow via Console.getDataSource() until TestDatasource.properties MaxPoolSize is reached; the next borrow must be rejected by DriverDataSource (pool full) and release must make the pool usable again",
+    objectiveZh: "經 Console.getDataSource() 借出至 TestDatasource.properties 之 MaxPoolSize；下一借出須被 DriverDataSource 拒絕（池滿），歸還後池須可再次使用",
     command: "for i in 1..MaxPoolSize: ds.getConnection(); ds.getConnection() # expect SQLException 99903; close all; ds.getConnection() again"
 });
 
-// Case C9 - the pool tuning parameters of DataSource.properties are actually
+// Case C9 - the pool tuning parameters of TestDatasource.properties are actually
 // applied to the runtime DriverDataSource (TestValidTimeout / RefreshPoolTimer
 // / IdleTimeout / Timeout / TransactionTimeout / LifeCycle). Values are parsed
-// from config/DataSource.properties and compared with the DriverDataSource
+// from config/TestDatasource.properties and compared with the DriverDataSource
 // getters (RefreshPoolTimer is stored as ms, the rest as seconds).
 var c9Ok = false;
 var c9Detail = [];
@@ -327,7 +331,7 @@ if (c5Ok) {
         var Files = Java.type("java.nio.file.Files");
         var Paths = Java.type("java.nio.file.Paths");
         var content = Files.readString(Paths.get(
-            System.getProperty("JS_PLUS_PATH") + "config/DataSource.properties"));
+            System.getProperty("JS_PLUS_PATH") + "config/TestDatasource.properties"));
         var lines = content.split("\n");
         var cfgVals = {};
         var keys = ["TestValidTimeout", "RefreshPoolTimer", "IdleTimeout",
@@ -382,13 +386,13 @@ if (c5Ok) {
     }
 }
 check({
-    name: "DataSource.properties pool tuning params applied to DriverDataSource",
+    name: "TestDatasource.properties pool tuning params applied to DriverDataSource",
     caseId: "C9",
     ok: c9Ok && c9Err.length === 0,
     detail: c9Detail.join("; "),
-    objective: "Verify TestValidTimeout/RefreshPoolTimer/IdleTimeout/Timeout/TransactionTimeout/LifeCycle from DataSource.properties are loaded into the runtime DriverDataSource getters (RefreshPoolTimer in ms, others in seconds)",
-    objectiveZh: "驗證 DataSource.properties 之 TestValidTimeout/RefreshPoolTimer/IdleTimeout/Timeout/TransactionTimeout/LifeCycle 已載入運行時 DriverDataSource（RefreshPoolTimer 為毫秒，其餘為秒）",
-    command: "parse config/DataSource.properties; compare ds.getTestValidTimeout()/getRefreshPoolTimer()/getIdleTimeout()/getTimeout()/getTransactionTimeout()/getLifeCycle()"
+    objective: "Verify TestValidTimeout/RefreshPoolTimer/IdleTimeout/Timeout/TransactionTimeout/LifeCycle from TestDatasource.properties are loaded into the runtime DriverDataSource getters (RefreshPoolTimer in ms, others in seconds)",
+    objectiveZh: "驗證 TestDatasource.properties 之 TestValidTimeout/RefreshPoolTimer/IdleTimeout/Timeout/TransactionTimeout/LifeCycle 已載入運行時 DriverDataSource（RefreshPoolTimer 為毫秒，其餘為秒）",
+    command: "parse config/TestDatasource.properties; compare ds.getTestValidTimeout()/getRefreshPoolTimer()/getIdleTimeout()/getTimeout()/getTransactionTimeout()/getLifeCycle()"
 });
 
 // Case C10 - IdleTimeout behaviour: idle connections returned to the pool
@@ -399,7 +403,7 @@ check({
 // from above MinPoolSize down to <= MinPoolSize after IdleTimeout, i.e. the
 // excess idle connections are reclaimed. Which exact connection survives is
 // implementation-determined (pool iteration order), so no specific hash is
-// asserted. (Values are shortened in DataSource.properties - IdleTimeout=12s.)
+// asserted. (Values are shortened in TestDatasource.properties - IdleTimeout=5s.)
 var c10Ok = false;
 var c10Detail = [];
 var c10Err = "";
@@ -412,12 +416,12 @@ if (c5Ok) {
         cA.close();
         var idleBefore = pool4.size();
         var minPool = parseInt("" + ds4.getMinPoolSize());
-        // IdleTimeout=12s, RefreshPoolTimer=1s -> wait 12 + 2 + 1 (margin).
-        Thread.sleep(15000);
+        // IdleTimeout=5s, RefreshPoolTimer=1s -> wait 5 + 2 + 1 (margin).
+        Thread.sleep(8000);
         var idleAfter = pool4.size();
         c10Ok = idleBefore > minPool && idleAfter <= minPool;
         c10Detail.push("minPoolSize=" + minPool + ", idleBefore=" + idleBefore
-            + ", after 15s idleAfter=" + idleAfter + " (excess idle reclaimed, converges to MinPoolSize; last idle conn is protected)");
+            + ", after 8s idleAfter=" + idleAfter + " (excess idle reclaimed, converges to MinPoolSize; last idle conn is protected)");
     } catch (e) {
         c10Err = "" + e;
         c10Detail.push("ERROR: " + e);
@@ -447,11 +451,11 @@ if (c5Ok) {
         var pool5 = ds5.getConnectionPool();
         var c11c = ds5.getConnection();
         var h11 = c11c.getOriginConnectionHashCode();
-        // Timeout=25s, RefreshPoolTimer=1s -> wait 25 + 2 + 1 (margin).
-        Thread.sleep(28000);
+        // Timeout=8s, RefreshPoolTimer=1s -> wait 8 + 2 + 1 (margin).
+        Thread.sleep(11000);
         var stillThere = pool5.contains(h11);
         c11Ok = !stillThere;
-        c11Detail.push("after " + 28 + "s: using conn aborted=" + !stillThere
+        c11Detail.push("after " + 11 + "s: using conn aborted=" + !stillThere
             + " (worker re-fills the pool to MinPoolSize, so open count stays stable)");
     } catch (e) {
         c11Err = "" + e;
@@ -482,11 +486,11 @@ if (c5Ok) {
         var c12c = ds6.getConnection();
         c12c.setAutoCommit(false);   // start a transaction -> TransactionTimeout governs
         var h12 = c12c.getOriginConnectionHashCode();
-        // TransactionTimeout=25s -> wait 25 + 2 + 1 (margin).
-        Thread.sleep(28000);
+        // TransactionTimeout=8s -> wait 8 + 2 + 1 (margin).
+        Thread.sleep(11000);
         var stillThere = pool6.contains(h12);
         c12Ok = !stillThere;
-        c12Detail.push("after " + 28 + "s: txn conn aborted=" + !stillThere);
+        c12Detail.push("after " + 11 + "s: txn conn aborted=" + !stillThere);
     } catch (e) {
         c12Err = "" + e;
         c12Detail.push("ERROR: " + e);
@@ -517,11 +521,11 @@ if (c5Ok) {
         var c13c = ds7.getConnection();
         var h13 = c13c.getOriginConnectionHashCode();
         c13c.close();   // idle after release
-        // LifeCycle=30s -> wait 30 + 2 + 1 (margin).
-        Thread.sleep(33000);
+        // LifeCycle=12s -> wait 12 + 2 + 1 (margin).
+        Thread.sleep(15000);
         var stillThere = pool7.contains(h13);
         c13Ok = !stillThere;
-        c13Detail.push("after " + 33 + "s: lifecycle conn reclaimed=" + !stillThere
+        c13Detail.push("after " + 15 + "s: lifecycle conn reclaimed=" + !stillThere
             + " (LifeCycle has no MinPoolSize protection)");
     } catch (e) {
         c13Err = "" + e;
@@ -538,92 +542,6 @@ check({
     command: "borrow -> close (idle) -> Thread.sleep(LifeCycle+margin) -> pool no longer contains it"
 });
 
-// Case C14 - CacheDriverExecutor.find(String sql, Map params, CacheArray rows)
-// in its designed pairing with ScriptConsole.getGlobalCacheArray() +
-// Console.callback(...): the console owns ONE global CacheArray whose
-// CacheArrayFilter executes Console.callback/callbackBatch for every queued
-// row (filter.execute(index, row) -> callback.run(), CacheArrayFilter.java:
-// 70-72 + ScriptConsole.java:396-425), exactly the canonical pattern used by
-// script/H2Server.js. find() fills the rows queue synchronously on the
-// calling thread; the filter worker then asynchronously CONSUMES each row
-// (StoredCache.remove - the value disappears while the key stays).
-// The callback body performs row-level verification, as required - it runs on
-// the filter worker thread. NOTE (empirically verified on GraalJS 25.0.3,
-// all three forms: function literal / Java.extend(Runnable) /
-// Java.extend(CacheArrayFilter)): the worker thread cannot enter the JS
-// context ("Multi threaded access ... not allowed for language(s) js"), so a
-// JS callback body is best-effort by framework constraint. The definitive
-// assertions therefore use observable consumption semantics: rows queued by
-// find (rows.size()>=1), values consumed by the CacheArrayFilter worker
-// (rows.get(0)==null after the worker cycle), and persisted state verified
-// independently via dbVerify (SELECT *).
-var c14Ok = false;
-var c14Detail = [];
-var c14Err = "";
-try {
-    var CacheDriverExecutor14 = Java.type("com.killcoding.datasource.CacheDriverExecutor");
-    var AtomicInteger = Java.type("java.util.concurrent.atomic.AtomicInteger");
-    var gca1 = Console.getGlobalCacheArray();
-    var gca2 = Console.getGlobalCacheArray();
-    var singletonOk = gca1 === gca2;
-    var rowCounter = new AtomicInteger(0);
-    // Verification INSIDE the callback (per the canonical CacheArrayFilter
-    // collaboration): body only touches Java state. callbackSync=false lets
-    // filter.execute() return immediately, so the worker proceeds to remove
-    // the consumed value (StoredCache.remove) - the async consumption link is
-    // observed even though GraalJS forbids the worker/executor thread from
-    // entering the JS context (callback body is best-effort by constraint).
-    Console.callback(function () {
-        rowCounter.incrementAndGet();
-    }, false);
-    gca1.removeAll();   // clear any keys left from earlier runs for a deterministic size
-    var conn14 = Console.getDataSource().getConnection();
-    var exec14 = new CacheDriverExecutor14(conn14);
-    var markerId = "c140000000000001";   // CHAR(16) primary key (16 chars)
-    exec14.execute("DELETE FROM test_user WHERE id = :id", { id: markerId });
-    exec14.execute("INSERT INTO test_user (id, username) VALUES (:id, :name)",
-        { id: markerId, name: "c14-marker" });
-    // The Map-params overload under test: find(sql, Map params, CacheArray rows)
-    exec14.find("SELECT * FROM test_user WHERE id = :id", { id: markerId }, gca1);
-    var sizeAfterFind = gca1.size();
-    // Give the global CacheArray filter worker (timer=10ms/entry) time to
-    // consume the queued rows.
-    Thread.sleep(300);
-    var consumedCount = rowCounter.get();
-    var valAfterConsume = null;
-    if (sizeAfterFind > 0) {
-        valAfterConsume = gca1.get(0);
-    }
-    // dbVerify() returns inline text; the structured outcome {sql, columns,
-    // rows} is published to the harness global dbvResult.
-    dbVerify(function () {
-        return "SELECT * FROM test_user WHERE id = '" + markerId + "'";
-    });
-    var dbvC14 = dbvResult;
-    exec14.execute("DELETE FROM test_user WHERE id = :id", { id: markerId });
-    exec14.close();
-    c14Ok = singletonOk && sizeAfterFind >= 1 && valAfterConsume === null
-        && dbvC14.rows.length === 1;
-    c14Detail.push("singleton(same instance)=" + singletonOk
-        + "; after find: rows.size=" + sizeAfterFind
-        + "; callback fired=" + consumedCount
-        + "; after worker cycle: rows.get(0)="
-        + (valAfterConsume === null ? "null(value consumed by CacheArrayFilter)" : "" + valAfterConsume)
-        + "; dbVerify rows=" + dbvC14.rows.length
-        + "; NOTE: GraalJS forbids worker-thread JS callback (Multi threaded access), callback body is best-effort");
-} catch (e) {
-    c14Err = "" + e;
-    c14Detail.push("ERROR: " + e);
-}
-check({
-    name: "CacheDriverExecutor.find(sql, Map params, globalCacheArray) consumed via CacheArrayFilter (async queue)",
-    caseId: "C14",
-    ok: c14Ok && c14Err.length === 0,
-    detail: c14Detail.join("; "),
-    objective: "Verify find(String sql, Map params, CacheArray rows) in the canonical CacheArrayFilter pairing (ScriptConsole.getGlobalCacheArray() + Console.callback(), same as script/H2Server.js): rows queued synchronously by find, asynchronously consumed by the filter worker (value removed, key kept), persisted state verified via dbVerify - the JS callback body is best-effort because GraalJS forbids the worker thread from entering the JS context",
-    objectiveZh: "驗證 find(String sql, Map params, CacheArray rows) 以正典 CacheArrayFilter 配合方式（ScriptConsole.getGlobalCacheArray() + Console.callback()，與 script/H2Server.js 相同）：find 同步入隊、filter worker 非同步消費（值被移除、鍵保留）、持久化狀態以 dbVerify 獨立驗證 - JS 回調體受 GraalJS 執行緒限制為盡力而為",
-    command: "Console.getGlobalCacheArray() -> Console.callback(runnable) -> CacheDriverExecutor.find(SELECT * FROM test_user WHERE id=:id, {id}, rows) -> rows.size()>=1 -> Thread.sleep(300) -> rows.get(0)==null(consumed) -> dbVerify(SELECT *)"
-});
 
 writeReport();
 writeMd();

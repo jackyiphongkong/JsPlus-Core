@@ -380,10 +380,32 @@ public class ScriptConsole implements ConsoleImpl {
 	public synchronized DriverDataSource getDataSource() throws IOException {
 	    
 	    if(datasource == null){
-            File datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/DataSource.properties");
-    		if(!datasourceConfigFile.exists()){
-    		    datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/Datasource.properties");
-    		}	    
+            // Runtime override: -DAPP_DATASOURCE=/path/xxx.properties (or the
+            // APP_DATASOURCE env var) lets test runners such as
+            // test/TestDatasource.bat/.sh exercise the datasource suite against
+            // a dedicated pool configuration (e.g. config/TestDatasource.properties
+            // with second-scale idle/using/abort/timeout values) without touching
+            // the production DataSource.properties. Absent the override, behaviour
+            // is exactly as before: default config/DataSource(.properties) file.
+            String appDataSourcePath = System.getProperty("APP_DATASOURCE");
+            if (appDataSourcePath == null || appDataSourcePath.trim().length() == 0) {
+                appDataSourcePath = System.getenv("APP_DATASOURCE");
+            }
+            File datasourceConfigFile = null;
+            if (appDataSourcePath != null && appDataSourcePath.trim().length() > 0) {
+                File overrideFile = new File(appDataSourcePath);
+                if (overrideFile.exists()) {
+                    datasourceConfigFile = overrideFile;
+                } else {
+                    Logger.systemDebug(ScriptConsole.class, "APP_DATASOURCE file not found: " + appDataSourcePath + " - falling back to default config");
+                }
+            }
+            if (datasourceConfigFile == null) {
+                datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/DataSource.properties");
+                if(!datasourceConfigFile.exists()){
+                    datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/Datasource.properties");
+                }
+            }
     		if(datasourceConfigFile.exists()){
 	            ScriptConsole.datasource = new DriverDataSource(datasourceConfigFile);
     		}else{
