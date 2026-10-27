@@ -1103,3 +1103,17 @@ ${jr.diff.changes}- build: 自動版本遞增
 - found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
 - build: 自動版本遞增
 
+
+## 6.1.76 (2026.10.27 16:23:43)
+- found diffed: com/killcoding/file/BaseFile.java (M)
+- found diffed: com/killcoding/file/RemoteFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.77 (2026.10.27 16:55:20)
+- found diffed: com/killcoding/file/BaseFile.java (M)
+- found diffed: com/killcoding/file/RemoteFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (A)
+- build: 自動版本遞增
+

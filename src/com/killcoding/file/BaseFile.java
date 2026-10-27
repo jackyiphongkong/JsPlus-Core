@@ -652,7 +652,7 @@ public abstract class BaseFile {
     * @param rf - the rf
     * @return the checkUsage result
     * */
-    public static boolean checkUsage(RemoteFile rf){
+    public static boolean checkUsage(RemoteFileBase rf){
         return memoryUsage() < RemoteFile.MAX_MEMORY_USAGE && rf.getDataSourceWriter().getUsage() < RemoteFile.MAX_CONNECT_USAGE && rf.getDataSourceReader().getUsage() < RemoteFile.MAX_CONNECT_USAGE;
     }
     
