@@ -50,4 +50,9 @@ fi
 
 echo "Using \"$JvmParams\""
 
+# Ensure the H2 base directory exists before the server starts - on a fresh
+# CI checkout Database/ is gitignored and absent, and H2 refuses a missing
+# baseDir when a client connects (90149).
+mkdir -p "${JS_PLUS_PATH}../Database"
+
 "$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -GhostName H2Ghost -Task "script/StartH2.js"
