@@ -1400,3 +1400,10 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/jsplus/ScriptConsoleJdbcBase.java (A)
 - build: automatic version bump
 
+
+## 6.1.91 (2026.10.27 22:11:01)
+- found diffed: com/killcoding/file/RemoteFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/file/RemoteFileSync.java (A)
+- build: automatic version bump
+
