@@ -58,9 +58,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CacheArray implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
-    
+
     private static Integer MAX_POOL_SIZE = 100;
-    
+
     private static Integer USING_POOL_SIZE = 0;
 
 	private static ExecutorService arrayPool = null;
@@ -68,13 +68,13 @@ public class CacheArray implements java.io.Serializable {
 	protected transient volatile Object lastItem = null;
 
 	private static volatile boolean stop = false;
-	
+
 	private static volatile boolean forceStop = false;
-	
+
 	private transient volatile CacheArrayFilter filter = null;
-	
+
 	private boolean nullIsCompleted = true;
-	
+
 	protected volatile Integer INDEX = -1;
 	protected volatile Integer SIZE = -1;
 
@@ -86,7 +86,7 @@ public class CacheArray implements java.io.Serializable {
 	protected transient volatile Object OBJECT = null;
 	protected volatile Integer BATCH_INDEX = -1;
     protected transient final List<Object> BATCH = new ArrayList<Object>();
-    
+
 	/**
 	 * All cache keys list
 	 * */
@@ -104,7 +104,7 @@ public class CacheArray implements java.io.Serializable {
 		super();
 		this.nullIsCompleted = true;
 	}
-	
+
 	/**
 	* Constructs a new CacheArray
 	* @param nullIsCompleted - the nullIsCompleted
@@ -112,7 +112,7 @@ public class CacheArray implements java.io.Serializable {
 	public CacheArray(boolean nullIsCompleted) {
 		super();
 		this.nullIsCompleted = nullIsCompleted;
-	}	
+	}
 
 	/**
 	* Performs the initPool operation
@@ -125,7 +125,7 @@ public class CacheArray implements java.io.Serializable {
 			arrayPool = Executors.newFixedThreadPool(MAX_POOL_SIZE);
 		}
 	}
-	
+
 	/**
 	 * Shut down the shared worker pool. Idempotent: safe to call multiple
 	 * times; subsequent filter() calls lazily re-create the pool via initPool().
@@ -136,7 +136,7 @@ public class CacheArray implements java.io.Serializable {
 			arrayPool = null;
 		}
 	}
-	
+
 	/**
 	* Performs the filter operation
 	* @param timer - the timer
@@ -158,7 +158,7 @@ public class CacheArray implements java.io.Serializable {
         	public void execute(Integer index, Object object){
         	    the.INDEX = index;
         	    the.OBJECT = object;
-        	    
+
         	    if(executeRun != null) executeRun.run();
         	}
         	@Override
@@ -169,16 +169,16 @@ public class CacheArray implements java.io.Serializable {
         	* */
         	public void completed(Integer size) {
         	    the.SIZE = size;
-        	    
+
                 if(completedRun != null) completedRun.run();
-        	}   
+        	}
         	@Override
 
         	/*
         	* Performs the terminated operation
         	* */
         	public void terminated() {
-        	    
+
         	    if(terminatedRun != null) terminatedRun.run();
         	}
 	    };
@@ -207,10 +207,10 @@ public class CacheArray implements java.io.Serializable {
         	* @param object - the object
         	* */
         	public void execute(Integer index, Object object){
-        	    
+
         	    if(executeRun != null) executeRun.run();
         	}
-        	
+
         	@Override
 
         	/*
@@ -219,10 +219,10 @@ public class CacheArray implements java.io.Serializable {
         	* @param batch - the batch
         	* */
         	public void executeBatch(Integer index,List<?> batch) {
-        	    
+
                 if(executeBatchRun != null) executeBatchRun.run();
-        	}    
-        	
+        	}
+
         	@Override
 
         	/*
@@ -232,15 +232,15 @@ public class CacheArray implements java.io.Serializable {
         	public void completed(Integer size) {
 
                 if(completedRun != null) completedRun.run();
-        	}   
-        	
+        	}
+
         	@Override
 
         	/*
         	* Performs the terminated operation
         	* */
         	public void terminated() {
-        	    
+
         	    if(terminatedRun != null) terminatedRun.run();
         	}
 	    };
@@ -269,7 +269,7 @@ public class CacheArray implements java.io.Serializable {
 				int index = 0;
 				try {
 					while (!the.completed && !the.filter.isForceTerminated() && !isForceStoped()) {
-					    
+
 						if (Thread.currentThread().isInterrupted()){
 						    the.filter.terminated = true;
 						    the.filter.forceTerminated = true;
@@ -286,20 +286,20 @@ public class CacheArray implements java.io.Serializable {
         						    the.filter.forceTerminated = true;
         						    the.completed = false;
         							break;
-        						}			
-        						
+        						}
+
 								if (forceStop) {
 									the.filter.terminated = true;
 									the.filter.forceTerminated = true;
 									the.completed = false;
 									break;
 								}
-								
+
 								if (the.filter.forceTerminated){
 								    the.completed = false;
 									break;
 								}
-								
+
 								Object t = the.get(index);
 								if (t == null) {
 									the.completed = true;
@@ -308,7 +308,7 @@ public class CacheArray implements java.io.Serializable {
 								lastItem = t;
                         	    the.INDEX = index;
                         	    the.OBJECT = t;
-                        	    the.processedTotal++;								
+                        	    the.processedTotal++;
 								BATCH.add(t);
 								the.filter.execute(index, t);
 								String cacheKey = the.getCacheKey(index);
@@ -324,7 +324,7 @@ public class CacheArray implements java.io.Serializable {
     							the.filter.terminated = true;
     							the.completed = false;
     							break;
-    						}							
+    						}
 						}
 						BATCH_INDEX++;
 						the.filter.executeBatch(BATCH_INDEX,BATCH);
@@ -341,17 +341,17 @@ public class CacheArray implements java.io.Serializable {
 							the.filter.terminated = true;
 							the.completed = false;
 							break;
-						}						
+						}
 					}
 				} finally {
-				    
+
 					if(the.completed) {
 					    the.SIZE = index;
 					    the.filter.completed(index);
 					    setUsingPoolSize(-1);
 					    usageReturned = true;
 					}
-					
+
 					if(the.filter.terminated){
 					    the.filter.terminated();
 					    if(!usageReturned) {
@@ -359,14 +359,14 @@ public class CacheArray implements java.io.Serializable {
 					        usageReturned = true;
 					    }
 					}
-					
+
 					// Guard every other exit path: the pool usage slot must
 					// always be returned exactly once (never leaked, never
 					// double-released).
 					if(!usageReturned) setUsingPoolSize(-1);
-					
+
 					the.removeAll();
-					
+
 					// NOTE: do NOT Thread.currentThread().interrupt() here - the
 					// worker runs on a shared fixed-thread-pool thread; marking
 					// it interrupted makes the next task on that thread exit
@@ -416,7 +416,7 @@ public class CacheArray implements java.io.Serializable {
 	    }
 	    return null;
 	}
-	
+
 	/**
 	 * Add object to the cache list
 	 * @return - return cacke key
@@ -426,11 +426,11 @@ public class CacheArray implements java.io.Serializable {
 	 * */
 	public synchronized String add(Object value,long sleepMs) throws InterruptedException {
 	    String key = add(value);
-	    
+
 	    if(sleepMs > 0) Thread.sleep(sleepMs);
-	    
+
 	    return key;
-	}	
+	}
 
 	/**
 	 * Add list to the cache list
@@ -517,38 +517,38 @@ public class CacheArray implements java.io.Serializable {
 	public synchronized Boolean isCompleted() {
 		return completed;
 	}
-	
+
 	/**
 	* Performs the isStoped operation
 	* @return the isStoped result
 	* */
 	public static Boolean isStoped() {
 		return stop;
-	}	
-	
+	}
+
 	/**
 	* Performs the isForceStoped operation
 	* @return the isForceStoped result
 	* */
 	public static Boolean isForceStoped() {
 		return forceStop;
-	}	
-	
+	}
+
 	/**
 	* Performs the stop operation
 	* */
 	public static void stop() {
 		stop = true;
 	}
-	
+
 	/**
 	* Performs the forceStop operation
 	* */
 	public static void forceStop() {
 		stop = true;
 		forceStop = true;
-	}	
-	
+	}
+
 	/**
 	* Performs the start operation
 	* */
@@ -556,7 +556,7 @@ public class CacheArray implements java.io.Serializable {
 		stop = false;
 		forceStop = false;
 	}
-	
+
 	/**
 	* Performs the terminate operation
 	* */
@@ -570,7 +570,7 @@ public class CacheArray implements java.io.Serializable {
 	public void forceTerminate(){
 	    if(filter != null) filter.forceTerminate();
 	}
-	
+
 	/**
 	* Performs the isTerminated operation
 	* @return the isTerminated result
@@ -578,15 +578,15 @@ public class CacheArray implements java.io.Serializable {
 	public Boolean isTerminated(){
 	    return filter == null ? true : filter.isTerminated();
 	}
-	
+
 	/**
 	* Performs the isForceTerminated operation
 	* @return the isForceTerminated result
 	* */
 	public Boolean isForceTerminated(){
 	    return filter == null ? true : filter.isForceTerminated();
-	}	
-	
+	}
+
 	/**
 	* Performs the getFilter operation
 	* @return the getFilter result
@@ -594,7 +594,7 @@ public class CacheArray implements java.io.Serializable {
 	public CacheArrayFilter getFilter(){
 	    return filter;
 	}
-	
+
 	/**
 	* Performs the getIndex operation
 	* @return the getIndex result
@@ -609,7 +609,7 @@ public class CacheArray implements java.io.Serializable {
 	public synchronized long getProcessedTotal(){
 	    return processedTotal;
 	}
-	
+
 	/**
 	* Performs the getSize operation
 	* @return the getSize result
@@ -617,14 +617,14 @@ public class CacheArray implements java.io.Serializable {
 	public Integer getSize(){
 	    return SIZE;
 	}
-	
+
 	/**
 	* Performs the getObject operation
 	* @return the getObject result
 	* */
 	public Object getObject(){
 	    return OBJECT;
-	}		
+	}
 
 	/**
 	* Performs the getBatch operation
@@ -632,8 +632,8 @@ public class CacheArray implements java.io.Serializable {
 	* */
 	public Object getBatch(){
 	    return BATCH;
-	}	
-	
+	}
+
 	/**
 	* Performs the getBatchIndex operation
 	* @return the getBatchIndex result
@@ -641,7 +641,7 @@ public class CacheArray implements java.io.Serializable {
 	public Integer getBatchIndex(){
 	    return BATCH_INDEX;
 	}
-	
+
 	/**
 	* Performs the setUsingPoolSize operation
 	* @param value - the value
@@ -650,14 +650,14 @@ public class CacheArray implements java.io.Serializable {
 	private static synchronized Integer setUsingPoolSize(int value){
 	    return USING_POOL_SIZE += value;
 	}
-	
+
 	/**
 	* Performs the getUsingPoolSize operation
 	* @return the getUsingPoolSize result
 	* */
 	public static synchronized Integer getUsingPoolSize(){
 	    return USING_POOL_SIZE;
-	}	
+	}
 
 	/**
 	* Performs the getMaxPoolSize operation
@@ -665,8 +665,8 @@ public class CacheArray implements java.io.Serializable {
 	* */
 	public static Integer getMaxPoolSize(){
 	    return MAX_POOL_SIZE;
-	}	
-	
+	}
+
 	/**
 	* Performs the getUsage operation
 	* @return the getUsage result
@@ -674,7 +674,7 @@ public class CacheArray implements java.io.Serializable {
 	public static synchronized double getUsage(){
 	    return getUsingPoolSize()/(MAX_POOL_SIZE*1.0D);
 	}
-	
+
 	/**
 	* Performs the isNulIsCompleted operation
 	* @return the isNulIsCompleted result
@@ -682,12 +682,12 @@ public class CacheArray implements java.io.Serializable {
 	public boolean isNulIsCompleted(){
 	    return nullIsCompleted;
 	}
-	
+
 	/**
 	* Performs the setNulIsCompleted operation
 	* @param nullIsCompleted - the nullIsCompleted
 	* */
 	public void setNulIsCompleted(boolean nullIsCompleted){
 	    this.nullIsCompleted = nullIsCompleted;
-	}	
+	}
 }

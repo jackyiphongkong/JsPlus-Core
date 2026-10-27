@@ -43,12 +43,12 @@ public class ConnectionPool {
 	 * Record all connection hash code
 	 * */
 	private final Map<Long, Integer> CONNECTION_POOL = new ConcurrentHashMap<Long, Integer>();
-	
+
 	private final Map<Integer, String> CONNECTION_THREAD_MARK = new ConcurrentHashMap<Integer, String>();
 	private final Map<Integer, Connection> CONNECTION_MARK = new ConcurrentHashMap<Integer, Connection>();
 	private final Map<Integer, Date> CONNECTION_OPENED_AT_MARK = new ConcurrentHashMap<Integer, Date>();
 	private final Map<Integer, Date> CONNECTION_USING_AT_MARK = new ConcurrentHashMap<Integer, Date>();
-	private final Map<Integer, Date> CONNECTION_IDLE_BEGIN_MARK = new ConcurrentHashMap<Integer, Date>();	
+	private final Map<Integer, Date> CONNECTION_IDLE_BEGIN_MARK = new ConcurrentHashMap<Integer, Date>();
 
 	/**
 	 * Guard for the compound (check-then-act) operations on CONNECTION_POOL:
@@ -73,7 +73,7 @@ public class ConnectionPool {
 	public Map<Long,Integer> map() {
 	   return new HashMap<Long,Integer>(CONNECTION_POOL);
 	}
-	
+
 	/**
 	 * List all connection hash code
 	 * @return List - All connection hash code
@@ -112,11 +112,11 @@ public class ConnectionPool {
 	    	    while(CONNECTION_POOL.containsKey(newKey)){
 	    	        newKey = System.nanoTime();
 	    	    }
-	    	    
+
 	    		final Date openedAt = new Date();
 	    		CONNECTION_IDLE_BEGIN_MARK.put(connHashCode, openedAt);
 	    		CONNECTION_OPENED_AT_MARK.put(connHashCode, openedAt);
-	    		CONNECTION_MARK.put(connHashCode, conn);	     	    
+	    		CONNECTION_MARK.put(connHashCode, conn);
 	    	    CONNECTION_POOL.put(newKey,connHashCode);
 	    	    return true;
 		    }
@@ -150,10 +150,10 @@ public class ConnectionPool {
 		CONNECTION_OPENED_AT_MARK.remove(connHashCode);
 		CONNECTION_USING_AT_MARK.remove(connHashCode);
 		CONNECTION_IDLE_BEGIN_MARK.remove(connHashCode);
-		CONNECTION_THREAD_MARK.remove(connHashCode);	    
+		CONNECTION_THREAD_MARK.remove(connHashCode);
         remove(connHashCode);
 	}
-	
+
 	/**
 	* Performs the remove operation
 	* @param connHashCode - the connHashCode
@@ -179,7 +179,7 @@ public class ConnectionPool {
 	    	    return rmHashCode != null;
 		    }
         }
-	}	
+	}
 
 	/**
 	* Performs the contains operation
@@ -206,19 +206,19 @@ public class ConnectionPool {
 		    }
 	    }
 	}
-	
+
 	/**
 	* Performs the getOpenConnectionSize operation
 	* @return the getOpenConnectionSize result
 	* */
 	public Integer getOpenConnectionSize() {
 		return CONNECTION_OPENED_AT_MARK.keySet().size();
-	}	
-	
+	}
+
 	public Map<Integer, Date> getConnectionOpenedAtMark(){
 	    return new HashMap<Integer, Date>(CONNECTION_OPENED_AT_MARK);
 	}
-	
+
 	/**
 	* Performs the removeConnectionOpenedAtMark operation
 	* @param hashCode - the hashCode
@@ -226,8 +226,8 @@ public class ConnectionPool {
 	* */
 	protected Object removeConnectionOpenedAtMark(Integer hashCode){
 	     return CONNECTION_OPENED_AT_MARK.remove(hashCode);
-	}	
-	
+	}
+
 	/**
 	* Performs the setConnectionOpenedAtMark operation
 	* @param hashCode - the hashCode
@@ -236,12 +236,12 @@ public class ConnectionPool {
 	* */
 	protected Object setConnectionOpenedAtMark(Integer hashCode,Date date){
 	     return CONNECTION_OPENED_AT_MARK.put(hashCode,date);
-	}	
-	
+	}
+
 	public Map<Integer, Date> getConnectionUsingAtMark(){
 	    return new HashMap<Integer, Date>(CONNECTION_USING_AT_MARK);
 	}
-	
+
 	/**
 	* Performs the removeConnectionUsingAtMark operation
 	* @param hashCode - the hashCode
@@ -250,7 +250,7 @@ public class ConnectionPool {
 	protected Object removeConnectionUsingAtMark(Integer hashCode){
 	     return CONNECTION_USING_AT_MARK.remove(hashCode);
 	}
-	
+
 	/**
 	* Performs the setConnectionUsingAtMark operation
 	* @param hashCode - the hashCode
@@ -264,7 +264,7 @@ public class ConnectionPool {
 	protected Map<Integer, Connection> getConnectionMark(){
 	    return CONNECTION_MARK;
 	}
-	
+
 	/**
 	* Performs the getConnection operation
 	* @return the getConnection result
@@ -272,17 +272,17 @@ public class ConnectionPool {
 	protected Connection getConnection(){
     	Thread ct = Thread.currentThread();
     	String tn = ct.getName();
-    	long tid = ct.threadId();	    
+    	long tid = ct.threadId();
     	Integer hashCode = get();
-    	
+
     	if(hashCode == null) return null;
-    	
+
 	    CONNECTION_USING_AT_MARK.put(hashCode, new Date());
     	CONNECTION_IDLE_BEGIN_MARK.remove(hashCode);
     	CONNECTION_THREAD_MARK.put(hashCode, String.format("%s-%s", tn, tid));
 	    return CONNECTION_MARK.get(hashCode);
-	}	
-	
+	}
+
 	/**
 	* Performs the removeConnectionMark operation
 	* @param hashCode - the hashCode
@@ -291,7 +291,7 @@ public class ConnectionPool {
 	protected Object removeConnectionMark(Integer hashCode){
 	     return CONNECTION_MARK.remove(hashCode);
 	}
-	
+
 	/**
 	* Performs the setConnectionMark operation
 	* @param hashCode - the hashCode
@@ -301,11 +301,11 @@ public class ConnectionPool {
 	protected Object setConnectionMark(Integer hashCode,Connection conn){
 	     return CONNECTION_MARK.put(hashCode,conn);
 	}
-	
+
 	public Map<Integer, Date> getConnectionIdleBeginMark(){
 	    return new HashMap<Integer,Date>(CONNECTION_IDLE_BEGIN_MARK);
 	}
-	
+
 	/**
 	* Performs the removeConnectionIdleBeginMark operation
 	* @param hashCode - the hashCode
@@ -314,7 +314,7 @@ public class ConnectionPool {
 	protected Object removeConnectionIdleBeginMark(Integer hashCode){
 	     return CONNECTION_IDLE_BEGIN_MARK.remove(hashCode);
 	}
-	
+
 	/**
 	* Performs the setConnectionIdleBeginMark operation
 	* @param hashCode - the hashCode
@@ -324,7 +324,7 @@ public class ConnectionPool {
 	protected Object setConnectionIdleBeginMark(Integer hashCode,Date date){
 	     return CONNECTION_IDLE_BEGIN_MARK.put(hashCode,date);
 	}
-	
+
 	public Map<Integer, String> getConnectionThreadMark(){
 	    return new HashMap<Integer, String>(CONNECTION_THREAD_MARK);
 	}

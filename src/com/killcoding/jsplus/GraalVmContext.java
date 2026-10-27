@@ -50,7 +50,7 @@ public class GraalVmContext extends JsPlusContext {
 	private Engine engine = null;
 	private Context context = null;
 	private Value value = null;
-	
+
 	/**
 	* Constructs a new GraalVmContext
 	* @param engineName - the engineName
@@ -64,7 +64,7 @@ public class GraalVmContext extends JsPlusContext {
         }
         this.engineName = useEngineName;
 	}
-	
+
 	@Override
 
 	/*
@@ -98,16 +98,16 @@ public class GraalVmContext extends JsPlusContext {
 		engine = builder.build();
 		Set<String> languages = engine.getLanguages().keySet();
 		System.out.println("GraalVM supported Languages: " + languages);
-		
+
 		Context.Builder contextBuiilder = Context.newBuilder();
 		if(allowAllAccess){
             contextBuiilder
 	            .allowAllAccess(true)
 	            .allowHostAccess(HostAccess.ALL)
 			    .allowCreateThread(true);
-		}		    
-	    context = contextBuiilder.engine(engine).build();	
-	    
+		}
+	    context = contextBuiilder.engine(engine).build();
+
 		value = context.getBindings(engineName);
 		value.putMember("ScriptClassLoader", context.getClass().getClassLoader());
 	}

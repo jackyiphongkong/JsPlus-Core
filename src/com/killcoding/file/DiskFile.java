@@ -44,9 +44,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 
 
-
 import java.sql.Timestamp;
-
 
 
 import java.nio.file.DirectoryStream;
@@ -71,10 +69,6 @@ import java.nio.file.NoSuchFileException;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-
-
-
-
 import java.util.Calendar;
 
 
@@ -89,7 +83,7 @@ import java.nio.file.FileAlreadyExistsException;
 * through a FilePart callback while preserving the original file attributes and timestamps.
 * */
 public class DiskFile extends BaseFile {
-    
+
     public static final int RETRY_OPEN_LIMITED = 100;
 
 	protected static Integer MAX_POOL_SIZE = 100;
@@ -109,14 +103,14 @@ public class DiskFile extends BaseFile {
 	public DiskFile(String path) {
 		super(path);
 	}
-	
+
 	/**
 	* Constructs a new DiskFile
 	* @param origin - the origin
 	* */
 	public DiskFile(File origin) {
 		super(origin);
-	}	
+	}
 
 	/**
 	* Performs the initPool operation
@@ -424,14 +418,14 @@ public class DiskFile extends BaseFile {
 	protected boolean isLogicCheck() throws Exception {
 		boolean b = false;
 		String tmpPath = toCheckTmpFilePath();
-		
+
 		DiskFile df = null;
 		Path logicPath = Paths.get(tmpPath);
 		if (Files.exists(logicPath)) {
 			df = new DiskFile(tmpPath);
 			DiskFile.copyAttrs(df, this.copyStructureOnly, this.syncRoot);
 			Timestamp dfModifyTime = df.getModifyTimeForClock();
-				
+
 			long diffMs = Calendar.getInstance().getTimeInMillis() - dfModifyTime.getTime();
 
 			b = diffMs < LOGIC_CHECK_TIMEOUT_MS;
@@ -457,7 +451,7 @@ public class DiskFile extends BaseFile {
     		String tmpLogicPath = toCheckTmpFilePath();
     		if (tmpLogicPath == null)
     			return null;
-    
+
     		Path logicPath = Paths.get(tmpLogicPath);
     		DiskFile df = new DiskFile(tmpLogicPath);
     		DiskFile.copyAttrs(df, this.copyStructureOnly, this.syncRoot);
@@ -467,7 +461,7 @@ public class DiskFile extends BaseFile {
     		} else {
     			df.write(msg, false);
     		}
-    
+
     		Files.setLastModifiedTime(logicPath, FileTime.fromMillis(Calendar.getInstance().getTimeInMillis()));
     		return df;
     	}
@@ -738,9 +732,9 @@ public class DiskFile extends BaseFile {
     			    }
 			    }catch(Exception e){
 			        LoggerFactory.getLogger(DiskFile.class).debug(e.getMessage(),e);
-			        
+
 			        if(retryCount >= RETRY_OPEN_LIMITED) throw new IOException(e.getMessage(),e);
-			        
+
 			    }
 			}
 			return false;
@@ -792,7 +786,7 @@ public class DiskFile extends BaseFile {
 		        return lock != null;
 		    }catch(Exception e){
 		        LoggerFactory.getLogger(DiskFile.class).debug(e.getMessage(),e);
-		        
+
 		        if(retryCount >= RETRY_OPEN_LIMITED) throw new IOException(e.getMessage(),e);
 		    }
 		}

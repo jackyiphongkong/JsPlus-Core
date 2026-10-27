@@ -51,7 +51,7 @@ public class NashornContext extends JsPlusContext {
     private ScriptContext context = null;
     private Bindings bindings = null;
     private ClassLoader customClassLoader = null;
-    
+
     private class SecurityClassFilter implements ClassFilter {
         @Override
 
@@ -67,7 +67,7 @@ public class NashornContext extends JsPlusContext {
             return false;
         }
     }
-    
+
     /**
     * Constructs a new NashornContext
     * @param engineName - the engineName
@@ -75,7 +75,7 @@ public class NashornContext extends JsPlusContext {
     public NashornContext(String engineName){
         super(engineName);
     }
-    
+
     @Override
 
     /*
@@ -84,8 +84,8 @@ public class NashornContext extends JsPlusContext {
     * */
     public Object getBindings(){
         return bindings;
-    }    
-    
+    }
+
     @Override
 
     /*
@@ -95,7 +95,7 @@ public class NashornContext extends JsPlusContext {
     public Object getEngine(){
         return nashornFactory;
     }
-    
+
     @Override
 
     /*
@@ -104,8 +104,8 @@ public class NashornContext extends JsPlusContext {
     * */
     public ScriptContext getContext(){
         return context;
-    }    
-    
+    }
+
     @Override
 
     /*
@@ -116,8 +116,8 @@ public class NashornContext extends JsPlusContext {
         if (bindings != null) {
             bindings.remove(name);
         }
-    }        
-    
+    }
+
     @Override
 
     /*
@@ -129,8 +129,8 @@ public class NashornContext extends JsPlusContext {
         if (bindings != null) {
             bindings.put(name,value);
         }
-    }  
-    
+    }
+
     @Override
 
     /*
@@ -140,7 +140,7 @@ public class NashornContext extends JsPlusContext {
     * */
     public Object get(String name){
         return bindings != null ? bindings.get(name) : null;
-    }    
+    }
 
     @Override
 
@@ -157,9 +157,9 @@ public class NashornContext extends JsPlusContext {
             System.out.println("Options: " + optionsArray);
         }
         customClassLoader = ClassLoader.getSystemClassLoader();
-        
+
         nashornFactory = new NashornScriptEngineFactory();
-        
+
         if (allowAllAccess) {
             if (customClassLoader != null && customClassLoader != ClassLoader.getSystemClassLoader()) {
                 scriptEngine = nashornFactory.getScriptEngine(options,customClassLoader);
@@ -171,26 +171,26 @@ public class NashornContext extends JsPlusContext {
             scriptEngine = nashornFactory.getScriptEngine(options,customClassLoader,filter);
 
         }
-        
+
         if(scriptEngine == null){
             throw new Exception(String.format("Unable to create engine '%s'.", engineName));
         }
-        
-        System.out.println(String.format("Engine Name: %s, Version: %s", 
+
+        System.out.println(String.format("Engine Name: %s, Version: %s",
             scriptEngine.getFactory().getEngineName(),
             scriptEngine.getFactory().getEngineVersion()));
-        
+
         context = new SimpleScriptContext();
         context.setBindings(scriptEngine.createBindings(), ScriptContext.ENGINE_SCOPE);
         bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
-        
+
         if (customClassLoader != null) {
             bindings.put("ScriptClassLoader", customClassLoader);
         }
 
         invocable = (Invocable) scriptEngine;
     }
-    
+
     @Override
 
     /*
@@ -241,9 +241,9 @@ public class NashornContext extends JsPlusContext {
         Object result = scriptEngine.eval(script, context);
         scriptEngine.setContext(context);
         invocable = (Invocable) scriptEngine;
-        return result;	    
+        return result;
     }
-    
+
     @Override
 
     /*
@@ -256,8 +256,8 @@ public class NashornContext extends JsPlusContext {
         scriptEngine.setContext(context);
         invocable = (Invocable) scriptEngine;
         return result;
-    }	
-    
+    }
+
     @Override
 
     /*
@@ -273,8 +273,8 @@ public class NashornContext extends JsPlusContext {
         invocable = null;
         nashornFactory = null;
         customClassLoader = null;
-    }	
-    
+    }
+
     @Override
 
     /*
@@ -283,8 +283,8 @@ public class NashornContext extends JsPlusContext {
     * */
     public String getEngineName(){
         return engineName;
-    } 
-    
+    }
+
     /**
     * Performs the getNashornFactory operation
     * @return the getNashornFactory result
@@ -292,7 +292,7 @@ public class NashornContext extends JsPlusContext {
     public NashornScriptEngineFactory getNashornFactory() {
         return nashornFactory;
     }
-    
+
     /**
     * Performs the getCustomClassLoader operation
     * @return the getCustomClassLoader result
@@ -300,7 +300,7 @@ public class NashornContext extends JsPlusContext {
     public ClassLoader getCustomClassLoader() {
         return customClassLoader;
     }
-    
+
     /**
     * Performs the recreateEngine operation
     * */
@@ -311,11 +311,11 @@ public class NashornContext extends JsPlusContext {
             List<String> optionsArray = appenvCp.getArray(engineNameMapKey,new String[]{});
             String[] options = optionsArray.toArray(new String[]{});
             System.out.println("Options: " + optionsArray);
-        
+
             ScriptEngine oldEngine = scriptEngine;
             Bindings oldBindings = bindings;
             ScriptContext oldContext = context;
-            
+
             if (allowAllAccess) {
                 if (customClassLoader != null && customClassLoader != ClassLoader.getSystemClassLoader()) {
                     scriptEngine = nashornFactory.getScriptEngine(options,customClassLoader);
@@ -326,23 +326,23 @@ public class NashornContext extends JsPlusContext {
                 ClassFilter filter = new SecurityClassFilter();
                 scriptEngine = nashornFactory.getScriptEngine(options, customClassLoader,filter);
             }
-            
+
             if (scriptEngine == null) {
                 throw new Exception("Unable to recreate engine.");
             }
-            
+
             if (oldContext != null) {
                 context = oldContext;
                 scriptEngine.setContext(context);
             }
-            
+
             if (oldBindings != null) {
                 bindings = oldBindings;
                 scriptEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             }
-            
+
             invocable = (Invocable) scriptEngine;
         }
     }
-    
+
 }

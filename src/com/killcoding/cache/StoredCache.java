@@ -37,7 +37,7 @@ public final class StoredCache {
 
 	private static AbsCacheApi api = null;
 	private static final Logger log = LoggerFactory.getLogger(StoredCache.class);
-	
+
 	/**
 	* Performs the setApi operation
 	* @param _api - the _api
@@ -53,7 +53,7 @@ public final class StoredCache {
 	public static AbsCacheApi getApi(){
 	    return api;
 	}
-	
+
 	/**
 	* Performs the set operation
 	* @param name - the name
@@ -61,11 +61,11 @@ public final class StoredCache {
 	* */
 	public synchronized static void set(String name,Object value){
 	    if(api == null) setApi(new MemoryCache(true));
-	    
+
 		log.debug("Set Cache: {}",name);
-		api.set(name, value, Integer.MAX_VALUE);		
+		api.set(name, value, Integer.MAX_VALUE);
 	}
-	
+
 	/**
 	* Performs the get operation
 	* @param name - the name
@@ -73,11 +73,11 @@ public final class StoredCache {
 	* */
 	public synchronized static Object get(String name){
 	    if(api == null) setApi(new MemoryCache(true));
-	    
+
 		log.debug("Get Cache: {}",name);
 		return api.get(name);
 	}
-	
+
 	/**
 	* Performs the included operation
 	* @param name - the name
@@ -85,38 +85,38 @@ public final class StoredCache {
 	* */
 	public synchronized static boolean included(String name){
 	    if(api == null) setApi(new MemoryCache(true));
-	    
+
 		log.debug("Included Cache: {}",name);
 		boolean b = api.included(name);
 		log.debug("Included: {}",b);
 		return b;
 	}
-	
+
 	/**
 	* Performs the remove operation
 	* @param name - the name
 	* */
 	public synchronized static void remove(String name){
 	    if(api == null) setApi(new MemoryCache(true));
-	    
+
 		log.debug("Remove Cache: {}",name);
 		api.remove(name);
 	}
-	
+
 	/**
 	* Performs the removeAll operation
 	* */
 	public synchronized static void removeAll(){
 	    if(api == null) setApi(new MemoryCache(true));
-	    
+
 		log.debug("Remove All Cache");
 		api.removeAll();
 	}
-	
+
 	public synchronized static List<String> getNames(){
 	    if(api == null) setApi(new MemoryCache(true));
-	    
+
 		return api.getNames();
-	}	
-	
+	}
+
 }

@@ -64,7 +64,7 @@ ALTER TABLE identity_card ADD INDEX idx_idcard_deleted (deleted);
 * StepValue, DataSource, GetAppClockSql). Invalid length configuration raises error 99801.
 * */
 public final class IdentityCard {
-    
+
     private final static Map<String, Integer> CURRENT_VALUES = new ConcurrentHashMap<String, Integer>();
     private final static Map<String, Long> STEP_LAST_VALUES = new ConcurrentHashMap<String, Long>();
 
@@ -87,7 +87,7 @@ public final class IdentityCard {
 	private Logger log = LoggerFactory.getLogger(IdentityCard.class);
 
 	private CacheDriverExecutor driverExecutor = null;
-	
+
 	private static volatile Long MAX_VALUE_LIMITED = Long.MAX_VALUE - 1;
 	private static volatile Long MIN_VALUE_LIMITED = 1L;
 	private static volatile Integer STEP_VALUE_LIMITED = 0;
@@ -116,7 +116,7 @@ public final class IdentityCard {
         initValues();
 		init();
 	}
-	
+
 	/**
 	* Performs the initValues operation
 	* */
@@ -135,7 +135,7 @@ public final class IdentityCard {
 		conn.setAutoCommit(false);
 		driverExecutor = new CacheDriverExecutor(conn);
 	}
-	
+
 	/**
 	* Performs the generateId operation
 	* @return the generateId result
@@ -143,12 +143,12 @@ public final class IdentityCard {
 	public synchronized Long generateId() throws SQLException {
 	    if (!enable)
 			return null;
-		
-		if(CURRENT_VALUES.get(identityName) <= 0){	
+
+		if(CURRENT_VALUES.get(identityName) <= 0){
 		    STEP_LAST_VALUES.put(identityName,generateIdForNextStep());
 		    CURRENT_VALUES.put(identityName,stepValue);
 		}
-		
+
 		Long val = STEP_LAST_VALUES.get(identityName) - CURRENT_VALUES.get(identityName);
 		CURRENT_VALUES.put(identityName,CURRENT_VALUES.get(identityName) - 1);
 		return val;
@@ -209,7 +209,7 @@ public final class IdentityCard {
 
 			if (driverExecutor != null)
 				driverExecutor.rollback();
-				
+
     		int errorCode = 99802;
     		String errorMsg = e.getMessage();
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
@@ -223,7 +223,7 @@ public final class IdentityCard {
     			public int getErrorCode() {
     				return errorCode;
     			}
-    		};				
+    		};
 
 		} finally {
 			if (driverExecutor != null){
@@ -240,7 +240,7 @@ public final class IdentityCard {
 	public synchronized String generateId(int length) throws SQLException {
 		if (!enable)
 			return null;
-			
+
 		if(length < 1){
     		int errorCode = 99801;
     		String errorMsg = String.format("The value length '%s' cannot be less than 1.", length);
@@ -255,9 +255,9 @@ public final class IdentityCard {
     			public int getErrorCode() {
     				return errorCode;
     			}
-    		};	
+    		};
 		}
-		
+
 		Long val = generateId();
 		if(val > getMaxValueForLength(length)){
 		    Map<String,Object> item = first();
@@ -280,11 +280,11 @@ public final class IdentityCard {
 	public synchronized String generateId(int length, String prefix) throws SQLException {
 		if (!enable)
 			return null;
-			
+
 		int valLen = length - prefix.length();
 		return String.format("%s%s", prefix, generateId(valLen));
 	}
-	
+
 	/**
 	* Performs the generateId operation
 	* @param length - the length
@@ -296,7 +296,7 @@ public final class IdentityCard {
 	public synchronized String generateId(int length, String prefix, String delimiter,int randomSuffixLength) throws SQLException {
 		if (!enable)
 			return null;
-			
+
 	    if(CommonTools.isBlank(delimiter)){
 	        delimiter = "";
 	    }
@@ -343,13 +343,13 @@ public final class IdentityCard {
 					maxValue = configProperties.getLong("MaxValue", MAX_VALUE_LIMITED);
 					minValue = configProperties.getLong("MinValue", MIN_VALUE_LIMITED);
 					stepValue = configProperties.getInteger("StepValue", STEP_VALUE_LIMITED);
-					
+
         			if(maxValue > MAX_VALUE_LIMITED) maxValue = MAX_VALUE_LIMITED;
-        			
+
         			if(minValue < MIN_VALUE_LIMITED) minValue = MIN_VALUE_LIMITED;
-        			
+
         			if(stepValue < STEP_VALUE_LIMITED) stepValue = STEP_VALUE_LIMITED;
-        			
+
 					if (enable) {
 						dataSourcePath = configProperties.getString("DataSource");
 						if (!CommonTools.isBlank(dataSourcePath)) {
@@ -372,30 +372,24 @@ public final class IdentityCard {
 			tableName = configProperties.getString("TableName", "identity_card");
 			timeout = configProperties.getMilliSeconds("Timeout", 10000L);
 			String reloadDataSourcePath = configProperties.getString("DataSource");
-			
+
 			maxValue = configProperties.getLong("MaxValue", MAX_VALUE_LIMITED);
 			minValue = configProperties.getLong("MinValue", MIN_VALUE_LIMITED);
 			stepValue = configProperties.getInteger("StepValue", STEP_VALUE_LIMITED);
-			
+
 			if(maxValue > MAX_VALUE_LIMITED) maxValue = MAX_VALUE_LIMITED;
-			
+
 			if(minValue < MIN_VALUE_LIMITED) minValue = MIN_VALUE_LIMITED;
-			
-			if(stepValue < STEP_VALUE_LIMITED) stepValue = STEP_VALUE_LIMITED;			
+
+			if(stepValue < STEP_VALUE_LIMITED) stepValue = STEP_VALUE_LIMITED;
 
 			boolean isReload = false;
 			if (!CommonTools.isBlank(reloadDataSourcePath)) {
 				isReload = !dataSourcePath.equals(reloadDataSourcePath);
 			}
 			if (dataSource != null && isReload) {
-			    // May be referenced when expansion is needed
-				// dataSource.closeAll();
 				dataSourcePath = reloadDataSourcePath;
 			}
-			// May be referenced when expansion is needed
-			// if (!enable && dataSource != null) {
-			// 	 dataSource.closeAll();
-			// }
 			if (enable && isReload) {
 				if (!CommonTools.isBlank(dataSourcePath)) {
 					dataSource = new DriverDataSource(new File(dataSourcePath));
@@ -456,7 +450,7 @@ public final class IdentityCard {
 		params.put("updated_at", currentTime);
 		driverExecutor.execute(sql, params);
 	}
-	
+
 	/**
 	* Performs the resetForce operation
 	* @param id - the id
@@ -471,7 +465,7 @@ public final class IdentityCard {
 		params.put("updated_user_id", userId);
 		params.put("updated_at", currentTime);
 		driverExecutor.execute(sql, params);
-	}	
+	}
 
 	/**
 	* Performs the create operation
@@ -482,9 +476,9 @@ public final class IdentityCard {
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
 		Long createIdentityValue = minValue;
-		
+
 		if(createIdentityValue < 0)  createIdentityValue = 0L;
-		
+
 		String sql = formatSql(SQL_INSERT);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", id);
@@ -516,7 +510,7 @@ public final class IdentityCard {
 		params.put("generate_task_id", generateTaskId);
 		return driverExecutor.first(sql, params);
 	}
-	
+
 	/**
 	* Performs the getMaxValueForLength operation
 	* @param length - the length
@@ -543,7 +537,7 @@ public final class IdentityCard {
 	public String formatSql(String sql) {
 		return String.format(sql, tableName);
 	}
-	
+
 	/**
 	* Performs the formatSql operation
 	* @param sql - the sql
@@ -552,7 +546,7 @@ public final class IdentityCard {
 	* */
 	public String formatSql(String sql,Integer stepValue) {
 		return String.format(sql, tableName,stepValue);
-	}	
+	}
 
 	/**
 	* Performs the setUserId operation
@@ -577,12 +571,12 @@ public final class IdentityCard {
 	public String getIdentityName() {
 		return identityName;
 	}
-	
+
 	/**
 	* Performs the getConfigProperties operation
 	* @return the getConfigProperties result
 	* */
 	public static ConfigProperties getConfigProperties(){
 	    return configProperties;
-	}	
+	}
 }

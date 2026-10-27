@@ -33,8 +33,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
 
-
-
 import java.util.Arrays;
 import com.killcoding.tool.ResultMap;
 
@@ -65,8 +63,8 @@ public final class CacheDriverExecutor extends DriverExecutor {
 
 	/**
 	 * This is full table query function
-	 * @param sql - Query sql 
-	 * @param params - Query params 
+	 * @param sql - Query sql
+	 * @param params - Query params
 	 * @param rows - CacheArray object
 	 * @exception SQLException - if query failed
 	 * */
@@ -76,8 +74,8 @@ public final class CacheDriverExecutor extends DriverExecutor {
 
 	/**
 	 * This is full table query function
-	 * @param sql - Query sql 
-	 * @param params - Query params 
+	 * @param sql - Query sql
+	 * @param params - Query params
 	 * @param rows - CacheArray object
 	 * @exception SQLException - if query failed
 	 * */
@@ -90,7 +88,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 
 	/**
 	 * This is full table query function
-	 * @param sql - Query sql 
+	 * @param sql - Query sql
 	 * @param rows - CacheArray object
 	 * @exception SQLException - if query failed
 	 * */
@@ -102,7 +100,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	 * This is limited rows query function
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql 
+	 * @param sql - Query sql
 	 * @param rows - CacheArray object
 	 * @exception SQLException - if query failed
 	 * */
@@ -115,7 +113,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	 * This is limited rows query function (use Map param mode)
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql 
+	 * @param sql - Query sql
 	 * @param rows - CacheArray object
 	 * @exception SQLException - if query failed
 	 * */
@@ -130,7 +128,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	 * This is limited rows query function (use List param mode)
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql 
+	 * @param sql - Query sql
 	 * @param rows - CacheArray object
 	 * @exception SQLException - if query failed
 	 * */
@@ -243,7 +241,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 			}
 		} catch (SQLException e) {
 		    if(rows != null) rows.add(null);
-		    
+
 			if (allowedLog)
 				writeSqlLog("error", begin, "error", String.format("%s,%s", e.getErrorCode(), e.getMessage()));
 			throw e;
@@ -258,12 +256,12 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc(and return result to CacheArray) 
+	 * Execute stored proc(and return result to CacheArray)
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql 
+	 * @param sql - Query sql
 	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed 
+	 * @exception SQLException - if query failed
 	 * */
 	public void callAndReturnList(int cursorStart, int maxRows, String sql, final CacheArray rows)
 			throws SQLException {
@@ -271,13 +269,13 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc(and return result) 
+	 * Execute stored proc(and return result)
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql 
+	 * @param sql - Query sql
 	 * @param params - Use Map param mode (use ':column_name' to mapping)
 	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed 
+	 * @exception SQLException - if query failed
 	 * */
 	public void callAndReturnList(int cursorStart, int maxRows, String sql, Map<String, Object> params,
 			final CacheArray rows) throws SQLException {
@@ -287,13 +285,13 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc(and return result) 
+	 * Execute stored proc(and return result)
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql  (use '?' to mapping)
 	 * @param params - Use List param mode
 	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed 
+	 * @exception SQLException - if query failed
 	 * */
 	public void callAndReturnList(int cursorStart, int maxRows, String sql, List<Object> params,
 			final CacheArray rows) throws SQLException {
@@ -410,7 +408,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 			}
 		} catch (SQLException e) {
 		    if(rows != null) rows.add(null);
-		    
+
 			if (allowedLog)
 				writeSqlLog("error", begin, "error", e.getErrorCode());
 			throw e;
@@ -420,10 +418,10 @@ public final class CacheDriverExecutor extends DriverExecutor {
 
 			if (statement != null)
 				statement.close();
-		
+
 		}
 	}
-	
+
 	/**
 	* Performs the getReadTimer operation
 	* @return the getReadTimer result

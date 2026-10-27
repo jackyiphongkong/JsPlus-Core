@@ -100,7 +100,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 					RemoteFileSync rf = new RemoteFile(fullPath);
 					if(isDebug(rf)){
 					    debugLog("CheckUsage",rf,this);
-					}					
+					}
 					if (memoryUsage() < RemoteFile.MAX_MEMORY_USAGE) {
 						rf.fileId = (String) item.get("file_id");
     					String toDf = rf.getPath();
@@ -113,7 +113,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
     					}
     					DiskFile df = new DiskFile(toDf);
     					DiskFile.copyAttrs(df, false, the.syncRoot);
-    					executeSyncRunnable(this, item, df, rf);	    
+    					executeSyncRunnable(this, item, df, rf);
 					} else{
 					    log.warn("Over max memory usage 'MAX_MEMORY_USAGE={}'.",MAX_MEMORY_USAGE);
 					}
@@ -292,11 +292,11 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 		Connection conn = null;
 		try {
 		    long deleteCutoffTimeMs = 0L;
-		    
+
 		    if(DELETE_CUTOFF_TIME != null) deleteCutoffTimeMs = SYNC_CUTOFF_TIME.getTime();
-		    
+
 			Timestamp currentTime = new Clock().getSqlTimestamp();
-			
+
 			conn = dataSourceReader.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
@@ -404,7 +404,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 		}
 		return false;
 	}
-	
+
 	/**
 	* Performs the listAllForScanDelete operation
 	* @param filePartDataTable - the filePartDataTable
@@ -416,9 +416,9 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 		Connection conn = null;
 		try {
 		    long deleteCutoffTimeMs = 0L;
-		    
+
 		    if(DELETE_CUTOFF_TIME != null) deleteCutoffTimeMs = DELETE_CUTOFF_TIME.getTime();
-		    
+
 			Timestamp currentTime = new Clock().getSqlTimestamp();
 			conn = dataSourceReader.getConnection();
 			conn.setAutoCommit(true);
@@ -555,7 +555,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
         			if(!rootExists){
         			    Logger.systemError(RemoteFileSync.class,"The root path '{}' does not exist.",syncRoot.getPath());
         			}
-        			
+
 					if (isDeleted && rootExists) {
 						if (df.exists()) {
 							if (isDebug) {
@@ -834,7 +834,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 		}
 
 		stopSync = false;
-        
+
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
 		try {
@@ -862,16 +862,16 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 					if (timerMs <= 0) {
 						LoggerFactory.getLogger(RemoteFileSync.class).mark("Completed archive for file deleted.");
 					}
-					
+
 					if (completedCallback != null) {
 						completedCallback.run();
 					}
-					
+
 					if (!isStopSync() && timerMs > 0) {
 					    while(true){
-					        
+
 					        if(isStopSync()) break;
-					        
+
     						try {
     							Thread.sleep(timerMs);
     							if (!isStopSync()) {
@@ -899,7 +899,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForFileDeleted-%s", index));
 					if(isDebug(the)){
 					    debugLog("CheckUsage",the,this);
-					}				    
+					}
 					if (memoryUsage() < RemoteFile.MAX_MEMORY_USAGE) {
 						CacheDriverExecutor _executor = null;
 						try {
@@ -1039,16 +1039,16 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 					if (timerMs <= 0) {
 						LoggerFactory.getLogger(RemoteFileSync.class).mark("Completed archive for deleted.");
 					}
-					
+
 					if (completedCallback != null) {
 						completedCallback.run();
 					}
-					
+
 					if (!isStopSync() && timerMs > 0) {
 					    while(true){
-					        
+
 					        if(isStopSync()) break;
-					        
+
     						try {
     							Thread.sleep(timerMs);
     							if (!isStopSync()) {
@@ -1078,7 +1078,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 					CacheDriverExecutor executor = null;
 					if(isDebug(the)){
 					    debugLog("CheckUsage",the,this);
-					}					
+					}
 					if (memoryUsage() < RemoteFile.MAX_MEMORY_USAGE) {
 						try {
 							Clock clock = new Clock();
@@ -1165,7 +1165,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			            log.error(e.getMessage(),e);
 			        }
 			    }
-			});			
+			});
 		} catch (SQLException e) {
 			throw new IOException(e.getMessage(), e);
 		} finally {
@@ -1178,7 +1178,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			}
 		}
 	}
-	
+
 	/**
 	* Performs the startArchiveForTimeout operation
 	* @param timerMs - the timerMs
@@ -1187,7 +1187,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	public void startArchiveForTimeout(long timerMs) throws IOException {
 	    startArchiveForTimeout(timerMs,null);
 	}
-	
+
 	/**
 	* Performs the startArchiveForTimeout operation
 	* @param timerMs - the timerMs
@@ -1196,7 +1196,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 
 	public void startArchiveForTimeout(long timerMs,Runnable completedCallback) throws IOException {
 	    final RemoteFileBase the = this;
-	    
+
 		stopSync = false;
 
 		CacheDriverExecutor executor = null;
@@ -1227,16 +1227,16 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 					if (timerMs <= 0) {
 						LoggerFactory.getLogger(RemoteFileSync.class).mark("Completed archive for timeout deleted.");
 					}
-					
+
 					if (completedCallback != null) {
 						completedCallback.run();
 					}
-					
+
 					if (!isStopSync() && timerMs > 0) {
 					    while(true){
-					        
+
 					        if(isStopSync()) break;
-					        
+
     						try {
     							Thread.sleep(timerMs);
     							if (!isStopSync()) {
@@ -1264,7 +1264,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForTimeout-%s", index));
 					if(isDebug(the)){
 					    debugLog("CheckUsage",the,this);
-					}				    
+					}
 					CacheDriverExecutor executor = null;
 					if (memoryUsage() < RemoteFile.MAX_MEMORY_USAGE) {
 						try {
@@ -1312,7 +1312,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			            log.error(e.getMessage(),e);
 			        }
 			    }
-			});				
+			});
 		} catch (SQLException e) {
 			throw new IOException(e.getMessage(), e);
 		} finally {
@@ -1324,6 +1324,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				}
 			}
 		}
-	}	
+	}
 
 }

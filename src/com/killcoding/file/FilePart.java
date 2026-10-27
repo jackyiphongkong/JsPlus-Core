@@ -29,14 +29,14 @@ import java.io.IOException;
 * final end signal (ended) with the last part index.
 * */
 public abstract class FilePart {
-    
+
     /**
     * Performs the process operation
     * @param partIndex - the partIndex
     * @param buffer - the buffer
     * */
     protected abstract void process(int partIndex,byte[] buffer) throws IOException;
-    
+
     /**
     * Performs the completed operation
     * @param lastPartIndex - the lastPartIndex
@@ -44,7 +44,7 @@ public abstract class FilePart {
     * @param fileSize - the fileSize
     * */
     protected abstract void completed(int lastPartIndex,Timestamp modifyTime,long fileSize) throws IOException;
-    
+
     /**
     * Performs the ended operation
     * @param lastPartIndex - the lastPartIndex

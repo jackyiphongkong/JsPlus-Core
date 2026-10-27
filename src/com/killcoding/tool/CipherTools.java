@@ -56,7 +56,7 @@ import com.killcoding.file.BaseFile;
 * This class is support base cipher function
 * */
 public final class CipherTools {
-    
+
     /**
     * Performs the DESEncrypt operation
     * @param keyText - the keyText
@@ -78,7 +78,7 @@ public final class CipherTools {
 		cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 		return cipher.doFinal(data);
     }
-    
+
     /**
     * Performs the DESDecrypt operation
     * @param keyText - the keyText
@@ -98,9 +98,9 @@ public final class CipherTools {
 		key = keyFactory.generateSecret(keySpec);
 		cipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, key, iv);
-		return cipher.doFinal(encryptData);		
+		return cipher.doFinal(encryptData);
     }
-    
+
     /**
     * Performs the _3DESEncrypt operation
     * @param keyText - the keyText
@@ -115,12 +115,12 @@ public final class CipherTools {
 		Cipher cipher = null;
 		IvParameterSpec iv = null;
 		key = new SecretKeySpec(keyText.getBytes(BaseFile.CHARSET), Algorithm);
-		cipher = Cipher.getInstance(TRANS_FORMATION);	
+		cipher = Cipher.getInstance(TRANS_FORMATION);
 		iv = new IvParameterSpec(ivText.getBytes(BaseFile.CHARSET));
 		cipher.init(Cipher.ENCRYPT_MODE, key,iv);
-		return cipher.doFinal(data);			
+		return cipher.doFinal(data);
     }
-    
+
     /**
     * Performs the _3DESDecrypt operation
     * @param keyText - the keyText
@@ -135,12 +135,12 @@ public final class CipherTools {
 		Cipher cipher = null;
 		IvParameterSpec iv = null;
 		key = new SecretKeySpec(keyText.getBytes(BaseFile.CHARSET), Algorithm);
-		cipher = Cipher.getInstance(TRANS_FORMATION);	
+		cipher = Cipher.getInstance(TRANS_FORMATION);
 		iv = new IvParameterSpec(ivText.getBytes(BaseFile.CHARSET));
 		cipher.init(Cipher.DECRYPT_MODE, key,iv);
-		return cipher.doFinal(encryptData);		
+		return cipher.doFinal(encryptData);
     }
-    
+
     /**
     * Performs the AESEncrypt operation
     * @param keyText - the keyText
@@ -153,7 +153,7 @@ public final class CipherTools {
 		cipher.init(Cipher.ENCRYPT_MODE, spec);
 		return cipher.doFinal(data);
     }
-    
+
     /**
     * Performs the AESDecrypt operation
     * @param keyText - the keyText
@@ -165,7 +165,7 @@ public final class CipherTools {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, spec);
 		return cipher.doFinal(encryptData);
-    }  
+    }
 
     /**
     * Performs the generateAESKey operation
@@ -177,7 +177,7 @@ public final class CipherTools {
         byte[] hash = digest.digest(keyText.getBytes(BaseFile.CHARSET));
         return Arrays.copyOf(hash, 16);
     }
-    
+
     /**
     * Performs the RSAPrivateKeyGen operation
     * @param seed - the seed
@@ -185,7 +185,7 @@ public final class CipherTools {
     * */
     public static byte[] RSAPrivateKeyGen(byte[] seed) throws Exception {
 		 String ALOGRITHM = "RSA";
-		 String RANDOM_ALOGRITHM = "SHA1PRNG"; 
+		 String RANDOM_ALOGRITHM = "SHA1PRNG";
 		 KeyPairGenerator generator = null;
 		 KeyPair keyPair = null;
 		 generator = KeyPairGenerator.getInstance(ALOGRITHM);
@@ -193,10 +193,10 @@ public final class CipherTools {
 				.getInstance(RANDOM_ALOGRITHM);
 		 random.setSeed(seed);
 		 generator.initialize(1024, random);
-		 keyPair = generator.generateKeyPair();	
+		 keyPair = generator.generateKeyPair();
 		 return keyPair.getPrivate().getEncoded();
     }
-    
+
     /**
     * Performs the RSAPublieKeyGen operation
     * @param seed - the seed
@@ -204,7 +204,7 @@ public final class CipherTools {
     * */
     public static byte[] RSAPublieKeyGen(byte[] seed) throws Exception {
 		 String ALOGRITHM = "RSA";
-		 String RANDOM_ALOGRITHM = "SHA1PRNG"; 
+		 String RANDOM_ALOGRITHM = "SHA1PRNG";
 		 KeyPairGenerator generator = null;
 		 KeyPair keyPair = null;
 		 generator = KeyPairGenerator.getInstance(ALOGRITHM);
@@ -212,10 +212,10 @@ public final class CipherTools {
 				.getInstance(RANDOM_ALOGRITHM);
 		 random.setSeed(seed);
 		 generator.initialize(1024, random);
-		 keyPair = generator.generateKeyPair();	
+		 keyPair = generator.generateKeyPair();
 		 return keyPair.getPublic().getEncoded();
-    }   
-    
+    }
+
 	/**
 	* Performs the RSAPublicKeyFrom operation
 	* @param keyArray - the keyArray
@@ -240,7 +240,7 @@ public final class CipherTools {
 		KeyFactory keyFactory = KeyFactory.getInstance(ALOGRITHM);
 		return keyFactory.generatePrivate(keySpec);
 	}
-    
+
 	/**
 	* Performs the RSAEncrypt operation
 	* @param key - the key
@@ -265,8 +265,8 @@ public final class CipherTools {
 			out.close();
 		}
 		return out.toByteArray();
-	}    
-	
+	}
+
 	/**
 	* Performs the RSADecrypt operation
 	* @param key - the key
@@ -292,6 +292,6 @@ public final class CipherTools {
 			out.close();
 		}
 		return out.toByteArray();
-	}	
+	}
 
 }

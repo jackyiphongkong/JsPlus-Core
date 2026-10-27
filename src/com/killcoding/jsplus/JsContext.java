@@ -51,7 +51,7 @@ public class JsContext extends JsPlusContext {
 	private ScriptEngine scriptEngine = null;
 	private ScriptContext context = null;
 	private Bindings bindings = null;
-	
+
     /**
     * Constructs a new JsContext
     * @param engineName - the engineName
@@ -59,7 +59,7 @@ public class JsContext extends JsPlusContext {
     public JsContext(String engineName){
         super(engineName);
     }
-    
+
 	@Override
 
 	/*
@@ -68,8 +68,8 @@ public class JsContext extends JsPlusContext {
 	* */
 	public Object getBindings(){
 	    return bindings;
-	}    
-    
+	}
+
 	@Override
 
     /*
@@ -79,7 +79,7 @@ public class JsContext extends JsPlusContext {
     public ScriptEngineManager getEngine(){
         return scriptEngineManager;
     }
-    
+
 	@Override
 
     /*
@@ -88,8 +88,8 @@ public class JsContext extends JsPlusContext {
     * */
     public ScriptContext getContext(){
         return context;
-    }    
-    
+    }
+
     @Override
 
 	/*
@@ -98,8 +98,8 @@ public class JsContext extends JsPlusContext {
 	* */
 	public void remove(String name){
 	    bindings.remove(name);
-	}        
-    
+	}
+
     @Override
 
 	/*
@@ -109,8 +109,8 @@ public class JsContext extends JsPlusContext {
 	* */
 	public void put(String name,Object value){
 	    bindings.put(name,value);
-	}  
-	
+	}
+
 	@Override
 
 	/*
@@ -120,7 +120,7 @@ public class JsContext extends JsPlusContext {
 	* */
 	public Object get(String name){
 	    return bindings.get(name);
-	}	
+	}
 
     @Override
 
@@ -151,7 +151,7 @@ public class JsContext extends JsPlusContext {
 			invocable = (Invocable) scriptEngine;
 		}
 	}
-	
+
 	@Override
 
 	/*
@@ -194,9 +194,9 @@ public class JsContext extends JsPlusContext {
 		Object result = scriptEngine.eval(script, context);
 		scriptEngine.setContext(context);
 		invocable = (Invocable) scriptEngine;
-		return result;	    
+		return result;
 	}
-	
+
 	@Override
 
 	/*
@@ -209,8 +209,8 @@ public class JsContext extends JsPlusContext {
 		scriptEngine.setContext(context);
 		invocable = (Invocable) scriptEngine;
 		return result;
-	}	
-	
+	}
+
     @Override
 
     /*
@@ -220,8 +220,8 @@ public class JsContext extends JsPlusContext {
         bindings.clear();
         bindings = null;
         context = null;
-    }	
-    
+    }
+
 	@Override
 
 	/*
@@ -230,15 +230,15 @@ public class JsContext extends JsPlusContext {
 	* */
 	public String getEngineName(){
 	    return engineName;
-	} 
-	
+	}
+
 	/**
 	* Performs the disableAllowAllAccess operation
 	* */
 	protected void disableAllowAllAccess(){
 	    if(!this.allowAllAccess && bindings != null){
     	    bindings.put("Java", null);
-    	    bindings.put("JavaImporter", null);			    
+    	    bindings.put("JavaImporter", null);
             bindings.put("java", null);
             bindings.put("javax", null);
             bindings.put("app", null);
@@ -254,5 +254,5 @@ public class JsContext extends JsPlusContext {
             bindings.put("jakarta", null);
 	    }
 	}
-	
+
 }

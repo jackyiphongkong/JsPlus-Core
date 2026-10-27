@@ -2030,7 +2030,7 @@ public final class Logger {
 		}
 		return stringParams;
 	}
-	
+
 	/**
 	* Performs the stringFormat operation
 	* @param msg - the msg
@@ -2053,7 +2053,7 @@ public final class Logger {
 	        int addSize = paramsSize - msgParamsSize;
 	        for(int i = 0;i < addSize;i++){
 	            newMsg += " %s ";
-	        } 
+	        }
 	    }
 	    return String.format(newMsg,newParams.toArray());
 	}

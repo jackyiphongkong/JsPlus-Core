@@ -31,8 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.io.File;
 
 
-
-
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
 import com.killcoding.tool.FileTools;
@@ -80,7 +78,7 @@ public class DiskCache extends AbsCacheApi {
 		    log.warn(e.getMessage(),e);
 		}
 	}
-	
+
 	/**
 	 * New a DiskCache object
 	 * @param stored - 'true' is force write cache
@@ -100,7 +98,7 @@ public class DiskCache extends AbsCacheApi {
 		    log.warn(e.getMessage(),e);
 		}
 	}
-	
+
 	/**
 	 * Shutdown cahee thread
 	 * */
@@ -128,11 +126,11 @@ public class DiskCache extends AbsCacheApi {
 			public void run() {
 				Thread.currentThread().setName("DiskCache");
 				while(true){
-				    
+
 				    if(Thread.currentThread().isInterrupted()){
-				       break; 
+				       break;
 				    }
-				    
+
     				Set<String> names = CACHE_FILE.keySet();
     				for (String name : names) {
     					Date current = new Date();
@@ -259,25 +257,25 @@ public class DiskCache extends AbsCacheApi {
 	* */
 	synchronized void set(String name, Object value, int lifeSeconds) {
 	    if(value != null) {
-	    
+
     	    if(lifeSeconds < 0){
     	        log.debug("Skip use cache, key '{}' life is '{}s'",name,lifeSeconds);
-    	        return;    
+    	        return;
     	    }
-    	    
+
     		try {
     			String cacheFileName = CommonTools.generateId(16);
     			CACHE_FILE.put(name, cacheFileName);
     			if(!stored){
     			    if(lifeSeconds == 0){
         			    Date life = new Date(Long.MAX_VALUE);
-        			    CACHE_LIFE.put(name, life);    			        
+        			    CACHE_LIFE.put(name, life);
     			    }
     			    if(lifeSeconds > 0){
     			        long lifeLong = System.currentTimeMillis() + lifeSeconds * 1000;
-    			        
+
     			        if(lifeLong > Long.MAX_VALUE) lifeLong = Long.MAX_VALUE;
-    			        
+
         			    Date life = new Date(lifeLong);
         			    CACHE_LIFE.put(name, life);
     			    }
@@ -288,10 +286,10 @@ public class DiskCache extends AbsCacheApi {
     		} catch (Exception e) {
     			log.warn(e);
     		}
-    		
+
     		if(!stored && !isStartRemoveExpiredThread)
     		    startRemoveExpiredThread();
-		    
+
 	    }
 	}
 

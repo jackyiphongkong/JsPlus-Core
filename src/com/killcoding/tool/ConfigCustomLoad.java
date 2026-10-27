@@ -27,20 +27,20 @@ import java.io.File;
 * the parsed configuration (file + properties) after the standard load completes.
 * */
 public class ConfigCustomLoad {
-    
+
     protected Runnable loadRun = null;
     protected ConfigProperties config = null;
     protected File file = null;
     protected boolean updated = false;
     protected boolean useCustom = true;
-    
+
     /**
     * Constructs a new ConfigCustomLoad
     * */
     public ConfigCustomLoad(){
         super();
     }
-    
+
     /**
     * Performs the load operation
     * @param loadRun - the loadRun
@@ -48,14 +48,14 @@ public class ConfigCustomLoad {
     public void load(Runnable loadRun){
         this.loadRun = loadRun;
     }
-    
+
     /**
     * Performs the load operation
     * */
     public void load(){
-         
+
     }
-    
+
     /**
     * Performs the load operation
     * @param file - the file
@@ -64,12 +64,12 @@ public class ConfigCustomLoad {
     protected void load(File file,ConfigProperties config){
         this.file = file;
         this.config = config;
-        
+
         if(this.loadRun != null) this.loadRun.run();
-        
+
         load();
     }
-    
+
     /**
     * Performs the getConfig operation
     * @return the getConfig result
@@ -77,7 +77,7 @@ public class ConfigCustomLoad {
     public ConfigProperties getConfig(){
         return config;
     }
-    
+
     /**
     * Performs the getFile operation
     * @return the getFile result
@@ -85,7 +85,7 @@ public class ConfigCustomLoad {
     public File getFile(){
         return file;
     }
-    
+
     /**
     * Performs the setUpdated operation
     * @param updated - the updated
@@ -100,8 +100,8 @@ public class ConfigCustomLoad {
     * */
     public boolean isUpdated(){
         return this.updated;
-    }   
-    
+    }
+
     /**
     * Performs the setUseCustom operation
     * @param useCustom - the useCustom
@@ -109,7 +109,7 @@ public class ConfigCustomLoad {
     public void setUseCustom(boolean useCustom){
         this.useCustom = useCustom;
     }
-    
+
     /**
     * Performs the isUseCustom operation
     * @return the isUseCustom result
@@ -117,5 +117,5 @@ public class ConfigCustomLoad {
     public boolean isUseCustom(){
         return useCustom;
     }
-    
+
 }

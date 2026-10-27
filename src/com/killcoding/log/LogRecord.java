@@ -40,7 +40,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 
-
 import com.killcoding.tool.ConfigProperties;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -54,7 +53,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.killcoding.datasource.CacheDriverExecutor;
 import java.sql.Connection;
-
 
 
 import com.killcoding.datasource.DriverDataSource;
@@ -96,7 +94,7 @@ public final class LogRecord {
 
 	private static AlertMessage alertMesage = null;
 	private static List<String> alertMessageLevelList = null;
-	
+
 	private static PrintStream originalOut = System.out;
     private static PrintStream originalErr = System.err;
 	private static ByteArrayOutputStream customOutput = null;
@@ -270,7 +268,7 @@ public final class LogRecord {
 				batchLines = new ArrayList<String>();
 			}
 			batchLines.add(msg);
-			
+
 			if(customOutput != null){
 			    try{
     			    customOutput.flush();
@@ -287,7 +285,7 @@ public final class LogRecord {
 			        Logger.systemError(LogRecord.class,e.getMessage(),e);
 			    }
 			}
-			
+
 			logBatch.put(logDateStr, batchLines);
 		}
 		return logBatch;
@@ -330,7 +328,7 @@ public final class LogRecord {
 		}
 		return new File(logFileNameFormat);
 	}
-	
+
 	/**
 	* Performs the getLogFileName operation
 	* @return the getLogFileName result
@@ -338,7 +336,7 @@ public final class LogRecord {
 	public static String getLogFileName() {
 	    return getLogFile().getName();
 	}
-	
+
 	/**
 	 * Force-restore the JVM-wide stdout/stderr streams captured by
 	 * LogRecord (SystemOut=false mode). Host applications should call this on
@@ -361,7 +359,7 @@ public final class LogRecord {
 			Logger.systemError(LogRecord.class, e);
 		}
 	}
-	
+
 	/**
 	* Performs the isSystemOut operation
 	* @return the isSystemOut result
@@ -391,17 +389,17 @@ public final class LogRecord {
 				        customOutput.flush();
 				        customPrint.flush();
 				        String outMsg = customOutput.toString(BaseFile.CHARSET);
-				        
+
     					System.setOut(originalOut);
     	                System.setErr(originalErr);
-    	                
+
     	                customOutput.close();
     	                customPrint.close();
-    	                
+
     	                customOutput = null;
     	                customPrint = null;
-    	                
-        	            if(!CommonTools.isBlank(outMsg)){    
+
+        	            if(!CommonTools.isBlank(outMsg)){
         	                System.out.println(outMsg);
 				        }
 				    }
@@ -415,7 +413,7 @@ public final class LogRecord {
 				}
 			}catch(Exception e){
 			    Logger.systemError(LogRecord.class, e);
-			}			
+			}
 			try {
 				String linesStr = String.join(System.lineSeparator(), logBatch.get(logDate)) + System.lineSeparator();
 				if (config.getBoolean("FileOut", false)) {
@@ -423,17 +421,17 @@ public final class LogRecord {
 					String logFileName = String.format("%s/%s.%s", fileOutFolder.getAbsolutePath(), logFileNamePrefix,
 							logFileNameSuffix);
 					File logFile = new File(logFileName);
-					
+
 					if(fileOutFolder.exists()){
 					    if(!fileOutFolder.canWrite()) return;
 					}else{
 					    fileOutFolder.mkdirs();
 					}
-					
+
 					if(logFile.exists()){
 					    if(!logFile.canWrite()) return;
-					}					
-					
+					}
+
 					long logSize = FileTools.size(logFile);
 					if (logSize < fileOutMaxFileSize) {
 						FileTools.write(logFile, linesStr, true);
@@ -673,7 +671,7 @@ public final class LogRecord {
 		}
 		return rows;
 	}
-	
+
 	/**
 	 * Get data source
 	 * @return DataSource
@@ -683,7 +681,7 @@ public final class LogRecord {
 	}
 
     /**
-     * Start write log thread 
+     * Start write log thread
      * */
 	protected static synchronized void start() {
 		if (!started) {
@@ -713,9 +711,9 @@ public final class LogRecord {
 				public void run() {
 					Thread.currentThread().setName(Logger.class.getSimpleName());
 					while (true) {
-					    
+
 					    if(Thread.currentThread().isInterrupted()) break;
-					     
+
 						try {
 							final List<Map<String, Object>> list = list();
 							Map<String, List<String>> logBatch = getLogBatch(list);

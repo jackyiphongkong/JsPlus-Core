@@ -38,25 +38,7 @@ import com.killcoding.datasource.Clock;
 import java.sql.Timestamp;
 
 import java.io.ByteArrayOutputStream;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import com.killcoding.cache.CacheArray;
-
-
 
 /**
  * RemoteFile - public facade of the remote (database-backed) file engine.
@@ -78,26 +60,23 @@ public class RemoteFile extends RemoteFileSync {
 		fileId = CommonTools.generateId(16);
 		initGlobal();
 	}
-	
+
 	/**
 	* Constructs a new RemoteFile
 	* @param origin - the origin
 	* */
-
 	@SuppressWarnings("this-escape")
 	public RemoteFile(File origin) {
 		super(origin);
 		log = LoggerFactory.getLogger(getClass());
 		fileId = CommonTools.generateId(16);
 		initGlobal();
-	}	
+	}
 
 	/**
 	* Performs the initPool operation
 	* @param poolSize - the poolSize
 	* */
-
-
 	public Map<String, Object> getRecordByFileId(Object fileId) throws IOException {
 		String sql = formatSql(SQL_SELECT_GET_RECORD_BY_FILE_ID);
 		Map<String, Object> dataRecord = new HashMap<String, Object>();
@@ -181,12 +160,6 @@ public class RemoteFile extends RemoteFileSync {
 		return forceDelete(realDeleted, "D");
 	}
 
-	/*
-	* Performs the forceDeleteLink operation
-	* @param realDeleted - the realDeleted
-	* @return the forceDeleteLink result
-	* */
-
 
 	/**
 	* Performs the writeBlock operation
@@ -197,15 +170,6 @@ public class RemoteFile extends RemoteFileSync {
 	public synchronized boolean writeBlock(byte[] data, boolean append) throws IOException {
 		return writeTo(data, append);
 	}
-
-	/*
-	* Performs the writeToBatch operation
-	* @param currentFilePartStartIndex - the currentFilePartStartIndex
-	* @param partDataList - the partDataList
-	* @return the writeToBatch result
-	* */
-
-
 
 	/**
 	* Performs the isDirectory operation
@@ -220,14 +184,6 @@ public class RemoteFile extends RemoteFileSync {
 		return lastRecord.get("file_type").equals("D");
 	}
 
-
-	/*
-	* Performs the isLink operation
-	* @return the isLink result
-	* */
-
-
-
 	/**
 	* Performs the readAllString operation
 	* @return the readAllString result
@@ -236,9 +192,9 @@ public class RemoteFile extends RemoteFileSync {
 		ByteArrayOutputStream baos = null;
 		try {
 			byte[] bytes = readAllBytes();
-			
+
 			if(bytes == null) return null;
-			
+
 			baos = new ByteArrayOutputStream();
 			baos.write(bytes);
 			baos.flush();
@@ -253,13 +209,6 @@ public class RemoteFile extends RemoteFileSync {
 			}
 		}
 	}
-
-
-	/*
-	* Performs the size operation
-	* @return the size result
-	* */
-
 
 	/**
 	* Performs the listAll operation
@@ -318,14 +267,6 @@ public class RemoteFile extends RemoteFileSync {
 		}
 	}
 
-	/*
-	* Performs the listAllForDelete operation
-	* @param likeFolderName - the likeFolderName
-	* @param likeFileName - the likeFileName
-	* @param rows - the rows
-	* */
-
-
 	/**
 	* Performs the isTimeout operation
 	* @return the isTimeout result
@@ -356,22 +297,5 @@ public class RemoteFile extends RemoteFileSync {
 	public ConfigProperties getConfigProperties() {
 		return configProperties;
 	}
-
-	/*
-	* Performs the encrypt operation
-	* @param data - the data
-	* @return the encrypt result
-	* */
-
-
-
-	/*
-	* Performs the getSourceHostname operation
-	* @return the getSourceHostname result
-	* */
-
-
-
-	
 
 }

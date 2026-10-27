@@ -34,16 +34,16 @@ import java.io.Writer;
 * operation (u-based and octal escapes fully unescaped).
 * */
 public final class CodeEscape {
-    
+
     /**
     * Performs the escapeToSingleLineForCsv operation
     * @param text - the text
     * @return the escapeToSingleLineForCsv result
     * */
     public static String escapeToSingleLineForCsv(final String text) {
-        
+
         if(text == null) return "null";
-        
+
         return text.replaceAll(",","\\\\u002C").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r").replaceAll("\t", "\\\\t");
     }
 
@@ -81,7 +81,6 @@ public final class CodeEscape {
         return CodeEscapeUtil.escape(text, level);
 
     }
-
 
 
     /**
@@ -125,7 +124,7 @@ public final class CodeEscape {
         CodeEscapeUtil.escape(new InternalStringReader(text), writer, level);
 
     }
-    
+
     /**
     * Performs the escapeJavaMinimal operation
     * @param reader - the reader
@@ -227,12 +226,6 @@ public final class CodeEscape {
         CodeEscapeUtil.escape(text, offset, len, writer, level);
 
     }
-
-
-
-
-
-
 
 
     /**
@@ -380,15 +373,12 @@ public final class CodeEscape {
     }
 
 
-
-
     /**
     * Constructs a new CodeEscape
     * */
     private CodeEscape() {
         super();
     }
-
 
 
     /*

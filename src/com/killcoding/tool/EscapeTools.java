@@ -35,7 +35,7 @@ public class EscapeTools {
 	public EscapeTools() {
 		super();
 	}
-	
+
 	/**
 	* Performs the escapeToSingleLineForCsv operation
 	* @param str - the str
@@ -43,8 +43,8 @@ public class EscapeTools {
 	* */
 	public static String escapeToSingleLineForCsv(String str){
 	    return CodeEscape.escapeToSingleLineForCsv(str);
-	}	
-	
+	}
+
 	/**
 	* Performs the escape operation
 	* @param str - the str
@@ -54,7 +54,7 @@ public class EscapeTools {
 	public static String escape(String str,CodeEscapeLevel escapeLevel){
 	    return CodeEscapeUtil.escape(str,escapeLevel);
 	}
-	
+
 	/**
 	* Performs the unescape operation
 	* @param encodeStr - the encodeStr
@@ -62,6 +62,6 @@ public class EscapeTools {
 	* */
 	public static String unescape(String encodeStr){
 	    return CodeEscapeUtil.unescape(encodeStr);
-	}	
+	}
 
 }

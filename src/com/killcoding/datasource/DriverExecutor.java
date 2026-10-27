@@ -62,7 +62,6 @@ import com.killcoding.tool.CodeEscape;
 import java.sql.Blob;
 
 
-
 import java.sql.Timestamp;
 import java.sql.Clob;
 import java.io.InputStream;
@@ -78,7 +77,7 @@ public class DriverExecutor {
 
 	protected final static Map<Integer, List<DriverExecutor>> SYNC_EXECUTOR_MARK = new ConcurrentHashMap<Integer, List<DriverExecutor>>();
 	private final static Map<Integer, Long> SYNC_CONN_ERROR_TIME = new ConcurrentHashMap<Integer, Long>();
-	
+
 	private final static Map<String,String> SQL_LOG_MSG_MAPPING = new ConcurrentHashMap<String,String>();
 	private final static Map<String,Boolean> SQL_LOG_OVERSPEND_MAPPING = new ConcurrentHashMap<String,Boolean>();
 
@@ -321,7 +320,7 @@ public class DriverExecutor {
 	 * Query all matched records
 	 * @exception SQLException
 	 * @return List<Map<String, Object>>
-	 * @param sql 
+	 * @param sql
 	 * @param params
 	 * */
 	public List<Map<String, Object>> find(String sql) throws SQLException {
@@ -334,7 +333,7 @@ public class DriverExecutor {
 	 * @return List<Map<String, Object>>
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql 
+	 * @param sql
 	 * @param params
 	 * */
 	public List<Map<String, Object>> find(int cursorStart, int maxRows, String sql) throws SQLException {
@@ -494,9 +493,9 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return boolean) 
-	 * @param sql - Query sql 
-	 * @exception SQLException 
+	 * Execute stored proc (and return boolean)
+	 * @param sql - Query sql
+	 * @exception SQLException
 	 * @return boolean
 	 * */
 	public boolean callAndReturnBoolean(String sql) throws SQLException {
@@ -504,10 +503,10 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return boolean) 
+	 * Execute stored proc (and return boolean)
 	 * @param sql - Query sql, condition use format ':column_name'
 	 * @param params
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return boolean
 	 * */
 	public boolean callAndReturnBoolean(String sql, Map<String, Object> params) throws SQLException {
@@ -517,10 +516,10 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return boolean) 
+	 * Execute stored proc (and return boolean)
 	 * @param sql - Query sql,condition use format '?'
 	 * @param params
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return boolean
 	 * */
 	public boolean callAndReturnBoolean(String sql, List<Object> params) throws SQLException {
@@ -547,7 +546,7 @@ public class DriverExecutor {
 			}
 
             statement.execute();
-            
+
 			boolean returnResult = true; //true is not exception
 
 			if (allowedLog) {
@@ -571,9 +570,9 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return rows) 
+	 * Execute stored proc (and return rows)
 	 * @param sql - Query sql
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return int
 	 * */
 	public int callAndReturnRows(String sql) throws SQLException {
@@ -581,10 +580,10 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return rows) 
+	 * Execute stored proc (and return rows)
 	 * @param sql - Query sql,condition use format ':column_name'
 	 * @param params
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return int
 	 * */
 	public int callAndReturnRows(String sql, Map<String, Object> params) throws SQLException {
@@ -592,7 +591,7 @@ public class DriverExecutor {
 		List<Object> cparams = converParams(sql, params);
 		return callAndReturnRows(sql, cparams);
 	}
-	
+
 	/**
 	* Performs the callAndReturnRows operation
 	* @param sql - the sql
@@ -604,11 +603,11 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return rows) 
+	 * Execute stored proc (and return rows)
 	 * @param sqltypes - e.g Types.INTEGER
 	 * @param sql - Query sql,condition use format '?'
 	 * @param params
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return Object
 	 * */
 	public Object callAndReturnRows(int sqlTypes,String sql, List<Object> params) throws SQLException {
@@ -635,7 +634,7 @@ public class DriverExecutor {
 				}
 			}
 			boolean hasResult = statement.execute();
-			
+
 			Object row = statement.getObject(1);
 
 			if (allowedLog) {
@@ -659,9 +658,9 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return List) 
+	 * Execute stored proc (and return List)
 	 * @param sql - Query sql
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return List<Map<String, Object>>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(String sql) throws SQLException {
@@ -669,11 +668,11 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return List) 
+	 * Execute stored proc (and return List)
 	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000) 
+	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return List<Map<String, Object>>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(int cursorStart, int maxRows, String sql) throws SQLException {
@@ -681,11 +680,11 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return List) 
+	 * Execute stored proc (and return List)
 	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000) 
+	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql, condition use format ':column_name'
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return List<Map<String, Object>>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(int cursorStart, int maxRows, String sql,
@@ -696,11 +695,11 @@ public class DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc (and return List) 
+	 * Execute stored proc (and return List)
 	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000) 
+	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql, condition use format '?'
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @return List<Map<String, Object>>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(int cursorStart, int maxRows, String sql, List<Object> params)
@@ -841,7 +840,7 @@ public class DriverExecutor {
 	 * Execute sql
 	 * @exception SQLException
 	 * @param sql - Condition use format ':column_name'
-	 * @param params 
+	 * @param params
 	 * @return int
 	 * */
 	public int execute(String sql, Map<String, Object> params) throws SQLException {
@@ -854,7 +853,7 @@ public class DriverExecutor {
 	 * Execute sql
 	 * @exception SQLException
 	 * @param sql - Condition use format '?'
-	 * @param params 
+	 * @param params
 	 * @return int
 	 * */
 	public int execute(String sql, List<Object> params) throws SQLException {
@@ -991,7 +990,7 @@ public class DriverExecutor {
 	public boolean isClosed() {
 		try {
 		    if(closed) return closed;
-		    
+
 			return (connection == null || connection.isClosed());
 		} catch (Exception e) {
 			log.warn(e);
@@ -1245,7 +1244,7 @@ public class DriverExecutor {
 
 	/**
 	 * Write sql log
-	 * @return boolean 
+	 * @return boolean
 	 * @param type
 	 * @param seq
 	 * @param sql
@@ -1257,7 +1256,7 @@ public class DriverExecutor {
 
 	/**
 	 * Write sql log
-	 * @return boolean 
+	 * @return boolean
 	 * @param connection
 	 * @param type
 	 * @param seq
@@ -1368,20 +1367,20 @@ public class DriverExecutor {
                 String threadId = Thread.currentThread().getName() + "-" + Thread.currentThread().threadId();
 				String msg = String.format("%s,%s,%s,%s,%s,%s,%s,%s,\"%s\",\"%s\"%s", dateTimeStr, hostname,
 				                    threadId, dds.getName(), connHashCode,deHashCode, type, seq,
-				                    replaceToSigleLine(sql), handleParams(logParamMaxLength, params), System.lineSeparator());	
-				                    
+				                    replaceToSigleLine(sql), handleParams(logParamMaxLength, params), System.lineSeparator());
+
 				String key = String.format("%s_%s",deHashCode,connHashCode);
 				if(seq <= 0 || overspend <= 0){
 				    sqlLogCacheArray.add(msg);
    				    SQL_LOG_MSG_MAPPING.remove(key);
-    				SQL_LOG_OVERSPEND_MAPPING.remove(key);				    
+    				SQL_LOG_OVERSPEND_MAPPING.remove(key);
 				}
 				if(seq > 0 && overspend > 0){
     				SQL_LOG_OVERSPEND_MAPPING.put(key,isOverspend);
     				String existsMsg = SQL_LOG_MSG_MAPPING.get(key);
     				existsMsg = existsMsg == null ? msg : (existsMsg + msg);
     				SQL_LOG_MSG_MAPPING.put(key, existsMsg);
-    				
+
     				boolean seqOverspend = SQL_LOG_OVERSPEND_MAPPING.get(key);
     				if(isSpendSeq && seqOverspend){
     				    sqlLogCacheArray.add(SQL_LOG_MSG_MAPPING.get(key) + "");

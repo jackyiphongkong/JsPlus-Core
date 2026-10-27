@@ -30,9 +30,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-
-
-
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
 
@@ -42,7 +39,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 
 
 /**
@@ -59,7 +55,7 @@ public class MemoryCache extends AbsCacheApi {
 
 	private static boolean isStartRemoveExpiredThread = false;
 	private static ExecutorService executor = null;
-	
+
     /**
     * New a MemoryCache object
     * */
@@ -219,21 +215,21 @@ public class MemoryCache extends AbsCacheApi {
 
     	    if(lifeSeconds < 0){
     	        log.debug("Skip use cache, key '{}' life is '{}s'",name,lifeSeconds);
-    	        return;    
+    	        return;
     	    }
-    	    
+
     		try {
     			CACHE_VALUE.put(name, value);
     			if(!stored){
     			    if(lifeSeconds == 0){
         			    Date life = new Date(Long.MAX_VALUE);
-        			    CACHE_LIFE.put(name, life);    			        
+        			    CACHE_LIFE.put(name, life);
     			    }
     			    if(lifeSeconds > 0){
     			        long lifeLong = System.currentTimeMillis() + lifeSeconds * 1000;
-    			        
+
     			        if(lifeLong > Long.MAX_VALUE) lifeLong = Long.MAX_VALUE;
-    			        
+
         			    Date life = new Date(lifeLong);
         			    CACHE_LIFE.put(name, life);
     			    }
@@ -241,10 +237,10 @@ public class MemoryCache extends AbsCacheApi {
     		} catch (Exception e) {
     			log.warn(e);
     		}
-    
+
     		if (!isStartRemoveExpiredThread)
     			startRemoveExpiredThread();
-			
+
 	    }
 	}
 

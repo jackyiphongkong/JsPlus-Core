@@ -32,7 +32,7 @@ import java.util.Map;
 * Can notify administrators via email or other means
 * */
 public class AlertMessage {
-    
+
     public static Map<String, Object> msg = null;
     protected static Runnable sendRun = null;
 
@@ -50,7 +50,7 @@ public class AlertMessage {
 	public AlertMessage() {
 		super();
 	}
-	
+
     /**
     * Performs the send operation
     * @param String - the String
@@ -60,17 +60,17 @@ public class AlertMessage {
         AlertMessage.msg = msg;
         if(AlertMessage.sendRun != null){
             AlertMessage.sendRun.run();
-        }        
-    }	
-    
+        }
+    }
+
     /**
     * Performs the send operation
     * @param sendRun - the sendRun
     * */
     public static void send(Runnable sendRun){
         AlertMessage.sendRun = sendRun;
-    }    
-	
+    }
+
 	/**
 	* Performs the push operation
 	* @param String - the String

@@ -29,7 +29,6 @@ import com.killcoding.tool.CommonTools;
 import com.killcoding.tool.ConfigProperties;
 
 
-
 import com.killcoding.datasource.DriverDataSource;
 import java.sql.Time;
 import com.killcoding.datasource.CacheDriverExecutor;
@@ -118,20 +117,14 @@ public final class Clock {
 		if (configProperties != null) {
 			enable = configProperties.getBoolean("Enable", false);
 			String reloadDataSourcePath = configProperties.getString("DataSource");
-			
+
 			boolean isReload = false;
 			if(!CommonTools.isBlank(reloadDataSourcePath)){
 			    isReload = !dataSourcePath.equals(reloadDataSourcePath);
 			}
 			if(dataSource != null && isReload){
-			    // May be referenced when expansion is needed
-			    // dataSource.closeAll();
 			    dataSourcePath = reloadDataSourcePath;
 			}
-			// May be referenced when expansion is needed
-			// if(!enable && dataSource != null){
-			//    dataSource.closeAll();
-			// }
 			if (enable && isReload) {
 				if (!CommonTools.isBlank(dataSourcePath)) {
 					dataSource = new DriverDataSource(new File(dataSourcePath));
@@ -187,7 +180,7 @@ public final class Clock {
 					return null;
 
                 gap = Calendar.getInstance().getTimeInMillis() - appSystemDateTime;
-                
+
 				String timeZone = CommonTools.isBlank(appTimeZoneObj)
 						? configProperties.getString("DefaultTimeZone", "GMT") : (String) appTimeZoneObj;
 
@@ -229,7 +222,7 @@ public final class Clock {
 		}
 		return calendar;
 	}
-	
+
 	/**
 	* Performs the getDefaultCalendear operation
 	* @return the getDefaultCalendear result
@@ -289,7 +282,7 @@ public final class Clock {
 		ZoneId zoneId = getCalendar().getTimeZone().toZoneId();
 		return LocalDateTime.ofInstant(Instant.ofEpochMilli(getTime()), zoneId);
 	}
-	
+
 	/**
 	* Performs the getDataSource operation
 	* @return the getDataSource result
@@ -297,7 +290,7 @@ public final class Clock {
 	public static DriverDataSource getDataSource(){
 	    return dataSource;
 	}
-	
+
 	/**
 	* Performs the getConfigProperties operation
 	* @return the getConfigProperties result

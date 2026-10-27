@@ -47,54 +47,54 @@ import java.util.concurrent.ConcurrentHashMap;
 * console for evaluation.
 * */
 public class TextScript {
-    
+
     public static String DEFAULT_ENGINE_NAME = "nashorn";
-    
+
     protected boolean allowAllAccess = true;
-    
+
     protected final static Map<String,JsPlusContext> CONTEXT_MAPPING = new ConcurrentHashMap<String,JsPlusContext>();
-    
+
     protected String prefix = "#";
-    
+
     protected String varName = "theContent";
 
     protected JsPlusContext context = null;
-    
+
     protected Scanner scanner = null;
-    
+
     /**
     * Constructs a new TextScript
     * */
     public TextScript() throws Exception{
         super();
     }
-    
+
     /**
     * Constructs a new TextScript
     * @param scriptPath - the scriptPath
     * */
     public TextScript(File scriptPath) throws Exception{
         super();
-        
+
         if(scriptPath == null) throw new NullPointerException("The 'scriptPath' is null.");
 
         byte[] scriptBytes = new DiskFile(scriptPath).readAllBytes();
         scanner = new Scanner(new ByteArrayInputStream(scriptBytes), BaseFile.CHARSET);
     }
-    
+
     /**
     * Constructs a new TextScript
     * @param script - the script
     * */
     public TextScript(String script) throws Exception{
         super();
-        
+
         if(script == null) throw new NullPointerException("The 'script' is null.");
-        
+
         byte[] scriptBytes = script.getBytes(BaseFile.CHARSET);
         scanner = new Scanner(new ByteArrayInputStream(scriptBytes), BaseFile.CHARSET);
-    }  
-    
+    }
+
     /**
     * Performs the isEnd operation
     * @param line - the line
@@ -102,8 +102,8 @@ public class TextScript {
     * */
     protected boolean isEnd(String line){
 	    return isMatched(getEndRegex(),line);
-    } 
-    
+    }
+
     /**
     * Performs the parseEnd operation
     * @param line - the line
@@ -130,7 +130,7 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token," } ");
         }
         return quoteLine;
-    } 
+    }
 
     /**
     * Performs the isBlock operation
@@ -139,8 +139,8 @@ public class TextScript {
     * */
     protected boolean isBlock(String line){
 	    return isMatched(getBlockRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the isDefault operation
     * @param line - the line
@@ -148,8 +148,8 @@ public class TextScript {
     * */
     protected boolean isDefault(String line){
         return isMatched(getDefaultRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the parseDefault operation
     * @param line - the line
@@ -176,8 +176,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, scriptMapping.get(token).replaceAll(":","").trim() + ": ");
         }
         return quoteLine;
-    }     
-    
+    }
+
     /**
     * Performs the isCase operation
     * @param line - the line
@@ -185,8 +185,8 @@ public class TextScript {
     * */
     protected boolean isCase(String line){
         return isMatched(getCaseRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the parseCase operation
     * @param line - the line
@@ -213,8 +213,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, scriptMapping.get(token));
         }
         return quoteLine;
-    }    
-    
+    }
+
     /**
     * Performs the isCode operation
     * @param line - the line
@@ -222,8 +222,8 @@ public class TextScript {
     * */
     protected boolean isCode(String line){
         return isMatched(getCodeRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the parseCode operation
     * @param line - the line
@@ -250,9 +250,9 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, scriptMapping.get(token));
         }
         return quoteLine;
-    }       
-        
-    
+    }
+
+
     /**
     * Performs the isJump operation
     * @param line - the line
@@ -260,8 +260,8 @@ public class TextScript {
     * */
     protected boolean isJump(String line){
         return isMatched(getJumpRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the parseJump operation
     * @param line - the line
@@ -288,8 +288,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, scriptMapping.get(token) + ";");
         }
         return quoteLine;
-    }       
-    
+    }
+
     /**
     * Performs the isElseIf operation
     * @param line - the line
@@ -297,8 +297,8 @@ public class TextScript {
     * */
     protected boolean isElseIf(String line){
         return isMatched(getElseIfRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the parseElseIf operation
     * @param line - the line
@@ -325,8 +325,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, " } " + scriptMapping.get(token) + " { ");
         }
         return quoteLine;
-    }     
-    
+    }
+
     /**
     * Performs the isElse operation
     * @param line - the line
@@ -334,8 +334,8 @@ public class TextScript {
     * */
     protected boolean isElse(String line){
         return isMatched(getElseRegex(),line);
-    }  
-    
+    }
+
     /**
     * Performs the parseElse operation
     * @param line - the line
@@ -362,8 +362,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, " } " + scriptMapping.get(token) + " { ");
         }
         return quoteLine;
-    }      
-    
+    }
+
     /**
     * Performs the isComment operation
     * @param line - the line
@@ -371,8 +371,8 @@ public class TextScript {
     * */
     protected boolean isComment(String line){
 	    return isMatched(getCommentRegex(),line);
-    }   
-    
+    }
+
     /**
     * Performs the isLogic operation
     * @param line - the line
@@ -380,8 +380,8 @@ public class TextScript {
     * */
     protected boolean isLogic(String line){
 	    return isMatched(getLogicRegex(),line);
-    }    
-    
+    }
+
     /**
     * Performs the parseLogic operation
     * @param line - the line
@@ -408,8 +408,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token, scriptMapping.get(token) + " { ");
         }
         return quoteLine;
-    }    
-    
+    }
+
     /**
     * Performs the isExpression operation
     * @param line - the line
@@ -418,7 +418,7 @@ public class TextScript {
     protected boolean isExpression(String line){
 	   return isMatched(getExpressionRegex(),line);
     }
-    
+
     /**
     * Performs the isMatched operation
     * @param regex - the regex
@@ -429,8 +429,8 @@ public class TextScript {
 	    Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(line);
         return matcher.find();
-    }    
-    
+    }
+
     /**
     * Performs the parseExpression operation
     * @param line - the line
@@ -457,8 +457,8 @@ public class TextScript {
             quoteLine = quoteLine.replaceAll(token,"' + " + scriptMapping.get(token) + " + '");
         }
         return quoteLine;
-    }    
-    
+    }
+
     /**
     * Performs the parseRawText operation
     * @param line - the line
@@ -467,8 +467,8 @@ public class TextScript {
     protected String parseRawText(String line){
         String quoteLine = line.replaceAll("'","\\\\'");
         return "'" + quoteLine + "'";
-    }  
-    
+    }
+
     /**
     * Performs the parse operation
     * @return the parse result
@@ -476,7 +476,7 @@ public class TextScript {
     public String parse() throws Exception {
         return parse(false);
     }
-    
+
     /**
     * Performs the parse operation
     * @param showScript - the showScript
@@ -491,32 +491,32 @@ public class TextScript {
         	while (scanner.hasNextLine()) {
         	    boolean needlineBreak = false;
         	    String line = scanner.nextLine();
-        	    
+
         	    if(!haveBlock && isBlock(line)){
         	        haveBlock = true;
         	    }
-        	    
+
         	    if(haveBlock && !isBlock(line) && !isEnd(line)){
         	        blockScript.append(line);
-        	        
+
         	        if(isWin) blockScript.append("\r\n");
-                    
+
                     if(!isWin) blockScript.append("\n");
-                    
+
                     continue;
-                    
+
         	    }
-        	    
+
         	    if(haveBlock) {
         	        haveBlock = !isEnd(line);
-        	        
+
         	        if(!haveBlock) continue;
         	    }
-        	    
+
         	    if(isBlock(line)) continue;
-     
+
         	    if(isComment(line)) continue;
-        	    
+
                 if(isExpression(line)){
                     String parseLine = parseExpression(line);
                     all.append(varName + " += " + parseLine + ";");
@@ -549,18 +549,18 @@ public class TextScript {
                     all.append(varName + " += " + parseRawText(line) + ";");
                     needlineBreak = true;
                 }
-                
+
                 if(!needlineBreak){
                     if(isWin) all.append("\r\n");
-                    
+
                     if(!isWin) all.append("\n");
-                }              
-                
+                }
+
                 if(needlineBreak && scanner.hasNextLine()){
                     if(isWin) all.append(varName + " += '\\r\\n';\r\n");
-                    
+
                     if(!isWin) all.append(varName + " += '\\n';\n");
-                }            
+                }
         	}
         }finally{
             scanner.close();
@@ -576,7 +576,7 @@ public class TextScript {
     	    return context.evalScript(functionScript).toString();
         }
     }
-    
+
     /**
     * Performs the evalScript operation
     * @param script - the script
@@ -588,7 +588,7 @@ public class TextScript {
         }
 	    return context.evalScript(script);
     }
-    
+
     /**
     * Performs the eval operation
     * @param scriptPath - the scriptPath
@@ -599,8 +599,8 @@ public class TextScript {
             useEngine(DEFAULT_ENGINE_NAME);
         }
 	    return context.eval(scriptPath);
-    }    
-    
+    }
+
     /**
     * Performs the addParams operation
     * @param String - the String
@@ -610,14 +610,14 @@ public class TextScript {
     public TextScript addParams(Map<String,Object> params) throws Exception {
         if(context == null){
             useEngine(DEFAULT_ENGINE_NAME);
-        }        
+        }
         Set<String> keys = params.keySet();
         for(String key : keys){
             this.context.put(key,params.get(key));
         }
         return this;
     }
-    
+
     /**
     * Performs the useEngine operation
     * @param engineName - the engineName
@@ -631,21 +631,21 @@ public class TextScript {
     	    if(this.context == null){
     	        TextScript.initEngine(allowAllAccess,engineName);
     	        throw new Exception("The context is null, please init engine (e.g. TextScript.initEngine(engineName)).");
-    	    }	        
+    	    }
 	    }
-	    	    
+
 	    return this;
-    }      
-    
+    }
+
     /**
     * Performs the initEngine operation
     * @param engineName - the engineName
     * @return the initEngine result
     * */
-    public static boolean initEngine(String engineName) throws Exception {   
+    public static boolean initEngine(String engineName) throws Exception {
         return initEngine(true,engineName);
     }
-    
+
     /**
     * Performs the initEngine operation
     * @param allowAllAccess - the allowAllAccess
@@ -673,7 +673,7 @@ public class TextScript {
             return false;
         }
     }
-    
+
     /**
     * Performs the getContext operation
     * @return the getContext result
@@ -681,18 +681,18 @@ public class TextScript {
     public JsPlusContext getContext() throws Exception {
         if(context == null){
             useEngine(DEFAULT_ENGINE_NAME);
-        }        
+        }
         return context;
     }
-    
+
     /**
     * Performs the setPrefix operation
     * @param prefix - the prefix
     * */
     public void setPrefix(String prefix){
-        this.prefix = prefix;   
+        this.prefix = prefix;
     }
-    
+
     /**
     * Performs the getPrefix operation
     * @return the getPrefix result
@@ -700,23 +700,23 @@ public class TextScript {
     public String getPrefix(){
         return prefix;
     }
-    
+
     /**
     * Performs the setVarName operation
     * @param varName - the varName
     * */
     public void setVarName(String varName){
-        this.varName = varName;   
+        this.varName = varName;
     }
-    
+
     /**
     * Performs the getVarName operation
     * @return the getVarName result
     * */
     public String getVarName(){
         return varName;
-    }    
-    
+    }
+
     /**
     * Performs the getExpressionRegex operation
     * @return the getExpressionRegex result
@@ -724,38 +724,38 @@ public class TextScript {
     protected String getExpressionRegex(){
         return "(" + getPrefix() + "\\{[^\\S]*([^\\}]*)[^\\S]*\\})";
     }
-    
+
     /**
     * Performs the getLogicRegex operation
     * @return the getLogicRegex result
     * */
     protected String getLogicRegex(){
         return "([^\\S]*" + getPrefix() +"((if|switch|for|do|while){1}[^\\S]*\\([^\\S]*(.*))[^\\S]*)";
-    }    
-    
+    }
+
     /**
     * Performs the getElseRegex operation
     * @return the getElseRegex result
     * */
     protected String getElseRegex(){
         return "([^\\S]*" + getPrefix() + "(else){1}[^\\S]*)$";
-    }      
-    
+    }
+
     /**
     * Performs the getElseIfRegex operation
     * @return the getElseIfRegex result
     * */
     protected String getElseIfRegex(){
         return "([^\\S]*" + getPrefix() + "((else[^\\S]+if){1}[^\\S]*\\([^\\S]*(.*))[^\\S]*)";
-    } 
-   
+    }
+
     /**
     * Performs the getEndRegex operation
     * @return the getEndRegex result
     * */
     protected String getEndRegex(){
         return "([^\\S]*" + getPrefix() +"(end){1}[^\\S]*)$";
-    }  
+    }
 
     /**
     * Performs the getJumpRegex operation
@@ -763,7 +763,7 @@ public class TextScript {
     * */
     protected String getJumpRegex(){
         return "([^\\S]*" + getPrefix() + "(break|continue){1}[^\\S]*)$";
-    }  
+    }
 
     /**
     * Performs the getCaseRegex operation
@@ -771,40 +771,40 @@ public class TextScript {
     * */
     protected String getCaseRegex(){
         return "([^\\S]*" + getPrefix() + "(case[^\\S]+.*))";
-    }  
-    
+    }
+
     /**
     * Performs the getDefaultRegex operation
     * @return the getDefaultRegex result
     * */
     protected String getDefaultRegex(){
-        return "([^\\S]*" + getPrefix() + "(default[^\\S]*[:]?)[^\\S|$]?)";    
-    }      
+        return "([^\\S]*" + getPrefix() + "(default[^\\S]*[:]?)[^\\S|$]?)";
+    }
 
     /**
     * Performs the getCodeRegex operation
     * @return the getCodeRegex result
     * */
     protected String getCodeRegex(){
-        return "([^\\S]*" + getPrefix() + "code[^\\S]+(.*))"; 
-    }   
-    
+        return "([^\\S]*" + getPrefix() + "code[^\\S]+(.*))";
+    }
+
     /**
     * Performs the getCommentRegex operation
     * @return the getCommentRegex result
     * */
     protected String getCommentRegex(){
-        return "([^\\S]*" + getPrefix() + "comment[^\\S]+(.*))"; 
-    }      
-    
+        return "([^\\S]*" + getPrefix() + "comment[^\\S]+(.*))";
+    }
+
     /**
     * Performs the getBlockRegex operation
     * @return the getBlockRegex result
     * */
     protected String getBlockRegex(){
         return "([^\\S]*" + getPrefix() +"(block){1}[^\\S]*)$";
-    }  
-    
+    }
+
     /**
     * Performs the setAllowAllAccess operation
     * @param allowAllAccess - the allowAllAccess
@@ -812,7 +812,7 @@ public class TextScript {
     public void setAllowAllAccess(boolean allowAllAccess){
         this.allowAllAccess = allowAllAccess;
     }
-    
+
     /**
     * Performs the isAllowAllAccess operation
     * @return the isAllowAllAccess result
@@ -820,5 +820,5 @@ public class TextScript {
     public boolean isAllowAllAccess(){
         return this.allowAllAccess;
     }
-    
+
 }

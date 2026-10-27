@@ -164,24 +164,24 @@ try {
         command: "cp1.getConfigProperties('ds').getString('name')"
     });
 
-    // C10: putAndReturnSlef() fluent put + getString
+    // C10: putAndReturnSelf() fluent put + getString
     var cp10 = new ConfigProperties();
-    cp10.putAndReturnSlef("k1", "v1").putAndReturnSlef("k2", "v2");
+    cp10.putAndReturnSelf("k1", "v1").putAndReturnSelf("k2", "v2");
     check({
         caseId: "C10",
-        name: "putAndReturnSlef() chains puts",
+        name: "putAndReturnSelf() chains puts",
         ok: ("" + cp10.getString("k1")) === "v1" && ("" + cp10.getString("k2")) === "v2",
         detail: "k1=" + cp10.getString("k1") + " k2=" + cp10.getString("k2"),
-        objective: "putAndReturnSlef returns this for chaining",
-        objectiveZh: "putAndReturnSlef 回傳自身以便串接",
-        command: "cp10.putAndReturnSlef('k1','v1').putAndReturnSlef('k2','v2')"
+        objective: "putAndReturnSelf returns this for chaining",
+        objectiveZh: "putAndReturnSelf 回傳自身以便串接",
+        command: "cp10.putAndReturnSelf('k1','v1').putAndReturnSelf('k2','v2')"
     });
 
     // C11: removeAllNullValues()
     var cp11 = new ConfigProperties();
-    cp11.putAndReturnSlef("a", "1");
-    cp11.putAndReturnSlef("b", null);
-    cp11.putAndReturnSlef("c", "3");
+    cp11.putAndReturnSelf("a", "1");
+    cp11.putAndReturnSelf("b", null);
+    cp11.putAndReturnSelf("c", "3");
     cp11.removeAllNullValues();
     check({
         caseId: "C11",

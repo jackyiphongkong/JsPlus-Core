@@ -87,7 +87,7 @@ public final class DriverDataSource implements DataSource {
 	private long countAbortedCloseFailed = 0L;
 	private long countClosed = 0L;
 	private volatile double maxUsage = 0.0D;
-	
+
 	private final Map<String, Driver> DRIVER_MARK = new ConcurrentHashMap<String, Driver>();
 	private final Map<Integer, Long> CONN_ERROR_TIME = new ConcurrentHashMap<Integer, Long>();
 
@@ -135,9 +135,9 @@ public final class DriverDataSource implements DataSource {
 
 	private final ConnectionPool connectionPool = new ConnectionPool();
 	private final ExecutorService connectionPoolExecutor = Executors.newFixedThreadPool(1);
-	
+
 	private long dynamicReloadConfigTime = System.currentTimeMillis();
-	
+
 	/**
 	 * New a DriverDataSource object
 	 * Use env APP_DATASOURCE=/path/DataSource.properties
@@ -161,7 +161,7 @@ public final class DriverDataSource implements DataSource {
 
 	/**
 	 * New a DriverDataSource object
-	 * @param appDataSource - It is file object (e.g. /your_path/DataSource.properties) 
+	 * @param appDataSource - It is file object (e.g. /your_path/DataSource.properties)
 	 * */
 	public DriverDataSource(File appDataSource) {
 		super();
@@ -172,7 +172,7 @@ public final class DriverDataSource implements DataSource {
 		        this.appDataSourcePath = this.appDataSource.getAbsolutePath();
 		        Logger.systemError(DriverDataSource.class, "The '{}' does not exists.",this.appDataSourcePath);
 		    }
-			
+
 		}
 
 		initDs();
@@ -273,7 +273,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Set connection life cycle 
+	 * Set connection life cycle
 	 * @param lifeCycle - Unit is ms
 	 * */
 	public void setLifeCycle(Long lifeCycle) {
@@ -281,7 +281,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get connection life cycle 
+	 * Get connection life cycle
 	 * @return Long - Unit is ms
 	 * */
 	public Long getLifeCycle() {
@@ -340,7 +340,7 @@ public final class DriverDataSource implements DataSource {
 	 * Set execute timeout
 	 * Default is 0s
 	 * Disabled timeou if value is 0s
-	 * @param timeout - Unit is seconds, 
+	 * @param timeout - Unit is seconds,
 	 * */
 	public void setTimeout(Long timeout) {
 		this.timeout = (timeout == null ? 0L : timeout);
@@ -348,7 +348,7 @@ public final class DriverDataSource implements DataSource {
 
 	/**
 	 * Get execute timeout
-	 * @return Long - Unit is seconds, 
+	 * @return Long - Unit is seconds,
 	 * */
 	public Long getTimeout() {
 		return this.timeout;
@@ -358,7 +358,7 @@ public final class DriverDataSource implements DataSource {
 	 * Set execute transaction timeout
 	 * Default is 0s
 	 * Disabled timeou if value is 0s
-	 * @param idleTimeout - Unit is seconds, 
+	 * @param idleTimeout - Unit is seconds,
 	 * */
 	public void setTransactionTimeout(Long transactionTimeout) {
 		this.transactionTimeout = (transactionTimeout == null ? 0L : transactionTimeout);
@@ -366,7 +366,7 @@ public final class DriverDataSource implements DataSource {
 
 	/**
 	 * Get execute transaction timeout
-	 * @return Long - Unit is seconds, 
+	 * @return Long - Unit is seconds,
 	 * */
 	public Long getTransactionTimeout() {
 		return this.transactionTimeout;
@@ -541,7 +541,7 @@ public final class DriverDataSource implements DataSource {
 	 * */
 	public ConnectionPool getConnectionPool() {
 		return connectionPool;
-	}	
+	}
 
 	/**
 	 * Abort timeout connection
@@ -563,14 +563,14 @@ public final class DriverDataSource implements DataSource {
 							connectionPool.removeConnectionUsingAtMark(hashCode);
 							continue;
 						}
-                        
+
                         try{
     						long timeoutSec = (currentTime.getTime() - openedAt.getTime()) / 1000;
     						Long _timeout = conn.getAutoCommit() ? timeout : transactionTimeout;
-    
+
     						if (_timeout == 0)
     							continue;
-    
+
     						if (timeoutSec >= _timeout) {
     							if (!abortList.contains(hashCode))
     								abortList.add(hashCode);
@@ -826,7 +826,7 @@ public final class DriverDataSource implements DataSource {
 
 		if (this.configProperties.containsKey("MaxAveUsageSize"))
 			setMaxAveUsageSize(this.configProperties.getInteger("MaxAveUsageSize", 10000));
-			
+
 		loadedConfig = true;
 	}
 
@@ -1100,11 +1100,11 @@ public final class DriverDataSource implements DataSource {
 							abortLifeCycleEndedConnection();
 							abortTimeoutConnection();
 							abortIdleTimeoutConnection();
-							
+
 							if(!closed && !Thread.currentThread().isInterrupted()){
 							    createConnectionToPool();
 							}
-							
+
 							countUsage(true);
 							if (enableStatusLog && statusLogFile != null) {
 								statusLogOutput();
@@ -1193,9 +1193,9 @@ public final class DriverDataSource implements DataSource {
     		}
     		if (conn == null) {
     			throwConnIsNull();
-    		}			
+    		}
             countUsage(false);
-    		
+
     		if (conn == null) {
     			throwConnIsNull();
     		}
@@ -1207,7 +1207,7 @@ public final class DriverDataSource implements DataSource {
 	    }
 	    return null;
 	}
-	
+
 	/**
 	* Performs the throwConnIsNull operation
 	* */
@@ -1313,10 +1313,10 @@ public final class DriverDataSource implements DataSource {
 		log.debug("Created Connection -> {}", hashCode);
 		connectionPool.add(conn);
 	}
- 
+
 	/**
 	 * Close connection
-	 * @exception SQLException 
+	 * @exception SQLException
 	 * @param conn - Connection object
 	 * */
 	protected void closeConnection(Connection conn) throws SQLException {
@@ -1325,7 +1325,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Close connection 
+	 * Close connection
 	 * @exception SQLException
 	 * @param hashCode - Connection hash code
 	 * */
@@ -1391,17 +1391,17 @@ public final class DriverDataSource implements DataSource {
 		    log.mark("Abort(On SystemExit) connection '{}.{}'.",name,hashCode);
 		    abort(hashCode);
 		}
-		log.mark("Aborted all connections '{}'.",name);	    
+		log.mark("Aborted all connections '{}'.",name);
 	}
-	
+
 	/**
 	 * Loop close all connections
 	 * */
 	public synchronized void closeAll(int waitSeconds) {
 		closed = true;
-		
+
 		if(waitSeconds < 0) waitSeconds = 10;
-		
+
 		log.mark("Try Abort(On SystemExit,CLOSE_ALL-{}) connections.",name);
 		Map<Integer,Date> idleBeginMark = connectionPool.getConnectionIdleBeginMark();
 		Set<Integer> hashCodeList = idleBeginMark.keySet();
@@ -1411,7 +1411,7 @@ public final class DriverDataSource implements DataSource {
 		}
 		double currentUsage = getUsage();
 		log.mark("Checking usage for close all , the '{}' usage is '{}'.",name,currentUsage);
-		
+
 		if(currentUsage > 0 && waitSeconds > 0){
 		  waitSeconds--;
 		    try{
@@ -1423,15 +1423,15 @@ public final class DriverDataSource implements DataSource {
 		}
 		abortAll();
 		log.mark("Aborted all connections '{}'.",name);
-	}	
-	
+	}
+
 	/**
 	 * Loop close all connections
 	 * */
 	public synchronized void closeAll() {
 		closeAll(10);
-	}	
-	
+	}
+
 	/**
 	 * Deregister JDBC Driver
 	 * For system exit
@@ -1454,7 +1454,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Try get connection 
+	 * Try get connection
 	 * Support multi url
 	 * @param driver - Driver
 	 * @param props - Connection properties ,var name is 'connProps'
@@ -1539,7 +1539,7 @@ public final class DriverDataSource implements DataSource {
 				callAbortConn(conn);
 				log.debug("Aborted Connection -> {}", hashCode);
 				connectionPool.removeAll(hashCode);
-				log.debug("Abort(If Aborted,{}), UsedPoolSize={}.", hashCode, getOpenConnectionSize()); 
+				log.debug("Abort(If Aborted,{}), UsedPoolSize={}.", hashCode, getOpenConnectionSize());
 			} catch (Exception e) {
 				log.warn(e.getMessage(), e);
 
@@ -1548,7 +1548,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Call abort connection 
+	 * Call abort connection
 	 * Please see 'abortMode' options (rollback,close,abort)
 	 * Default is 'abort'
 	 * @param conn - Connection
@@ -1705,7 +1705,7 @@ public final class DriverDataSource implements DataSource {
 	public String getFingerprint() {
 		return CommonTools.md5(String.format("%s-%s", this.url, this.username));
 	}
-	
+
 	/**
 	* Performs the getAveUsage operation
 	* @return the getAveUsage result
@@ -1716,12 +1716,12 @@ public final class DriverDataSource implements DataSource {
 	    for(int i = 0; i < size;i++){
 	        sum += aveUsageSum.get(i);
 	    }
-	    
+
 	    if(size <= 0) return 0.0D;
-	    
+
 	    return sum/size;
 	}
-	
+
 	/**
 	* Performs the setMaxAveUsageSize operation
 	* @param maxAveUsageSize - the maxAveUsageSize
@@ -1748,7 +1748,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get pool using 
+	 * Get pool using
 	 * @return double
 	 * */
 	public double getUsage() {
@@ -1760,7 +1760,7 @@ public final class DriverDataSource implements DataSource {
 
 		if (maxPoolSize <= 0)
 			return 0.0D;
-			
+
 		return usingSize / (maxPoolSize * 1.0D);
 	}
 

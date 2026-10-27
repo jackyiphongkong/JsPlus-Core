@@ -51,7 +51,6 @@ final class CodeEscapeUtil {
     private static final byte[] ESCAPE_LEVELS;
 
 
-
     static {
 
         SEC_CHARS = new char[SEC_CHARS_LEN];
@@ -102,7 +101,6 @@ final class CodeEscapeUtil {
         }
 
     }
-
 
 
     /**
@@ -178,8 +176,6 @@ final class CodeEscapeUtil {
             }
 
             readOffset = i + 1;
-
-
 
 
             if (codepoint < SEC_CHARS_LEN) {
@@ -383,7 +379,7 @@ final class CodeEscapeUtil {
         }
 
     }
-    
+
     /**
     * Performs the parseIntFromReference operation
     * @param text - the text
@@ -451,7 +447,7 @@ final class CodeEscapeUtil {
         }
 
         if (start + 1 >= end) {
-            return (c1 != '0'); 
+            return (c1 != '0');
         }
 
         final char c2 = text.charAt(start + 1);
@@ -460,7 +456,7 @@ final class CodeEscapeUtil {
         }
 
         if (start + 2 >= end) {
-            return (c1 != '0' || c2 != '0'); 
+            return (c1 != '0' || c2 != '0');
         }
 
         final char c3 = text.charAt(start + 2);
@@ -468,7 +464,7 @@ final class CodeEscapeUtil {
             return (c1 != '0' || c2 != '0');
         }
 
-        return (c1 != '0' || c2 != '0' || c3 != '0'); 
+        return (c1 != '0' || c2 != '0' || c3 != '0');
 
     }
 
@@ -497,19 +493,19 @@ final class CodeEscapeUtil {
 
         final char c2 = text[start + 1];
         if (c2 < '0' || c2 > '7') {
-            return (c1 != '0'); 
+            return (c1 != '0');
         }
 
         if (start + 2 >= end) {
-            return (c1 != '0' || c2 != '0'); 
+            return (c1 != '0' || c2 != '0');
         }
 
         final char c3 = text[start + 2];
         if (c3 < '0' || c3 > '7') {
-            return (c1 != '0' || c2 != '0'); 
+            return (c1 != '0' || c2 != '0');
         }
 
-        return (c1 != '0' || c2 != '0' || c3 != '0'); 
+        return (c1 != '0' || c2 != '0' || c3 != '0');
 
     }
 
@@ -619,7 +615,6 @@ final class CodeEscapeUtil {
     }
 
 
-
     /**
     * Performs the requiresUnicodeUnescape operation
     * @param text - the text
@@ -658,7 +653,6 @@ final class CodeEscapeUtil {
         return false;
 
     }
-
 
 
     /**
@@ -833,7 +827,7 @@ final class CodeEscapeUtil {
                 }
 
             }
-            
+
             if (strBuilder == null) {
                 strBuilder = new StringBuilder(max + 5);
             }
@@ -875,7 +869,7 @@ final class CodeEscapeUtil {
         if (reader == null) {
             return;
         }
-        
+
         char[] buffer = new char[20];
 
         int read = reader.read(buffer, 0, buffer.length);
@@ -990,9 +984,9 @@ final class CodeEscapeUtil {
                 if (codepoint == -1) {
 
                     if (c1 >= '0' && c1 <= '7') {
-                        
+
                         int f = i + 2;
-                        while (f < (i + 4) && f < max) { 
+                        while (f < (i + 4) && f < max) {
                             final char cf = unicodeEscapedText[f];
                             if (!(cf >= '0' && cf <= '7')) {
                                 break;
@@ -1041,8 +1035,6 @@ final class CodeEscapeUtil {
     }
 
 
-
-
     /**
     * Performs the codePointAt operation
     * @param c1 - the c1
@@ -1059,7 +1051,6 @@ final class CodeEscapeUtil {
         }
         return c1;
     }
-
 
 
 }

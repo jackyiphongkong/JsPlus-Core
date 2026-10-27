@@ -462,7 +462,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	* @param name - the name
 	* */
 	public void into(String name) {
-		consoleVariables.putAndReturnSlef(name, intoValue);
+		consoleVariables.putAndReturnSelf(name, intoValue);
 	}
 
 	/**
@@ -490,12 +490,12 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	public void startTask(String taskTimer, String taskFile) {
 		if (taskTimer == null) {
 			preExecuteTime = 0L;
-			consoleVariables.putAndReturnSlef("TaskTimer", DEFAULT_TaskTimer);
-			consoleVariables.putAndReturnSlef("Task", taskFile);
+			consoleVariables.putAndReturnSelf("TaskTimer", DEFAULT_TaskTimer);
+			consoleVariables.putAndReturnSelf("Task", taskFile);
 		} else {
 			preExecuteTime = 0L;
-			consoleVariables.putAndReturnSlef("TaskTimer", taskTimer);
-			consoleVariables.putAndReturnSlef("Task", taskFile);
+			consoleVariables.putAndReturnSelf("TaskTimer", taskTimer);
+			consoleVariables.putAndReturnSelf("Task", taskFile);
 		}
 	}
 
@@ -504,8 +504,8 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	* */
 	public void stopTask() {
 		preExecuteTime = 0L;
-		consoleVariables.putAndReturnSlef("TaskTimer", DEFAULT_TaskTimer + "ms");
-		consoleVariables.putAndReturnSlef("Task", null);
+		consoleVariables.putAndReturnSelf("TaskTimer", DEFAULT_TaskTimer + "ms");
+		consoleVariables.putAndReturnSelf("Task", null);
 	}
 
 	/**
@@ -515,7 +515,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	* @return the set result
 	* */
 	public String set(String key,Object value) {
-		consoleVariables.putAndReturnSlef(key,value);
+		consoleVariables.putAndReturnSelf(key,value);
 		return String.format("Set %s=%s", key, value);
 	}
 
@@ -582,39 +582,39 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	* private so it cannot be overridden during super-class construction)
 	* */
 	private synchronized void initReset() {
-		consoleVariables.putAndReturnSlef("QueryCursorStart", DEFAULT_QueryCursorStart);
-		consoleVariables.putAndReturnSlef("QueryMaxRows", DEFAULT_QueryMaxRows);
-		consoleVariables.putAndReturnSlef("AutoCommit", DEFAULT_AutoCommit);
-		consoleVariables.putAndReturnSlef("CommandEnd", DEFAULT_CommandEnd);
-		consoleVariables.putAndReturnSlef("CommandCancel", DEFAULT_CommandCancel);
-		consoleVariables.putAndReturnSlef("ColumnWidth", DEFAULT_ColumnWidth);
-		consoleVariables.putAndReturnSlef("ColumnCut", DEFAULT_ColumnCut);
-		consoleVariables.putAndReturnSlef("ShowResultHeader", DEFAULT_ShowResultHeader);
-		consoleVariables.putAndReturnSlef("ShowResultBody", DEFAULT_ShowResultBody);
-		consoleVariables.putAndReturnSlef("ShowResultFooter", DEFAULT_ShowResultFooter);
-		consoleVariables.putAndReturnSlef("DateTimeFormat", DEFAULT_DateTimeFormat);
-		consoleVariables.putAndReturnSlef("DateFormat", DEFAULT_DateFormat);
-		consoleVariables.putAndReturnSlef("TimeFormat", DEFAULT_TimeFormat);
-		consoleVariables.putAndReturnSlef("Name", DEFAULT_Name);
-		consoleVariables.putAndReturnSlef("WriteHistory", DEFAULT_WriteHistory);
-		consoleVariables.putAndReturnSlef("CommandHistory", DEFAULT_CommandHistory);
-		consoleVariables.putAndReturnSlef("ShowTaskLog", DEFAULT_ShowTaskLog);
-		consoleVariables.putAndReturnSlef("ExportMaxFileSize", DEFAULT_ExportMaxFileSize);
-		consoleVariables.putAndReturnSlef("ExportCursorStart", DEFAULT_ExportCursorStart);
-		consoleVariables.putAndReturnSlef("ExportMaxRows", DEFAULT_ExportMaxRows);
-		consoleVariables.putAndReturnSlef("ExportTimer", DEFAULT_ExportTimer);
-		consoleVariables.putAndReturnSlef("ExportOrderBy", DEFAULT_ExportOrderBy);
-		consoleVariables.putAndReturnSlef("ExportUpperOrLowerCase", DEFAULT_ExportUpperOrLowerCase);
-		consoleVariables.putAndReturnSlef("ExportSplit", DEFAULT_ExportSplit);
-		consoleVariables.putAndReturnSlef("ImportSplit", DEFAULT_ImportSplit);
-		consoleVariables.putAndReturnSlef("BatchSize", DEFAULT_BatchSize);
-		consoleVariables.putAndReturnSlef("Quote", DEFAULT_Quote);
-		consoleVariables.putAndReturnSlef("CallStoredProcedureFun", DEFAULT_CallStoredProcedureFun);
-		consoleVariables.putAndReturnSlef("ScriptEngine", DEFAULT_ScriptEngine);
+		consoleVariables.putAndReturnSelf("QueryCursorStart", DEFAULT_QueryCursorStart);
+		consoleVariables.putAndReturnSelf("QueryMaxRows", DEFAULT_QueryMaxRows);
+		consoleVariables.putAndReturnSelf("AutoCommit", DEFAULT_AutoCommit);
+		consoleVariables.putAndReturnSelf("CommandEnd", DEFAULT_CommandEnd);
+		consoleVariables.putAndReturnSelf("CommandCancel", DEFAULT_CommandCancel);
+		consoleVariables.putAndReturnSelf("ColumnWidth", DEFAULT_ColumnWidth);
+		consoleVariables.putAndReturnSelf("ColumnCut", DEFAULT_ColumnCut);
+		consoleVariables.putAndReturnSelf("ShowResultHeader", DEFAULT_ShowResultHeader);
+		consoleVariables.putAndReturnSelf("ShowResultBody", DEFAULT_ShowResultBody);
+		consoleVariables.putAndReturnSelf("ShowResultFooter", DEFAULT_ShowResultFooter);
+		consoleVariables.putAndReturnSelf("DateTimeFormat", DEFAULT_DateTimeFormat);
+		consoleVariables.putAndReturnSelf("DateFormat", DEFAULT_DateFormat);
+		consoleVariables.putAndReturnSelf("TimeFormat", DEFAULT_TimeFormat);
+		consoleVariables.putAndReturnSelf("Name", DEFAULT_Name);
+		consoleVariables.putAndReturnSelf("WriteHistory", DEFAULT_WriteHistory);
+		consoleVariables.putAndReturnSelf("CommandHistory", DEFAULT_CommandHistory);
+		consoleVariables.putAndReturnSelf("ShowTaskLog", DEFAULT_ShowTaskLog);
+		consoleVariables.putAndReturnSelf("ExportMaxFileSize", DEFAULT_ExportMaxFileSize);
+		consoleVariables.putAndReturnSelf("ExportCursorStart", DEFAULT_ExportCursorStart);
+		consoleVariables.putAndReturnSelf("ExportMaxRows", DEFAULT_ExportMaxRows);
+		consoleVariables.putAndReturnSelf("ExportTimer", DEFAULT_ExportTimer);
+		consoleVariables.putAndReturnSelf("ExportOrderBy", DEFAULT_ExportOrderBy);
+		consoleVariables.putAndReturnSelf("ExportUpperOrLowerCase", DEFAULT_ExportUpperOrLowerCase);
+		consoleVariables.putAndReturnSelf("ExportSplit", DEFAULT_ExportSplit);
+		consoleVariables.putAndReturnSelf("ImportSplit", DEFAULT_ImportSplit);
+		consoleVariables.putAndReturnSelf("BatchSize", DEFAULT_BatchSize);
+		consoleVariables.putAndReturnSelf("Quote", DEFAULT_Quote);
+		consoleVariables.putAndReturnSelf("CallStoredProcedureFun", DEFAULT_CallStoredProcedureFun);
+		consoleVariables.putAndReturnSelf("ScriptEngine", DEFAULT_ScriptEngine);
 
-		consoleVariables.putAndReturnSlef("JdbcCipherAesKey", DEFAULT_Jdbc_Cipher_AesKey);
-		consoleVariables.putAndReturnSlef("ScriptCipherAesKey", DEFAULT_Script_Cipher_AesKey);
-		consoleVariables.putAndReturnSlef("ConfigCipherAesKey", DEFAULT_Config_Cipher_AesKey);
+		consoleVariables.putAndReturnSelf("JdbcCipherAesKey", DEFAULT_Jdbc_Cipher_AesKey);
+		consoleVariables.putAndReturnSelf("ScriptCipherAesKey", DEFAULT_Script_Cipher_AesKey);
+		consoleVariables.putAndReturnSelf("ConfigCipherAesKey", DEFAULT_Config_Cipher_AesKey);
 	}
 
 	/**
@@ -809,9 +809,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	* */
 	public String formatObjectValue(boolean useEncrypt, boolean single, Object objValue,
 			String tableObjectFolder) {
-// 		SimpleDateFormat dateTimeFormat = new SimpleDateFormat(consoleVariables.getString("DateTimeFormat"));
-// 		SimpleDateFormat dateFormat = new SimpleDateFormat(consoleVariables.getString("DateFormat"));
-// 		SimpleDateFormat timeFormat = new SimpleDateFormat(consoleVariables.getString("TimeFormat"));
 
 		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(consoleVariables.getString("DateTimeFormat"));
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(consoleVariables.getString("DateFormat"));
@@ -859,15 +856,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
 			}
 		}
 
-// 		else if (objValue instanceof java.sql.Timestamp) {
-// 			value = dateTimeFormat.format((java.sql.Timestamp) objValue);
-// 		} else if (objValue instanceof java.util.Date) {
-// 			value = dateTimeFormat.format((java.util.Date) objValue);
-// 		} else if (objValue instanceof java.sql.Date) {
-// 			value = dateFormat.format((java.sql.Date) objValue);
-// 		} else if (objValue instanceof java.sql.Time) {
-// 			value = timeFormat.format((java.sql.Time) objValue);
-// 		}
        if (objValue instanceof java.sql.Timestamp) {
             value = ((java.sql.Timestamp) objValue).toLocalDateTime().format(dateTimeFormatter);
         } else if (objValue instanceof java.util.Date) {

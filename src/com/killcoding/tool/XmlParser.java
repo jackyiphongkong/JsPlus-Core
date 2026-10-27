@@ -56,7 +56,7 @@ public class XmlParser {
         this.xml = xml;
         root = xml2Map(this.xml);
     }
-    
+
     /**
     * Performs the put operation
     * @param name - the name
@@ -66,7 +66,7 @@ public class XmlParser {
     public void put(String name, Map<String, Object> map) {
         root.put(getShortName(name), map);
     }
-    
+
     /**
     * Performs the getRootName operation
     * @return the getRootName result
@@ -101,7 +101,7 @@ public class XmlParser {
         }
         return o;
     }
-    
+
     @SuppressWarnings("unchecked")
     public List<Object> getList(String... keys) {
         List<Object> list = new ArrayList<Object>();
@@ -147,24 +147,24 @@ public class XmlParser {
         if (paths == null) return null;
         return get(paths.trim().split("\\."));
     }
-    
+
     public List<Object> pathList(String paths) {
         if (paths == null) return null;
         return getList(paths.trim().split("\\."));
-    }    
+    }
 
     public Map<String, Object> xml2Map(String xml) throws Exception {
         Map<String, Object> map = new HashMap<>();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(false);
         factory.setValidating(false);
-        
+
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.parse(new InputSource(new StringReader(xml)));
-        
+
         Element rootElement = document.getDocumentElement();
         rootName = rootElement.getNodeName();
-        
+
         NodeList childNodes = rootElement.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
@@ -185,7 +185,7 @@ public class XmlParser {
     private void processElement(Element element, Map<String, Object> parentMap) {
         String elementName = element.getNodeName();
         NodeList children = element.getChildNodes();
-        
+
         boolean hasElementChildren = false;
         for (int i = 0; i < children.getLength(); i++) {
             if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -193,7 +193,7 @@ public class XmlParser {
                 break;
             }
         }
-        
+
         if (!hasElementChildren) {
             String textContent = getElementText(element);
             handleValue(parentMap, elementName, textContent, element);
@@ -205,7 +205,7 @@ public class XmlParser {
                     processElement((Element) child, childMap);
                 }
             }
-            
+
             if (childMap.isEmpty()) {
                 String textContent = getElementText(element);
                 handleValue(parentMap, elementName, textContent, element);
@@ -226,13 +226,13 @@ public class XmlParser {
     @SuppressWarnings("unchecked")
     private void handleValue(Map<String, Object> map, String key, Object value, Element element) {
         Object existingValue = map.get(key);
-        
+
         if (existingValue == null) {
             map.put(getShortName(key), blank(value));
             map.put("@" + getShortName(key), parseAttributes(element));
         } else if (existingValue instanceof List) {
             ((List<Object>) existingValue).add(blank(value));
-            
+
             Object existingAttrs = map.get("@" + getShortName(key));
             if (existingAttrs instanceof List) {
                 ((List<Object>) existingAttrs).add(parseAttributes(element));
@@ -242,7 +242,7 @@ public class XmlParser {
             valueList.add(existingValue);
             valueList.add(blank(value));
             map.put(getShortName(key), valueList);
-            
+
             List<Object> attrList = new ArrayList<>();
             attrList.add(map.get("@" + getShortName(key)));
             attrList.add(parseAttributes(element));
@@ -262,13 +262,13 @@ public class XmlParser {
     @SuppressWarnings("unchecked")
     private void handleMap(Map<String, Object> map, String key, Map<String, Object> value, Element element) {
         Object existingValue = map.get(key);
-        
+
         if (existingValue == null) {
             map.put(getShortName(key), value);
             map.put("@" + getShortName(key), parseAttributes(element));
         } else if (existingValue instanceof List) {
             ((List<Object>) existingValue).add(value);
-            
+
             Object existingAttrs = map.get("@" + getShortName(key));
             if (existingAttrs instanceof List) {
                 ((List<Object>) existingAttrs).add(parseAttributes(element));
@@ -278,7 +278,7 @@ public class XmlParser {
             valueList.add(existingValue);
             valueList.add(value);
             map.put(getShortName(key), valueList);
-            
+
             List<Object> attrList = new ArrayList<>();
             attrList.add(map.get("@" + getShortName(key)));
             attrList.add(parseAttributes(element));
@@ -296,7 +296,7 @@ public class XmlParser {
         }
         return atts;
     }
-    
+
     /**
     * Performs the getElementText operation
     * @param element - the element
@@ -305,17 +305,17 @@ public class XmlParser {
     private String getElementText(Element element) {
         StringBuilder text = new StringBuilder();
         NodeList childNodes = element.getChildNodes();
-        
+
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
             if (node.getNodeType() == Node.TEXT_NODE) {
                 text.append(node.getNodeValue());
             }
         }
-        
+
         return text.toString();
     }
-    
+
     public Map<String, Object> getRoot() {
         return root;
     }
@@ -328,7 +328,7 @@ public class XmlParser {
     private static Object blank(Object value) {
         return (value == null || value.toString().trim().equals("")) ? null : value;
     }
-    
+
     /**
     * Performs the join operation
     * @param list - the list
@@ -343,12 +343,12 @@ public class XmlParser {
                 first = false;
             else
                 sb.append(conjunction);
-            
+
             sb.append(item.trim());
         }
         return sb.toString();
     }
-    
+
     /**
     * Performs the getShortName operation
     * @param nodeName - the nodeName
@@ -356,7 +356,6 @@ public class XmlParser {
     * */
     private String getShortName(String nodeName) {
         return nodeName.replaceFirst("^.*:","");
-    }    
-    
+    }
+
 }
-    

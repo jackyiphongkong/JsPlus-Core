@@ -45,7 +45,7 @@ public abstract class JsPlusContext {
 		this.engineName = engineName.trim();
 		log = LoggerFactory.getLogger(this.getClass());
 	}
-	
+
 	/**
 	* Performs the isGraalJs operation
 	* @param engineName - the engineName
@@ -58,7 +58,7 @@ public abstract class JsPlusContext {
 	        return false;
 	    }
 	}
-	
+
 	/**
 	* Performs the isNashornJs operation
 	* @param engineName - the engineName
@@ -70,8 +70,8 @@ public abstract class JsPlusContext {
 	    }catch(Exception e){
 	        return false;
 	    }
-	}	
-	
+	}
+
 	/**
 	* Performs the setAllowAllAccess operation
 	* @param allowAllAccess - the allowAllAccess
@@ -79,15 +79,15 @@ public abstract class JsPlusContext {
 	public void setAllowAllAccess(boolean allowAllAccess){
 	    this.allowAllAccess = allowAllAccess;
 	}
-	
+
 	/**
 	* Performs the isAllowAllAccess operation
 	* @return the isAllowAllAccess result
 	* */
 	public boolean isAllowAllAccess(){
 	    return this.allowAllAccess;
-	}		
-	
+	}
+
 	/**
 	* Performs the setScriptCipherAesKey operation
 	* @param scriptCipherAesKey - the scriptCipherAesKey
@@ -95,7 +95,7 @@ public abstract class JsPlusContext {
 	public void setScriptCipherAesKey(String scriptCipherAesKey){
 	    this.scriptCipherAesKey = scriptCipherAesKey;
 	}
-	
+
 	/**
 	* Performs the remove operation
 	* */
@@ -103,7 +103,7 @@ public abstract class JsPlusContext {
 	    String tid = Thread.currentThread().threadId() + "";
 	    remove(tid);
 	}
-    
+
     /**
     * Performs the put operation
     * @param value - the value
@@ -112,7 +112,7 @@ public abstract class JsPlusContext {
         String tid = Thread.currentThread().threadId() + "";
         put(tid,value);
     }
-    
+
     /**
     * Performs the get operation
     * @return the get result
@@ -120,50 +120,50 @@ public abstract class JsPlusContext {
     public Object get() {
         String tid = Thread.currentThread().threadId() + "";
         return get(tid);
-    }  
-	
+    }
+
 	/**
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */
 	public abstract String getEngineName();
-	
+
 	/**
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
 	public abstract Object getBindings();
-	
+
     /**
     * Performs the getEngine operation
     * @return the getEngine result
     * */
     public abstract Object getEngine();
-    
+
     /**
     * Performs the getContext operation
     * @return the getContext result
     * */
-    public abstract Object getContext();	
+    public abstract Object getContext();
 
     /**
     * Performs the close operation
     * */
     public abstract void close();
-    
+
     /**
     * Performs the remove operation
     * @param name - the name
     * */
     public abstract void remove(String name);
-    
+
     /**
     * Performs the put operation
     * @param name - the name
     * @param value - the value
     * */
     public abstract void put(String name,Object value);
-    
+
     /**
     * Performs the get operation
     * @param name - the name
@@ -189,7 +189,7 @@ public abstract class JsPlusContext {
 	* @return the eval result
 	* */
 	public abstract Object eval(File scriptPath) throws Exception;
-	
+
 	/**
 	* Performs the evalScript operation
 	* @param script - the script

@@ -64,23 +64,23 @@ deleted SMALLINT
 * Used e.g. by script/StartH2.js with -GhostName H2Ghost.
 * */
 public class GhostConsole extends ScriptConsole {
-    
+
     public static int RESULT_SIZE = 500;
-    
+
     /** Delay between printing response lines (per-line throttle). */
     private static final long RESPONSE_LINE_DELAY_MS = 200L;
-    
+
     private static String GHOST_REQUESTED_SQL = "SELECT * FROM %s WHERE deleted = 0 AND requested = 1 AND responsed = 0 AND processed = 0 AND ghost_name = :ghost_name ORDER BY created_at ASC";
     private static String GHOST_GET_PROCESSED_SQL = "SELECT * FROM %s WHERE deleted = 0 AND requested = 1 AND responsed = 0 AND processed = 1 AND ghost_name = :ghost_name ORDER BY created_at ASC";
     private static String GHOST_PROCESSED_SQL = "UPDATE %s SET responsed = 0,processed = 1,response_message = :response_message,updated_at = :updated_at WHERE id = :id";
     private static String GHOST_RESPONSED_SQL = "UPDATE %s SET responsed = 1,updated_at = :updated_at WHERE id = :id";
     private static String GHOST_REQUEST_SQL = "INSERT INTO %s (id,ghost_name,request_script,response_message,requested,responsed,processed,created_at,updated_at,deleted_at,deleted) VALUES (:id,:ghost_name,:request_script,:response_message,:requested,:responsed,:processed,:created_at,:updated_at,:deleted_at,:deleted)";
-    private static String GHOST_CLEAN_SQL = "DELETE FROM %s WHERE responsed = 1 AND processed = 1 AND deleted = 0 AND ghost_name = :ghost_name";   
+    private static String GHOST_CLEAN_SQL = "DELETE FROM %s WHERE responsed = 1 AND processed = 1 AND deleted = 0 AND ghost_name = :ghost_name";
     private static String GHOST_CLEAN_ALL_SQL = "DELETE FROM %s WHERE ghost_name = :ghost_name";
-           
+
     private ConfigProperties config = null;
     private DriverDataSource ghostDs = null;
-    
+
     private String ghostTable = null;
     private String ghostName = null;
     private long ghostTimer = 200L;
@@ -88,10 +88,10 @@ public class GhostConsole extends ScriptConsole {
     private CacheArray responseRows = null;
     private ScriptConsole console = null;
     private boolean autoClean = true;
-   
+
     private boolean exit = false;
     private boolean firstStart = true;
-    
+
     /**
     * Constructs a new GhostConsole
     * @param console - the console
@@ -107,7 +107,7 @@ public class GhostConsole extends ScriptConsole {
         String ghostDsPropFile = ScriptConsole.getJsPlusPath() + "/config/GhostDataSource.properties";
         init(ghostDsPropFile);
     }
-    
+
     /**
     * Performs the init operation
     * @param ghostDsPropFile - the ghostDsPropFile
@@ -118,12 +118,12 @@ public class GhostConsole extends ScriptConsole {
             ghostDs = new DriverDataSource(new File(ghostDsPropFile));
             config = ghostDs.getConfigProperties();
             ghostTable = config.getString("GhostTable","ghost_remote_command");
-            ghostTimer = config.getMilliSeconds("GhostTimer",200L);            
+            ghostTimer = config.getMilliSeconds("GhostTimer",200L);
         }catch(Exception e){
             Logger.systemError(GhostConsole.class,e.getMessage(),e);
         }
     }
-    
+
     /**
     * Performs the isAutoClean operation
     * @return the isAutoClean result
@@ -131,7 +131,7 @@ public class GhostConsole extends ScriptConsole {
     public boolean isAutoClean(){
         return this.autoClean;
     }
-    
+
     /**
     * Performs the submit operation
     * @param executeCommand - the executeCommand
@@ -140,7 +140,7 @@ public class GhostConsole extends ScriptConsole {
         String sql = String.format(GHOST_REQUEST_SQL,ghostTable);
         CacheDriverExecutor cde = null;
         try{
-            Map<String,Object> params = new HashMap<String,Object>();    
+            Map<String,Object> params = new HashMap<String,Object>();
             Timestamp currentTime = new Clock().getSqlTimestamp();
             params.put("ghost_name",ghostName);
             params.put("requested",1);
@@ -156,12 +156,12 @@ public class GhostConsole extends ScriptConsole {
             cde = new CacheDriverExecutor(conn);
             cde.execute(sql,params);
         }catch(Exception e){
-           Logger.systemError(GhostConsole.class,e.getMessage(),e); 
+           Logger.systemError(GhostConsole.class,e.getMessage(),e);
         }finally{
            if(cde != null) try{cde.close();}catch(Exception e){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",e.getMessage(),e);}
         }
     }
-    
+
     /**
     * Performs the getExecuteRun operation
     * @return the getExecuteRun result
@@ -207,11 +207,11 @@ public class GhostConsole extends ScriptConsole {
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
                 }finally{
                     if(cde != null) try{cde.close();}catch(Exception e){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",e.getMessage(),e);}
-                } 
+                }
             }
         };
     }
-    
+
     /**
     * Performs the getCompletedRun operation
     * @return the getCompletedRun result
@@ -229,18 +229,18 @@ public class GhostConsole extends ScriptConsole {
                     the.requestRows = null;
 
                     if(!exit) Thread.sleep(ghostTimer);
-                    
+
                     if(!exit) the.start(the.autoClean);
                 }catch(Exception e){
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
-                    
+
                     if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
-                    
+
                     if(!exit) the.start(the.autoClean);
                 }
             }
         };
-    }    
+    }
 
    /**
    * Performs the getDetectExecuteRun operation
@@ -288,11 +288,11 @@ public class GhostConsole extends ScriptConsole {
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
                 }finally{
                     if(cde != null) try{cde.close();}catch(Exception e){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",e.getMessage(),e);}
-                } 
+                }
             }
         };
     }
-    
+
     /**
     * Performs the getDetectCompletedRun operation
     * @return the getDetectCompletedRun result
@@ -308,21 +308,21 @@ public class GhostConsole extends ScriptConsole {
             public void run(){
                 try{
                     the.responseRows = null;
-                    
+
                     if(!exit) Thread.sleep(ghostTimer);
-                    
+
                     if(!exit) the.detect();
                 }catch(Exception e){
                     Logger.systemError(GhostConsole.class,e.getMessage(),e);
-                    
+
                     if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
-                    
-                    if(!exit) the.detect();                    
+
+                    if(!exit) the.detect();
                 }
             }
         };
-    }      
-    
+    }
+
     /**
     * Performs the detect operation
     * */
@@ -343,23 +343,23 @@ public class GhostConsole extends ScriptConsole {
                 cde.find(0,100,sql,params,responseRows);
             }catch(Exception e){
                 Logger.systemError(GhostConsole.class,e.getMessage(),e);
-                
+
                 if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
-                
+
                 if(!exit) the.detect();
             }finally{
                 if(cde != null) try {cde.close();}catch(Exception ee){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",ee.getMessage(),ee);};
             }
         }
-    }  
-    
+    }
+
     /**
     * Performs the start operation
     * */
     public void start() throws Exception {
         start(true);
-    }    
-    
+    }
+
     /**
     * Performs the start operation
     * @param autoClean - the autoClean
@@ -391,16 +391,16 @@ public class GhostConsole extends ScriptConsole {
                 cde.find(0,100,sql,params,requestRows);
             }catch(Exception e){
                 Logger.systemError(GhostConsole.class,e.getMessage(),e);
-                
+
                 if(!exit) try {Thread.sleep(ghostTimer);} catch(Exception ee){Logger.systemDebug(GhostConsole.class,"ghostTimer sleep interrupted: {}",ee.getMessage(),ee);};
-                
+
                 if(!exit) the.start(the.autoClean);
             }finally{
                 if(cde != null) try {cde.close();}catch(Exception ee){Logger.systemDebug(GhostConsole.class,"cde.close failed: {}",ee.getMessage(),ee);};
             }
         }
     }
-    
+
     /**
     * Performs the stop operation
     * */

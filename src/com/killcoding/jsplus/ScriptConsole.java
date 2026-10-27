@@ -399,12 +399,12 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		        clear(true);
 		    }else if(executeCommand.toUpperCase().equals("JDBC")){
     	        setUseJdbcEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd",";");
-    	        consoleVariables.putAndReturnSlef("Name","jdbc");
+    	        consoleVariables.putAndReturnSelf("CommandEnd",";");
+    	        consoleVariables.putAndReturnSelf("Name","jdbc");
 		        System.out.println("Changed CommandEnd to ';'");
         	}else if(executeCommand.toUpperCase().equals("SCRIPT")){
     	        setUseScriptEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd","/");
+    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
     	        set("Name",displayEngineName);
 		        System.out.println("Changed CommandEnd to '/'");
         	} else if (executeCommand.matches(CONSOLE_VAR_REGEX)){
@@ -412,7 +412,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 			    if(keyValue.length == 2){
 			        String key = keyValue[0].trim().replaceFirst("^Console\\.","");
 			        String value = keyValue[1].trim();
-			        consoleVariables.putAndReturnSlef(key,value);
+			        consoleVariables.putAndReturnSelf(key,value);
 			        if(enableSystemOut) System.out.println(String.format("Successfully Console.%s=%s",key,value));
 			    }else{
 			        if(enableSystemOut) System.out.println("ERROR: Invalid console variable");
@@ -530,21 +530,21 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		        clear(true);
 		    }else if(executeCommand.toUpperCase().equals("JDBC")){
     	        setUseJdbcEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd",";");
-    	        consoleVariables.putAndReturnSlef("Name","jdbc");
+    	        consoleVariables.putAndReturnSelf("CommandEnd",";");
+    	        consoleVariables.putAndReturnSelf("Name","jdbc");
     	        if(enableSystemOut) {
 		            System.out.println("Changed CommandEnd to ';'");
     	        }
         	}else if(executeCommand.toUpperCase().equals("SCRIPT")){
     	        setUseScriptEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd","/");
+    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
     	        set("Name",displayEngineName);
     	        if(enableSystemOut) {
 		            System.out.println("Changed CommandEnd to '/'");
     	        }
         	}else if(executeCommand.toUpperCase().equals("GHOST")){
     	        setUseGhostEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd","/");
+    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
     	        set("Name","ghost");
     	        if(enableSystemOut) {
 		            System.out.println("Changed CommandEnd to '/'");
@@ -554,7 +554,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 			    if(keyValue.length == 2){
 			        String key = keyValue[0].trim().replaceFirst("^Console\\.","");
 			        String value = keyValue[1].trim();
-			        consoleVariables.putAndReturnSlef(key,value);
+			        consoleVariables.putAndReturnSelf(key,value);
 			        if(enableSystemOut) System.out.println(String.format("Successfully Console.%s=%s",key,value));
 			    }else{
 			        if(enableSystemOut) System.out.println("ERROR: Invalid console variable");
@@ -661,18 +661,18 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		        clear(true);
 		    }else if(executeCommand.toUpperCase().equals("JDBC")){
     	        setUseJdbcEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd",";");
-    	        consoleVariables.putAndReturnSlef("Name","jdbc");
+    	        consoleVariables.putAndReturnSelf("CommandEnd",";");
+    	        consoleVariables.putAndReturnSelf("Name","jdbc");
 		        System.out.println("Changed CommandEnd to ';'");
         	}else if(executeCommand.toUpperCase().equals("CMD")){
     	        setUseCmdEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd","/");
-    	        consoleVariables.putAndReturnSlef("Name","cmd");
+    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
+    	        consoleVariables.putAndReturnSelf("Name","cmd");
 		        System.out.println("Changed CommandEnd to '/'");
         	}else if(executeCommand.toUpperCase().equals("GHOST")){
     	        setUseGhostEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd","/");
-    	        consoleVariables.putAndReturnSlef("Name","ghost");
+    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
+    	        consoleVariables.putAndReturnSelf("Name","ghost");
 		        System.out.println("Changed CommandEnd to '/'");
         	}else{
         		if(jsPlusContext == null){

@@ -48,18 +48,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.file.Paths;
 
 
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-
-
-
-
-
-
-
-
 
 
 import com.killcoding.file.DiskFile;
@@ -306,32 +296,32 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			MAX_FILE_PARENT_PATH_LENGTH = configProperties.getInteger("MaxFileParentPathLength", 200);
 			MAX_FILE_NAME_LENGTH = configProperties.getInteger("MaxFileNameLength", 200);
 			CACHE_SECONDS = configProperties.getInteger("CacheSeconds", 5);
-			
+
 			SYNC_CUTOFF_TIME = configProperties.getDateTime("SyncCutoffTime","0000-01-01 00:00:00.0000");
 			DELETE_CUTOFF_TIME = configProperties.getDateTime("DeleteCutoffTime","0000-01-01 00:00:00.0000");
-    			
+
 			if(BEFORE_THE_QUEUE_TIME < 0) BEFORE_THE_QUEUE_TIME = 15000L;
-			
+
 			if(MAX_CONNECT_USAGE < 0) MAX_CONNECT_USAGE = 0D;
-			
+
 			if(MAX_MEMORY_USAGE < 0) MAX_MEMORY_USAGE = 0D;
-			
+
 			if(BATCH_SIZE <= 0) BATCH_SIZE = 10;
-			
+
 			if(MAX_QUEUE_SIZE <= 0) MAX_QUEUE_SIZE = 10;
-			
+
 			if(MAX_FILE_SZIE <= 0) MAX_FILE_SZIE = 1024 * 1024 * 1L;
-			
+
 			if(LOGIC_TIMEOUT_MS <= 0) LOGIC_TIMEOUT_MS = 900000L;
-			
+
 			if(LOGIC_ACCESS_TIMEOUT_MS < 0) LOGIC_ACCESS_TIMEOUT_MS = 60000L;
-			
+
 			if(LOGIC_CHECK_TIMEOUT_MS < 0) LOGIC_CHECK_TIMEOUT_MS = 60000L;
-			
+
 			if(MAX_FILE_PARENT_PATH_LENGTH <= 0) MAX_FILE_PARENT_PATH_LENGTH = 200;
-			
+
 			if(MAX_FILE_NAME_LENGTH <= 0) MAX_FILE_NAME_LENGTH = 200;
-			
+
 			if(CACHE_SECONDS < 0) CACHE_SECONDS = 0;
 
 			log.debug("LOGIC_TIMEOUT_MS={}", LOGIC_TIMEOUT_MS);
@@ -353,9 +343,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			String reloadDataSourceReaderPath = configProperties.getString("DataSourceReader", dataSourcePath);
 			String reloadDataSourceWriterPath = configProperties.getString("DataSourceWriter", dataSourcePath);
 			filePartSize = configProperties.getFileSize("FilePartSize", 1024 * 1024 * 1L).intValue();
-			
+
 			if(filePartSize <= 0) filePartSize = 1024 * 1024 * 1;
-			
+
 			tableName = configProperties.getString("TableName", "remote_file");
 			identityCardEnable = configProperties.getBoolean("IdentityCardEnable", false);
 			identityCardName = configProperties.getString("IdentityCardName", "RemoteFile");
@@ -392,7 +382,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			}
 
 			loadDataMapping(this);
-			
+
 			FIRST_LOADED = true;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -473,10 +463,10 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
     									String.format("The file '%s' missing modify logic lock.", the.getPath()));
     						}
     					}
-    					
+
 					    if (diskFile != null)
 						    diskFile.logicModify();
-						    
+
 						String fileName = diskFile.getOrigin().getName();
 						isWritingDf = fileName.matches(TMP_WRITING_SWP);
 						if (isWritingDf) {
@@ -494,7 +484,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 								DiskFile.copyAttrs(realDf, diskFile.isCopyStructureOnly(), diskFile.syncRoot);
 								if(!diskFile.manualOpen(true)){
 									throw new IOException(
-											String.format("The disk file '%s' cannot open.", diskFile.getPath()));	
+											String.format("The disk file '%s' cannot open.", diskFile.getPath()));
 								}
 							}
 							partDataList.add(decrypt(data));
@@ -574,7 +564,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
     						diskFile.delete();
     						throw new IOException(
     								String.format("The file '%s' missing modify logic lock.", diskFile.getPath()));
-    					}					    
+    					}
 						if (isWritingDf) {
 							if (diskFile.exists()) {
 								diskFile.moveTo(realDf.getPath());
@@ -788,7 +778,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			}
 		}
 	}
-	
+
 	/**
 	* Performs the getFirstCreatedAt operation
 	* @return the getFirstCreatedAt result
@@ -818,8 +808,8 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				log.error(e.getMessage(), e);
 			}
 		}
-	}	
-	
+	}
+
 	/**
 	* Performs the getMaxFilePartDataTable operation
 	* @return the getMaxFilePartDataTable result
@@ -848,7 +838,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				log.error(e.getMessage(), e);
 			}
 		}
-	}	
+	}
 
 	private Map<String, Object> getSelectByPathForCheckExists() throws IOException {
 		String sql = formatSql(SQL_SELECT_BY_PATH_FOR_CHECK_EXISTS);
@@ -976,7 +966,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				log.error(e.getMessage(), e);
 			}
 		}
-	}	
+	}
 
 	private Map<String, Object> getLastIndexRecord() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_LAST_FILE_PART);
@@ -1081,7 +1071,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 							item = (Map<String, Object>) o;
 							fp = readPart(item);
 							Object fpData = null;
-							
+
 							if(fp == null){
 							    fpData = new byte[]{};
 							}else{
@@ -1194,7 +1184,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			if (copyStructureOnly) {
 				the.createStructureFile(diskFile.size());
 				diskFile.removeLogicAccess();
-				DiskFile.removeQueuePathMapping(diskFile.getPath());				
+				DiskFile.removeQueuePathMapping(diskFile.getPath());
 			} else {
 				diskFile.split(filePartSize, new FilePart() {
 					final List<byte[]> partDataList = new ArrayList<byte[]>();
@@ -1224,7 +1214,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
     								LoggerFactory.getLogger(RemoteFile.class).mark("CreateRemoteFile - {}", the.getPath());
     							}
     						}
-    
+
     						partDataList.add(data);
     						if (partDataList.size() >= BATCH_SIZE) {
     							// Embedded engine: no sync root configured (server
@@ -1312,9 +1302,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	protected boolean createEmptyFile() throws IOException {
 	    boolean allowed = beforeWrite();
-	    
+
 	    if(!allowed) return false;
-		
+
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
 		CacheDriverExecutor executor = null;
@@ -1347,9 +1337,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			dataRecord.put("synced_on_hostnames", String.format(";%s;", CommonTools.getHostname()));
 			dataRecord.put("deleted_on_hostnames", ";");
 			executor.execute(formatSql(SQL_INSERT_INTO_FILE), dataRecord);
-			
+
 			afterWrite();
-			
+
 			return true;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
@@ -1371,9 +1361,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	private boolean createStructureFile(long fileSize) throws IOException {
 	    boolean allowed = beforeWrite();
-	    
+
 	    if(!allowed) return false;
-	    
+
 		log.debug("CreateStructureFile: {}", getPath());
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
@@ -1407,9 +1397,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			dataRecord.put("synced_on_hostnames", String.format(";%s;", CommonTools.getHostname()));
 			dataRecord.put("deleted_on_hostnames", ";");
 			executor.execute(formatSql(SQL_INSERT_INTO_FILE), dataRecord);
-			
+
 			afterWrite();
-			
+
 			return true;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
@@ -1544,9 +1534,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			dataRecord.put("updated_at", currentTime);
 			dataRecord.put("updated_user_id", getDefaultModifyUserId());
 			int rows = executor.execute(formatSql(SQL_UPDATE_FOR_COMPLETED), dataRecord);
-			
+
 			afterWrite();
-			
+
 			return rows > 0;
 		} catch (SQLException e) {
 			throw new IOException(e.getMessage(), e);
@@ -1597,9 +1587,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				dataRecord.put("updated_at", currentTime);
 				dataRecord.put("updated_user_id", getDefaultModifyUserId());
 				int rows = executor.execute(formatSql(SQL_UPDATE_FOR_COMPLETED), dataRecord);
-				
+
 				afterWrite();
-				
+
 				return rows > 0;
 			}
 			return false;
@@ -1685,9 +1675,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 					dataRecord.put("like_subfolder", parsePath(getPath() + "/%"));
 					int resultRows = executor.execute(formatSql(SQL_UPDATE_FOR_DELETE_FILE_LINK), dataRecord);
 					log.debug("ForceDelete({}): {} -> {}", realDeleted, getPath(), resultRows);
-                    
+
                     afterDelete(realDeleted);
-                    
+
 					return resultRows > 0;
 				} catch (SQLException e) {
 					throw new IOException(e.getMessage(), e);
@@ -1736,7 +1726,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				log.debug("ForceDelete({}): {} -> {}", realDeleted, getPath(), resultRows);
 
                 afterDelete(realDeleted);
-                
+
 				return resultRows > 0;
 			} catch (SQLException e) {
 				throw new IOException(e.getMessage(), e);
@@ -1782,7 +1772,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	public boolean beforeDelete(boolean realDeleted) {
 		return true;
 	}
-	
+
 
 	/**
 	* Performs the afterDelete operation
@@ -1790,9 +1780,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 	public void afterDelete(boolean realDeleted) {
-	    
-	}	
-	
+
+	}
+
 
 	/**
 	* Performs the beforeMkdirs operation
@@ -1802,16 +1792,16 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	public boolean beforeMkdirs() {
 	    return true;
 	}
-	
+
 
 	/**
 	* Performs the afterMkdirs operation
 	* */
 
 	public void afterMkdirs() {
-	    
+
 	}
-	
+
 
 	/**
 	* Performs the beforeCreateLink operation
@@ -1822,7 +1812,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	public boolean beforeCreateLink(String target) {
 	    return true;
 	}
-	
+
 
 	/**
 	* Performs the afterCreateLink operation
@@ -1830,9 +1820,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 	public void afterCreateLink(String target) {
-	    
+
 	}
-	
+
 
 	/**
 	* Performs the beforeWrite operation
@@ -1842,15 +1832,15 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	public boolean beforeWrite(){
 	    return true;
 	}
-	
+
 
 	/**
 	* Performs the afterWrite operation
 	* */
 
 	public void afterWrite(){
-	    
-	}	
+
+	}
 
 
 	/**
@@ -1861,7 +1851,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	public boolean exists() throws IOException {
 		return getFirstFilePart() != null;
 	}
-	
+
 	/**
 	* Performs the exists operation
 	* @param refresh - the refresh
@@ -1874,7 +1864,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	    }else{
 		    return exists();
 	    }
-	}	
+	}
 
 
 	/**
@@ -1893,11 +1883,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 	public boolean mkdirs(boolean checkSourceHostname) throws IOException {
-	    
+
 	    boolean allowed = beforeMkdirs();
-	    
+
 	    if(!allowed) return false;
-	    
+
 		Clock clock = new Clock();
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -1944,9 +1934,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			dataRecord.put("synced_on_hostnames", String.format(";%s;", CommonTools.getHostname()));
 			dataRecord.put("deleted_on_hostnames", ";");
 			int rows = executor.execute(formatSql(SQL_INSERT_INTO_FILE), dataRecord);
-			
+
 			afterMkdirs();
-			
+
 			return rows > 0;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
@@ -1987,11 +1977,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* @return the writeToBatch result
 	* */
 	protected boolean writeToBatch(int currentFilePartStartIndex, List<byte[]> partDataList) throws IOException {
-	    
+
 	    boolean allowed = beforeWrite();
-	    
+
 	    if(!allowed) return false;
-	    
+
 		CacheDriverExecutor executor = null;
 		CacheDriverExecutor dmExecutor = null;
 		List<Map<String, Object>> rfList = new ArrayList<Map<String, Object>>();
@@ -2048,7 +2038,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn.setAutoCommit(true);
 			dmExecutor = new CacheDriverExecutor(conn);
 			dmExecutor.executeBatch(formatSqlForFilePartData(SQL_INSERT_INTO_FILE_DATA), dmList);
-			
+
 			return true;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
@@ -2076,11 +2066,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 	protected boolean writeTo(byte[] data, boolean append) throws IOException {
-	    
+
 	    boolean allowed = beforeWrite();
-	    
+
 	    if(!allowed) return false;
-	    
+
 		CacheDriverExecutor executor = null;
 		CacheDriverExecutor dmExecutor = null;
 		try {
@@ -2220,9 +2210,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	public boolean createLink(String target) throws IOException {
 	    boolean allowed = beforeCreateLink(target);
-	    
+
 	    if(!allowed) return false;
-	    
+
 		Clock clock = new Clock();
 		CacheDriverExecutor executor = null;
 		CacheDriverExecutor dmExecutor = null;
@@ -2277,9 +2267,9 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			dmExecutor.execute(formatSqlForFilePartData(SQL_INSERT_INTO_FILE_DATA), dataRecord);
 
 			complete();
-            
+
             afterCreateLink(target);
-            
+
 			return rows > 0;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
@@ -2344,11 +2334,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			for (Map<String, Object> fpItem : filePartList) {
 				Map<String, Object> fp = readPart(fpItem);
 				Object fpData = null;
-				
+
 				if(fp == null){
 				    fpData = new byte[]{};
 				}else{
-				    fpData = fp.get("file_part_data");	
+				    fpData = fp.get("file_part_data");
 				}
 
 				if (fpData instanceof byte[]) {
@@ -2398,7 +2388,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 
-
 	/**
 	* Performs the isLink operation
 	* @return the isLink result
@@ -2417,7 +2406,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* Performs the readAllString operation
 	* @return the readAllString result
 	* */
-
 
 
 	/**
@@ -2490,11 +2478,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		Connection conn = null;
 		try {
 		    long deleteCutoffTimeMs = 0L;
-		    
+
 		    if(DELETE_CUTOFF_TIME != null) deleteCutoffTimeMs = DELETE_CUTOFF_TIME.getTime();
-		    
+
 			Timestamp currentTime = new Clock().getSqlTimestamp();
-			
+
 			conn = dataSourceReader.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
@@ -2578,7 +2566,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* Performs the isTimeout operation
 	* @return the isTimeout result
 	* */
-
 
 
 	/**
@@ -2733,7 +2720,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	}
 
 
-
 	/*
 	* Performs the startFullAsync operation
 	* @param timerMs - the timerMs
@@ -2800,7 +2786,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 
-
 	/**
 	* Performs the getLastSourceHostname operation
 	* @return the getLastSourceHostname result
@@ -2815,13 +2800,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	}
 
 
-
-
-	
-
-
-
-
 	/**
 	* Performs the getParentFile operation
 	* @return the getParentFile result
@@ -2830,7 +2808,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	public RemoteFile getParentFile() {
 		return new RemoteFile(getParent());
 	}
-
 
 
 	/**
@@ -2975,7 +2952,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 				if (!DATA_MAPPING.containsKey(shortKey)) {
 					ConfigProperties dmCp = new ConfigProperties();
-					dmCp.putAllAndReturnSlef(dmMap);
+					dmCp.putAllAndReturnSelf(dmMap);
 					int priority = dmCp.getInteger(String.format("%s.Priority", originKey), 0);
 					if (i == 0 && priority < 1) {
 						throw new Exception("First DataMapping priority cannot be less than 1.");
@@ -3018,13 +2995,13 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 						tableRange.add(Integer.parseInt(tableRangOriginValue.trim()));
 					}
 					shortCp.put("TableRange", tableRange);
-					shortCp.putAndReturnSlef("DataSourceReader", dmDsReaderKey);
-					shortCp.putAndReturnSlef("DataSourceWriter", dmDsWriterKey);
-					shortCp.putAndReturnSlef("Priority", priority);
-					shortCp.putAndReturnSlef("UsingCount", 0);
-					shortCp.putAndReturnSlef("Name", dm);
+					shortCp.putAndReturnSelf("DataSourceReader", dmDsReaderKey);
+					shortCp.putAndReturnSelf("DataSourceWriter", dmDsWriterKey);
+					shortCp.putAndReturnSelf("Priority", priority);
+					shortCp.putAndReturnSelf("UsingCount", 0);
+					shortCp.putAndReturnSelf("Name", dm);
 					int randomIndex = ThreadLocalRandom.current().nextInt(0, tableRange.size());
-					shortCp.putAndReturnSlef("Table", tableRange.get(randomIndex));
+					shortCp.putAndReturnSelf("Table", tableRange.get(randomIndex));
 					DATA_MAPPING.put(shortKey, shortCp);
 					dmList.add(dm);
 					DATA_MAPPING_LIST.put(rf.dsKey, dmList);
@@ -3076,14 +3053,14 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			usingCount++;
 			if (usingCount >= priority) {
 				DATA_MAPPING_INDEX.put(rf.dsKey, DATA_MAPPING_INDEX.get(rf.dsKey) + 1);
-				cp.putAndReturnSlef("UsingCount", 0);
+				cp.putAndReturnSelf("UsingCount", 0);
 				int randomIndex = ThreadLocalRandom.current().nextInt(0, tableRange.size());
-				cp.putAndReturnSlef("Table", tableRange.get(randomIndex));
+				cp.putAndReturnSelf("Table", tableRange.get(randomIndex));
 				DATA_MAPPING.put(key, cp);
 			} else {
-				cp.putAndReturnSlef("UsingCount", usingCount);
+				cp.putAndReturnSelf("UsingCount", usingCount);
 				int randomIndex = ThreadLocalRandom.current().nextInt(0, tableRange.size());
-				cp.putAndReturnSlef("Table", tableRange.get(randomIndex));
+				cp.putAndReturnSelf("Table", tableRange.get(randomIndex));
 				DATA_MAPPING.put(key, cp);
 			}
 		} else {
@@ -3114,7 +3091,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	protected String getDataMappingTableName() {
 		return String.format("%s_data_%s", this.tableName, this.dataMappingTable);
 	}
-	
+
 	/**
 	* Performs the debugLog operation
 	* @param point - the point
@@ -3125,6 +3102,6 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	protected static void debugLog(String point, RemoteFileBase rf, CacheArrayFilter filter){
 		if (rf == null || !isDebug(rf)) { return; }
 		LoggerFactory.getLogger(RemoteFileBase.class).debug("{}: {}", point, rf.getPath());
-	}	
+	}
 
 }

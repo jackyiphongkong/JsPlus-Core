@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.HashMap;
 
 
-
-
 import com.killcoding.cache.CacheArray;
 import java.util.Scanner;
 
@@ -40,28 +38,28 @@ import com.killcoding.jsplus.GhostConsole;
 * -WriteHistory ...), bootstraps the script engine and console, and dispatches the configured task
 * with uniform exit codes (EXIT_OK / EXIT_ERROR).
 * */
-public final class Main { 
-    
+public final class Main {
+
     /** Exit code for successful termination. */
     private static final int EXIT_OK = 0;
     /** Exit code for any startup or runtime failure. */
     private static final int EXIT_ERROR = 1;
-    
+
     private static ScriptConsole mainConsole = null;
-    
+
     private static char[] password = null;
 	private static String command = null;
 	private static StringBuffer commands = null;
 	private static boolean isEnd = false;
 	private static boolean isCancel = false;
-    
+
     /**
     * Constructs a new Main
     * */
     public Main(){
         super();
     }
-    
+
     /**
     * Constructs a new Main
     * @param args - the args
@@ -69,7 +67,7 @@ public final class Main {
     public static void main(String[] args){
         appMain(args);
     }
-    
+
 	/**
 	* Performs the appMain operation
 	* @param args - the args
@@ -79,9 +77,9 @@ public final class Main {
 		if (params == null) {
 			params = new HashMap<String, Object>();
 		}
-		
+
 		String env = (String) params.get("Env");
-		
+
         if(env.toUpperCase().equals("GHOST")) {
             ScriptConsole ghostScriptConsole = new ScriptConsole();
             ghostScriptConsole.setUseScriptEnv();
@@ -92,34 +90,34 @@ public final class Main {
             mainConsole = new GhostConsole(ghostScriptConsole,ghostName);
             mainConsole.setUseGhostEnv();
         }
-        
+
         if(env.toUpperCase().equals("JDBC")) {
             mainConsole = new JdbcConsole();
             mainConsole.setUseJdbcEnv();
         }
-		
+
 		if(env.toUpperCase().equals("CMD")) {
 		    mainConsole = new CmdConsole();
 		    mainConsole.setUseCmdEnv();
 		}
-		
+
 		if(env.toUpperCase().equals("SCRIPT")) {
 		    mainConsole = new ScriptConsole();
 		    mainConsole.setUseScriptEnv();
 		}
-		
+
 		if(mainConsole == null) {
 		    System.out.println(String.format("Invalid Env '%s'.",env));
 		    System.exit(EXIT_ERROR);
-		}	
-		
+		}
+
 		int connectHashCode = mainConsole.hashCode();
 
         System.out.println("New Console: " + connectHashCode);
-        
+
         ScriptConsole.CONNECT_CONSOLES.put(connectHashCode,mainConsole);
         mainConsole.connect(connectHashCode);
-        
+
 		if (params.containsKey("help")) {
 			System.out.println(mainConsole.help());
 			System.exit(EXIT_OK);
@@ -132,12 +130,12 @@ public final class Main {
 			System.out.println(ScriptConsole.exit());
 			System.exit(EXIT_OK);
 		}
-		
+
 		File datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/DataSource.properties");
 		if(!datasourceConfigFile.exists()){
 		    datasourceConfigFile = new File(ScriptConsole.getJsPlusPath() + "/config/Datasource.properties");
 		}
-	
+
 		if (datasourceConfigFile.exists()) {
 			try {
 				mainConsole.datasourceVariables.load(datasourceConfigFile);
@@ -147,10 +145,10 @@ public final class Main {
 		}
 
 		if (params != null) {
-			mainConsole.consoleVariables.putAllAndReturnSlef(params);
-			mainConsole.consoleVariables.putAndReturnSlef("Task", params.get("Task"));
+			mainConsole.consoleVariables.putAllAndReturnSelf(params);
+			mainConsole.consoleVariables.putAndReturnSelf("Task", params.get("Task"));
 			if (params.get("TaskTimer") != null) {
-				mainConsole.consoleVariables.putAndReturnSlef("TaskTimer", params.get("TaskTimer"));
+				mainConsole.consoleVariables.putAndReturnSelf("TaskTimer", params.get("TaskTimer"));
 			}
 			if (mainConsole.consoleVariables.containsKey("CacheArrayInitPool")) {
 			    CacheArray.initPool(mainConsole.consoleVariables.getInteger("CacheArrayInitPool",100));
@@ -163,34 +161,34 @@ public final class Main {
 		String line = null;
 		Scanner scanner = new Scanner(System.in);
 		String scriptEngine = (String) params.get("ScriptEngine");
-		
+
 		if (CommonTools.isBlank(scriptEngine)) {
 			scriptEngine = "nashorn";
 		}
-		
-		mainConsole.consoleVariables.putAndReturnSlef("ScriptEngine", scriptEngine);
+
+		mainConsole.consoleVariables.putAndReturnSelf("ScriptEngine", scriptEngine);
 
 		boolean havaTask = !CommonTools.isBlank(mainConsole.consoleVariables.getString("Task"));
-		
+
 		if (mainConsole.isUseJdbcEnv() && havaTask) {
 			if (!mainConsole.open()) {
 				System.exit(EXIT_ERROR);
 			}
-			mainConsole.consoleVariables.putAndReturnSlef("CommandEnd", ";");
-			System.out.println("Changed CommandEnd to ';'");				
+			mainConsole.consoleVariables.putAndReturnSelf("CommandEnd", ";");
+			System.out.println("Changed CommandEnd to ';'");
 			mainConsole.taskExecute();
 		}
-		
+
 		if (mainConsole.isUseCmdEnv()) {
-			mainConsole.consoleVariables.putAndReturnSlef("CommandEnd", "/");
-			System.out.println("Changed CommandEnd to '/'");	
-			
+			mainConsole.consoleVariables.putAndReturnSelf("CommandEnd", "/");
+			System.out.println("Changed CommandEnd to '/'");
+
 			if(havaTask)
 			    mainConsole.taskExecute();
-		}		
+		}
 
 		if (mainConsole.isUseScriptEnv()) {
-			mainConsole.consoleVariables.putAndReturnSlef("CommandEnd", "/");
+			mainConsole.consoleVariables.putAndReturnSelf("CommandEnd", "/");
 			System.out.println("Changed CommandEnd to '/'");
 			try {
 			    boolean allowAllAccess = true;
@@ -206,9 +204,9 @@ public final class Main {
 				System.err.println(ScriptConsole.error(e));
 			}
 		}
-		
+
 		if (mainConsole.isUseGhostEnv()) {
-			mainConsole.consoleVariables.putAndReturnSlef("CommandEnd", "/");
+			mainConsole.consoleVariables.putAndReturnSelf("CommandEnd", "/");
 			System.out.println("Changed CommandEnd to '/'");
 			try {
 				if (havaTask) {
@@ -217,22 +215,22 @@ public final class Main {
 			} catch (Exception e) {
 				System.err.println(ScriptConsole.error(e));
 			}
-		}		
+		}
 
 		if (mainConsole.isUseJdbcEnv() && !mainConsole.datasourceVariables.containsKey("DriverJar")){
 			System.out.print("DriverJar? ");
 		}
-    
+
         try{
     		while ((line = scanner.nextLine()) != null) {
-    		    
+
     		    ScriptConsole newConsole = mainConsole.getConsole();
     		    if(newConsole.hashCode() != mainConsole.hashCode()){
     		        mainConsole = newConsole;
     		        System.out.print(String.format("%s>",mainConsole.getDisplayEngineName()));
     		    }
     			if (mainConsole.isUseJdbcEnv()) {
-    
+
     				if (env.toUpperCase().equals("SCRIPT")
     						&& !mainConsole.datasourceVariables.containsKey("DriverJar")) {
     					env = "jdbc";
@@ -245,46 +243,46 @@ public final class Main {
     						System.out.print("DriverJar? ");
     						continue;
     					}
-    					mainConsole.datasourceVariables.putAndReturnSlef("DriverJar", driverJar);
+    					mainConsole.datasourceVariables.putAndReturnSelf("DriverJar", driverJar);
     					if (!mainConsole.datasourceVariables.containsKey("Driver")) {
     						System.out.print("Driver? ");
     						continue;
     					}
     				}
-    
+
     				if (!mainConsole.datasourceVariables.containsKey("Driver")) {
     					String driver = line;
     					if (CommonTools.isBlank(driver)) {
     						System.out.print("Driver? ");
     						continue;
     					}
-    					mainConsole.datasourceVariables.putAndReturnSlef("Driver", driver);
+    					mainConsole.datasourceVariables.putAndReturnSelf("Driver", driver);
     					if (!mainConsole.datasourceVariables.containsKey("Url")) {
     						System.out.print("Url? ");
     						continue;
     					}
     				}
-    
+
     				if (!mainConsole.datasourceVariables.containsKey("Url")) {
     					String url = line;
     					if (CommonTools.isBlank(url)) {
     						System.out.print("Url? ");
     						continue;
     					}
-    					mainConsole.datasourceVariables.putAndReturnSlef("Url", url);
+    					mainConsole.datasourceVariables.putAndReturnSelf("Url", url);
     					if (!mainConsole.datasourceVariables.containsKey("Username")) {
     						System.out.print("Username? ");
     						continue;
     					}
     				}
-    
+
     				if (!mainConsole.datasourceVariables.containsKey("Username")) {
     					String username = line;
     					if (CommonTools.isBlank(username)) {
     						System.out.print("Username? ");
     						continue;
     					}
-    					mainConsole.datasourceVariables.putAndReturnSlef("Username", username);
+    					mainConsole.datasourceVariables.putAndReturnSelf("Username", username);
     					if (!mainConsole.datasourceVariables.containsKey("Password")) {
     						password = System.console().readPassword("Password?");
     						String passwordText = scanner.nextLine();
@@ -292,15 +290,15 @@ public final class Main {
     							passwordText = passwordText.trim();
     						}
     						if (password != null && password.length > 0) {
-    							mainConsole.datasourceVariables.putAndReturnSlef("Password",
+    							mainConsole.datasourceVariables.putAndReturnSelf("Password",
     									new String(password).trim());
     						} else if (passwordText.length() > 0) {
-    							mainConsole.datasourceVariables.putAndReturnSlef("Password", passwordText);
+    							mainConsole.datasourceVariables.putAndReturnSelf("Password", passwordText);
     						}
     						continue;
     					}
     				}
-    
+
     				if (!mainConsole.datasourceVariables.containsKey("Password")) {
     					if (password == null || password.length == 0) {
     						password = System.console().readPassword("Password?");
@@ -309,31 +307,31 @@ public final class Main {
     							passwordText = passwordText.trim();
     						}
     						if (password != null && password.length > 0) {
-    							mainConsole.datasourceVariables.putAndReturnSlef("Password",
+    							mainConsole.datasourceVariables.putAndReturnSelf("Password",
     									new String(password).trim());
     						} else if (passwordText.length() > 0) {
-    							mainConsole.datasourceVariables.putAndReturnSlef("Password", passwordText);
+    							mainConsole.datasourceVariables.putAndReturnSelf("Password", passwordText);
     						}
     						continue;
     					}
     				}
-    
+
     				if (!mainConsole.datasourceVariables.containsKey("Password") && password != null) {
-    					mainConsole.datasourceVariables.putAndReturnSlef("Password", new String(password));
+    					mainConsole.datasourceVariables.putAndReturnSelf("Password", new String(password));
     				}
-    
+
     				if (mainConsole.firstOpen) {
     					if (env.toUpperCase().equals("JDBC") && !mainConsole.open()) {
     						System.exit(EXIT_ERROR);
     					}
     				}
-    
+
     			}
-    
+
     			if (command == null && !isEnd && !isCancel) {
     				System.out.print(String.format("%s> ",mainConsole.getDisplayEngineName()));
     			}
-    
+
     			command = line;
     			isCancel = mainConsole.isCommandCancel(command);
     			if (isCancel) {
@@ -356,7 +354,7 @@ public final class Main {
     						mainConsole.executeViaCmd(true,commands.toString());
     					} else if (mainConsole.isUseGhostEnv()) {
     						mainConsole.executeViaGhost(true,commands.toString());
-    					} 
+    					}
     					System.out.print(String.format("%s> ",mainConsole.getDisplayEngineName()));
     					commands = new StringBuffer();
     					command = null;

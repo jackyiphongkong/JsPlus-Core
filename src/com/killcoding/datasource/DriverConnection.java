@@ -47,12 +47,12 @@ import java.util.concurrent.Executor;
 * Implement and enhance the JDBC connection class
 * */
 public final class DriverConnection implements Connection {
-    
+
     /**
-     * Original connection 
+     * Original connection
      * */
     private Connection originConnection;
-    
+
     /**
      * DriverDataSource Object
      * */
@@ -64,10 +64,10 @@ public final class DriverConnection implements Connection {
 	public DriverConnection() {
 		super();
 	}
-	
+
 	/**
 	 * New a DriverConnection object
-	 * @param driverDataSource 
+	 * @param driverDataSource
 	 * @param originConnection
 	 * */
 	public DriverConnection(DriverDataSource driverDataSource,Connection originConnection){
@@ -75,7 +75,7 @@ public final class DriverConnection implements Connection {
 	    this.driverDataSource = driverDataSource;
 	    this.originConnection = originConnection;
 	}
-	
+
 	/**
 	 * Get origin connection hash code
 	 * @return int - Connection hash code
@@ -83,7 +83,7 @@ public final class DriverConnection implements Connection {
 	public int getOriginConnectionHashCode(){
 	    return this.originConnection.hashCode();
 	}
-	
+
 	/**
 	 * Get current DriverDataSource
 	 * @return DriverDataSource
@@ -91,13 +91,13 @@ public final class DriverConnection implements Connection {
 	public DriverDataSource getDriverDataSource(){
 	    return driverDataSource;
 	}
-	
+
 	@Override
 	public <T> T unwrap(java.lang.Class<T> arg0) throws SQLException {
 	    return originConnection.unwrap(arg0);
 	}
 
-    @Override	
+    @Override
 	public boolean isWrapperFor(java.lang.Class<?> arg0) throws SQLException{
 	    return originConnection.isWrapperFor(arg0);
 	}
@@ -141,7 +141,7 @@ public final class DriverConnection implements Connection {
 	public Clob createClob() throws SQLException {
 		return originConnection.createClob();
 	}
-    
+
     @Override
 
 	/*
@@ -239,7 +239,7 @@ public final class DriverConnection implements Connection {
 	public String getSchema() throws SQLException {
 		return originConnection.getSchema();
 	}
-	
+
     @Override
 
 	/*
@@ -418,7 +418,7 @@ public final class DriverConnection implements Connection {
 	* */
 	public PreparedStatement prepareStatement(String arg0) throws SQLException {
 		return originConnection.prepareStatement(arg0);
-	}   
+	}
 
     @Override
 
@@ -450,7 +450,7 @@ public final class DriverConnection implements Connection {
 	public void clearWarnings() throws SQLException {
 	    originConnection.clearWarnings();
 	}
-    
+
     @Override
 
 	/*
@@ -469,7 +469,7 @@ public final class DriverConnection implements Connection {
 	public void rollback() throws SQLException {
 	    originConnection.rollback();
 	}
-	
+
     @Override
 
 	/*
@@ -537,7 +537,7 @@ public final class DriverConnection implements Connection {
 	public void setCatalog(String arg0) throws SQLException {
 	    originConnection.setCatalog(arg0);
 	}
-    
+
     @Override
 
 	/*
@@ -593,7 +593,7 @@ public final class DriverConnection implements Connection {
 	public PreparedStatement prepareStatement(String arg0, int arg1, int arg2) throws SQLException {
 		return originConnection.prepareStatement(arg0,arg1,arg2);
 	}
-	
+
     @Override
 
 	/*
@@ -703,8 +703,8 @@ public final class DriverConnection implements Connection {
 	* */
 	public PreparedStatement prepareStatement(String arg0, int arg1, int arg2, int arg3) throws SQLException {
 		return originConnection.prepareStatement(arg0,arg1,arg2,arg3);
-	}   
-	
+	}
+
 	@Override
 
 	/*

@@ -26,7 +26,6 @@ package com.killcoding.cache;
 import java.io.Serializable;
 
 
-
 import java.io.ObjectOutputStream;
 
 import java.io.File;
@@ -112,7 +111,7 @@ public class DataObject implements java.io.Serializable {
 					oips.close();
 			} catch (Exception e) {
 				Logger.systemError(DataObject.class,e.getMessage(),e);
-			}			
+			}
 		}
 	}
 

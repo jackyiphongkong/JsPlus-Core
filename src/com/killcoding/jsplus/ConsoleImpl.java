@@ -29,9 +29,9 @@ package com.killcoding.jsplus;
 * injects on every build (replace-version target).
 * */
 public interface ConsoleImpl {
-    
+
     public final static String VERSION = "${BuildVersion.VERSION}(${BuildVersion.BUILD_DATE})";
-    
+
     public final static String CONSOLE_FUN_REGEX = "^(Console\\.)([A-Za-z0-9_]+)[\s]*\\((.*)\\)[\s]*$";
 	public final static String CONSOLE_VAR_REGEX = "^(Console\\.)[A-Za-z0-9_]+[\s]*\\=.*$";
 	public final static String SELECT_REGEX = "^(SELECT|SHOW|DESC|EXPLAIN|VALUES)[\s]{1,}.*$";
@@ -68,10 +68,10 @@ public interface ConsoleImpl {
 	public final static String DEFAULT_ExportOrderBy = "";
 	public final static String DEFAULT_ExportSplit = ",";
 	public final static String DEFAULT_ImportSplit = ",";
-	
+
 	public final static String DEFAULT_Jdbc_Cipher_AesKey = "";
 	public final static String DEFAULT_Script_Cipher_AesKey = "";
 	public final static String DEFAULT_Config_Cipher_AesKey = "";
-	
+
 
 }

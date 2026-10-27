@@ -34,11 +34,11 @@ import java.util.List;
 public class CacheArrayFilter {
 
 	private Long timer = 10L;
-	
+
 	private Long loopTimer = 10L;
-	
+
 	private CacheArray cacheArray = null;
-	
+
 	protected boolean terminated = false;
 	protected boolean forceTerminated = false;
 
@@ -60,7 +60,7 @@ public class CacheArrayFilter {
 		super();
 		this.timer = timer;
 		this.loopTimer = loopTimer;
-	}	
+	}
 
     /**
      * Need override the method to use
@@ -75,38 +75,38 @@ public class CacheArrayFilter {
      * Handle execute batch method
      * */
 	public void executeBatch(Integer batchIndex,List<?> batch){
-	    
+
 	}
-	
+
     /**
      * Handle completed method
      * */
 	public void completed(Integer size) {
 
 	}
-	
+
     /**
      * Handle terminated method
      * */
 	public void terminated() {
 
-	}	
-	
+	}
+
 	/**
 	* Performs the terminate operation
 	* */
 	public void terminate(){
 	    this.terminated = true;
 	}
-	
+
 	/**
 	* Performs the forceTerminate operation
 	* */
 	public void forceTerminate(){
 	    this.terminated = true;
 	    this.forceTerminated = true;
-	}		
-	
+	}
+
 	/**
 	* Performs the isTerminated operation
 	* @return the isTerminated result
@@ -114,22 +114,22 @@ public class CacheArrayFilter {
 	public boolean isTerminated(){
 	    return terminated;
 	}
-	
+
 	/**
 	* Performs the isForceTerminated operation
 	* @return the isForceTerminated result
 	* */
 	public boolean isForceTerminated(){
 	    return forceTerminated;
-	}	
-	
+	}
+
 	/**
 	* Performs the setTimer operation
 	* @param timer - the timer
 	* */
 	public void setTimer(long timer) {
 		this.timer = timer;
-	}	
+	}
 
 	/**
 	* Performs the getTimer operation
@@ -138,22 +138,22 @@ public class CacheArrayFilter {
 	public Long getTimer() {
 		return timer;
 	}
-	
+
 	/**
 	* Performs the setLoopTimer operation
 	* @param loopTimer - the loopTimer
 	* */
 	public void setLoopTimer(long loopTimer) {
 		this.loopTimer = loopTimer;
-	}	
-	
+	}
+
 	/**
 	* Performs the getLoopTimer operation
 	* @return the getLoopTimer result
 	* */
 	public Long getLoopTimer() {
 		return loopTimer;
-	}	
+	}
 
 	/**
 	* Performs the setCacheArray operation
@@ -169,6 +169,6 @@ public class CacheArrayFilter {
 	* */
 	public CacheArray getCacheArray() {
 		return this.cacheArray;
-	}	
+	}
 
 }

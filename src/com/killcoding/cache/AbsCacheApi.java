@@ -29,13 +29,13 @@ import java.util.List;
 * This abstract class, it is the framework base cache class.
 * */
 public abstract class AbsCacheApi {
-    
+
     protected static Long TIMER = 100L;
-    
+
     /**
      * Force write cache
      * */
-    protected Boolean stored = false;    
+    protected Boolean stored = false;
 
     /**
      * New an AbsCacheApi
@@ -45,7 +45,7 @@ public abstract class AbsCacheApi {
 	public AbsCacheApi() {
 		super();
 	}
-	
+
 	/**
 	 * New an AbsCacheApi
 	 * Need 'override' abstract method
@@ -54,8 +54,8 @@ public abstract class AbsCacheApi {
 	public AbsCacheApi(Boolean stored) {
 		super();
 		this.stored = stored;
-	}	
-	
+	}
+
 	/**
 	* Performs the set operation
 	* @param name - the name

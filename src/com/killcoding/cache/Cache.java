@@ -32,25 +32,25 @@ import java.util.List;
 * This class is Cache entry
 * */
 public final class Cache {
-    
+
     /**
      * Default is use mode 'MemoryCache'
      * */
 	private static AbsCacheApi api = null;
 	private static final Logger log = LoggerFactory.getLogger(Cache.class);
-	
+
 	/**
-	 * Set cache mode 
+	 * Set cache mode
 	 * @param _api - It is class 'MemoryCache' or 'DiskCache'
 	 * */
     public synchronized static void setApi(AbsCacheApi _api){
         api = _api;
     }
-  
+
  	/**
 	 * Set detect cache timer (Default is 100MS)
 	 * @param timer - It is detect cache timer
-	 * */   
+	 * */
     public static void setTimer(long timer) {
         AbsCacheApi.TIMER = timer;
     }
@@ -63,13 +63,13 @@ public final class Cache {
      * */
 	public synchronized static void set(String name,Object value,int life){
 	    if(api == null) setApi(new MemoryCache());
-	    
+
 		if(life > 0){
     		log.debug("Set Cache: {}",name);
-    		api.set(name, value, life);	
+    		api.set(name, value, life);
 		}
 	}
-	
+
     /**
      * Set a cache
      * @param name - It is cache key name
@@ -77,11 +77,11 @@ public final class Cache {
      * */
 	public synchronized static void set(String name,Object value){
 	    if(api == null) setApi(new MemoryCache());
-	    
+
 		log.debug("Set Cache: {}",name);
-		api.set(name, value, 0);	
-	}	
-	
+		api.set(name, value, 0);
+	}
+
 	/**
 	 * Get a cache value
 	 * @return Object - It is cache value
@@ -89,11 +89,11 @@ public final class Cache {
 	 * */
 	public synchronized static Object get(String name){
 	    if(api == null) setApi(new MemoryCache());
-	    
+
 		log.debug("Get Cache: {}",name);
 		return api.get(name);
 	}
-	
+
 	/**
 	 * Check is included cache key
 	 * @return boolean - 'true' is included, 'false' is not included.
@@ -101,24 +101,24 @@ public final class Cache {
 	 * */
 	public synchronized static boolean included(String name){
 	    if(api == null) setApi(new MemoryCache());
-	    
+
 		log.debug("Included Cache: {}",name);
 		boolean b = api.included(name);
 		log.debug("Included: {}",b);
 		return b;
 	}
-	
+
 	/**
 	 * Remove a cache
 	 * @param name - It is cache key name
 	 * */
 	public synchronized static void remove(String name){
 	    if(api == null) setApi(new MemoryCache());
-	    
+
 		log.debug("Remove Cache: {}",name);
 		api.remove(name);
 	}
-	
+
 	/**
 	 * Remove all cache
 	 * */
@@ -130,9 +130,9 @@ public final class Cache {
 	/**
 	 * Get all cache key name list
 	 * @return List<String> - It is key name list
-	 * */	
+	 * */
 	public synchronized static List<String> getNames(){
 		return api.getNames();
-	}	
+	}
 
 }

@@ -52,7 +52,7 @@ import java.io.IOException;
 * null checks and miscellaneous helpers shared across the killcoding packages.
 * */
 public final class CommonTools {
-    
+
     private static volatile String HOSTNAME = null;
 
 
@@ -64,7 +64,7 @@ public final class CommonTools {
 	public static URLClassLoader loadJars(String libDirs) throws Exception {
         return loadJars(libDirs,ClassLoader.getSystemClassLoader());
 	}
-	
+
 	/**
 	* Performs the loadJars operation
 	* @param libDirs - the libDirs
@@ -72,8 +72,8 @@ public final class CommonTools {
 	* */
 	public static URLClassLoader loadJars(String[] libDirs) throws Exception {
         return loadJars(libDirs,ClassLoader.getSystemClassLoader());
-	}	
-	
+	}
+
 	/**
 	* Performs the loadJars operation
 	* @param libDirs - the libDirs
@@ -91,17 +91,17 @@ public final class CommonTools {
 	* @return the loadJars result
 	* */
 	public static URLClassLoader loadJars(String libDirs,ClassLoader classLoader) throws Exception {
-		if (libDirs == null) 
+		if (libDirs == null)
 			return null;
-	
+
 		List<URL> urlList = new ArrayList<URL>();
 		List<String> libDirArr = Arrays.asList(libDirs.split(";"));
 		for(String libDir : libDirArr){
     		File jars = new File(libDir);
     		if(!jars.exists())
     		    continue;
-    		
-    		if(jars.isDirectory()){    
+
+    		if(jars.isDirectory()){
         		List<String> list = findFiles(jars.getAbsolutePath(),".jar");
         		for(String jarPath : list){
         		    urlList.add(new File(jarPath).toURI().toURL());
@@ -115,50 +115,50 @@ public final class CommonTools {
 		}
 
 		URL[] urls = urlList.toArray(new URL[]{});
-		
+
 		URLClassLoader cl = new URLClassLoader(urls,classLoader);
 		return cl;
 	}
-	
+
     public static List<String> findFiles(String dir,String ext) throws IOException {
-        
+
         if(!new File(dir).exists()) return new ArrayList<String>();
-        
+
         List<Path> paths = Files.walk(Paths.get(dir))
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().toLowerCase().endsWith(ext))
                 .collect(Collectors.toList());
-                
+
         return paths.stream()
                       .map(path -> path.toAbsolutePath().toString())
                       .collect(Collectors.toList());
     }
-    
+
     public static List<String> findFiles(String dir) throws IOException {
-        
+
         if(!new File(dir).exists()) return new ArrayList<String>();
-        
+
         List<Path> paths = Files.walk(Paths.get(dir))
                 .filter(Files::isRegularFile)
                 .collect(Collectors.toList());
-                
+
         return paths.stream()
                       .map(path -> path.toAbsolutePath().toString())
-                      .collect(Collectors.toList());                
-    }    
-    
+                      .collect(Collectors.toList());
+    }
+
     public static List<String> findSubDirs(String dir) throws IOException {
-        
+
         if(!new File(dir).exists()) return new ArrayList<String>();
-        
+
         List<Path> paths = Files.walk(Paths.get(dir))
                 .filter(Files::isDirectory)
                 .collect(Collectors.toList());
-                
+
         return paths.stream()
                       .map(path -> path.toAbsolutePath().toString())
-                      .collect(Collectors.toList());                
-    }    
+                      .collect(Collectors.toList());
+    }
 
 	/**
 	* Performs the getJarPath operation
@@ -174,7 +174,7 @@ public final class CommonTools {
 			return null;
 		}
 	}
-	
+
 	/**
 	* Performs the isBlank operation
 	* @param o - the o
@@ -213,10 +213,10 @@ public final class CommonTools {
 			    Logger.systemDebug(CommonTools.class,"Found %s",envFile.getPath());
 				return envFile;
 			}
-			
+
 			String jarPath = new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().getPath();
 			File jarConfigFile = new File(String.format("%s/%s", jarPath, propFileName));
-			
+
 			if(!jarConfigFile.exists()) {
 			    jarConfigFile = new File(String.format("%s/config/%s", jarPath, propFileName));
 			}
@@ -224,28 +224,28 @@ public final class CommonTools {
 			if (jarConfigFile.exists()) {
                 Logger.systemDebug(CommonTools.class,"Found %s",jarConfigFile.getPath());
 				return jarConfigFile;
-			}			
-			
+			}
+
 			String jarParentPath = new File(jarPath).getParentFile()
 					.getPath();
-					
+
 			File jarParentConfigFile = new File(String.format("%s/%s", jarParentPath, propFileName));
-			
+
 			if(!jarParentConfigFile.exists()) {
 			    jarParentConfigFile = new File(String.format("%s/config/%s", jarParentPath, propFileName));
-			}			
-			
+			}
+
             if (jarParentConfigFile.exists()) {
                 Logger.systemDebug(CommonTools.class,"Found %s",jarParentConfigFile.getPath());
 				return jarParentConfigFile;
 			}
-			
+
 			URL classPathFileUrl = clazz.getResource(String.format("/%s", propFileName));
 			if (classPathFileUrl != null) {
 			    Logger.systemDebug(CommonTools.class,"Found %s",classPathFileUrl.getPath());
 				return new File(classPathFileUrl.toURI());
 			}
-			
+
             classPathFileUrl = clazz.getResource(String.format("/config/%s", propFileName));
 			if (classPathFileUrl != null) {
 			    Logger.systemDebug(CommonTools.class,"Found %s",classPathFileUrl.getPath());
@@ -257,11 +257,11 @@ public final class CommonTools {
     			    String classParentPath = new File(classPathFileUrl.toURI()).getParent();
     			    if(classParentPath != null){
         			    File classParentConfigFile = new File(String.format("%s/%s", classParentPath, propFileName));
-        			    
+
         			    if(!classParentConfigFile.exists()) {
         			        classParentConfigFile = new File(String.format("%s/config/%s", classParentPath, propFileName));
         			    }
-        			    
+
         			    if(!classParentConfigFile.exists()) {
         			        Logger.systemDebug(CommonTools.class,"Found %s",classParentConfigFile.getPath());
         			        return classParentConfigFile;
@@ -290,9 +290,9 @@ public final class CommonTools {
 	* @return the getHostname result
 	* */
 	public synchronized static String getHostname() {
-	    
+
 	    if(HOSTNAME != null) return HOSTNAME;
-	    
+
 	    HOSTNAME = System.getenv("HOSTNAME");
         if(HOSTNAME == null){
     		try {
@@ -346,7 +346,7 @@ public final class CommonTools {
 		}
 		return result;
 	}
-	
+
 	/**
 	* Performs the md5 operation
 	* @param text - the text
@@ -375,6 +375,6 @@ public final class CommonTools {
 			return null;
 		}
 
-	}	
+	}
 
 }

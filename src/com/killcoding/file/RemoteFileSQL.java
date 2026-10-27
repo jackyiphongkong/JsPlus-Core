@@ -80,7 +80,7 @@ public interface RemoteFileSQL {
     public static final String SQL_SELECT_FOR_ALL_TIMEOUT = "SELECT * FROM %s WHERE deleted = 0 AND file_type = 'F' AND file_part_last_index = -1 AND file_part_index = 0 AND updated_at < :before_updated_at AND (file_parent_path = :file_parent_path OR (file_parent_path LIKE :like_file_parent_path)) ORDER BY created_at ASC";
 
     public static final String SQL_UPDATE_FOR_TIMEOUT_DELETE = "UPDATE %s SET deleted = 1,deleted_at = :deleted_at,deleted_user_id = :deleted_user_id WHERE file_id = :file_id AND deleted = 0";
-    
+
 	public static final String SQL_SELECT_FOR_LIST_ALL = "SELECT * FROM %s WHERE deleted = 0 AND file_deleted = 0 AND file_part_index = 0 AND file_part_last_index > -1 AND file_parent_path LIKE :file_parent_path AND file_name LIKE :file_name ORDER BY created_at ASC";
 
 	public static final String SQL_SELECT_FOR_LIST_ALL_SYNC = "SELECT * FROM %s WHERE file_part_index = 0 AND file_part_last_index > -1 AND file_parent_path LIKE :file_parent_path AND file_name LIKE :file_name AND deleted = 0 AND file_deleted = 0 AND file_modify_time >= :begin_time AND file_modify_time <= :end_time AND created_at <= :created_at AND synced_on_hostnames NOT LIKE :synced_on_hostnames ORDER BY created_at ASC";

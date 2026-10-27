@@ -69,9 +69,9 @@ public class ConfigProperties extends Properties {
 	public static final String ENV_VAR_REGEX = "[\\$%#]{1}\\{?([\\.\\w-]+)(:{1}([^\\}]+)){0,1}\\}";
 
 	public static String DATETIME_PATTERN = "yyyy.MM.dd HH:mm:ss[.SSSSSSSSS]";
-	
+
 	public static String Config_Cipher_AesKey = null;
-	
+
     public static Long AUTO_LOAD_TIMER = 5000L;
 	private static final List<Runnable> AUTO_LOAD_CP = new CopyOnWriteArrayList<Runnable>();
 
@@ -109,7 +109,7 @@ public class ConfigProperties extends Properties {
 	}
 
     private static ConfigCustomLoad CUSTOMLOAD = null;
-    
+
 	protected static ExecutorService executor = null;
 
 	private String parseContentRaw = null;
@@ -149,7 +149,7 @@ public class ConfigProperties extends Properties {
 	/**
 	* Performs the startAutoLoad operation
 	* */
-	private static synchronized void startAutoLoad() { 
+	private static synchronized void startAutoLoad() {
 		if (executor == null) {
 			executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
@@ -163,19 +163,19 @@ public class ConfigProperties extends Properties {
 				        Thread.currentThread().setName("ConfigProperties.startAutoLoad");
     					for (Runnable cpRun : AUTO_LOAD_CP) {
     					    cpRun.run();
-    					}				        
+    					}
     					try {
     						Thread.sleep(getAutoLoadTimer());
     					} catch (InterruptedException e) {
     						Logger.systemError(ConfigProperties.class, e.getMessage(), e);
     						break;
-    					}				        
+    					}
 				    }
 				}
 			});
 		}
 	}
-	
+
 	/**
 	* Performs the getAutoLoadTimer operation
 	* @return the getAutoLoadTimer result
@@ -190,8 +190,8 @@ public class ConfigProperties extends Properties {
 	* */
 	public static void setConfigCustom(ConfigCustomLoad customLoad){
 	    ConfigProperties.CUSTOMLOAD =  customLoad;
-	}	
-	
+	}
+
 	/**
 	* Performs the loadConfigCustom operation
 	* @param file - the file
@@ -243,10 +243,10 @@ public class ConfigProperties extends Properties {
         						the.load(file);
         						Logger.systemMark(ConfigProperties.class, "Updated");
         						Logger.systemDebug(ConfigProperties.class, the.parseContentRaw);
-        						
+
         						if (updatedRunnable != null)
         							updatedRunnable.run();
-        					}   
+        					}
     					}
 					}
 				} catch (Exception e) {
@@ -442,11 +442,11 @@ public class ConfigProperties extends Properties {
 	* */
 	public Boolean getBoolean(String key, Boolean defaultValue) {
 	    Object originValue = get(key);
-	    
+
 	    if(originValue == null) return defaultValue;
-	    
-	    if(originValue instanceof Boolean) return (Boolean)originValue;	 
-	    
+
+	    if(originValue instanceof Boolean) return (Boolean)originValue;
+
 		String o = getString(key);
 		if (isBlank(o)) {
 			return defaultValue;
@@ -545,34 +545,6 @@ public class ConfigProperties extends Properties {
 		return o.trim();
 	}
 
-	// 	public String getString(String key, String defaultValue) {
-	// 	    String o = getProperty(key);
-	// 	    if(o == null)
-	// 	        return o;
-
-	// 	    String originValue = o.trim();     
-	// 	    Pattern p = Pattern.compile(ENV_VAR_REGEX);  
-	//         Matcher m = p.matcher(originValue);
-	//         boolean findEnvFormat = m.find();
-	//         if(findEnvFormat){
-	//             String envVar = m.group(1);
-	//             String envDefValue = m.group(3);
-	//             String envValue = getSysEnv(envVar);
-	//     		if (!isBlank(envValue)) {
-	//     			return envValue;
-	//     		}  
-	//     		if (!isBlank(envDefValue)) {
-	//     			return envDefValue;
-	//     		}      		
-	//     		return defaultValue;
-	//         }else{
-	//     		if (isBlank(originValue)) {
-	//     			return defaultValue;
-	//     		}
-	//     		return originValue.trim();
-	//         }
-	// 	}	
-
 	/**
 	* Performs the getShort operation
 	* @param key - the key
@@ -590,11 +562,11 @@ public class ConfigProperties extends Properties {
 	* */
 	public Short getShort(String key, Short defaultValue) {
 	    Object originValue = get(key);
-	    
+
 	    if(originValue == null) return defaultValue;
-	    
-	    if(originValue instanceof Number) return ((Number) originValue).shortValue();	   
-	    
+
+	    if(originValue instanceof Number) return ((Number) originValue).shortValue();
+
 		String o = getString(key);
 		if (isBlank(o)) {
 			return defaultValue;
@@ -619,11 +591,11 @@ public class ConfigProperties extends Properties {
 	* */
 	public Integer getInteger(String key, Integer defaultValue) {
 	    Object originValue = get(key);
-	    
+
 	    if(originValue == null) return defaultValue;
-	    
+
 	    if(originValue instanceof Number) return ((Number) originValue).intValue();
-	    
+
 		String o = getString(key);
 		if (isBlank(o)) {
 			return defaultValue;
@@ -648,11 +620,11 @@ public class ConfigProperties extends Properties {
 	* */
 	public Long getLong(String key, Long defaultValue) {
 	    Object originValue = get(key);
-	    
+
 	    if(originValue == null) return defaultValue;
-	    
-	    if(originValue instanceof Number) return ((Number) originValue).longValue();	    
-	    
+
+	    if(originValue instanceof Number) return ((Number) originValue).longValue();
+
 		String o = getString(key);
 		if (isBlank(o)) {
 			return defaultValue;
@@ -677,11 +649,11 @@ public class ConfigProperties extends Properties {
 	* */
 	public Float getFloat(String key, Float defaultValue) {
 	    Object originValue = get(key);
-	    
+
 	    if(originValue == null) return defaultValue;
-	    
-	    if(originValue instanceof Number) return ((Number) originValue).floatValue();	    
-	    
+
+	    if(originValue instanceof Number) return ((Number) originValue).floatValue();
+
 		String o = getString(key);
 		if (isBlank(o)) {
 			return defaultValue;
@@ -706,11 +678,11 @@ public class ConfigProperties extends Properties {
 	* */
 	public Double getDouble(String key, Double defaultValue) {
 	    Object originValue = get(key);
-	    
+
 	    if(originValue == null) return defaultValue;
-	    
-	    if(originValue instanceof Number) return ((Number) originValue).doubleValue();	    
-	    
+
+	    if(originValue instanceof Number) return ((Number) originValue).doubleValue();
+
 		String o = getString(key);
 		if (isBlank(o)) {
 			return defaultValue;
@@ -765,7 +737,7 @@ public class ConfigProperties extends Properties {
 	public Long getFileSize(String key, Long defaultValue) {
 		return parseFileSize(getString(key, null), defaultValue);
 	}
-	
+
 	/**
 	* Performs the getDateTime operation
 	* @param key - the key
@@ -775,7 +747,7 @@ public class ConfigProperties extends Properties {
 	public Date getDateTime(String key, String defaultValue) {
 		return parseDateTime(getString(key, null), defaultValue);
 	}
-	
+
 	/**
 	* Performs the getDateTime operation
 	* @param key - the key
@@ -783,7 +755,7 @@ public class ConfigProperties extends Properties {
 	* */
 	public Date getDateTime(String key) {
 		return getDateTime(key,null);
-	}	
+	}
 
 	/**
 	* Performs the getConfigProperties operation
@@ -794,7 +766,7 @@ public class ConfigProperties extends Properties {
 		Map<String, Object> map = getMap(key);
 		if (map != null) {
 			ConfigProperties cp = new ConfigProperties();
-			cp.putAllAndReturnSlef(map);
+			cp.putAllAndReturnSelf(map);
 			return cp;
 		}
 		return null;
@@ -810,7 +782,7 @@ public class ConfigProperties extends Properties {
 		Map<String, Object> map = getMap(key);
 		if (map != null) {
 			ConfigProperties cp = new ConfigProperties();
-			cp.putAllAndReturnSlef(map);
+			cp.putAllAndReturnSelf(map);
 			return cp;
 		}
 		return defaultValue;
@@ -847,7 +819,7 @@ public class ConfigProperties extends Properties {
 		}
 		return isBlank(cp) ? defaultValue : cp;
 	}
-	
+
 	/**
 	* Performs the getContentRaw operation
 	* @return the getContentRaw result
@@ -898,7 +870,7 @@ public class ConfigProperties extends Properties {
 				defaultValue, "Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).");
 		return ms == null ? defaultValue : ms;
 	}
-	
+
     /**
     * Performs the parseDateTime operation
     * @param objectValue - the objectValue

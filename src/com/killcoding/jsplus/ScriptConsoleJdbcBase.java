@@ -328,21 +328,6 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(consoleVariables.getString("DateTimeFormat"));
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(consoleVariables.getString("DateFormat"));
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern(consoleVariables.getString("TimeFormat"));
-// 		SimpleDateFormat dateTimeFormat = new SimpleDateFormat(consoleVariables.getString("DateTimeFormat"));
-// 		SimpleDateFormat dateFormat = new SimpleDateFormat(consoleVariables.getString("DateFormat"));
-// 		SimpleDateFormat timeFormat = new SimpleDateFormat(consoleVariables.getString("TimeFormat"));
-
-// 		if (javaType.equals(java.lang.String.class.getName())) {
-//             objectValue = unescapeCsv(cell);
-// 		} else if (javaType.equals(java.util.Date.class.getName())) {
-// 			objectValue = new java.util.Date(dateTimeFormat.parse(cell).getTime());
-// 		} else if (javaType.equals(java.sql.Date.class.getName())) {
-// 			objectValue = new java.sql.Date(dateFormat.parse(cell).getTime());
-// 		} else if (javaType.equals(java.sql.Timestamp.class.getName())) {
-// 			objectValue = new java.sql.Timestamp(dateTimeFormat.parse(cell).getTime());
-// 		} else if (javaType.equals(java.sql.Time.class.getName())) {
-// 			objectValue = new java.sql.Time(dateTimeFormat.parse(cell).getTime());
-// 		}
 
         if (javaType.equals(java.lang.String.class.getName())) {
             objectValue = unescapeCsv(cell);
@@ -724,21 +709,21 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 
             if(executeCommand.toUpperCase().equals("SCRIPT")){
 		        setUseScriptEnv();
-		        consoleVariables.putAndReturnSlef("CommandEnd","/");
+		        consoleVariables.putAndReturnSelf("CommandEnd","/");
 		        if(enableSystemOut){
 		            System.out.println("Changed CommandEnd to '/'");
 		        }
 		        set("Name",displayEngineName);
 		    } else if(executeCommand.toUpperCase().equals("CMD")){
 		        setUseCmdEnv();
-		        consoleVariables.putAndReturnSlef("CommandEnd","/");
+		        consoleVariables.putAndReturnSelf("CommandEnd","/");
 		        if(enableSystemOut){
 		            System.out.println("Changed CommandEnd to '/'");
 		        }
 		        set("Name","cmd");
 		    }else if(executeCommand.toUpperCase().equals("GHOST")){
     	        setUseGhostEnv();
-    	        consoleVariables.putAndReturnSlef("CommandEnd","/");
+    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
     	        set("Name","ghost");
     	        if(enableSystemOut){
 		            System.out.println("Changed CommandEnd to '/'");
@@ -763,7 +748,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			    if(keyValue.length == 2){
 			        String key = keyValue[0].trim().replaceFirst("^Console\\.","");
 			        String value = keyValue[1].trim();
-			        consoleVariables.putAndReturnSlef(key,value);
+			        consoleVariables.putAndReturnSelf(key,value);
 			        if(enableSystemOut) System.out.println(String.format("Successfully Console.%s=%s",key,value));
 			    }else{
 			        if(enableSystemOut) System.out.println("ERROR: Invalid console variable");

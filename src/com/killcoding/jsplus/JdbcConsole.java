@@ -24,23 +24,6 @@ THE SOFTWARE.
 package com.killcoding.jsplus;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
 * JDBC console: an interactive database REPL that executes SQL against a DriverDataSource
 * connection, supporting scripts, query result rendering and connection lifecycle management.

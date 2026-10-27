@@ -26,7 +26,6 @@ package com.killcoding.log;
 import java.io.File;
 
 
-
 import java.io.IOException;
 
 
@@ -121,9 +120,9 @@ public final class LoggerFactory {
 						Logger.systemError(LoggerFactory.class, e);
 					}
 				}
-			};	
+			};
 			defaultConfig.load(loggerPropFile,updatedRun);
-			config(defaultConfig);	 
+			config(defaultConfig);
 		}
 	}
 
@@ -160,7 +159,7 @@ public final class LoggerFactory {
 	public static Logger getLogger(String clazzName) {
 		return new Logger(clazzName);
 	}
-	
+
 	/**
 	* Performs the getConfigProperties operation
 	* @return the getConfigProperties result
