@@ -23,42 +23,39 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.tool;
 
-import java.util.Properties;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.Set;
-import java.util.Map;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Arrays;
-import com.killcoding.log.Logger;
-import java.io.StringReader;
-import java.io.Reader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.File;
-import java.io.FileInputStream;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Files;
-
-
 import java.nio.file.Paths;
-
-import java.util.Date;
-import com.killcoding.file.BaseFile;
-import java.util.concurrent.CopyOnWriteArrayList;
-import com.killcoding.file.DiskFile;
-import com.killcoding.tool.CipherTools;
-import java.io.ByteArrayInputStream;
-import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.killcoding.file.BaseFile;
+import com.killcoding.file.DiskFile;
+import com.killcoding.log.Logger;
+import com.killcoding.tool.CipherTools;
 
 /**
 * Extended Properties: reads .properties files with ${VAR} environment expansion and typed value
@@ -86,6 +83,30 @@ public class ConfigProperties extends Properties {
 
 	/** Env-var substitution pattern (reused by getEnv - do not re-compile per call). */
 	private static final Pattern ENV_VAR_PATTERN = Pattern.compile(ENV_VAR_REGEX);
+
+	/** Env-var substitution pattern with DOTALL|MULTILINE (reused by parseContent - do not re-compile per call). */
+	private static final Pattern ENV_VAR_PATTERN_FLAGS = Pattern.compile(ENV_VAR_REGEX, Pattern.DOTALL | Pattern.MULTILINE);
+
+	/** Time unit -> multiplier relative to one millisecond, shared by parseTimeToSec/parseTimeToMs. */
+	private static final Map<String, Long> TIME_UNIT_MULTIPLIER_MS = new HashMap<String, Long>();
+	static {
+		TIME_UNIT_MULTIPLIER_MS.put("ms", 1L);
+		TIME_UNIT_MULTIPLIER_MS.put("s", 1000L);
+		TIME_UNIT_MULTIPLIER_MS.put("m", 60000L);
+		TIME_UNIT_MULTIPLIER_MS.put("h", 3600000L);
+		TIME_UNIT_MULTIPLIER_MS.put("d", 86400000L);
+		TIME_UNIT_MULTIPLIER_MS.put("w", 604800000L);
+	}
+
+	/** File-size unit -> multiplier relative to one byte, shared by parseFileSize. */
+	private static final Map<String, Long> FILE_SIZE_MULTIPLIER = new HashMap<String, Long>();
+	static {
+		FILE_SIZE_MULTIPLIER.put("b", 1L);
+		FILE_SIZE_MULTIPLIER.put("kb", 1024L);
+		FILE_SIZE_MULTIPLIER.put("mb", 1024L * 1024);
+		FILE_SIZE_MULTIPLIER.put("gb", 1024L * 1024 * 1024);
+		FILE_SIZE_MULTIPLIER.put("tb", 1024L * 1024 * 1024 * 1024);
+	}
 
     private static ConfigCustomLoad CUSTOMLOAD = null;
     
@@ -279,10 +300,12 @@ public class ConfigProperties extends Properties {
 	* */
 	public void load(Reader reader) throws IOException {
 		try {
-			int readChar;
-			StringBuffer sbf = new StringBuffer();
-			while ((readChar = reader.read()) != -1) {
-				sbf.append((char) readChar);
+			// Batch-read into a char[] buffer instead of read()-ing char by char.
+			char[] buffer = new char[8192];
+			int readCount;
+			StringBuilder sbf = new StringBuilder();
+			while ((readCount = reader.read(buffer)) != -1) {
+				sbf.append(buffer, 0, readCount);
 			}
 			this.parseContentRaw = parseContent(sbf.toString());
 			super.load(new StringReader(this.parseContentRaw));
@@ -293,25 +316,25 @@ public class ConfigProperties extends Properties {
 	}
 
 	/**
-	* Performs the putAndReturnSlef operation
+	* Performs the putAndReturnSelf operation
 	* @param key - the key
 	* @param value - the value
-	* @return the putAndReturnSlef result
+	* @return the putAndReturnSelf result
 	* */
 	@SuppressWarnings("unchecked")
-	public ConfigProperties putAndReturnSlef(String key, Object value) {
+	public ConfigProperties putAndReturnSelf(String key, Object value) {
 		if (isBlank(value)) {
 			put(key, "");
 		} else if (value instanceof Map) {
-			Map<String, Object> subMap = conver(key, (Map<String, Object>) value);
-			putAllAndReturnSlef(subMap);
+			Map<String, Object> subMap = convert(key, (Map<String, Object>) value);
+			putAllAndReturnSelf(subMap);
 		} else if (value instanceof List) {
 			List<Object> list = (List<Object>) value;
 			int size = list.size();
 			for (int i = 0; i < size; i++) {
 				Object item = list.get(i);
 				String newKey = String.format("%s[%s]", key, i);
-				putAndReturnSlef(newKey, item);
+				putAndReturnSelf(newKey, item);
 			}
 		} else if (value instanceof Object[]) {
 			List<Object> list = Arrays.asList((Object[]) value);
@@ -319,7 +342,7 @@ public class ConfigProperties extends Properties {
 			for (int i = 0; i < size; i++) {
 				Object item = list.get(i);
 				String newKey = String.format("%s[%s]", key, i);
-				putAndReturnSlef(newKey, item);
+				putAndReturnSelf(newKey, item);
 			}
 		} else if (value instanceof String) {
 			put(key, value);
@@ -329,47 +352,69 @@ public class ConfigProperties extends Properties {
 		return this;
 	}
 
+	/** @deprecated misspelled legacy name; kept for compatibility - use {@link #putAndReturnSelf(String, Object)}. */
+	@Deprecated
+	public ConfigProperties putAndReturnSlef(String key, Object value) {
+		return putAndReturnSelf(key, value);
+	}
+
 	/**
-	* Performs the removeAndReturnSlef operation
+	* Performs the removeAndReturnSelf operation
 	* @param key - the key
-	* @return the removeAndReturnSlef result
+	* @return the removeAndReturnSelf result
 	* */
-	public ConfigProperties removeAndReturnSlef(String key) {
+	public ConfigProperties removeAndReturnSelf(String key) {
 		this.remove(key);
 		return this;
 	}
 
+	/** @deprecated misspelled legacy name; kept for compatibility - use {@link #removeAndReturnSelf(String)}. */
+	@Deprecated
+	public ConfigProperties removeAndReturnSlef(String key) {
+		return removeAndReturnSelf(key);
+	}
+
 	/**
-	* Performs the putAllAndReturnSlef operation
-	* @param String - the String
+	* Performs the putAllAndReturnSelf operation
 	* @param map - the map
-	* @return the putAllAndReturnSlef result
+	* @return the putAllAndReturnSelf result
 	* */
-	public ConfigProperties putAllAndReturnSlef(Map<String, Object> map) {
+	public ConfigProperties putAllAndReturnSelf(Map<String, Object> map) {
 		Set<String> keys = map.keySet();
 		for (String key : keys) {
 			Object value = map.get(key);
-			putAndReturnSlef(key, value);
+			putAndReturnSelf(key, value);
 		}
 		return this;
+	}
+
+	/** @deprecated misspelled legacy name; kept for compatibility - use {@link #putAllAndReturnSelf(Map)}. */
+	@Deprecated
+	public ConfigProperties putAllAndReturnSlef(Map<String, Object> map) {
+		return putAllAndReturnSelf(map);
 	}
 
 	/**
 	* Performs the removeAllNullValues operation
 	* */
 	public void removeAllNullValues() {
-		Set<Object> keys = this.keySet();
+		// Copy the key set before removing: mutating the live keySet during iteration
+		// trips the fail-fast Hashtable iterator (ConcurrentModificationException).
+		List<Object> keys = new ArrayList<Object>(this.keySet());
 		for (Object key : keys) {
-			Object value = get(key);
-			boolean blank = isBlank(value);
-			if (blank) {
+			if (isBlank(get(key))) {
 				this.remove(key);
-				continue;
 			}
 		}
 	}
 
-	private Map<String, Object> conver(String parentKey, Map<String, Object> map) {
+	/**
+	* Performs the convert operation
+	* @param parentKey - the parentKey
+	* @param map - the map
+	* @return the convert result
+	* */
+	private Map<String, Object> convert(String parentKey, Map<String, Object> map) {
 		Map<String, Object> subMap = new HashMap<String, Object>();
 		Set<String> keys = map.keySet();
 		for (String key : keys) {
@@ -409,6 +454,11 @@ public class ConfigProperties extends Properties {
 		return Boolean.parseBoolean(o.trim());
 	}
 
+	/**
+	* Performs the getArray operation
+	* @param key - the key
+	* @return the getArray result
+	* */
 	public List<String> getArray(String key) {
 		List<String> defaultValue = null;
 		List<String> v = getArray(key, defaultValue);
@@ -423,18 +473,31 @@ public class ConfigProperties extends Properties {
 		}
 	}
 
+	/**
+	* Performs the getArray operation
+	* @param key - the key
+	* @param defaultValue - the defaultValue
+	* @return the getArray result
+	* */
 	public List<String> getArray(String key, String[] defaultValue) {
 		return getArray(key, Arrays.asList(defaultValue));
 	}
 
+	/**
+	* Performs the getArray operation
+	* @param key - the key
+	* @param defaultValue - the defaultValue
+	* @return the getArray result
+	* */
 	public List<String> getArray(String key, List<String> defaultValue) {
 		String[] list = null;
 		Map<Integer, String> listMap = new HashMap<Integer, String>();
 		List<Integer> listIndex = new ArrayList<Integer>();
+		// Compile the indexed-key pattern once instead of per key.
+		String format = String.format("^%s\\[(\\w+)\\]$", key);
+		Pattern pattern = Pattern.compile(format);
 		Set<Object> keys = keySet();
 		for (Object _key : keys) {
-			String format = String.format("^%s\\[(\\w+)\\]$", key);
-			Pattern pattern = Pattern.compile(format);
 			Matcher matcher = pattern.matcher(_key.toString());
 			if (matcher.find()) {
 				Integer index = Integer.parseInt(matcher.group(1));
@@ -530,7 +593,7 @@ public class ConfigProperties extends Properties {
 	    
 	    if(originValue == null) return defaultValue;
 	    
-	    if(originValue instanceof Number) return Short.parseShort(originValue + "");	   
+	    if(originValue instanceof Number) return ((Number) originValue).shortValue();	   
 	    
 		String o = getString(key);
 		if (isBlank(o)) {
@@ -559,7 +622,7 @@ public class ConfigProperties extends Properties {
 	    
 	    if(originValue == null) return defaultValue;
 	    
-	    if(originValue instanceof Number) return Integer.parseInt(originValue + "");
+	    if(originValue instanceof Number) return ((Number) originValue).intValue();
 	    
 		String o = getString(key);
 		if (isBlank(o)) {
@@ -588,7 +651,7 @@ public class ConfigProperties extends Properties {
 	    
 	    if(originValue == null) return defaultValue;
 	    
-	    if(originValue instanceof Number) return Long.parseLong(originValue + "");	    
+	    if(originValue instanceof Number) return ((Number) originValue).longValue();	    
 	    
 		String o = getString(key);
 		if (isBlank(o)) {
@@ -617,7 +680,7 @@ public class ConfigProperties extends Properties {
 	    
 	    if(originValue == null) return defaultValue;
 	    
-	    if(originValue instanceof Number) return Float.parseFloat(originValue + "");	    
+	    if(originValue instanceof Number) return ((Number) originValue).floatValue();	    
 	    
 		String o = getString(key);
 		if (isBlank(o)) {
@@ -646,7 +709,7 @@ public class ConfigProperties extends Properties {
 	    
 	    if(originValue == null) return defaultValue;
 	    
-	    if(originValue instanceof Number) return Double.parseDouble(originValue + "");	    
+	    if(originValue instanceof Number) return ((Number) originValue).doubleValue();	    
 	    
 		String o = getString(key);
 		if (isBlank(o)) {
@@ -753,10 +816,21 @@ public class ConfigProperties extends Properties {
 		return defaultValue;
 	}
 
+	/**
+	* Performs the getMap operation
+	* @param key - the key
+	* @return the getMap result
+	* */
 	public Map<String, Object> getMap(String key) {
 		return getMap(key, null);
 	}
 
+	/**
+	* Performs the getMap operation
+	* @param key - the key
+	* @param defaultValue - the defaultValue
+	* @return the getMap result
+	* */
 	public Map<String, Object> getMap(String key, Map<String, Object> defaultValue) {
 		Map<String, Object> cp = null;
 		Set<Object> keys = this.keySet();
@@ -798,51 +872,14 @@ public class ConfigProperties extends Properties {
 	* @return the parseTimeToSec result
 	* */
 	public static Long parseTimeToSec(Object objectValue, Long defaultValue) {
-
+		// Numeric input is treated as seconds as-is (kept for compatibility).
 		if (objectValue == null)
 			return defaultValue;
-
-		String stringValue = null;
-		if (objectValue instanceof String) {
-			stringValue = objectValue.toString().trim();
-		} else {
+		if (!(objectValue instanceof String))
 			return Long.parseLong(objectValue.toString().trim());
-		}
-
-		Long value = null;
-		try {
-			Matcher matcher = TIME_UNIT_PATTERN.matcher(stringValue);
-			if (matcher.find()) {
-				Long originValue = Long.parseLong(matcher.group(1));
-				String unit = matcher.group(2).toLowerCase();
-				if (unit.equals("ms")) {
-					value = originValue / 1000;
-				}
-				if (unit.equals("s")) {
-					value = originValue;
-				}
-				if (unit.equals("m")) {
-					value = originValue * 60;
-				}
-				if (unit.equals("h")) {
-					value = originValue * 60 * 60;
-				}
-				if (unit.equals("d")) {
-					value = originValue * 60 * 60 * 24;
-				}
-				if (unit.equals("w")) {
-					value = originValue * 60 * 60 * 24 * 7;
-				}
-			} else {
-				Logger.systemMark(ConfigProperties.class,
-						"Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).",
-						stringValue, defaultValue, stringValue);
-			}
-			return value == null ? defaultValue : value;
-		} catch (Exception e) {
-			Logger.systemError(ConfigProperties.class, e);
-			return defaultValue;
-		}
+		Long ms = parseSuffixed(objectValue.toString().trim(), TIME_UNIT_PATTERN, TIME_UNIT_MULTIPLIER_MS,
+				defaultValue, "Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).");
+		return ms == null ? defaultValue : ms / 1000;
 	}
 
 	/**
@@ -852,51 +889,14 @@ public class ConfigProperties extends Properties {
 	* @return the parseTimeToMs result
 	* */
 	public static Long parseTimeToMs(Object objectValue, Long defaultValue) {
-
+		// Numeric input is treated as milliseconds as-is (kept for compatibility).
 		if (objectValue == null)
 			return defaultValue;
-
-		String stringValue = null;
-		if (objectValue instanceof String) {
-			stringValue = objectValue.toString().trim();
-		} else {
+		if (!(objectValue instanceof String))
 			return Long.parseLong(objectValue.toString().trim());
-		}
-
-		Long value = null;
-		try {
-			Matcher matcher = TIME_UNIT_PATTERN.matcher(stringValue);
-			if (matcher.find()) {
-				Long originValue = Long.parseLong(matcher.group(1));
-				String unit = matcher.group(2).toLowerCase();
-				if (unit.equals("ms")) {
-					value = originValue;
-				}
-				if (unit.equals("s")) {
-					value = originValue * 1000;
-				}
-				if (unit.equals("m")) {
-					value = originValue * 60 * 1000;
-				}
-				if (unit.equals("h")) {
-					value = originValue * 60 * 60 * 1000;
-				}
-				if (unit.equals("d")) {
-					value = originValue * 60 * 60 * 1000 * 24;
-				}
-				if (unit.equals("w")) {
-					value = originValue * 60 * 60 * 1000 * 24 * 7;
-				}
-			} else {
-				Logger.systemMark(ConfigProperties.class,
-						"Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).",
-						stringValue, defaultValue, stringValue);
-			}
-			return value == null ? defaultValue : value;
-		} catch (Exception e) {
-			Logger.systemError(ConfigProperties.class, e);
-			return defaultValue;
-		}
+		Long ms = parseSuffixed(objectValue.toString().trim(), TIME_UNIT_PATTERN, TIME_UNIT_MULTIPLIER_MS,
+				defaultValue, "Missing unit(ms|s|m|h|d|w) '{}' will using default value '{}', (e.g. {}ms,{}s,...).");
+		return ms == null ? defaultValue : ms;
 	}
 	
     /**
@@ -930,47 +930,45 @@ public class ConfigProperties extends Properties {
 	* @return the parseFileSize result
 	* */
 	public static Long parseFileSize(Object objectValue, Long defaultValue) {
-
+		// Numeric input is treated as bytes as-is (kept for compatibility).
 		if (objectValue == null)
 			return defaultValue;
-
-		String stringValue = null;
-		if (objectValue instanceof String) {
-			stringValue = objectValue.toString().trim();
-		} else {
+		if (!(objectValue instanceof String))
 			return Long.parseLong(objectValue.toString().trim());
-		}
+		Long size = parseSuffixed(objectValue.toString().trim(), FILE_SIZE_PATTERN, FILE_SIZE_MULTIPLIER,
+				defaultValue, "Missing unit(b|kb|mb|gb|tb) '{}' will using default value '{}', (e.g. {}mb,{}kb,...).");
+		return size == null ? defaultValue : size;
+	}
 
+	/**
+	* Shared suffix-parser: matches the unit pattern, multiplies the numeric part by the unit
+	* multiplier map; logs a missing-unit warning; returns null when unmatched or invalid so the
+	* caller can fall back to its defaultValue.
+	* @param stringValue - the trimmed value to parse
+	* @param pattern - the unit pattern to match
+	* @param unitMultiplier - the unit -> multiplier lookup
+	* @param defaultValue - the caller's default (used for the missing-unit warning only)
+	* @param missingUnitMsg - the warning template
+	* @return the computed raw value, or null when the input has no valid unit
+	* */
+	private static Long parseSuffixed(String stringValue, Pattern pattern, Map<String, Long> unitMultiplier,
+			Long defaultValue, String missingUnitMsg) {
 		Long value = null;
 		try {
-			Matcher matcher = FILE_SIZE_PATTERN.matcher(stringValue);
+			Matcher matcher = pattern.matcher(stringValue);
 			if (matcher.find()) {
 				Long originValue = Long.parseLong(matcher.group(1));
-				String unit = matcher.group(2).toLowerCase();
-				if (unit.equals("b")) {
-					value = originValue;
-				}
-				if (unit.equals("kb")) {
-					value = originValue * 1024;
-				}
-				if (unit.equals("mb")) {
-					value = originValue * 1024 * 1024;
-				}
-				if (unit.equals("gb")) {
-					value = originValue * 1024 * 1024 * 1024;
-				}
-				if (unit.equals("tb")) {
-					value = originValue * 1024 * 1024 * 1024 * 1024;
+				Long multiplier = unitMultiplier.get(matcher.group(2).toLowerCase());
+				if (multiplier != null) {
+					value = originValue * multiplier;
 				}
 			} else {
-				Logger.systemMark(ConfigProperties.class,
-						"Missing unit(b|kb|mb|gb|tb) '{}' will using default value '{}', (e.g. {}mb,{}kb,...).",
-						stringValue, defaultValue, stringValue);
+				Logger.systemMark(ConfigProperties.class, missingUnitMsg, stringValue, defaultValue, stringValue);
 			}
-			return value == null ? defaultValue : value;
+			return value;
 		} catch (Exception e) {
 			Logger.systemError(ConfigProperties.class, e);
-			return defaultValue;
+			return null;
 		}
 	}
 
@@ -1026,8 +1024,8 @@ public class ConfigProperties extends Properties {
 	* @return the parseContent result
 	* */
 	public static String parseContent(String content, String replaceNullChar) {
-		Pattern p = Pattern.compile(ENV_VAR_REGEX, Pattern.DOTALL | Pattern.MULTILINE);
-		StringBuffer sb = new StringBuffer();
+		Pattern p = ENV_VAR_PATTERN_FLAGS;
+		StringBuilder sb = new StringBuilder();
 		Matcher matcher = p.matcher(content);
 		while (matcher.find()) {
 			String envValue = ConfigProperties.getEnv(matcher.group());
@@ -1052,7 +1050,8 @@ public class ConfigProperties extends Properties {
 		if (props1 == null || props2 == null)
 			return false;
 
-		return props1.parseContentRaw.equals(props2.parseContentRaw);
+		// parseContentRaw may be null when a ConfigProperties was never loaded.
+		return Objects.equals(props1.parseContentRaw, props2.parseContentRaw);
 	}
 
 }
