@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -56,6 +56,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 * shared executor (lazily re-created on the next filter()).
 * */
 public class CacheArray implements java.io.Serializable {
+
+	private static final long serialVersionUID = 1L;
     
     private static Integer MAX_POOL_SIZE = 100;
     
@@ -63,13 +65,13 @@ public class CacheArray implements java.io.Serializable {
 
 	private static ExecutorService arrayPool = null;
 
-	protected volatile Object lastItem = null;
+	protected transient volatile Object lastItem = null;
 
 	private static volatile boolean stop = false;
 	
 	private static volatile boolean forceStop = false;
 	
-	private volatile CacheArrayFilter filter = null;
+	private transient volatile CacheArrayFilter filter = null;
 	
 	private boolean nullIsCompleted = true;
 	
@@ -81,14 +83,14 @@ public class CacheArray implements java.io.Serializable {
 	 * order (getProcessedTotal()) even though the local index (getIndex())
 	 * cycles back to 0 after each head sweep. */
 	private long processedTotal = 0;
-	protected volatile Object OBJECT = null;
+	protected transient volatile Object OBJECT = null;
 	protected volatile Integer BATCH_INDEX = -1;
-    protected final List<Object> BATCH = new ArrayList<Object>();
+    protected transient final List<Object> BATCH = new ArrayList<Object>();
     
 	/**
 	 * All cache keys list
 	 * */
-	private final List<String> cacheKeys = new CopyOnWriteArrayList<String>();
+	private transient final List<String> cacheKeys = new CopyOnWriteArrayList<String>();
 
 	/**
 	 * 'true' is completed
@@ -148,7 +150,7 @@ public class CacheArray implements java.io.Serializable {
 	    the.filter = new CacheArrayFilter(timer){
 	        @Override
 
-        	/**
+        	/*
         	* Performs the execute operation
         	* @param index - the index
         	* @param object - the object
@@ -161,7 +163,7 @@ public class CacheArray implements java.io.Serializable {
         	}
         	@Override
 
-        	/**
+        	/*
         	* Performs the completed operation
         	* @param size - the size
         	* */
@@ -172,7 +174,7 @@ public class CacheArray implements java.io.Serializable {
         	}   
         	@Override
 
-        	/**
+        	/*
         	* Performs the terminated operation
         	* */
         	public void terminated() {
@@ -199,7 +201,7 @@ public class CacheArray implements java.io.Serializable {
 	    the.filter = new CacheArrayFilter(timer,loopTimer){
 	        @Override
 
-        	/**
+        	/*
         	* Performs the execute operation
         	* @param index - the index
         	* @param object - the object
@@ -211,19 +213,19 @@ public class CacheArray implements java.io.Serializable {
         	
         	@Override
 
-        	/**
+        	/*
         	* Performs the executeBatch operation
         	* @param index - the index
         	* @param batch - the batch
         	* */
-        	public void executeBatch(Integer index,List batch) {
+        	public void executeBatch(Integer index,List<?> batch) {
         	    
                 if(executeBatchRun != null) executeBatchRun.run();
         	}    
         	
         	@Override
 
-        	/**
+        	/*
         	* Performs the completed operation
         	* @param size - the size
         	* */
@@ -234,7 +236,7 @@ public class CacheArray implements java.io.Serializable {
         	
         	@Override
 
-        	/**
+        	/*
         	* Performs the terminated operation
         	* */
         	public void terminated() {
@@ -259,7 +261,7 @@ public class CacheArray implements java.io.Serializable {
 		Runnable runnable = new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -434,7 +436,7 @@ public class CacheArray implements java.io.Serializable {
 	 * Add list to the cache list
 	 * @param list - It is object list value
 	 * */
-	public synchronized void addAll(List list) {
+	public synchronized void addAll(List<?> list) {
 		for (Object value : list) {
 			add(value);
 		}

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -47,6 +47,7 @@ public class CmdConsole extends ScriptConsole {
     /**
     * Constructs a new CmdConsole
     * */
+    @SuppressWarnings("this-escape")
     public CmdConsole() {
         this(true);
     }
@@ -55,6 +56,7 @@ public class CmdConsole extends ScriptConsole {
     * Constructs a new CmdConsole
     * @param enableSystemOut - the enableSystemOut
     * */
+    @SuppressWarnings("this-escape")
     public CmdConsole(boolean enableSystemOut) {
         super();
         this.enableSystemOut = enableSystemOut;

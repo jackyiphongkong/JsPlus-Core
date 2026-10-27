@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -67,6 +67,8 @@ import java.time.ZoneId;
 * */
 public class ConfigProperties extends Properties {
 
+	private static final long serialVersionUID = 1L;
+
 	public static final String ENV_VAR_REGEX = "[\\$%#]{1}\\{?([\\.\\w-]+)(:{1}([^\\}]+)){0,1}\\}";
 
 	public static String DATETIME_PATTERN = "yyyy.MM.dd HH:mm:ss[.SSSSSSSSS]";
@@ -132,7 +134,7 @@ public class ConfigProperties extends Properties {
 			executor.execute(new Runnable() {
 				@Override
 
-				/**
+				/*
 				* Performs the run operation
 				* */
 				public void run() {
@@ -194,7 +196,7 @@ public class ConfigProperties extends Properties {
 		final Runnable cpRun = new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -255,7 +257,7 @@ public class ConfigProperties extends Properties {
 
 	@Override
 
-	/**
+	/*
 	* Performs the load operation
 	* @param inputStream - the inputStream
 	* */
@@ -271,7 +273,7 @@ public class ConfigProperties extends Properties {
 
 	@Override
 
-	/**
+	/*
 	* Performs the load operation
 	* @param reader - the reader
 	* */
@@ -296,6 +298,7 @@ public class ConfigProperties extends Properties {
 	* @param value - the value
 	* @return the putAndReturnSlef result
 	* */
+	@SuppressWarnings("unchecked")
 	public ConfigProperties putAndReturnSlef(String key, Object value) {
 		if (isBlank(value)) {
 			put(key, "");
@@ -1029,7 +1032,10 @@ public class ConfigProperties extends Properties {
 		while (matcher.find()) {
 			String envValue = ConfigProperties.getEnv(matcher.group());
 			envValue = (envValue == null ? replaceNullChar : envValue);
-			matcher.appendReplacement(sb, envValue);
+			// quoteReplacement() is REQUIRED: appendReplacement treats '\' and '$'
+			// as meta characters, so a value like "C:\Users\x" would silently lose
+			// its backslashes (observed: 'C:\Users\AutoTrader' -> 'C:UsersAutoTrader').
+			matcher.appendReplacement(sb, Matcher.quoteReplacement(envValue));
 		}
 		matcher.appendTail(sb);
 		return sb.toString();

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -62,7 +62,7 @@ public class JsContext extends JsPlusContext {
     
 	@Override
 
-	/**
+	/*
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
@@ -72,7 +72,7 @@ public class JsContext extends JsPlusContext {
     
 	@Override
 
-    /**
+    /*
     * Performs the getEngine operation
     * @return the getEngine result
     * */
@@ -82,7 +82,7 @@ public class JsContext extends JsPlusContext {
     
 	@Override
 
-    /**
+    /*
     * Performs the getContext operation
     * @return the getContext result
     * */
@@ -92,7 +92,7 @@ public class JsContext extends JsPlusContext {
     
     @Override
 
-	/**
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -102,7 +102,7 @@ public class JsContext extends JsPlusContext {
     
     @Override
 
-	/**
+	/*
 	* Performs the put operation
 	* @param name - the name
 	* @param value - the value
@@ -113,7 +113,7 @@ public class JsContext extends JsPlusContext {
 	
 	@Override
 
-	/**
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -124,7 +124,7 @@ public class JsContext extends JsPlusContext {
 
     @Override
 
-	/**
+	/*
 	* Performs the initScriptEngineManager operation
 	* */
 	public void initScriptEngineManager() throws Exception {
@@ -154,7 +154,7 @@ public class JsContext extends JsPlusContext {
 	
 	@Override
 
-	/**
+	/*
 	* Performs the setAllowAllAccess operation
 	* @param allowAllAccess - the allowAllAccess
 	* */
@@ -165,7 +165,7 @@ public class JsContext extends JsPlusContext {
 
     @Override
 
-	/**
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -176,7 +176,7 @@ public class JsContext extends JsPlusContext {
 
     @Override
 
-	/**
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -199,7 +199,7 @@ public class JsContext extends JsPlusContext {
 	
 	@Override
 
-	/**
+	/*
 	* Performs the evalScript operation
 	* @param script - the script
 	* @return the evalScript result
@@ -213,7 +213,7 @@ public class JsContext extends JsPlusContext {
 	
     @Override
 
-    /**
+    /*
     * Performs the close operation
     * */
     public void close(){
@@ -224,7 +224,7 @@ public class JsContext extends JsPlusContext {
     
 	@Override
 
-	/**
+	/*
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */

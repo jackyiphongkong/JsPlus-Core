@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -100,7 +100,7 @@ public abstract class JsPlusContext {
 	* Performs the remove operation
 	* */
 	public void remove(){
-	    String tid = Thread.currentThread().getId() + "";
+	    String tid = Thread.currentThread().threadId() + "";
 	    remove(tid);
 	}
     
@@ -109,7 +109,7 @@ public abstract class JsPlusContext {
     * @param value - the value
     * */
     public void put(Object value){
-        String tid = Thread.currentThread().getId() + "";
+        String tid = Thread.currentThread().threadId() + "";
         put(tid,value);
     }
     
@@ -118,7 +118,7 @@ public abstract class JsPlusContext {
     * @return the get result
     * */
     public Object get() {
-        String tid = Thread.currentThread().getId() + "";
+        String tid = Thread.currentThread().threadId() + "";
         return get(tid);
     }  
 	

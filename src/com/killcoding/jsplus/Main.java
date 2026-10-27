@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -343,7 +343,7 @@ public final class Main {
     				System.out.print(String.format("%s> ",mainConsole.getDisplayEngineName()));
     			} else {
     				String commandCancel = mainConsole.consoleVariables.getString("CommandCancel",
-    						mainConsole.DEFAULT_CommandCancel);
+    						ConsoleImpl.DEFAULT_CommandCancel);
     				isEnd = mainConsole.isCommandEnd(command);
     				commands.append(command);
     				commands.append(" ");

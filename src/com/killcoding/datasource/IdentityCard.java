@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,7 +35,7 @@ import com.killcoding.datasource.Clock;
 import java.sql.Timestamp;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
+/*
 *
 CREATE TABLE identity_card (
 id CHAR(16),
@@ -194,7 +194,7 @@ public final class IdentityCard {
 				throw new SQLException(errorMsg) {
 					@Override
 
-					/**
+					/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
 					* */
@@ -216,7 +216,7 @@ public final class IdentityCard {
     		throw new SQLException(errorMsg) {
     			@Override
 
-    			/**
+    			/*
     			* Performs the getErrorCode operation
     			* @return the getErrorCode result
     			* */
@@ -248,7 +248,7 @@ public final class IdentityCard {
     		throw new SQLException(errorMsg) {
     			@Override
 
-    			/**
+    			/*
     			* Performs the getErrorCode operation
     			* @return the getErrorCode result
     			* */
@@ -323,7 +323,7 @@ public final class IdentityCard {
 					Runnable updatedRun = new Runnable() {
 						@Override
 
-						/**
+						/*
 						* Performs the run operation
 						* */
 						public void run() {

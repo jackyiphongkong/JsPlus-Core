@@ -48,7 +48,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard");
+print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCacheArray");
 
 var suites = [
     { file: "TestDatasource.js", title: "TestDatasource" },
@@ -57,7 +57,16 @@ var suites = [
     { file: "TestFind.js",        title: "TestFind" },
     { file: "TestDiskFile.js",    title: "TestDiskFile" },
     { file: "TestClock.js",       title: "TestClock" },
-    { file: "TestIdentityCard.js", title: "TestIdentityCard" }
+    { file: "TestIdentityCard.js", title: "TestIdentityCard" },
+    { file: "TestXmlParser.js",   title: "TestXmlParser" },
+    { file: "TestCommonTools.js", title: "TestCommonTools" },
+    { file: "TestDataObject.js",      title: "TestDataObject" },
+    { file: "TestResultMap.js",       title: "TestResultMap" },
+    { file: "TestConfigProperties.js", title: "TestConfigProperties" },
+    { file: "TestCipherTools.js",     title: "TestCipherTools" },
+    { file: "TestEscapeTools.js",     title: "TestEscapeTools" },
+    { file: "TestFileTools.js",       title: "TestFileTools" },
+    { file: "TestCacheArray.js",      title: "TestCacheArray" }
 ];
 
 var totalPass = 0;

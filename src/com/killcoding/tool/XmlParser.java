@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +20,6 @@ THE SOFTWARE.
 
 package com.killcoding.tool;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,6 +50,7 @@ public class XmlParser {
     * Constructs a new XmlParser
     * @param xml - the xml
     * */
+    @SuppressWarnings("this-escape")
     public XmlParser(String xml) throws Exception {
         super();
         this.xml = xml;
@@ -75,12 +75,13 @@ public class XmlParser {
         return rootName;
     }
 
+    @SuppressWarnings("unchecked")
     public Object get(String... keys) {
         Object o = null;
         if (root == null)
             return null;
 
-        Map<String, Object> m = (Map<String, Object>) root;
+        Map<String, Object> m = root;
         for (int i = 0; i < keys.length; i++) {
             o = m.get(keys[i]);
             if (o == null) {
@@ -101,13 +102,14 @@ public class XmlParser {
         return o;
     }
     
+    @SuppressWarnings("unchecked")
     public List<Object> getList(String... keys) {
         List<Object> list = new ArrayList<Object>();
         Object o = null;
         if (root == null)
             return null;
 
-        Map<String, Object> m = (Map<String, Object>) root;
+        Map<String, Object> m = root;
         for (int i = 0; i < keys.length; i++) {
             o = m.get(keys[i]);
             if (o == null) {
@@ -221,6 +223,7 @@ public class XmlParser {
     * @param value - the value
     * @param element - the element
     * */
+    @SuppressWarnings("unchecked")
     private void handleValue(Map<String, Object> map, String key, Object value, Element element) {
         Object existingValue = map.get(key);
         
@@ -256,6 +259,7 @@ public class XmlParser {
     * @param value - the value
     * @param element - the element
     * */
+    @SuppressWarnings("unchecked")
     private void handleMap(Map<String, Object> map, String key, Map<String, Object> value, Element element) {
         Object existingValue = map.get(key);
         

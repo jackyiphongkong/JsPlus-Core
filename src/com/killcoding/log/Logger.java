@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -23,7 +23,6 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.log;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
@@ -66,7 +65,7 @@ public final class Logger {
 	* Constructs a new Logger
 	* @param clazz - the clazz
 	* */
-	public Logger(Class clazz) {
+	public Logger(Class<?> clazz) {
 		super();
 		this.clazzName = clazz.getName();
 		hostname = CommonTools.getHostname();
@@ -238,7 +237,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -340,7 +339,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -442,7 +441,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -544,7 +543,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -605,7 +604,7 @@ public final class Logger {
 			log(LEVEL_MARK, map);
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -677,7 +676,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param message - the message
 	* */
-	public static void systemError(Class clazz, String message) {
+	public static void systemError(Class<?> clazz, String message) {
 		if (LEVEL <= LEVEL_ERROR) {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -695,7 +694,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param obj - the obj
 	* */
-	public static void systemError(Class clazz, Object obj) {
+	public static void systemError(Class<?> clazz, Object obj) {
 		if (LEVEL <= LEVEL_ERROR) {
 			String message = obj + "";
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -737,7 +736,7 @@ public final class Logger {
 	* @param message - the message
 	* @param exception - the exception
 	* */
-	public static void systemMark(Class clazz, String message, Exception exception) {
+	public static void systemMark(Class<?> clazz, String message, Exception exception) {
 		try {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -767,7 +766,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -816,7 +815,7 @@ public final class Logger {
 		}
 	}
 
-	public static void systemMark(Class clazz, String message, Object... params) {
+	public static void systemMark(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
@@ -830,7 +829,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -840,7 +839,7 @@ public final class Logger {
 	* @param message - the message
 	* @param obj - the obj
 	* */
-	public static void systemMark(Class clazz, String message, Object obj) {
+	public static void systemMark(Class<?> clazz, String message, Object obj) {
 		try {
 			Object[] params = new Object[] { obj + "" };
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -863,7 +862,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param obj - the obj
 	* */
-	public static void systemMark(Class clazz, Object obj) {
+	public static void systemMark(Class<?> clazz, Object obj) {
 		try {
 			String message = obj + "";
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -909,7 +908,7 @@ public final class Logger {
 	* @param message - the message
 	* @param exception - the exception
 	* */
-	public static void systemError(Class clazz, String message, Exception exception) {
+	public static void systemError(Class<?> clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -955,7 +954,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param exception - the exception
 	* */
-	public static void systemError(Class clazz, Exception exception) {
+	public static void systemError(Class<?> clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -989,7 +988,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1019,7 +1018,7 @@ public final class Logger {
 		}
 	}
 
-	public static void systemError(Class clazz, String message, Object... params) {
+	public static void systemError(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1035,7 +1034,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1045,7 +1044,7 @@ public final class Logger {
 	* @param message - the message
 	* @param obj - the obj
 	* */
-	public static void systemError(Class clazz, String message, Object obj) {
+	public static void systemError(Class<?> clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
 				Object[] params = new Object[] { obj + "" };
@@ -1092,7 +1091,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param message - the message
 	* */
-	public static void systemWarn(Class clazz, String message) {
+	public static void systemWarn(Class<?> clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1139,7 +1138,7 @@ public final class Logger {
 	* @param message - the message
 	* @param exception - the exception
 	* */
-	public static void systemWarn(Class clazz, String message, Exception exception) {
+	public static void systemWarn(Class<?> clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1185,7 +1184,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param exception - the exception
 	* */
-	public static void systemWarn(Class clazz, Exception exception) {
+	public static void systemWarn(Class<?> clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1219,7 +1218,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1249,7 +1248,7 @@ public final class Logger {
 		}
 	}
 
-	public static void systemWarn(Class clazz, String message, Object... params) {
+	public static void systemWarn(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1265,7 +1264,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1275,7 +1274,7 @@ public final class Logger {
 	* @param message - the message
 	* @param obj - the obj
 	* */
-	public static void systemWarn(Class clazz, String message, Object obj) {
+	public static void systemWarn(Class<?> clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
 				Object[] params = new Object[] { obj + "" };
@@ -1322,7 +1321,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param message - the message
 	* */
-	public static void systemInfo(Class clazz, String message) {
+	public static void systemInfo(Class<?> clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1369,7 +1368,7 @@ public final class Logger {
 	* @param message - the message
 	* @param exception - the exception
 	* */
-	public static void systemInfo(Class clazz, String message, Exception exception) {
+	public static void systemInfo(Class<?> clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1415,7 +1414,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param exception - the exception
 	* */
-	public static void systemInfo(Class clazz, Exception exception) {
+	public static void systemInfo(Class<?> clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1449,7 +1448,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1479,7 +1478,7 @@ public final class Logger {
 		}
 	}
 
-	public static void systemInfo(Class clazz, String message, Object... params) {
+	public static void systemInfo(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1495,7 +1494,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1505,7 +1504,7 @@ public final class Logger {
 	* @param message - the message
 	* @param obj - the obj
 	* */
-	public static void systemInfo(Class clazz, String message, Object obj) {
+	public static void systemInfo(Class<?> clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
 				Object[] params = new Object[] { obj + "" };
@@ -1552,7 +1551,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param message - the message
 	* */
-	public static void systemDebug(Class clazz, String message) {
+	public static void systemDebug(Class<?> clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1599,7 +1598,7 @@ public final class Logger {
 	* @param message - the message
 	* @param exception - the exception
 	* */
-	public static void systemDebug(Class clazz, String message, Exception exception) {
+	public static void systemDebug(Class<?> clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1645,7 +1644,7 @@ public final class Logger {
 	* @param clazz - the clazz
 	* @param exception - the exception
 	* */
-	public static void systemDebug(Class clazz, Exception exception) {
+	public static void systemDebug(Class<?> clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1679,7 +1678,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1709,7 +1708,7 @@ public final class Logger {
 		}
 	}
 
-	public static void systemDebug(Class clazz, String message, Object... params) {
+	public static void systemDebug(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
 				if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -1725,7 +1724,7 @@ public final class Logger {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Worng msg format: " + message);
+			System.err.println("Wrong msg format: " + message);
 		}
 	}
 
@@ -1735,7 +1734,7 @@ public final class Logger {
 	* @param message - the message
 	* @param obj - the obj
 	* */
-	public static void systemDebug(Class clazz, String message, Object obj) {
+	public static void systemDebug(Class<?> clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
 				Object[] params = new Object[] { obj + "" };
@@ -1781,7 +1780,7 @@ public final class Logger {
 		}
 
 		Thread currentThread = Thread.currentThread();
-		long threadId = currentThread.getId();
+		long threadId = currentThread.threadId();
 		String threadName = currentThread.getName();
 
 		Date logTime = new Date();
@@ -1854,7 +1853,7 @@ public final class Logger {
 	* @param String - the String
 	* @param map - the map
 	* */
-	private static void log(String level, Class clazz, Map<String, Object> map) {
+	private static void log(String level, Class<?> clazz, Map<String, Object> map) {
 		log(level, clazz.getName(), map);
 	}
 
@@ -1904,7 +1903,7 @@ public final class Logger {
 		}
 
 		Thread currentThread = Thread.currentThread();
-		long threadId = currentThread.getId();
+		long threadId = currentThread.threadId();
 		String threadName = currentThread.getName();
 
 		Date logTime = new Date();

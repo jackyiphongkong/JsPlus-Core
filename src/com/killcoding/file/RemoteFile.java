@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -24,10 +24,8 @@ THE SOFTWARE.
 package com.killcoding.file;
 
 import java.io.File;
-import com.killcoding.datasource.DriverDataSource;
 import com.killcoding.tool.ConfigProperties;
 import com.killcoding.tool.CommonTools;
-import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
 
 import java.io.IOException;
@@ -38,19 +36,12 @@ import java.util.Map;
 import java.util.HashMap;
 import com.killcoding.datasource.Clock;
 import java.sql.Timestamp;
-import java.nio.file.Files;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.List;
-import java.util.ArrayList;
 
 import java.io.ByteArrayOutputStream;
 
-import java.nio.file.Paths;
-import java.nio.file.Path;
 
 
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
@@ -63,18 +54,11 @@ import java.util.concurrent.Executors;
 
 
 
-import com.killcoding.file.DiskFile;
 
 import com.killcoding.cache.CacheArray;
 import com.killcoding.cache.CacheArrayFilter;
 
 
-import com.killcoding.datasource.IdentityCard;
-import java.util.Collections;
-import java.util.concurrent.ThreadLocalRandom;
-import com.killcoding.tool.CipherTools;
-import com.killcoding.cache.Cache;
-import java.util.Date;
 
 /**
  * RemoteFile - public facade of the remote (database-backed) file engine.
@@ -89,6 +73,7 @@ public class RemoteFile extends RemoteFileBase {
 	* Constructs a new RemoteFile
 	* @param path - the path
 	* */
+	@SuppressWarnings("this-escape")
 	public RemoteFile(String path) {
 		super(path);
 		log = LoggerFactory.getLogger(getClass());
@@ -101,6 +86,7 @@ public class RemoteFile extends RemoteFileBase {
 	* @param origin - the origin
 	* */
 
+	@SuppressWarnings("this-escape")
 	public RemoteFile(File origin) {
 		super(origin);
 		log = LoggerFactory.getLogger(getClass());
@@ -116,7 +102,7 @@ public class RemoteFile extends RemoteFileBase {
 
 	public Map<String, Object> getRecordByFileId(Object fileId) throws IOException {
 		String sql = formatSql(SQL_SELECT_GET_RECORD_BY_FILE_ID);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_id", fileId);
 		Map<String, Object> record = null;
 		if (record == null) {
@@ -155,7 +141,7 @@ public class RemoteFile extends RemoteFileBase {
 			conn = dataSourceReader.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("file_name", origin.getName());
 			dataRecord.put("file_parent_path", getParent());
 			Map<String, Object> completedRecord = getCompletedRecord();
@@ -197,7 +183,7 @@ public class RemoteFile extends RemoteFileBase {
 		return forceDelete(realDeleted, "D");
 	}
 
-	/**
+	/*
 	* Performs the forceDeleteLink operation
 	* @param realDeleted - the realDeleted
 	* @return the forceDeleteLink result
@@ -214,7 +200,7 @@ public class RemoteFile extends RemoteFileBase {
 		return writeTo(data, append);
 	}
 
-	/**
+	/*
 	* Performs the writeToBatch operation
 	* @param currentFilePartStartIndex - the currentFilePartStartIndex
 	* @param partDataList - the partDataList
@@ -237,7 +223,7 @@ public class RemoteFile extends RemoteFileBase {
 	}
 
 
-	/**
+	/*
 	* Performs the isLink operation
 	* @return the isLink result
 	* */
@@ -271,7 +257,7 @@ public class RemoteFile extends RemoteFileBase {
 	}
 
 
-	/**
+	/*
 	* Performs the size operation
 	* @return the size result
 	* */
@@ -334,7 +320,7 @@ public class RemoteFile extends RemoteFileBase {
 		}
 	}
 
-	/**
+	/*
 	* Performs the listAllForDelete operation
 	* @param likeFolderName - the likeFolderName
 	* @param likeFileName - the likeFileName
@@ -351,7 +337,7 @@ public class RemoteFile extends RemoteFileBase {
 	}
 
 
-	/**
+	/*
 	* Performs the copyTo operation
 	* @param toPath - the toPath
 	* */
@@ -424,7 +410,7 @@ public class RemoteFile extends RemoteFileBase {
 		});
 	}
 
-	/**
+	/*
 	* Performs the getDataSourceReader operation
 	* @return the getDataSourceReader result
 	* */
@@ -438,7 +424,7 @@ public class RemoteFile extends RemoteFileBase {
 		return configProperties;
 	}
 
-	/**
+	/*
 	* Performs the encrypt operation
 	* @param data - the data
 	* @return the encrypt result
@@ -470,7 +456,7 @@ public class RemoteFile extends RemoteFileBase {
 		return null;
 	}
 
-	/**
+	/*
 	* Performs the getSourceHostname operation
 	* @return the getSourceHostname result
 	* */
@@ -594,6 +580,7 @@ public class RemoteFile extends RemoteFileBase {
 					if (memoryUsage() < RemoteFile.MAX_MEMORY_USAGE) {
 						CacheDriverExecutor _executor = null;
 						try {
+							@SuppressWarnings("unchecked")
 							Map<String, Object> item = (Map<String, Object>) o;
 							boolean notDir = !item.get("file_type").equals("D");
 							if(notDir){
@@ -773,6 +760,7 @@ public class RemoteFile extends RemoteFileBase {
 						try {
 							Clock clock = new Clock();
 							Timestamp currentTime = clock.getSqlTimestamp();
+							@SuppressWarnings("unchecked")
 							Map<String, Object> item = (Map<String, Object>) o;
 							Object fileId = item.get("file_id");
 							Thread.currentThread().setName(String.format("RemoteFile-archiveForDeleted-%s", fileId));
@@ -959,6 +947,7 @@ public class RemoteFile extends RemoteFileBase {
 						try {
 							Clock clock = new Clock();
 							Timestamp currentTime = clock.getSqlTimestamp();
+							@SuppressWarnings("unchecked")
 							Map<String, Object> item = (Map<String, Object>) o;
 							Object fileId = item.get("file_id");
 							Thread.currentThread().setName(String.format("RemoteFile-archiveForTimeout-%s", fileId));

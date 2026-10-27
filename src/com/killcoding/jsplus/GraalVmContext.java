@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -67,7 +67,7 @@ public class GraalVmContext extends JsPlusContext {
 	
 	@Override
 
-	/**
+	/*
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */
@@ -77,7 +77,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the initScriptEngineManager operation
 	* */
 	public void initScriptEngineManager() throws Exception {
@@ -85,10 +85,14 @@ public class GraalVmContext extends JsPlusContext {
 		ConfigProperties appenvCp = ScriptConsole.getAppenv();
 		if(appenvCp != null){
 		   String engineNameMapKey = String.format("GraalVM.%s",engineName);
-		   Map appenvMap = appenvCp.getMap(engineNameMapKey,null);
+		   Map<String, Object> appenvMap = appenvCp.getMap(engineNameMapKey,null);
 		   if(appenvMap != null){
 		       System.out.println("GraalVM options: " + appenvMap);
-		       builder.options(appenvMap);
+		       Map<String, String> optionsMap = new java.util.HashMap<String, String>();
+		       for (Map.Entry<String, Object> opt : appenvMap.entrySet()) {
+		           optionsMap.put(opt.getKey(), String.valueOf(opt.getValue()));
+		       }
+		       builder.options(optionsMap);
 		   }
 		}
 		engine = builder.build();
@@ -110,7 +114,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
@@ -120,7 +124,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getEngine operation
 	* @return the getEngine result
 	* */
@@ -130,7 +134,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getContext operation
 	* @return the getContext result
 	* */
@@ -140,7 +144,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -150,7 +154,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -161,7 +165,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the put operation
 	* @param name - the name
 	* @param obj - the obj
@@ -172,7 +176,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -183,7 +187,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -203,7 +207,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the evalScript operation
 	* @param script - the script
 	* @return the evalScript result
@@ -221,7 +225,7 @@ public class GraalVmContext extends JsPlusContext {
 
 	@Override
 
-	/**
+	/*
 	* Performs the close operation
 	* */
 	public void close() {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +20,6 @@ THE SOFTWARE.
 
 package com.killcoding.jsplus;
 
-import java.util.concurrent.ExecutorService;
 import com.killcoding.jsplus.ScriptConsole;
 
 
@@ -41,7 +40,7 @@ import com.killcoding.datasource.Clock;
 import java.sql.Timestamp;
 import com.killcoding.tool.CommonTools;
 
-/**
+/*
 *
 CREATE TABLE ghost_remote_command (
 id CHAR(16) PRIMARY KEY,
@@ -98,13 +97,14 @@ public class GhostConsole extends ScriptConsole {
     * @param console - the console
     * @param ghostName - the ghostName
     * */
+    @SuppressWarnings("this-escape")
     public GhostConsole(ScriptConsole console,String ghostName) {
         super();
         this.console = console;
         this.ghostName = ghostName;
-        this.setUseGhostEnv();
+        setUseGhostEnv();
         CacheDriverExecutor.COLUMN_NAME_CASE_MODE = CacheDriverExecutor.COLUMN_NAME_CASE_LOWER;
-        String ghostDsPropFile = this.console.getJsPlusPath() + "/config/GhostDataSource.properties";
+        String ghostDsPropFile = ScriptConsole.getJsPlusPath() + "/config/GhostDataSource.properties";
         init(ghostDsPropFile);
     }
     
@@ -170,9 +170,10 @@ public class GhostConsole extends ScriptConsole {
         return new Runnable(){
             @Override
 
-            /**
+            /*
             * Performs the run operation
             * */
+            @SuppressWarnings("unchecked")
             public void run(){
                 CacheDriverExecutor cde = null;
                 try{
@@ -220,7 +221,7 @@ public class GhostConsole extends ScriptConsole {
         return new Runnable(){
             @Override
 
-            /**
+            /*
             * Performs the run operation
             * */
             public void run(){
@@ -249,9 +250,10 @@ public class GhostConsole extends ScriptConsole {
         return new Runnable(){
             @Override
 
-            /**
+            /*
             * Performs the run operation
             * */
+            @SuppressWarnings("unchecked")
             public void run(){
                 CacheDriverExecutor cde = null;
                 try{
@@ -300,7 +302,7 @@ public class GhostConsole extends ScriptConsole {
         return new Runnable(){
             @Override
 
-            /**
+            /*
             * Performs the run operation
             * */
             public void run(){

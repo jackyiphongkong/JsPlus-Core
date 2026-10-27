@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -42,6 +42,7 @@ import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import com.killcoding.cache.CacheArrayFilter;
+import com.killcoding.cache.CacheArray;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 
@@ -696,7 +697,7 @@ public abstract class BaseFile {
 	* @param rf - the rf
 	* @param filter - the filter
 	* */
-	protected synchronized static void debugLog(Class clazz,String point,RemoteFile rf,CacheArrayFilter filter){
+	protected synchronized static void debugLog(Class<?> clazz,String point,RemoteFile rf,CacheArrayFilter filter){
 	    long ctm = System.currentTimeMillis();
 	    boolean canWrite = (ctm - debugLogTime) >= 60000L;
 	    if(canWrite){
@@ -710,7 +711,7 @@ public abstract class BaseFile {
 	        LoggerFactory.getLogger(clazz).mark("************{}************",point);
     		LoggerFactory.getLogger(clazz).mark("[{}] DiskQueuePathMapping - {}",point,DiskFile.getQueuePathMapping().keySet().size());
     	    LoggerFactory.getLogger(clazz).mark("[{}] RemoteQueuePathMapping - {}",point,RemoteFile.getQueuePathMapping().keySet().size());
-    		LoggerFactory.getLogger(clazz).mark("[{}] CacheArrayPoolUsage - {}",point,filter.getCacheArray().getUsingPoolSize());
+    		LoggerFactory.getLogger(clazz).mark("[{}] CacheArrayPoolUsage - {}",point,CacheArray.getUsingPoolSize());
     		LoggerFactory.getLogger(clazz).mark("[{}] DataSourceReaderUsage - {}",point,readerUsage);	
     		LoggerFactory.getLogger(clazz).mark("[{}] DataSourceWriterUsage - {}",point,writerUsage);
     		LoggerFactory.getLogger(clazz).mark("[{}] MemoryUsage - {}mb ({})",point,memoryUsing,memoryUsage);

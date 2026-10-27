@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -48,6 +48,8 @@ import com.killcoding.tool.CipherTools;
 * This class is encrypting cache value
 * */
 public class DataObject implements java.io.Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private static final Logger log = LoggerFactory.getLogger(DataObject.class);
 

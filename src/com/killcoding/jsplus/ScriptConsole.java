@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -78,7 +78,6 @@ import java.sql.Timestamp;
 import com.killcoding.file.BaseFile;
 
 import com.killcoding.jsplus.JsPlusContext;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import com.killcoding.jsplus.NashornContext;
 import com.killcoding.datasource.Clock;
@@ -116,7 +115,7 @@ public class ScriptConsole implements ConsoleImpl {
 	private static volatile ExitPolicy EXIT_POLICY = new ExitPolicy() {
 		@Override
 
-		/**
+		/*
 		* Performs the exit operation
 		* @param status - the status
 		* */
@@ -136,7 +135,7 @@ public class ScriptConsole implements ConsoleImpl {
 			EXIT_POLICY = new ExitPolicy() {
 				@Override
 
-				/**
+				/*
 				* Performs the exit operation
 				* @param status - the status
 				* */
@@ -195,12 +194,13 @@ public class ScriptConsole implements ConsoleImpl {
 	/**
 	* Constructs a new ScriptConsole
 	* */
+	@SuppressWarnings("this-escape")
 	public ScriptConsole() {
 		super();
 		initEnv();
 		log = LoggerFactory.getLogger(this.getClass());
 		loadAppenv();
-		reset();
+		initReset();
 	}
 	
 	/**
@@ -242,7 +242,8 @@ public class ScriptConsole implements ConsoleImpl {
 	/**
 	* Performs the loadAppenv operation
 	* */
-	public void loadAppenv(){
+	@SuppressWarnings("this-escape")
+	private void loadAppenv(){
 	    try{
 	        if(appenvCp == null){
         	    String jsPlusPath = getJsPlusPath();
@@ -256,12 +257,12 @@ public class ScriptConsole implements ConsoleImpl {
             	    Runnable updateRun = new Runnable(){
             	        @Override
 
-            	        /**
+            	        /*
             	        * Performs the run operation
             	        * */
             	        public void run(){
             	            Logger.systemDebug(ScriptConsole.class, "Appenv '{}' Reloading...", appenvPropFile);
-    						List<String> propKeys = new ArrayList(appenvCp.keySet());
+    						List<String> propKeys = new ArrayList<String>(appenvCp.stringPropertyNames());
     						for (String pk : propKeys) {
     							String v = appenvCp.getString(pk, "");
     							if(log.isDebugEnabled()){
@@ -334,7 +335,7 @@ public class ScriptConsole implements ConsoleImpl {
 			exitExecute.execute(new Runnable() {
 				@Override
 
-				/**
+				/*
 				* Performs the run operation
 				* */
 				public void run() {
@@ -609,7 +610,7 @@ public class ScriptConsole implements ConsoleImpl {
 	    return new CacheArrayFilter(filterTimer,filterLoopTimer){
 	        @Override
 
-	        /**
+	        /*
 	        * Performs the execute operation
 	        * @param index - the index
 	        * @param o - the o
@@ -626,12 +627,12 @@ public class ScriptConsole implements ConsoleImpl {
 
 	        @Override
 
-	        /**
+	        /*
 	        * Performs the executeBatch operation
 	        * @param batchIndex - the batchIndex
 	        * @param batch - the batch
 	        * */
-	        public void executeBatch(Integer batchIndex,List batch) {
+	        public void executeBatch(Integer batchIndex,List<?> batch) {
                 if(callbackBatch != null) {
                     if(callbackSync){
                         callbackBatch.run();
@@ -643,7 +644,7 @@ public class ScriptConsole implements ConsoleImpl {
 	        
 	        @Override
 
-	        /**
+	        /*
 	        * Performs the terminated operation
 	        * */
 	        public void terminated() {
@@ -1036,8 +1037,8 @@ public class ScriptConsole implements ConsoleImpl {
 	* @param apiClass - the apiClass
 	* */
 	public static void setCacheApi(String apiClass) throws Exception {
-		Class clazz = Class.forName(apiClass.trim());
-		Constructor con = clazz.getConstructor(Boolean.class);
+		Class<?> clazz = Class.forName(apiClass.trim());
+		Constructor<?> con = clazz.getConstructor(Boolean.class);
 		AbsCacheApi api = (AbsCacheApi) con.newInstance(true);
 		StoredCache.setApi(api);
 	}
@@ -1046,6 +1047,14 @@ public class ScriptConsole implements ConsoleImpl {
 	* Performs the reset operation
 	* */
 	public synchronized void reset() {
+		initReset();
+	}
+
+	/**
+	* Performs the initReset operation (constructor-safe reset,
+	* private so it cannot be overridden during super-class construction)
+	* */
+	private synchronized void initReset() {
 		consoleVariables.putAndReturnSlef("QueryCursorStart", DEFAULT_QueryCursorStart);
 		consoleVariables.putAndReturnSlef("QueryMaxRows", DEFAULT_QueryMaxRows);
 		consoleVariables.putAndReturnSlef("AutoCommit", DEFAULT_AutoCommit);
@@ -1329,12 +1338,12 @@ public class ScriptConsole implements ConsoleImpl {
 			
 			@Override
 
-			/**
+			/*
 			* Performs the executeBatch operation
 			* @param index - the index
 			* @param batch - the batch
 			* */
-			public void executeBatch(Integer index,List batch) {
+			public void executeBatch(Integer index,List<?> batch) {
                 if (showTaskLog) {
     				System.out.println(String.format("Exporting table %s (%s -> %s).", outFileName,index,batch.size()));
     			}
@@ -1342,7 +1351,8 @@ public class ScriptConsole implements ConsoleImpl {
 			    for(Object o : batch){
     				try {
     					String tableObjectFolder = String.format("%s/%s_objects", outFolder, outFileName);
-    					Map<String, Object> cacheRow = (Map<String, Object>) o;
+    					@SuppressWarnings("unchecked")
+Map<String, Object> cacheRow = (Map<String, Object>) o;
     					if (csvFile == null) {
     						String outIndexFormat = String.format("%09d", outIndex);
     						csvFile = new DiskFile(String.format("%s/%s.%s.csv", outFolder, outFileName, outIndexFormat));
@@ -1403,7 +1413,7 @@ public class ScriptConsole implements ConsoleImpl {
 
 			@Override
 
-			/**
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
@@ -1414,7 +1424,7 @@ public class ScriptConsole implements ConsoleImpl {
 
 			@Override
 
-			/**
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -1442,7 +1452,7 @@ public class ScriptConsole implements ConsoleImpl {
 			
 			@Override
 
-			/**
+			/*
 			* Performs the terminated operation
 			* */
 			public void terminated(){
@@ -2532,11 +2542,12 @@ public class ScriptConsole implements ConsoleImpl {
 
 			@Override
 
-			/**
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
 			* */
+			@SuppressWarnings("unchecked")
 			public void execute(Integer index, Object o) {
 				if (index == 0) {
 					StringBuffer header = new StringBuffer();
@@ -2564,6 +2575,7 @@ public class ScriptConsole implements ConsoleImpl {
 				}
 				if (index >= 0) {
 					int columsSize = columns.size();
+					@SuppressWarnings("unchecked")
 					StringBuffer body = new StringBuffer();
 					boolean showResultBody = consoleVariables.getBoolean("ShowResultBody", DEFAULT_ShowResultBody);
 					Map<String, Object> row = (Map<String, Object>) o;
@@ -2586,7 +2598,7 @@ public class ScriptConsole implements ConsoleImpl {
 
 			@Override
 
-			/**
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -2894,7 +2906,7 @@ public class ScriptConsole implements ConsoleImpl {
 
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -3161,6 +3173,7 @@ public class ScriptConsole implements ConsoleImpl {
 			intoValue = "NULL";
 		} else {
 			if (value instanceof List) {
+				@SuppressWarnings("unchecked")
 				List<Map<String, Object>> list = (List<Map<String, Object>>) value;
 				if (list.size() > 0) {
 					Map<String, Object> map = list.get(0);
@@ -3546,7 +3559,7 @@ public class ScriptConsole implements ConsoleImpl {
         scheduleExecutor.schedule(new Runnable() {
             @Override
 
-            /**
+            /*
             * Performs the run operation
             * */
             public void run() {
@@ -4138,7 +4151,7 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 		try {
 			String tableName = formatCommand(params.get(0).trim());
-			Map<String, Object> result = (Map<String, Object>) showColumnClasses(tableName);
+			Map<String, Object> result = showColumnClasses(tableName);
 			List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 			list.add(result);
 			String lines = toResultList(list);

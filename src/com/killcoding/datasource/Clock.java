@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -84,7 +84,7 @@ public final class Clock {
 					Runnable updatedRun = new Runnable(){
         		        @Override
 
-        		        /**
+        		        /*
         		        * Performs the run operation
         		        * */
         		        public void run(){

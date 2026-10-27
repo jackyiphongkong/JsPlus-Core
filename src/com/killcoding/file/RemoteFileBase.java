@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.io.ByteArrayOutputStream;
 
 import java.nio.file.Paths;
-import java.nio.file.Path;
 
 
 
@@ -205,7 +204,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	private static ExecutorService mergePool = null;
 
-	/**
+	/*
 	* Constructs a new RemoteFile
 	* @param path - the path
 	* */
@@ -228,7 +227,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* */
 
 	private synchronized void init() {
-		dsKey = CommonTools.md5(this.appRemoteFile.getAbsolutePath());
+		dsKey = CommonTools.md5(appRemoteFile.getAbsolutePath());
 		dataSourceReader = DATASOURCE_REMOTE_FILE.get(String.format("%s.reader", dsKey));
 		dataSourceWriter = DATASOURCE_REMOTE_FILE.get(String.format("%s.writer", dsKey));
 		configProperties = CONFIG_PROPS_REMOTE_FILE.get(dsKey);
@@ -277,11 +276,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* Performs the initGlobal operation
 	* */
 
-	protected synchronized void initGlobal() {
-	    if(this.appRemoteFile == null){
-    		this.appRemoteFile = CommonTools.getSystemProperties(RemoteFile.class, "APP_REMOTE_FILE",
+	protected final synchronized void initGlobal() {
+	    if(appRemoteFile == null){
+    		appRemoteFile = CommonTools.getSystemProperties(RemoteFile.class, "APP_REMOTE_FILE",
     					"RemoteFile.properties");
-			log.info("appRemoteFile={}", this.appRemoteFile);
+			log.info("appRemoteFile={}", appRemoteFile);
 	    }
 		init();
 	}
@@ -705,10 +704,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	public Map<String, Object> getCompletedRecord() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_COMPLETED);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", origin.getName());
 		dataRecord.put("file_parent_path", getParent());
 		String cacheKey = String.format("first-%s-%s",sql,dataRecord);
+		@SuppressWarnings("unchecked")
 		Map<String,Object> record = (Map<String,Object>)Cache.get(cacheKey);
 		if(record == null){
 			CacheDriverExecutor executor = null;
@@ -737,7 +737,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	public Map<String, Object> getRecordById(Object id) throws IOException {
 		String sql = formatSql(SQL_SELECT_GET_RECORD_BY_ID);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("id", id);
 		Map<String, Object> record = null;
 		if (record == null) {
@@ -765,7 +765,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	public Map<String, Object> getLastUpdateRecord() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_LAST_UPDATE);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", origin.getName());
 		dataRecord.put("file_parent_path", getParent());
 		Map<String, Object> record = null;
@@ -796,7 +796,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	protected Timestamp getFirstCreatedAt() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_FIRST_CREATED_AT);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_parent_path", getPath());
 		dataRecord.put("like_file_parent_path", parsePath(getPath() + "/%"));
 		dataRecord.put("deleted_on_hostnames", "%;" + CommonTools.getHostname() + ";%");
@@ -827,7 +827,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	protected Integer getMaxFilePartDataTable() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_MAX_DATA_TABLE);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_parent_path", getPath());
 		dataRecord.put("like_file_parent_path", parsePath(getPath() + "/%"));
 		CacheDriverExecutor executor = null;
@@ -852,7 +852,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	private Map<String, Object> getSelectByPathForCheckExists() throws IOException {
 		String sql = formatSql(SQL_SELECT_BY_PATH_FOR_CHECK_EXISTS);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", origin.getName());
 		dataRecord.put("file_parent_path", getParent());
 		Map<String, Object> record = null;
@@ -888,7 +888,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	protected int countAllSubFiles(String fileParentPath, String fileName) throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_COUNT_ALL_SUB_FILES);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", fileName);
 		dataRecord.put("file_parent_path", fileParentPath);
 		Map<String, Object> record = null;
@@ -917,10 +917,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	protected Map<String, Object> getFirstFilePart() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_FIRST_FILE);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", origin.getName());
 		dataRecord.put("file_parent_path", getParent());
 		String cacheKey = String.format("first-%s-%s",sql,dataRecord);
+		@SuppressWarnings("unchecked")
 		Map<String, Object> record = (Map<String,Object>)Cache.get(cacheKey);
 		if(record == null){
 			CacheDriverExecutor executor = null;
@@ -949,7 +950,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	protected Map<String, Object> getFirstFilePartRefresh() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_FIRST_FILE);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", origin.getName());
 		dataRecord.put("file_parent_path", getParent());
 		String cacheKey = String.format("first-%s-%s",sql,dataRecord);
@@ -979,7 +980,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	private Map<String, Object> getLastIndexRecord() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_LAST_FILE_PART);
-		Map dataRecord = new HashMap<String, Object>();
+		Map<String, Object> dataRecord = new HashMap<String, Object>();
 		dataRecord.put("file_name", origin.getName());
 		dataRecord.put("file_parent_path", getParent());
 		dataRecord.put("file_id", fileId);
@@ -1059,7 +1060,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceReader.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = getCompletedRecord();
+			Map<String, Object> dataRecord = getCompletedRecord();
 			if (dataRecord != null) {
 				CacheArray rows = new CacheArray();
 				CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
@@ -1073,6 +1074,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 					* @param index - the index
 					* @param o - the o
 					* */
+					@SuppressWarnings("unchecked")
 					public void execute(Integer index, Object o) {
 
 						try {
@@ -1322,7 +1324,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceWriter.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("id",
 					generateId(identityCardEnable, identityCardName, identityCardPrefix, identityCardSuffix));
 			dataRecord.put("file_name", origin.getName());
@@ -1382,7 +1384,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceWriter.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("id",
 					generateId(identityCardEnable, identityCardName, identityCardPrefix, identityCardSuffix));
 			dataRecord.put("file_name", origin.getName());
@@ -1534,7 +1536,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceWriter.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("file_id", fileId);
 			dataRecord.put("file_part_last_index", filePartLastIndex);
 			dataRecord.put("file_size", fileSize);
@@ -1573,7 +1575,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceWriter.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("file_name", origin.getName());
 			dataRecord.put("file_parent_path", getParent());
 			dataRecord.put("file_id", fileId);
@@ -1622,7 +1624,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return forceDeleteAll(true);
 	}
 
-	/**
+	/*
 	* Performs the forceDeleteDir operation
 	* @param realDeleted - the realDeleted
 	* @return the forceDeleteDir result
@@ -1669,7 +1671,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 					conn = dataSourceWriter.getConnection();
 					conn.setAutoCommit(true);
 					executor = new CacheDriverExecutor(conn);
-					Map dataRecord = new HashMap<String, Object>();
+					Map<String, Object> dataRecord = new HashMap<String, Object>();
 					dataRecord.put("file_deleted", realDeleted ? 1 : 0);
 					dataRecord.put("deleted", realDeleted ? 0 : 1);
 					dataRecord.put("file_name", origin.getName());
@@ -1719,7 +1721,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				conn = dataSourceWriter.getConnection();
 				conn.setAutoCommit(true);
 				executor = new CacheDriverExecutor(conn);
-				Map dataRecord = new HashMap<String, Object>();
+				Map<String, Object> dataRecord = new HashMap<String, Object>();
 				dataRecord.put("file_deleted", realDeleted ? 1 : 0);
 				dataRecord.put("deleted", realDeleted ? 0 : 1);
 				dataRecord.put("file_name", origin.getName());
@@ -1919,7 +1921,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceWriter.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("id",
 					generateId(identityCardEnable, identityCardName, identityCardPrefix, identityCardSuffix));
 			dataRecord.put("file_name", origin.getName());
@@ -1970,7 +1972,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return writeTo(data, append);
 	}
 
-	/**
+	/*
 	* Performs the writeBlock operation
 	* @param data - the data
 	* @param append - the append
@@ -2005,7 +2007,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				byte[] data = partDataList.get(filePartIndex);
 				String remoteFileId = generateId(identityCardEnable, identityCardName, identityCardPrefix,
 						identityCardSuffix);
-				Map rfRecord = new HashMap<String, Object>();
+				Map<String, Object> rfRecord = new HashMap<String, Object>();
 				rfRecord.put("id", remoteFileId);
 				rfRecord.put("file_name", origin.getName());
 				rfRecord.put("file_parent_path", getParent());
@@ -2116,7 +2118,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			log.debug("Write: {}", getPath());
 			String remoteFileId = generateId(identityCardEnable, identityCardName, identityCardPrefix,
 					identityCardSuffix);
-			Map rfRecord = new HashMap<String, Object>();
+			Map<String, Object> rfRecord = new HashMap<String, Object>();
 			rfRecord.put("id", remoteFileId);
 			rfRecord.put("file_name", origin.getName());
 			rfRecord.put("file_parent_path", getParent());
@@ -2143,7 +2145,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			executor = new CacheDriverExecutor(conn);
 			executor.execute(formatSql(SQL_INSERT_INTO_FILE), rfRecord);
 
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("id", generateDataId(identityCardEnable, identityCardName, identityCardSuffix, this));
 			dataRecord.put("file_part_data", encrypt(data));
 			dataRecord.put("remote_file_id", remoteFileId);
@@ -2234,7 +2236,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			String remoteFileId = generateId(identityCardEnable, identityCardName, identityCardPrefix,
 					identityCardSuffix);
 			byte[] data = target.getBytes(CHARSET);
-			Map rfRecord = new HashMap<String, Object>();
+			Map<String, Object> rfRecord = new HashMap<String, Object>();
 			rfRecord.put("id", remoteFileId);
 			rfRecord.put("file_name", origin.getName());
 			rfRecord.put("file_parent_path", getParent());
@@ -2261,7 +2263,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			executor = new CacheDriverExecutor(conn);
 			int rows = executor.execute(formatSql(SQL_INSERT_INTO_FILE), rfRecord);
 
-			Map dataRecord = new HashMap<String, Object>();
+			Map<String, Object> dataRecord = new HashMap<String, Object>();
 			dataRecord.put("id", generateDataId(identityCardEnable, identityCardName, identityCardSuffix, this));
 			dataRecord.put("file_part_data", encrypt(data));
 			dataRecord.put("remote_file_id", remoteFileId);
@@ -2336,7 +2338,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			conn = dataSourceReader.getConnection();
 			conn.setAutoCommit(true);
 			executor = new CacheDriverExecutor(conn);
-			Map dataRecord = getCompletedRecord();
+			Map<String, Object> dataRecord = getCompletedRecord();
 			List<Map<String, Object>> filePartList = executor.find(formatSql(SQL_SELECT_FILE), dataRecord);
 			baos = new ByteArrayOutputStream();
 			for (Map<String, Object> fpItem : filePartList) {
@@ -2390,7 +2392,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	}
 
 
-	/**
+	/*
 	* Performs the isDirectory operation
 	* @return the isDirectory result
 	* */
@@ -2411,7 +2413,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	}
 
 
-	/**
+	/*
 	* Performs the readAllString operation
 	* @return the readAllString result
 	* */
@@ -2470,7 +2472,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
-	/**
+	/*
 	* Performs the listAll operation
 	* @param likeFileName - the likeFileName
 	* @param rows - the rows
@@ -2620,7 +2622,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
-	/**
+	/*
 	* Performs the isTimeout operation
 	* @return the isTimeout result
 	* */
@@ -2807,6 +2809,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				* @param index - the index
 				* @param o - the o
 				* */
+				@SuppressWarnings("unchecked")
 				public void execute(Integer index, Object o) {
 					Map<String, Object> item = (Map<String, Object>) o;
 					String fileName = (String) item.get("file_name");
@@ -2840,7 +2843,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				* Performs the terminated operation
 				* */
 				public void terminated() {
-					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().getId());
+					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().threadId());
 				}
 
 
@@ -2896,6 +2899,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* @param completedCallback - the completedCallback
 	* */
 
+	@SuppressWarnings("unchecked")
 	protected void startFullAsyncThread(boolean subFolders, long timerMs, String replaceTo, Runnable completedCallback) {
 		RemoteFileBase the = this;
 		try {
@@ -2947,7 +2951,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 				* Performs the terminated operation
 				* */
 				public void terminated() {
-					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().getId());
+					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().threadId());
 				}
 
 
@@ -2995,7 +2999,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
-	/**
+	/*
 	* Performs the startFullAsync operation
 	* @param timerMs - the timerMs
 	* */
@@ -3018,7 +3022,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return dataSourceWriter;
 	}
 
-	/**
+	/*
 	* Performs the getConfigProperties operation
 	* @return the getConfigProperties result
 	* */
@@ -3055,7 +3059,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
-	/**
+	/*
 	* Performs the getSyncedOnHostnames operation
 	* @return the getSyncedOnHostnames result
 	* */
@@ -3672,6 +3676,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* @param rf - the rf
 	* */
 
+	@SuppressWarnings("unchecked")
 	protected static synchronized void calculateDataMappingDataSourceWriter(RemoteFileBase rf) {
 		if (DATA_MAPPING_INDEX.get(rf.dsKey) >= DATA_MAPPING_LIST.size() - 1) {
 			DATA_MAPPING_INDEX.put(rf.dsKey, 0);

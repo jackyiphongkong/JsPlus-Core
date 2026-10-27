@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -85,7 +85,7 @@ public class ConnectionPool {
             .sorted()
             .collect(Collectors.toList());
 	   for(Object k : klist){
-	       list.add((Integer)CONNECTION_POOL.get(k));
+	       list.add(CONNECTION_POOL.get(k));
 	   }
 	   return list;
 	}
@@ -161,12 +161,12 @@ public class ConnectionPool {
 	* */
 	protected Boolean remove(Integer connHashCode) {
         synchronized (poolLock) {
-	        List klist = new ArrayList(CONNECTION_POOL.keySet());
+	        List<Long> klist = new ArrayList<Long>(CONNECTION_POOL.keySet());
 	        Object rmKey = -1;
 	        int size = klist.size();
 		    for(int i = 0;i < size;i++){
 		       Object key = klist.get(i);
-		       Object hashCode = (Integer)CONNECTION_POOL.get(key);
+		       Object hashCode = CONNECTION_POOL.get(key);
 		       if(hashCode.equals(connHashCode)){
 		           rmKey = key;
 		           break;
@@ -272,7 +272,7 @@ public class ConnectionPool {
 	protected Connection getConnection(){
     	Thread ct = Thread.currentThread();
     	String tn = ct.getName();
-    	long tid = ct.getId();	    
+    	long tid = ct.threadId();	    
     	Integer hashCode = get();
     	
     	if(hashCode == null) return null;

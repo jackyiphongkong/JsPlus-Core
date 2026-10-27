@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -80,7 +80,7 @@ public class AlertMessage {
 		final Runnable runnable = new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {

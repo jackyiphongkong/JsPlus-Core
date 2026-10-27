@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -34,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Set;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -166,6 +165,7 @@ public final class LogRecord {
      * @param list
      * @return List<Map<String, Object>>
      * */
+	@SuppressWarnings("unchecked")
 	protected static synchronized List<Map<String, Object>> list() {
 		return (List<Map<String, Object>>) process("LIST", null);
 	}
@@ -695,8 +695,8 @@ public final class LogRecord {
 						.toUpperCase().split("[^\\S]*,[^\\S]*");
 				alertMessageLevelList = Arrays.asList(alertMessageLevels);
 				if (!CommonTools.isBlank(alertMessageClazz)) {
-					Class amc = Class.forName(alertMessageClazz);
-					alertMesage = (AlertMessage) amc.newInstance();
+					Class<?> amc = Class.forName(alertMessageClazz);
+					alertMesage = (AlertMessage) amc.getDeclaredConstructor().newInstance();
 				}
 			} catch (Exception e) {
 				Logger.systemError(LogRecord.class, e);
@@ -707,7 +707,7 @@ public final class LogRecord {
 
 				@Override
 
-				/**
+				/*
 				* Performs the run operation
 				* */
 				public void run() {
@@ -724,7 +724,7 @@ public final class LogRecord {
     							DB_WRITE_POOL.execute(new Runnable(){
     							    @Override
 
-    							    /**
+    							    /*
     							    * Performs the run operation
     							    * */
     							    public void run(){

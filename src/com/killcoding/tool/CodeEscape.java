@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -417,7 +417,7 @@ public final class CodeEscape {
 
         @Override
 
-        /**
+        /*
         * Performs the read operation
         * @return the read result
         * */
@@ -430,7 +430,7 @@ public final class CodeEscape {
 
         @Override
 
-        /**
+        /*
         * Performs the read operation
         * @param cbuf - the cbuf
         * @param off - the off
@@ -455,7 +455,7 @@ public final class CodeEscape {
 
         @Override
 
-        /**
+        /*
         * Performs the close operation
         * */
         public void close() throws IOException {

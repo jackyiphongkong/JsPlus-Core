@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 Copyright (c) 2024 KILLCODING.COM
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,7 +26,6 @@ import java.io.File;
 import com.killcoding.file.BaseFile;
 import java.util.Scanner;
 
-import java.nio.charset.Charset;
 import java.io.ByteArrayInputStream;
 import com.killcoding.jsplus.JsPlusContext;
 import com.killcoding.jsplus.JsContext;

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -28,7 +28,6 @@ import com.killcoding.tool.CommonTools;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.nio.file.Files;
 import java.io.File;
 
 
@@ -123,7 +122,7 @@ public class DiskCache extends AbsCacheApi {
 		executor.execute(new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -149,7 +148,7 @@ public class DiskCache extends AbsCacheApi {
     					Thread.sleep(TIMER);
     				} catch (InterruptedException e) {
     					log.warn(e);
-    					Thread.currentThread().interrupted();
+    					Thread.interrupted();
     				}
 				}
 			}
@@ -159,7 +158,7 @@ public class DiskCache extends AbsCacheApi {
 
 	@Override
 
-	/**
+	/*
 	* Performs the included operation
 	* @param name - the name
 	* @return the included result
@@ -197,7 +196,7 @@ public class DiskCache extends AbsCacheApi {
 
 	@Override
 
-	/**
+	/*
 	* Performs the removeAll operation
 	* */
 	synchronized void removeAll() {
@@ -209,7 +208,7 @@ public class DiskCache extends AbsCacheApi {
 
 	@Override
 
-	/**
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -226,7 +225,7 @@ public class DiskCache extends AbsCacheApi {
 
 	@Override
 
-	/**
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -252,7 +251,7 @@ public class DiskCache extends AbsCacheApi {
 
 	@Override
 
-	/**
+	/*
 	* Performs the set operation
 	* @param name - the name
 	* @param value - the value

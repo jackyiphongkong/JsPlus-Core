@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -97,6 +97,7 @@ public class DriverExecutor {
 	 * New a DriverExecutor object
 	 * @param connection - JDBC connection
 	 * */
+	@SuppressWarnings("this-escape")
 	public DriverExecutor(Connection connection) {
 		super();
 		log = LoggerFactory.getLogger(this.getClass());
@@ -1299,12 +1300,12 @@ public class DriverExecutor {
 				sqlLogCacheArray.filter(new CacheArrayFilter(0L,sqlLogFilterTimer) {
 					@Override
 
-					/**
+					/*
 					* Performs the executeBatch operation
 					* @param index - the index
 					* @param batch - the batch
 					* */
-					public void executeBatch(Integer index, List batch) {
+					public void executeBatch(Integer index, List<?> batch) {
 					    final StringBuffer sbf = new StringBuffer();
 					    for(Object item : batch){
 					        sbf.append(item);
@@ -1364,7 +1365,7 @@ public class DriverExecutor {
 				    isOverspend = (spendValue >= overspend);
 				}
 
-                String threadId = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
+                String threadId = Thread.currentThread().getName() + "-" + Thread.currentThread().threadId();
 				String msg = String.format("%s,%s,%s,%s,%s,%s,%s,%s,\"%s\",\"%s\"%s", dateTimeStr, hostname,
 				                    threadId, dds.getName(), connHashCode,deHashCode, type, seq,
 				                    replaceToSigleLine(sql), handleParams(logParamMaxLength, params), System.lineSeparator());	
@@ -1482,6 +1483,7 @@ public class DriverExecutor {
 	 * Hahdle Params
 	 * For write csv log
 	 * */
+	@SuppressWarnings("unchecked")
 	private static String handleParams(int paramMaxLength, Object params) {
 
 		if (params == null)
@@ -1509,7 +1511,7 @@ public class DriverExecutor {
 		return replaceToSigleLine(paramSbf.toString());
 	}
 
-	/**For Sync DataSource**/
+	/*For Sync DataSource**/
 
 	/**
 	 * For database replication
@@ -1543,7 +1545,7 @@ public class DriverExecutor {
 								throw new SQLException(errorMsg) {
 									@Override
 
-									/**
+									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
@@ -1628,7 +1630,7 @@ public class DriverExecutor {
 								throw new SQLException(errorMsg) {
 									@Override
 
-									/**
+									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
@@ -1681,7 +1683,7 @@ public class DriverExecutor {
 								throw new SQLException(errorMsg) {
 									@Override
 
-									/**
+									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
@@ -1734,7 +1736,7 @@ public class DriverExecutor {
 								throw new SQLException(errorMsg) {
 									@Override
 
-									/**
+									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
@@ -1817,7 +1819,7 @@ public class DriverExecutor {
 								throw new SQLException(errorMsg) {
 									@Override
 
-									/**
+									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */

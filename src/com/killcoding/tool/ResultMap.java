@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -31,16 +31,19 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings("serial")
-
 /**
 * Cloneable, serializable Map implementation backed by parallel key/value arrays (AbstractMap),
 * preserving insertion order and suited to small result sets returned to scripts.
 * */
 public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Serializable {
 
+	private static final long serialVersionUID = 1L;
+
 	static class Entry<K, V> implements Map.Entry<K, V>, Cloneable, Serializable {
+		private static final long serialVersionUID = 1L;
+		@SuppressWarnings("serial")
 		protected K key;
+		@SuppressWarnings("serial")
 		protected V value;
 
 		/**
@@ -115,12 +118,13 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 		}
 	}
 
-	private Set<java.util.Map.Entry<K, V>> entries = null;
-	private ArrayList<java.util.Map.Entry<K, V>> list;
+	private transient Set<java.util.Map.Entry<K, V>> entries = null;
+	private transient ArrayList<java.util.Map.Entry<K, V>> list;
 
 	/**
 	* Constructs a new ResultMap
 	* */
+	@SuppressWarnings("this-escape")
 	public ResultMap() {
 		super();
 		list = new ArrayList<java.util.Map.Entry<K, V>>();
@@ -131,6 +135,7 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 	* @param K - the K
 	* @param map - the map
 	* */
+	@SuppressWarnings("this-escape")
 	public ResultMap(Map<K, V> map) {
 		super();
 		list = new ArrayList<java.util.Map.Entry<K, V>>();
@@ -176,7 +181,7 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 
 	@Override
 
-	/**
+	/*
 	* Performs the put operation
 	* @param key - the key
 	* @param value - the value

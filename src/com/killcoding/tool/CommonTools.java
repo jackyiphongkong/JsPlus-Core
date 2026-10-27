@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -104,13 +104,13 @@ public final class CommonTools {
     		if(jars.isDirectory()){    
         		List<String> list = findFiles(jars.getAbsolutePath(),".jar");
         		for(String jarPath : list){
-        		    urlList.add(new File(jarPath).toURL());
+        		    urlList.add(new File(jarPath).toURI().toURL());
         		}
     		}
     		if(jars.isFile()){
     		   boolean isJar = jars.getName().toLowerCase().endsWith(".jar");
 
-    		   if(isJar) urlList.add(jars.toURL());
+    		   if(isJar) urlList.add(jars.toURI().toURL());
     		}
 		}
 
@@ -165,7 +165,7 @@ public final class CommonTools {
 	* @param clazz - the clazz
 	* @return the getJarPath result
 	* */
-	public static String getJarPath(Class clazz) {
+	public static String getJarPath(Class<?> clazz) {
 		try {
 			return new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())
 					.getParentFile().getPath().replaceAll("\\\\", "/");
@@ -197,7 +197,7 @@ public final class CommonTools {
 	* @param propFileName - the propFileName
 	* @return the getSystemProperties result
 	* */
-	public static File getSystemProperties(Class clazz, String envKey, String propFileName) {
+	public static File getSystemProperties(Class<?> clazz, String envKey, String propFileName) {
 		try {
 			File envFile = null;
 

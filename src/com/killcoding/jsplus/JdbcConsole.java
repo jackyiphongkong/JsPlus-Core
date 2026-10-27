@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -23,7 +23,6 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.jsplus;
 
-import java.io.Console;
 
 
 
@@ -39,7 +38,6 @@ import java.io.Console;
 
 
 
-import java.nio.file.Files;
 
 
 
@@ -52,6 +50,7 @@ public class JdbcConsole extends ScriptConsole {
 	/**
 	* Constructs a new JdbcConsole
 	* */
+	@SuppressWarnings("this-escape")
 	public JdbcConsole() {
 		super();
 		setUseJdbcEnv();

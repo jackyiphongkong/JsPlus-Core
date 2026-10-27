@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -46,7 +46,6 @@ import java.nio.file.attribute.FileTime;
 
 
 import java.sql.Timestamp;
-import java.util.stream.Stream;
 
 
 
@@ -160,7 +159,7 @@ public class DiskFile extends BaseFile {
 		splitPool.execute(new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -207,7 +206,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the copyTo operation
 	* @param toPath - the toPath
 	* */
@@ -220,7 +219,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the moveTo operation
 	* @param toPath - the toPath
 	* */
@@ -243,7 +242,7 @@ public class DiskFile extends BaseFile {
 		return writeToRemote(remoteFile, new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -317,7 +316,7 @@ public class DiskFile extends BaseFile {
 			DiskFile.copyAttrs(df, this.copyStructureOnly, this.syncRoot);
 
 			if (msg == null) {
-				df.write(String.format("%s-%s", Thread.currentThread().getName(), Thread.currentThread().getId()),
+				df.write(String.format("%s-%s", Thread.currentThread().getName(), Thread.currentThread().threadId()),
 						false);
 			} else {
 				df.write(msg, false);
@@ -388,7 +387,7 @@ public class DiskFile extends BaseFile {
 			DiskFile df = new DiskFile(tmpLogicPath);
 			DiskFile.copyAttrs(df, this.copyStructureOnly, this.syncRoot);
 			if (msg == null) {
-				df.write(String.format("%s-%s", Thread.currentThread().getName(), Thread.currentThread().getId()),
+				df.write(String.format("%s-%s", Thread.currentThread().getName(), Thread.currentThread().threadId()),
 						false);
 			} else {
 				df.write(msg, false);
@@ -463,7 +462,7 @@ public class DiskFile extends BaseFile {
     		DiskFile df = new DiskFile(tmpLogicPath);
     		DiskFile.copyAttrs(df, this.copyStructureOnly, this.syncRoot);
     		if (msg == null) {
-    			df.write(String.format("%s-%s", Thread.currentThread().getName(), Thread.currentThread().getId()),
+    			df.write(String.format("%s-%s", Thread.currentThread().getName(), Thread.currentThread().threadId()),
     					false);
     		} else {
     			df.write(msg, false);
@@ -500,7 +499,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the beforeDelete operation
 	* @param realDeleted - the realDeleted
 	* @return the beforeDelete result
@@ -511,7 +510,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the afterDelete operation
 	* @param realDeleted - the realDeleted
 	* */
@@ -521,7 +520,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the beforeMkdirs operation
 	* @return the beforeMkdirs result
 	* */
@@ -531,7 +530,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the afterMkdirs operation
 	* */
 	public void afterMkdirs() {
@@ -540,7 +539,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the beforeCreateLink operation
 	* @param target - the target
 	* @return the beforeCreateLink result
@@ -551,7 +550,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the afterCreateLink operation
 	* @param target - the target
 	* */
@@ -561,7 +560,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the beforeWrite operation
 	* @return the beforeWrite result
 	* */
@@ -571,7 +570,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the afterWrite operation
 	* */
 	public void afterWrite() {
@@ -580,7 +579,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the delete operation
 	* @return the delete result
 	* */
@@ -629,7 +628,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the isFile operation
 	* @return the isFile result
 	* */
@@ -639,7 +638,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the isDirectory operation
 	* @return the isDirectory result
 	* */
@@ -649,7 +648,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the isLink operation
 	* @return the isLink result
 	* */
@@ -659,7 +658,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the exists operation
 	* @return the exists result
 	* */
@@ -669,7 +668,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the mkdirs operation
 	* @return the mkdirs result
 	* */
@@ -689,7 +688,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @param append - the append
@@ -834,7 +833,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @return the write result
@@ -845,7 +844,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @param append - the append
@@ -868,7 +867,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @return the write result
@@ -889,7 +888,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the createLink operation
 	* @param target - the target
 	* @return the createLink result
@@ -916,7 +915,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the readLink operation
 	* @return the readLink result
 	* */
@@ -927,7 +926,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the readAllBytes operation
 	* @return the readAllBytes result
 	* */
@@ -954,7 +953,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the readAllString operation
 	* @return the readAllString result
 	* */
@@ -989,7 +988,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the size operation
 	* @return the size result
 	* */
@@ -1034,7 +1033,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the complete operation
 	* @return the complete result
 	* */
@@ -1064,7 +1063,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the setModifyTime operation
 	* @param modifyTime - the modifyTime
 	* */
@@ -1088,7 +1087,7 @@ public class DiskFile extends BaseFile {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getModifyTime operation
 	* @return the getModifyTime result
 	* */
@@ -1170,7 +1169,7 @@ public class DiskFile extends BaseFile {
 		Runnable runnable = new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -1187,7 +1186,7 @@ public class DiskFile extends BaseFile {
 		runnable = new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -1238,7 +1237,7 @@ public class DiskFile extends BaseFile {
 		Runnable runnable = new Runnable() {
 			@Override
 
-			/**
+			/*
 			* Performs the run operation
 			* */
 			public void run() {
@@ -1270,11 +1269,12 @@ public class DiskFile extends BaseFile {
 		CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 			@Override
 
-			/**
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
 			* */
+			@SuppressWarnings("unchecked")
 			public void execute(Integer index, Object o) {
 
 				try {
@@ -1323,7 +1323,7 @@ public class DiskFile extends BaseFile {
 
 			@Override
 
-			/**
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -1503,7 +1503,7 @@ public class DiskFile extends BaseFile {
 
 			@Override
 
-			/**
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -1512,12 +1512,12 @@ public class DiskFile extends BaseFile {
 
 				if (isRootCompleted) {
 					try {
-						if (rf != null && the.isStopSync() && isDebug(rf)) {
+						if (rf != null && BaseFile.isStopSync() && isDebug(rf)) {
 							LoggerFactory.getLogger(DiskFile.class).mark("StopedRootScan - {}", the.getPath());
 						}
-						if (!the.isStopSync() && timerMs > 0) {
+						if (!BaseFile.isStopSync() && timerMs > 0) {
 							Thread.sleep(timerMs);
-							if (!the.isStopSync()) {
+							if (!BaseFile.isStopSync()) {
 								if (rf != null && isDebug(rf)) {
 									LoggerFactory.getLogger(DiskFile.class).mark("RootScaning - {}", the.getPath());
 								}
@@ -1535,7 +1535,7 @@ public class DiskFile extends BaseFile {
 
 			@Override
 
-			/**
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
@@ -1707,8 +1707,8 @@ public class DiskFile extends BaseFile {
 									LoggerFactory.getLogger(DiskFile.class).mark("Stopping queue");
 								}
 								if (!isStopSync()) {
-									boolean allowedPoolSize = theFilter.getCacheArray().getUsingPoolSize() < theFilter
-											.getCacheArray().getMaxPoolSize() && checkUsage(rf);
+									boolean allowedPoolSize = CacheArray.getUsingPoolSize() < CacheArray
+											.getMaxPoolSize() && checkUsage(rf);
 									if (isDebug && allowedPoolSize) {
 										LoggerFactory.getLogger(DiskFile.class).debug("Scaning - {}", df.getPath());
 									}

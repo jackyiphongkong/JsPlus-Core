@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -61,7 +61,6 @@ import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.concurrent.Callable;
 
-import java.util.concurrent.Executor;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -441,6 +440,7 @@ public final class DriverDataSource implements DataSource {
 	 * Set connection url
 	 * @param urlOrList - String or List
 	 * */
+	@SuppressWarnings("unchecked")
 	public void setUrl(Object urlOrList) {
 		if (urlOrList instanceof String) {
 			this.urlList.add((String) urlOrList);
@@ -720,10 +720,10 @@ public final class DriverDataSource implements DataSource {
 				log.debug("Will create connection total = {}", willCreateConnTotal);
 			}
 			for (int i = 0; i < willCreateConnTotal; i++) {
-				Callable callable = new Callable<Boolean>() {
+				Callable<Boolean> callable = new Callable<Boolean>() {
 					@Override
 
-					/**
+					/*
 					* Performs the call operation
 					* @return the call result
 					* */
@@ -869,7 +869,7 @@ public final class DriverDataSource implements DataSource {
     	        Runnable updateRun = new Runnable(){
     	            @Override
 
-    	            /**
+    	            /*
     	            * Performs the run operation
     	            * */
     	            public void run(){
@@ -1019,20 +1019,18 @@ public final class DriverDataSource implements DataSource {
 			list.add(objArr);
 		}
 
-		Comparator comp = new Comparator() {
+		Comparator<Object[]> comp = new Comparator<Object[]>() {
 			@Override
 
-			/**
+			/*
 			* Performs the compare operation
 			* @param arg0 - the arg0
 			* @param arg1 - the arg1
 			* @return the compare result
 			* */
-			public int compare(Object arg0, Object arg1) {
-				Object[] objArr0 = (Object[]) arg0;
-				Object[] objArr1 = (Object[]) arg1;
-				Date date0 = (Date) objArr0[1];
-				Date date1 = (Date) objArr1[1];
+			public int compare(Object[] arg0, Object[] arg1) {
+				Date date0 = (Date) arg0[1];
+				Date date1 = (Date) arg1[1];
 				return date0.getTime() < date1.getTime() ? -1 : 1;
 			}
 		};
@@ -1089,7 +1087,7 @@ public final class DriverDataSource implements DataSource {
 
 				@Override
 
-				/**
+				/*
 				* Performs the run operation
 				* */
 				public void run() {
@@ -1136,7 +1134,7 @@ public final class DriverDataSource implements DataSource {
 
 				@Override
 
-				/**
+				/*
 				* Performs the run operation
 				* */
 				public void run() {
@@ -1220,7 +1218,7 @@ public final class DriverDataSource implements DataSource {
 		throw new SQLException(errorMsg) {
 			@Override
 
-			/**
+			/*
 			* Performs the getErrorCode operation
 			* @return the getErrorCode result
 			* */
@@ -1242,7 +1240,7 @@ public final class DriverDataSource implements DataSource {
 			throw new SQLException(errorMsg) {
 				@Override
 
-				/**
+				/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
 				* */
@@ -1594,7 +1592,7 @@ public final class DriverDataSource implements DataSource {
 				throw new SQLException(errorMsg) {
 					@Override
 
-					/**
+					/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
 					* */
@@ -1608,8 +1606,8 @@ public final class DriverDataSource implements DataSource {
 
 			if (driverNewInstance == null) {
 				URLClassLoader driverClassLoader = CommonTools.loadJars(driverJar);
-				Class classToLoad = Class.forName(driver, true, driverClassLoader);
-				Constructor driverConstructor = classToLoad.getConstructor();
+				Class<?> classToLoad = Class.forName(driver, true, driverClassLoader);
+				Constructor<?> driverConstructor = classToLoad.getConstructor();
 				driverConstructor.setAccessible(true);
 				driverNewInstance = (Driver) driverConstructor.newInstance();
 
@@ -1625,7 +1623,7 @@ public final class DriverDataSource implements DataSource {
 
 				@Override
 
-				/**
+				/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
 				* */
@@ -1684,7 +1682,7 @@ public final class DriverDataSource implements DataSource {
 					throw new SQLException(errorMsg) {
 						@Override
 
-						/**
+						/*
 						* Performs the getErrorCode operation
 						* @return the getErrorCode result
 						* */
@@ -1769,12 +1767,12 @@ public final class DriverDataSource implements DataSource {
 	/** Abandon the following methods **/
 
 	@Override
-	public java.lang.Object unwrap(java.lang.Class arg0) throws java.sql.SQLException {
+	public <T> T unwrap(java.lang.Class<T> arg0) throws java.sql.SQLException {
 		return null;
 	}
 
 	@Override
-	public boolean isWrapperFor(java.lang.Class arg0) throws java.sql.SQLException {
+	public boolean isWrapperFor(java.lang.Class<?> arg0) throws java.sql.SQLException {
 		return false;
 	}
 
@@ -1785,7 +1783,7 @@ public final class DriverDataSource implements DataSource {
 
 	@Override
 
-	/**
+	/*
 	* Performs the setLogWriter operation
 	* @param arg0 - the arg0
 	* */
@@ -1794,7 +1792,7 @@ public final class DriverDataSource implements DataSource {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getLogWriter operation
 	* @return the getLogWriter result
 	* */
@@ -1804,7 +1802,7 @@ public final class DriverDataSource implements DataSource {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getLoginTimeout operation
 	* @return the getLoginTimeout result
 	* */
@@ -1814,7 +1812,7 @@ public final class DriverDataSource implements DataSource {
 
 	@Override
 
-	/**
+	/*
 	* Performs the setLoginTimeout operation
 	* @param arg0 - the arg0
 	* */
@@ -1823,7 +1821,7 @@ public final class DriverDataSource implements DataSource {
 
 	@Override
 
-	/**
+	/*
 	* Performs the getConnection operation
 	* @param arg0 - the arg0
 	* @param arg1 - the arg1
@@ -1835,7 +1833,7 @@ public final class DriverDataSource implements DataSource {
 
 	@Override
 
-	/**
+	/*
 	* Performs the createConnectionBuilder operation
 	* @return the createConnectionBuilder result
 	* */

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -23,14 +23,12 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.log;
 
-import java.util.Map;
 import java.io.File;
 
 
 
 import java.io.IOException;
 
-import java.util.Properties;
 
 import com.killcoding.tool.ConfigProperties;
 import com.killcoding.log.Logger;
@@ -112,7 +110,7 @@ public final class LoggerFactory {
 		    Runnable updatedRun = new Runnable() {
 			    @Override
 
-				/**
+				/*
 				* Performs the run operation
 				* */
 				public void run() {
@@ -150,7 +148,7 @@ public final class LoggerFactory {
 	 * @return Logger
 	 * @param clazz
 	 * */
-	public static Logger getLogger(Class clazz) {
+	public static Logger getLogger(Class<?> clazz) {
 		return getLogger(clazz.getName());
 	}
 

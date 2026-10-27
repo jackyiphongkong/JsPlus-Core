@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2024 KILLCODING.COM
@@ -74,7 +74,7 @@ public class CacheArrayFilter {
     /**
      * Handle execute batch method
      * */
-	public void executeBatch(Integer batchIndex,List batch){
+	public void executeBatch(Integer batchIndex,List<?> batch){
 	    
 	}
 	
