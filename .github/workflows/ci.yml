@@ -27,12 +27,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ant
 
-      - name: Build jsplus-embed.jar
+      - name: Build jsplus-core.jar
         run: ant build
 
       - name: Run TestAll.sh
         run: |
-          chmod +x TestAll.sh
+          # Restore executable bits lost by the Git checkout (mode 644) on
+          # every helper script under JsPlus/bin, then run the suite entry.
+          chmod +x TestAll.sh ../../JsPlus/bin/*.sh
           ./TestAll.sh
         working-directory: test
 

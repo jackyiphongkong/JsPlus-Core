@@ -48,6 +48,12 @@ JS_PLUS_PATH_ORIGIN="${BIN_PATH}../JsPlus/"
 export JS_PLUS_PATH="${JS_PLUS_PATH_ORIGIN//\\//}"
 LIB_HOME="${JS_PLUS_PATH}../LibHome/"
 
+# CI checkouts often lose the executable bit on helper scripts (Git stores
+# them as mode 644), so calling e.g. BG_StartH2.sh below would fail with
+# "Permission denied" (exit 126). Make every helper executable up front -
+# a no-op when the bit is already set.
+chmod +x "${JS_PLUS_PATH}bin/"*.sh "${BIN_PATH}"*.sh 2>/dev/null || true
+
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
 if [ -z "$DEPEND_LIBS" ]; then
