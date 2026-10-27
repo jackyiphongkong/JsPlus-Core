@@ -47,8 +47,8 @@ import java.util.concurrent.Executors;
 
 
 /**
- * This cache class is save to memory
- * */
+* This cache class is save to memory
+* */
 public class MemoryCache extends AbsCacheApi {
 
 	private static final Logger log = LoggerFactory.getLogger(MemoryCache.class);
@@ -88,6 +88,10 @@ public class MemoryCache extends AbsCacheApi {
 		executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				Thread.currentThread().setName("MemoryCache");
 				while (true) {
@@ -120,6 +124,12 @@ public class MemoryCache extends AbsCacheApi {
 	}
 
 	@Override
+
+	/**
+	* Performs the included operation
+	* @param name - the name
+	* @return the included result
+	* */
 	synchronized boolean included(String name) {
 		if (stored) {
 			return CACHE_VALUE.containsKey(name);
@@ -152,6 +162,10 @@ public class MemoryCache extends AbsCacheApi {
 	}
 
 	@Override
+
+	/**
+	* Performs the removeAll operation
+	* */
 	synchronized void removeAll() {
 		Set<String> names = CACHE_VALUE.keySet();
 		for (String name : names) {
@@ -160,6 +174,11 @@ public class MemoryCache extends AbsCacheApi {
 	}
 
 	@Override
+
+	/**
+	* Performs the remove operation
+	* @param name - the name
+	* */
 	synchronized void remove(String name) {
 		if (CACHE_VALUE.containsKey(name)) {
 			CACHE_LIFE.remove(name);
@@ -168,6 +187,12 @@ public class MemoryCache extends AbsCacheApi {
 	}
 
 	@Override
+
+	/**
+	* Performs the get operation
+	* @param name - the name
+	* @return the get result
+	* */
 	synchronized Object get(String name) {
 		try {
 			if (included(name)) {
@@ -183,6 +208,13 @@ public class MemoryCache extends AbsCacheApi {
 	}
 
 	@Override
+
+	/**
+	* Performs the set operation
+	* @param name - the name
+	* @param value - the value
+	* @param lifeSeconds - the lifeSeconds
+	* */
 	synchronized void set(String name, Object value, int lifeSeconds) {
 	    if(value != null) {
 

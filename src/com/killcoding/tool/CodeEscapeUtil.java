@@ -29,6 +29,10 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Arrays;
 
+/**
+* Internal escape / unescape engine (package-private): character escape tables, SEC mapping and
+* stream-based processing used by CodeEscape and EscapeTools.
+* */
 final class CodeEscapeUtil {
 
 
@@ -101,10 +105,18 @@ final class CodeEscapeUtil {
 
 
 
+    /**
+    * Constructs a new CodeEscapeUtil
+    * */
     private CodeEscapeUtil() {
         super();
     }
 
+    /**
+    * Performs the toUHexa operation
+    * @param codepoint - the codepoint
+    * @return the toUHexa result
+    * */
     static char[] toUHexa(final int codepoint) {
         final char[] result = new char[4];
         result[3] = HEXA_CHARS_UPPER[codepoint % 0x10];
@@ -114,6 +126,12 @@ final class CodeEscapeUtil {
         return result;
     }
 
+    /**
+    * Performs the escape operation
+    * @param text - the text
+    * @param escapeLevel - the escapeLevel
+    * @return the escape result
+    * */
     static String escape(final String text, final CodeEscapeLevel escapeLevel) {
 
         if (text == null) {
@@ -203,6 +221,12 @@ final class CodeEscapeUtil {
 
     }
 
+    /**
+    * Performs the escape operation
+    * @param reader - the reader
+    * @param writer - the writer
+    * @param escapeLevel - the escapeLevel
+    * */
     static void escape(final Reader reader, final Writer writer, final CodeEscapeLevel escapeLevel)
             throws IOException {
 
@@ -278,6 +302,14 @@ final class CodeEscapeUtil {
 
     }
 
+    /**
+    * Performs the escape operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @param writer - the writer
+    * @param escapeLevel - the escapeLevel
+    * */
     static void escape(final char[] text, final int offset, final int len, final Writer writer,
                        final CodeEscapeLevel escapeLevel)
                        throws IOException {
@@ -352,6 +384,14 @@ final class CodeEscapeUtil {
 
     }
     
+    /**
+    * Performs the parseIntFromReference operation
+    * @param text - the text
+    * @param start - the start
+    * @param end - the end
+    * @param radix - the radix
+    * @return the parseIntFromReference result
+    * */
     static int parseIntFromReference(final String text, final int start, final int end, final int radix) {
         int result = 0;
         for (int i = start; i < end; i++) {
@@ -368,6 +408,14 @@ final class CodeEscapeUtil {
         return result;
     }
 
+    /**
+    * Performs the parseIntFromReference operation
+    * @param text - the text
+    * @param start - the start
+    * @param end - the end
+    * @param radix - the radix
+    * @return the parseIntFromReference result
+    * */
     static int parseIntFromReference(final char[] text, final int start, final int end, final int radix) {
         int result = 0;
         for (int i = start; i < end; i++) {
@@ -384,6 +432,13 @@ final class CodeEscapeUtil {
         return result;
     }
 
+    /**
+    * Performs the isOctalEscape operation
+    * @param text - the text
+    * @param start - the start
+    * @param end - the end
+    * @return the isOctalEscape result
+    * */
     static boolean isOctalEscape(final String text, final int start, final int end) {
 
         if (start >= end) {
@@ -418,6 +473,13 @@ final class CodeEscapeUtil {
     }
 
 
+    /**
+    * Performs the isOctalEscape operation
+    * @param text - the text
+    * @param start - the start
+    * @param end - the end
+    * @return the isOctalEscape result
+    * */
     static boolean isOctalEscape(final char[] text, final int start, final int end) {
 
         if (start >= end) {
@@ -451,6 +513,11 @@ final class CodeEscapeUtil {
 
     }
 
+    /**
+    * Performs the unicodeUnescape operation
+    * @param text - the text
+    * @return the unicodeUnescape result
+    * */
     static String unicodeUnescape(final String text) {
 
         if (text == null) {
@@ -553,6 +620,13 @@ final class CodeEscapeUtil {
 
 
 
+    /**
+    * Performs the requiresUnicodeUnescape operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @return the requiresUnicodeUnescape result
+    * */
     static boolean requiresUnicodeUnescape(final char[] text, final int offset, final int len) {
 
         if (text == null) {
@@ -587,6 +661,13 @@ final class CodeEscapeUtil {
 
 
 
+    /**
+    * Performs the unicodeUnescape operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @param writer - the writer
+    * */
     static void unicodeUnescape(final char[] text, final int offset, final int len, final Writer writer)
                                 throws IOException {
 
@@ -674,6 +755,11 @@ final class CodeEscapeUtil {
 
     }
 
+    /**
+    * Performs the unescape operation
+    * @param text - the text
+    * @return the unescape result
+    * */
     static String unescape(final String text) {
 
         if (text == null) {
@@ -779,6 +865,11 @@ final class CodeEscapeUtil {
 
     }
 
+    /**
+    * Performs the unescape operation
+    * @param reader - the reader
+    * @param writer - the writer
+    * */
     static void unescape(final Reader reader, final Writer writer) throws IOException {
 
         if (reader == null) {
@@ -840,6 +931,13 @@ final class CodeEscapeUtil {
 
     }
 
+    /**
+    * Performs the unescape operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @param writer - the writer
+    * */
     static void unescape(final char[] text, final int offset, final int len, final Writer writer)
                          throws IOException {
 
@@ -945,6 +1043,12 @@ final class CodeEscapeUtil {
 
 
 
+    /**
+    * Performs the codePointAt operation
+    * @param c1 - the c1
+    * @param c2 - the c2
+    * @return the codePointAt result
+    * */
     private static int codePointAt(final char c1, final char c2) {
         if (Character.isHighSurrogate(c1)) {
             if (c2 >= 0) {

@@ -43,6 +43,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.LocalDateTime;
 
+/**
+* System clock facade for JsPlus: returns the current time in several representations
+* (java.util.Date, millis, SQL Timestamp, LocalDate, Calendar) from the local JVM, and
+* exposes an AppClock static accessor that tracks the DB server time when Clock.properties
+* is configured (GetAppClockSql). All accessors are consistent within one snapshot.
+* */
 public final class Clock {
 
 	private Calendar calendar = null;
@@ -56,11 +62,17 @@ public final class Clock {
 
 	private Logger log = LoggerFactory.getLogger(Clock.class);
 
+	/**
+	* Constructs a new Clock
+	* */
 	public Clock() {
 		super();
 		init();
 	}
 
+	/**
+	* Performs the init operation
+	* */
 	private synchronized void init() {
 		if (dataSource == null) {
 			try {
@@ -71,6 +83,10 @@ public final class Clock {
 					configProperties = new ConfigProperties();
 					Runnable updatedRun = new Runnable(){
         		        @Override
+
+        		        /**
+        		        * Performs the run operation
+        		        * */
         		        public void run(){
         	            	try {
         						reload();
@@ -95,6 +111,9 @@ public final class Clock {
 		}
 	}
 
+	/**
+	* Performs the reload operation
+	* */
 	private void reload() {
 		if (configProperties != null) {
 			enable = configProperties.getBoolean("Enable", false);
@@ -121,6 +140,10 @@ public final class Clock {
 		}
 	}
 
+	/**
+	* Performs the getRemoteCalendar operation
+	* @return the getRemoteCalendar result
+	* */
 	private Calendar getRemoteCalendar() {
 		if (enable && dataSource != null) {
 			Connection conn = null;
@@ -188,6 +211,10 @@ public final class Clock {
 		return null;
 	}
 
+	/**
+	* Performs the getCalendar operation
+	* @return the getCalendar result
+	* */
 	public Calendar getCalendar() {
 
 		if (calendar != null)
@@ -203,6 +230,10 @@ public final class Clock {
 		return calendar;
 	}
 	
+	/**
+	* Performs the getDefaultCalendear operation
+	* @return the getDefaultCalendear result
+	* */
 	private Calendar getDefaultCalendear(){
 		String timeZone = configProperties.getString("DefaultTimeZone", "GMT");
         long msGap = Calendar.getInstance().getTimeInMillis() + gap;
@@ -217,6 +248,10 @@ public final class Clock {
 		return new java.util.Date(getCalendar().getTimeInMillis());
 	}
 
+	/**
+	* Performs the getTime operation
+	* @return the getTime result
+	* */
 	public long getTime() {
 		return getCalendar().getTimeInMillis();
 	}
@@ -229,24 +264,44 @@ public final class Clock {
 		return new java.sql.Time(getTime());
 	}
 
+	/**
+	* Performs the getSqlTimestamp operation
+	* @return the getSqlTimestamp result
+	* */
 	public Timestamp getSqlTimestamp() {
 		return new Timestamp(getTime());
 	}
 
+	/**
+	* Performs the getLocalDate operation
+	* @return the getLocalDate result
+	* */
 	public LocalDate getLocalDate() {
 		ZoneId zoneId = getCalendar().getTimeZone().toZoneId();
 		return Instant.ofEpochMilli(getTime()).atZone(zoneId).toLocalDate();
 	}
 
+	/**
+	* Performs the getLocalDateTime operation
+	* @return the getLocalDateTime result
+	* */
 	public LocalDateTime getLocalDateTime() {
 		ZoneId zoneId = getCalendar().getTimeZone().toZoneId();
 		return LocalDateTime.ofInstant(Instant.ofEpochMilli(getTime()), zoneId);
 	}
 	
+	/**
+	* Performs the getDataSource operation
+	* @return the getDataSource result
+	* */
 	public static DriverDataSource getDataSource(){
 	    return dataSource;
 	}
 	
+	/**
+	* Performs the getConfigProperties operation
+	* @return the getConfigProperties result
+	* */
 	public static ConfigProperties getConfigProperties(){
 	    return configProperties;
 	}

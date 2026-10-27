@@ -23,6 +23,11 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.jsplus;
 
+/**
+* Core console implementation of com.killcoding.jsplus.Console: binds the script engine and
+* delegates evaluation to ScriptConsole. Also carries the build version constant which build.xml
+* injects on every build (replace-version target).
+* */
 public interface ConsoleImpl {
     
     public final static String VERSION = "${BuildVersion.VERSION}(${BuildVersion.BUILD_DATE})";

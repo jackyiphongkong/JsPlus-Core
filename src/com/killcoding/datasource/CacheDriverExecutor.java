@@ -47,10 +47,10 @@ import java.io.InputStream;
 import java.sql.CallableStatement;
 
 /**
- * This class uses a 'CacheArray' to process the asynchronous processing method of the data query result set.
- * If you choose to use the mode 'DiskCache', temporary files will be generated. 
- * If you choose to use the mode 'MemoryCache', temporary files will not be generated but the physical memory size must be considered.
- * */
+* This class uses a 'CacheArray' to process the asynchronous processing method of the data query result set.
+* If you choose to use the mode 'DiskCache', temporary files will be generated.
+* If you choose to use the mode 'MemoryCache', temporary files will not be generated but the physical memory size must be considered.
+* */
 public final class CacheDriverExecutor extends DriverExecutor {
 
 	public static long READ_TIMER = 10L;
@@ -424,6 +424,10 @@ public final class CacheDriverExecutor extends DriverExecutor {
 		}
 	}
 	
+	/**
+	* Performs the getReadTimer operation
+	* @return the getReadTimer result
+	* */
 	private long getReadTimer(){
 	    return READ_TIMER;
 	}

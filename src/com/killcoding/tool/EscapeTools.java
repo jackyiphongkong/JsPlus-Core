@@ -23,20 +23,43 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.tool;
 
+/**
+* Facade over CodeEscape / CodeEscapeUtil exposing Java escape / unescape and CSV single-line
+* escaping for callers that prefer a single static entry point.
+* */
 public class EscapeTools {
 
+	/**
+	* Constructs a new EscapeTools
+	* */
 	public EscapeTools() {
 		super();
 	}
 	
+	/**
+	* Performs the escapeToSingleLineForCsv operation
+	* @param str - the str
+	* @return the escapeToSingleLineForCsv result
+	* */
 	public static String escapeToSingleLineForCsv(String str){
 	    return CodeEscape.escapeToSingleLineForCsv(str);
 	}	
 	
+	/**
+	* Performs the escape operation
+	* @param str - the str
+	* @param escapeLevel - the escapeLevel
+	* @return the escape result
+	* */
 	public static String escape(String str,CodeEscapeLevel escapeLevel){
 	    return CodeEscapeUtil.escape(str,escapeLevel);
 	}
 	
+	/**
+	* Performs the unescape operation
+	* @param encodeStr - the encodeStr
+	* @return the unescape result
+	* */
 	public static String unescape(String encodeStr){
 	    return CodeEscapeUtil.unescape(encodeStr);
 	}	

@@ -42,22 +42,28 @@ import java.sql.Timestamp;
 import com.killcoding.tool.CommonTools;
 
 /**
- * 
-    CREATE TABLE ghost_remote_command (
-        id CHAR(16) PRIMARY KEY,
-        ghost_name VARCHAR(200),
-        request_script VARCHAR(500),
-        response_message VARCHAR(500),
-        processed INT,
-        requested INT,
-        responsed INT,
-        created_at TIMESTAMP,
-        updated_at TIMESTAMP,
-        deleted_at TIMESTAMP,
-        deleted SMALLINT
-    );
- * 
- */
+*
+CREATE TABLE ghost_remote_command (
+id CHAR(16) PRIMARY KEY,
+ghost_name VARCHAR(200),
+request_script VARCHAR(500),
+response_message VARCHAR(500),
+processed INT,
+requested INT,
+responsed INT,
+created_at TIMESTAMP,
+updated_at TIMESTAMP,
+deleted_at TIMESTAMP,
+deleted SMALLINT
+);
+*
+ * */
+
+/**
+* Ghost-mode console for daemon / service sessions: headless command processing without an
+* interactive prompt, with a response-line delay (RESPONSE_LINE_DELAY_MS) between command outputs.
+* Used e.g. by script/StartH2.js with -GhostName H2Ghost.
+* */
 public class GhostConsole extends ScriptConsole {
     
     public static int RESULT_SIZE = 500;
@@ -87,6 +93,11 @@ public class GhostConsole extends ScriptConsole {
     private boolean exit = false;
     private boolean firstStart = true;
     
+    /**
+    * Constructs a new GhostConsole
+    * @param console - the console
+    * @param ghostName - the ghostName
+    * */
     public GhostConsole(ScriptConsole console,String ghostName) {
         super();
         this.console = console;
@@ -97,6 +108,10 @@ public class GhostConsole extends ScriptConsole {
         init(ghostDsPropFile);
     }
     
+    /**
+    * Performs the init operation
+    * @param ghostDsPropFile - the ghostDsPropFile
+    * */
     private void init(String ghostDsPropFile) {
         try{
             config = new ConfigProperties();
@@ -109,10 +124,18 @@ public class GhostConsole extends ScriptConsole {
         }
     }
     
+    /**
+    * Performs the isAutoClean operation
+    * @return the isAutoClean result
+    * */
     public boolean isAutoClean(){
         return this.autoClean;
     }
     
+    /**
+    * Performs the submit operation
+    * @param executeCommand - the executeCommand
+    * */
     public void submit(String executeCommand){
         String sql = String.format(GHOST_REQUEST_SQL,ghostTable);
         CacheDriverExecutor cde = null;
@@ -139,9 +162,17 @@ public class GhostConsole extends ScriptConsole {
         }
     }
     
+    /**
+    * Performs the getExecuteRun operation
+    * @return the getExecuteRun result
+    * */
     private Runnable getExecuteRun(){
         return new Runnable(){
             @Override
+
+            /**
+            * Performs the run operation
+            * */
             public void run(){
                 CacheDriverExecutor cde = null;
                 try{
@@ -180,10 +211,18 @@ public class GhostConsole extends ScriptConsole {
         };
     }
     
+    /**
+    * Performs the getCompletedRun operation
+    * @return the getCompletedRun result
+    * */
     private Runnable getCompletedRun(){
         final GhostConsole the = this;
         return new Runnable(){
             @Override
+
+            /**
+            * Performs the run operation
+            * */
             public void run(){
                 try{
                     the.requestRows = null;
@@ -202,9 +241,17 @@ public class GhostConsole extends ScriptConsole {
         };
     }    
 
+   /**
+   * Performs the getDetectExecuteRun operation
+   * @return the getDetectExecuteRun result
+   * */
    private Runnable getDetectExecuteRun(){
         return new Runnable(){
             @Override
+
+            /**
+            * Performs the run operation
+            * */
             public void run(){
                 CacheDriverExecutor cde = null;
                 try{
@@ -244,10 +291,18 @@ public class GhostConsole extends ScriptConsole {
         };
     }
     
+    /**
+    * Performs the getDetectCompletedRun operation
+    * @return the getDetectCompletedRun result
+    * */
     private Runnable getDetectCompletedRun(){
         final GhostConsole the = this;
         return new Runnable(){
             @Override
+
+            /**
+            * Performs the run operation
+            * */
             public void run(){
                 try{
                     the.responseRows = null;
@@ -266,6 +321,9 @@ public class GhostConsole extends ScriptConsole {
         };
     }      
     
+    /**
+    * Performs the detect operation
+    * */
     public synchronized void detect() {
         GhostConsole the = this;
         if(responseRows == null){
@@ -293,10 +351,17 @@ public class GhostConsole extends ScriptConsole {
         }
     }  
     
+    /**
+    * Performs the start operation
+    * */
     public void start() throws Exception {
         start(true);
     }    
     
+    /**
+    * Performs the start operation
+    * @param autoClean - the autoClean
+    * */
     public synchronized void start(boolean autoClean) {
         this.autoClean = autoClean;
         GhostConsole the = this;
@@ -334,6 +399,9 @@ public class GhostConsole extends ScriptConsole {
         }
     }
     
+    /**
+    * Performs the stop operation
+    * */
     public synchronized void stop(){
         exit = true;
     }

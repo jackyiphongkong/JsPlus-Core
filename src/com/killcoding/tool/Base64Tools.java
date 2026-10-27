@@ -27,8 +27,8 @@ import com.killcoding.file.BaseFile;
 import java.io.UnsupportedEncodingException;
 
 /**
- * This class is support Base64 tools
- * */
+* This class is support Base64 tools
+* */
 public final class Base64Tools {
 
 	// Mapping table from 6-bit nibbles to Base64 characters.
@@ -54,14 +54,33 @@ public final class Base64Tools {
 			map2[map1[i]] = (byte) i;
 	}
 
+	/**
+	* Performs the encodeString operation
+	* @param s - the s
+	* @return the encodeString result
+	* */
 	public static String encodeString(String s) throws UnsupportedEncodingException {
 		return new String(encode(s.getBytes(BaseFile.CHARSET)));
 	}
 
+	/**
+	* Performs the encodeLines operation
+	* @param in - the in
+	* @return the encodeLines result
+	* */
 	public static String encodeLines(byte[] in) {
 		return encodeLines(in, 0, in.length, 76, System.lineSeparator());
 	}
 
+	/**
+	* Performs the encodeLines operation
+	* @param in - the in
+	* @param iOff - the iOff
+	* @param iLen - the iLen
+	* @param lineLen - the lineLen
+	* @param lineSeparator - the lineSeparator
+	* @return the encodeLines result
+	* */
 	public static String encodeLines(byte[] in, int iOff, int iLen,
 			int lineLen, String lineSeparator) {
 		int blockLen = (lineLen * 3) / 4;
@@ -80,14 +99,32 @@ public final class Base64Tools {
 		return buf.toString();
 	}
 
+	/**
+	* Performs the encode operation
+	* @param in - the in
+	* @return the encode result
+	* */
 	public static char[] encode(byte[] in) {
 		return encode(in, 0, in.length);
 	}
 
+	/**
+	* Performs the encode operation
+	* @param in - the in
+	* @param iLen - the iLen
+	* @return the encode result
+	* */
 	public static char[] encode(byte[] in, int iLen) {
 		return encode(in, 0, iLen);
 	}
 
+	/**
+	* Performs the encode operation
+	* @param in - the in
+	* @param iOff - the iOff
+	* @param iLen - the iLen
+	* @return the encode result
+	* */
 	public static char[] encode(byte[] in, int iOff, int iLen) {
 		int oDataLen = (iLen * 4 + 2) / 3; // output length without padding
 		int oLen = ((iLen + 2) / 3) * 4; // output length including padding
@@ -113,10 +150,20 @@ public final class Base64Tools {
 		return out;
 	}
 
+	/**
+	* Performs the decodeString operation
+	* @param s - the s
+	* @return the decodeString result
+	* */
 	public static String decodeString(String s) throws UnsupportedEncodingException {
 		return new String(decode(s),BaseFile.CHARSET);
 	}
 
+	/**
+	* Performs the decodeLines operation
+	* @param s - the s
+	* @return the decodeLines result
+	* */
 	public static byte[] decodeLines(String s) {
 		char[] buf = new char[s.length()];
 		int p = 0;
@@ -128,14 +175,31 @@ public final class Base64Tools {
 		return decode(buf, 0, p);
 	}
 
+	/**
+	* Performs the decode operation
+	* @param s - the s
+	* @return the decode result
+	* */
 	public static byte[] decode(String s) {
 		return decode(s.toCharArray());
 	}
 
+	/**
+	* Performs the decode operation
+	* @param in - the in
+	* @return the decode result
+	* */
 	public static byte[] decode(char[] in) {
 		return decode(in, 0, in.length);
 	}
 
+	/**
+	* Performs the decode operation
+	* @param in - the in
+	* @param iOff - the iOff
+	* @param iLen - the iLen
+	* @return the decode result
+	* */
 	public static byte[] decode(char[] in, int iOff, int iLen) {
 		if (iLen % 4 != 0)
 			throw new IllegalArgumentException(

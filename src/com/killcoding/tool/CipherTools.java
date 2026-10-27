@@ -53,10 +53,17 @@ import java.util.Arrays;
 import com.killcoding.file.BaseFile;
 
 /**
- * This class is support base cipher function
- * */
+* This class is support base cipher function
+* */
 public final class CipherTools {
     
+    /**
+    * Performs the DESEncrypt operation
+    * @param keyText - the keyText
+    * @param ivText - the ivText
+    * @param data - the data
+    * @return the DESEncrypt result
+    * */
     public static byte[] DESEncrypt(String keyText, String ivText, byte[] data) throws Exception {
 		DESKeySpec keySpec = null;
 		AlgorithmParameterSpec iv = null ;
@@ -72,6 +79,13 @@ public final class CipherTools {
 		return cipher.doFinal(data);
     }
     
+    /**
+    * Performs the DESDecrypt operation
+    * @param keyText - the keyText
+    * @param ivText - the ivText
+    * @param encryptData - the encryptData
+    * @return the DESDecrypt result
+    * */
     public static byte[] DESDecrypt(String keyText, String ivText, byte[] encryptData) throws Exception {
 		DESKeySpec keySpec = null;
 		AlgorithmParameterSpec iv = null ;
@@ -87,6 +101,13 @@ public final class CipherTools {
 		return cipher.doFinal(encryptData);		
     }
     
+    /**
+    * Performs the _3DESEncrypt operation
+    * @param keyText - the keyText
+    * @param ivText - the ivText
+    * @param data - the data
+    * @return the _3DESEncrypt result
+    * */
     public static byte[] _3DESEncrypt(String keyText,String ivText,byte[] data) throws Exception {
         String Algorithm = "DESede";
 		String TRANS_FORMATION = "DESede/CBC/PKCS5Padding";
@@ -100,6 +121,13 @@ public final class CipherTools {
 		return cipher.doFinal(data);			
     }
     
+    /**
+    * Performs the _3DESDecrypt operation
+    * @param keyText - the keyText
+    * @param ivText - the ivText
+    * @param encryptData - the encryptData
+    * @return the _3DESDecrypt result
+    * */
     public static byte[] _3DESDecrypt(String keyText,String ivText,byte[] encryptData) throws Exception {
         String Algorithm = "DESede";
 		String TRANS_FORMATION = "DESede/CBC/PKCS5Padding";
@@ -113,6 +141,12 @@ public final class CipherTools {
 		return cipher.doFinal(encryptData);		
     }
     
+    /**
+    * Performs the AESEncrypt operation
+    * @param keyText - the keyText
+    * @param data - the data
+    * @return the AESEncrypt result
+    * */
     public static byte[] AESEncrypt(String keyText, byte[] data) throws Exception {
 		SecretKeySpec spec = new SecretKeySpec(generateAESKey(keyText), "AES");
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -120,6 +154,12 @@ public final class CipherTools {
 		return cipher.doFinal(data);
     }
     
+    /**
+    * Performs the AESDecrypt operation
+    * @param keyText - the keyText
+    * @param encryptData - the encryptData
+    * @return the AESDecrypt result
+    * */
     public static byte[] AESDecrypt(String keyText, byte[] encryptData) throws Exception {
 		SecretKeySpec spec = new SecretKeySpec(generateAESKey(keyText), "AES");
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -127,12 +167,22 @@ public final class CipherTools {
 		return cipher.doFinal(encryptData);
     }  
 
+    /**
+    * Performs the generateAESKey operation
+    * @param keyText - the keyText
+    * @return the generateAESKey result
+    * */
     public static byte[] generateAESKey(String keyText) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(keyText.getBytes(BaseFile.CHARSET));
         return Arrays.copyOf(hash, 16);
     }
     
+    /**
+    * Performs the RSAPrivateKeyGen operation
+    * @param seed - the seed
+    * @return the RSAPrivateKeyGen result
+    * */
     public static byte[] RSAPrivateKeyGen(byte[] seed) throws Exception {
 		 String ALOGRITHM = "RSA";
 		 String RANDOM_ALOGRITHM = "SHA1PRNG"; 
@@ -147,6 +197,11 @@ public final class CipherTools {
 		 return keyPair.getPrivate().getEncoded();
     }
     
+    /**
+    * Performs the RSAPublieKeyGen operation
+    * @param seed - the seed
+    * @return the RSAPublieKeyGen result
+    * */
     public static byte[] RSAPublieKeyGen(byte[] seed) throws Exception {
 		 String ALOGRITHM = "RSA";
 		 String RANDOM_ALOGRITHM = "SHA1PRNG"; 
@@ -161,6 +216,11 @@ public final class CipherTools {
 		 return keyPair.getPublic().getEncoded();
     }   
     
+	/**
+	* Performs the RSAPublicKeyFrom operation
+	* @param keyArray - the keyArray
+	* @return the RSAPublicKeyFrom result
+	* */
 	public static PublicKey RSAPublicKeyFrom(byte[] keyArray) throws Exception {
 		String ALOGRITHM = "RSA";
 		KeySpec keySpec = new X509EncodedKeySpec(
@@ -169,6 +229,11 @@ public final class CipherTools {
 		return keyFactory.generatePublic(keySpec);
 	}
 
+	/**
+	* Performs the RSAPrivateKeyFrom operation
+	* @param keyArray - the keyArray
+	* @return the RSAPrivateKeyFrom result
+	* */
 	public static PrivateKey RSAPrivateKeyFrom(byte[] keyArray) throws Exception {
 		String ALOGRITHM = "RSA";
 		KeySpec keySpec = new PKCS8EncodedKeySpec(keyArray);
@@ -176,6 +241,12 @@ public final class CipherTools {
 		return keyFactory.generatePrivate(keySpec);
 	}
     
+	/**
+	* Performs the RSAEncrypt operation
+	* @param key - the key
+	* @param data - the data
+	* @return the RSAEncrypt result
+	* */
 	public static byte[] RSAEncrypt(Key key, byte[] data) throws Exception {
 	    String ALOGRITHM = "RSA";
 		Cipher cipher = Cipher.getInstance(ALOGRITHM);
@@ -196,6 +267,12 @@ public final class CipherTools {
 		return out.toByteArray();
 	}    
 	
+	/**
+	* Performs the RSADecrypt operation
+	* @param key - the key
+	* @param encryptData - the encryptData
+	* @return the RSADecrypt result
+	* */
 	public static byte[] RSADecrypt(Key key, byte[] encryptData) throws Exception {
 	    String ALOGRITHM = "RSA";
 		Cipher cipher = Cipher.getInstance(ALOGRITHM);

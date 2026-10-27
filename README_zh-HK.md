@@ -100,6 +100,23 @@ MinPoolSize=1         MaxPoolSize=100
 - `QUALITY-REVIEW.md`：70 分七維質量報告（P0 已全部完成）——含伺服器版對標、工具鏈、測試閉環、版本機制、已知限制（如 GraalJS `load()` 共享全域作用域、CacheArray 全域 forceStop、PowerShell 須 `cmd /c` 傳 `< NUL`）。
 - **GraalJS 執行緒限定**（25.0.3 實測）：`CacheArray` 的 filter worker 執行緒無法進入 JS context（`Multi threaded access … not allowed for language(s) js`），因此 JS `Console.callback(...)` 的回調體在 worker 執行緒上不會觸發。TestDatasource C14 改用 `callbackSync=false` 並以可觀察的消費鏈路作斷言（值被移除、鍵保留、`dbVerify` 獨立驗證）。
 
+## 架構對照：相關開源模式
+
+CacheArray 管線（異步 filter worker + 生產／餵入／消費三 console + 回調代理）對應一組成熟的開源模式，對照表如下：
+
+| JsPlus-Core 設計 | 開源對應物 | 定位 |
+| --- | --- | --- |
+| `CacheArray.filter(worker)` 逐行觸發 callback（`execute`≈`onNext`、`completed`≈`onComplete`、`terminated`≈`onError`／取消） | **RxJava / Project Reactor**（Flowable/Flux） | 可觀察序列 + 背壓 + 異步消費——語義最貼近 |
+| `CacheDriverExecutor.find(sql, params, GCA)` 逐行 add | **Spring JdbcTemplate RowCallbackHandler** / **MyBatis Cursor** / **jOOQ** 流式查詢 | JDBC 結果集逐行處理，不整表載入記憶體 |
+| `executeBatch` + `sweepProcessed`（批量消費 + 頭部回收） | **LMAX Disruptor**（無鎖環形緩衝 + 批量事件處理） | 低延遲批量消費 |
+| insertConsole → feedConsole → callbackConsole（多角色 console） | **Akka Actor** / **Vert.x Verticle** / **ZeroMQ** | 多角色獨立消息循環 |
+| 批量 chunk + 完成回調 | **Spring Batch**（ItemReader→Processor→Writer chunk） | 批處理管線（ETL／Job） |
+| filter worker 輪詢 + 週期任務 | **ScheduledExecutorService** / **Quartz** / Node.js `setInterval` | 定時驅動消費循環 |
+| 快取 + 淘汰／回收 | **Caffeine / Guava Cache**（異步 refresh、淘汰 ≈ `sweepProcessed`／`removeAll`） | 快取生命週期管理 |
+| Java worker 執行緒 + `Java.extend(Runnable)` 代理（GraalJS 執行緒限定） | **GraalVM Polyglot API** 宿主互操作 | 多語言嵌入的跨執行緒邊界 |
+
+整體最貼近：**RxJava／Reactor**（可觀察語義）、**Disruptor**（批量消費）、**Akka Actor**（多 console 分工）、**MyBatis Cursor／Spring RowCallbackHandler**（JDBC 逐行流式）。
+
 ## 環境變數覆蓋（與伺服器版同名慣例）
 
 | 變數 | 預設 | 用途 |

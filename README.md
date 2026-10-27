@@ -100,6 +100,23 @@ MinPoolSize=1         MaxPoolSize=100
 - `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — server-edition alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
 - **GraalJS thread confinement** (verified on 25.0.3): a `CacheArray` filter worker thread cannot enter the JS context (`Multi threaded access … not allowed for language(s) js`), so a JS `Console.callback(...)` body never fires on the worker thread. TestDatasource C14 uses `callbackSync=false` and asserts the observable consumption link instead (value removed, key kept, `dbVerify` independent).
 
+## Architecture Reference: Related Open-Source Patterns
+
+The CacheArray pipeline (async filter worker + producer/feeder/consumer consoles + callback proxy) maps onto a set of well-known open-source patterns:
+
+| JsPlus-Core design | Open-source counterpart | Niche |
+| --- | --- | --- |
+| `CacheArray.filter(worker)` fires the callback per row (`execute`≈`onNext`, `completed`≈`onComplete`, `terminated`≈`onError`/dispose) | **RxJava / Project Reactor** (Flowable/Flux) | Observable sequence + backpressure + async consumption — semantically closest |
+| `CacheDriverExecutor.find(sql, params, GCA)` adds rows one by one | **Spring JdbcTemplate RowCallbackHandler** / **MyBatis Cursor** / **jOOQ** streaming queries | Row-by-row JDBC result processing without materialising the whole set |
+| `executeBatch` + `sweepProcessed` (batched consumption + head reclaim) | **LMAX Disruptor** (lock-free ring buffer + batched event processing) | Low-latency batched consumption |
+| insertConsole → feedConsole → callbackConsole (multi-role consoles) | **Akka Actor** / **Vert.x Verticle** / **ZeroMQ** | Multi-role independent message loops |
+| Batched chunk + completion callback | **Spring Batch** (ItemReader→Processor→Writer chunk) | Batch pipelines (ETL / jobs) |
+| Filter worker polling + periodic tasks | **ScheduledExecutorService** / **Quartz** / Node.js `setInterval` | Timer-driven consumption loops |
+| Cache + eviction / reclaim | **Caffeine / Guava Cache** (async refresh, eviction ≈ `sweepProcessed`/`removeAll`) | Cache lifecycle management |
+| Java worker thread + `Java.extend(Runnable)` proxy (GraalJS thread confinement) | **GraalVM Polyglot API** host interop | Cross-thread boundary in polyglot embedding |
+
+Closest overall: **RxJava / Reactor** for the observable semantics, **Disruptor** for batched consumption, **Akka Actor** for the multi-console division, **MyBatis Cursor / Spring RowCallbackHandler** for row-by-row JDBC streaming.
+
 ## Environment Overrides (same naming convention as the server edition)
 
 | Variable | Default | Purpose |

@@ -47,6 +47,11 @@ import java.nio.file.attribute.FileTime;
 
 
 
+/**
+* Abstract base for file operations: shared sync/stop machinery (volatile stopSync plus a
+* polling wait), debug timing (debugLogTime) and common file-IO helpers used by the concrete
+* file engines DiskFile and RemoteFile.
+* */
 public abstract class BaseFile {
     
     protected static final String TMP_MATCHES_EDIT = "^.*\\..*~$";
@@ -62,60 +67,179 @@ public abstract class BaseFile {
 	
 	public static String CHARSET = "UTF-8";
 
+	/**
+	* Performs the isFile operation
+	* @return the isFile result
+	* */
 	public abstract boolean isFile() throws IOException;
 	
+	/**
+	* Performs the isDirectory operation
+	* @return the isDirectory result
+	* */
 	public abstract boolean isDirectory() throws IOException;
 	
+	/**
+	* Performs the isLink operation
+	* @return the isLink result
+	* */
 	public abstract boolean isLink() throws IOException;
 
+	/**
+	* Performs the delete operation
+	* @return the delete result
+	* */
 	public abstract boolean delete() throws IOException;
 
+	/**
+	* Performs the exists operation
+	* @return the exists result
+	* */
 	public abstract boolean exists() throws IOException;
 
+	/**
+	* Performs the mkdirs operation
+	* @return the mkdirs result
+	* */
 	public abstract boolean mkdirs() throws IOException;
 	
+	/**
+	* Performs the createLink operation
+	* @param target - the target
+	* @return the createLink result
+	* */
 	public abstract boolean createLink(String target) throws IOException;
 	
+	/**
+	* Performs the readLink operation
+	* @return the readLink result
+	* */
 	public abstract String readLink() throws IOException;
 
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param append - the append
+	* @return the write result
+	* */
 	public abstract boolean write(byte[] data, boolean append) throws IOException;
 
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @return the write result
+	* */
 	public abstract boolean write(byte[] data) throws IOException;
 
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param append - the append
+	* @return the write result
+	* */
 	public abstract boolean write(String data, boolean append) throws IOException;
 
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @return the write result
+	* */
 	public abstract boolean write(String data) throws IOException;
 
+	/**
+	* Performs the readAllBytes operation
+	* @return the readAllBytes result
+	* */
 	public abstract byte[] readAllBytes() throws IOException;
 	
+	/**
+	* Performs the readAllString operation
+	* @return the readAllString result
+	* */
 	public abstract String readAllString() throws IOException;
 	
+	/**
+	* Performs the size operation
+	* @return the size result
+	* */
 	public abstract long size() throws IOException;
 	
+	/**
+	* Performs the complete operation
+	* @return the complete result
+	* */
 	public abstract boolean complete() throws IOException;
 	
+	/**
+	* Performs the getModifyTime operation
+	* @return the getModifyTime result
+	* */
 	public abstract Timestamp getModifyTime() throws IOException;
 	
+	/**
+	* Performs the setModifyTime operation
+	* @param modifyTime - the modifyTime
+	* */
 	public abstract void setModifyTime(Timestamp modifyTime) throws IOException;
 	
+	/**
+	* Performs the copyTo operation
+	* @param toPath - the toPath
+	* */
 	public abstract void copyTo(String toPath) throws IOException;
 	
+	/**
+	* Performs the moveTo operation
+	* @param toPath - the toPath
+	* */
 	public abstract void moveTo(String toPath) throws IOException;
 
+	/**
+	* Performs the beforeDelete operation
+	* @param realDeleted - the realDeleted
+	* @return the beforeDelete result
+	* */
 	public abstract boolean beforeDelete(boolean realDeleted);
 	
+	/**
+	* Performs the afterDelete operation
+	* @param realDeleted - the realDeleted
+	* */
 	public abstract void afterDelete(boolean realDeleted);
 		
+	/**
+	* Performs the beforeMkdirs operation
+	* @return the beforeMkdirs result
+	* */
 	public abstract boolean beforeMkdirs();
 	
+	/**
+	* Performs the afterMkdirs operation
+	* */
 	public abstract void afterMkdirs();
 	
+	/**
+	* Performs the beforeCreateLink operation
+	* @param target - the target
+	* @return the beforeCreateLink result
+	* */
 	public abstract boolean beforeCreateLink(String target);
 	
+	/**
+	* Performs the afterCreateLink operation
+	* @param target - the target
+	* */
 	public abstract void afterCreateLink(String target);	
 	
+	/**
+	* Performs the beforeWrite operation
+	* @return the beforeWrite result
+	* */
 	public abstract boolean beforeWrite();
 	
+	/**
+	* Performs the afterWrite operation
+	* */
 	public abstract void afterWrite();
 	
 	public static long CACHE_ARRAY_FILTER_TIMER = 10L;
@@ -160,28 +284,52 @@ public abstract class BaseFile {
 	    }
 	}
 
+	/**
+	* Constructs a new BaseFile
+	* @param path - the path
+	* */
 	public BaseFile(String path) {
 		super();
 		origin = new File(path);
 	}
 	
+	/**
+	* Constructs a new BaseFile
+	* @param origin - the origin
+	* */
 	public BaseFile(File origin) {
 		super();
 		this.origin = origin;
 	}	
 	
+	/**
+	* Performs the setTmpDir operation
+	* @param tmpDir - the tmpDir
+	* */
 	public static void setTmpDir(String tmpDir) throws IOException {
 	    TEMP_DIR = Files.createDirectories(Paths.get(tmpDir));
 	}
 
+	/**
+	* Performs the getPath operation
+	* @return the getPath result
+	* */
 	public String getPath() {
         return parsePath(String.format("%s/%s",getParent(),origin.getName()));
 	}
 	
+	/**
+	* Performs the getOrigin operation
+	* @return the getOrigin result
+	* */
 	public File getOrigin(){
 	    return origin;
 	}
 	
+	/**
+	* Performs the getParent operation
+	* @return the getParent result
+	* */
 	public String getParent() {
 		String parent = CommonTools.isBlank(origin.getParent()) ? "/" : origin.getParent();
         return replacePath(parent);
@@ -202,6 +350,11 @@ public abstract class BaseFile {
 	    return parents;
 	}
 	
+	/**
+	* Performs the write operation
+	* @param partSize - the partSize
+	* @param allBytes - the allBytes
+	* */
 	public void write(int partSize,byte[] allBytes) throws IOException {
 	    try{
     	    ByteBuffer bf = ByteBuffer.allocate(partSize);
@@ -227,6 +380,10 @@ public abstract class BaseFile {
 	    }
 	}	
 	
+    /**
+    * Performs the toModifyTmpFilePath operation
+    * @return the toModifyTmpFilePath result
+    * */
     protected String toModifyTmpFilePath() throws IOException {
         if(syncRoot == null) throw new IOException("The 'BaseFile.syncRoot' is null.");
         
@@ -239,6 +396,10 @@ public abstract class BaseFile {
         return null;  
     }  
     
+    /**
+    * Performs the toAccessTmpFilePath operation
+    * @return the toAccessTmpFilePath result
+    * */
     protected String toAccessTmpFilePath() throws IOException {
         if(syncRoot == null) throw new IOException("The 'BaseFile.syncRoot' is null.");
         
@@ -251,6 +412,10 @@ public abstract class BaseFile {
         return null;            
     }  
 
+    /**
+    * Performs the toCheckTmpFilePath operation
+    * @return the toCheckTmpFilePath result
+    * */
     protected String toCheckTmpFilePath() throws IOException {
         if(syncRoot == null) throw new IOException("The 'BaseFile.syncRoot' is null.");
         
@@ -263,6 +428,9 @@ public abstract class BaseFile {
         return null;            
     }  
     
+	/**
+	* Performs the stopSync operation
+	* */
 	public synchronized static void stopSync() {
 		LoggerFactory.getLogger(DiskFile.class).mark("Sending stop command.");
     	stopSync = true;
@@ -280,12 +448,21 @@ public abstract class BaseFile {
 		LoggerFactory.getLogger(DiskFile.class).mark("Sent stop command");
 	}
 	
+    /**
+    * Performs the isStopSync operation
+    * @return the isStopSync result
+    * */
     public static boolean isStopSync(){
 	    DiskFile.checkQueuePathMapping();
 	    RemoteFile.checkQueuePathMapping();        
         return stopSync && DiskFile.getQueuePathMapping().isEmpty() && RemoteFile.getQueuePathMapping().isEmpty();
     }
     
+    /**
+    * Performs the isDebug operation
+    * @param remoteFile - the remoteFile
+    * @return the isDebug result
+    * */
     protected static boolean isDebug(RemoteFile remoteFile){
         boolean debug = false;
         if(remoteFile != null){
@@ -296,6 +473,11 @@ public abstract class BaseFile {
         return debug || LoggerFactory.getLogger(BaseFile.class).isDebugEnabled();
     }
     
+    /**
+    * Performs the isHidden operation
+    * @param path - the path
+    * @return the isHidden result
+    * */
     public static boolean isHidden(String path) throws Exception{
         Path checkPath = Paths.get(path);
 
@@ -314,6 +496,16 @@ public abstract class BaseFile {
 		return false;
     } 
     
+    /**
+    * Performs the checkSyncPathAvailable operation
+    * @param path - the path
+    * @param showHidden - the showHidden
+    * @param showLink - the showLink
+    * @param maxFileSize - the maxFileSize
+    * @param syncPathAllowed - the syncPathAllowed
+    * @param syncPathIgnored - the syncPathIgnored
+    * @return the checkSyncPathAvailable result
+    * */
     public static boolean checkSyncPathAvailable(String path, boolean showHidden,boolean showLink,long maxFileSize, List<String> syncPathAllowed,
 			List<String> syncPathIgnored) {
 			    
@@ -405,10 +597,21 @@ public abstract class BaseFile {
 		}
 	}
 	
+	/**
+	* Performs the isDir operation
+	* @return the isDir result
+	* */
 	public boolean isDir() throws IOException {
 	    return isDirectory();
 	}	
 	
+	/**
+	* Performs the timeZoneConver operation
+	* @param destTimeZone - the destTimeZone
+	* @param srcTimeZone - the srcTimeZone
+	* @param srcDate - the srcDate
+	* @return the timeZoneConver result
+	* */
 	public Timestamp timeZoneConver(String destTimeZone, String srcTimeZone, Timestamp srcDate) throws IOException {
 	    try{
     	    String pattern = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -426,19 +629,38 @@ public abstract class BaseFile {
 	    }
 	}	
 	
+	/**
+	* Performs the replacePath operation
+	* @param source - the source
+	* @return the replacePath result
+	* */
 	protected static String replacePath(String source){
 	    return source.replaceAll("\\\\", "/");
 	}
 	
+	/**
+	* Performs the parsePath operation
+	* @param source - the source
+	* @return the parsePath result
+	* */
 	protected static String parsePath(String source){
 	    return source.replaceAll("\\\\", "/").replaceAll("//","/");
 	}
 
+    /**
+    * Performs the checkUsage operation
+    * @param rf - the rf
+    * @return the checkUsage result
+    * */
     public static boolean checkUsage(RemoteFile rf){
         return memoryUsage() < RemoteFile.MAX_MEMORY_USAGE && rf.getDataSourceWriter().getUsage() < RemoteFile.MAX_CONNECT_USAGE && rf.getDataSourceReader().getUsage() < RemoteFile.MAX_CONNECT_USAGE;
     }
     
 
+    /**
+    * Performs the memoryUsing operation
+    * @return the memoryUsing result
+    * */
     public static long memoryUsing(){
         int mb = 1024 * 1024;
 		Runtime instance = Runtime.getRuntime();
@@ -447,6 +669,11 @@ public abstract class BaseFile {
 		return  (instance.totalMemory() - instance.freeMemory()) / mb;
     }	
 
+    /**
+    * Performs the memoryUsage operation
+    * @param using - the using
+    * @return the memoryUsage result
+    * */
     public static double memoryUsage(long using){
         int mb = 1024 * 1024;
 		Runtime instance = Runtime.getRuntime();
@@ -454,10 +681,21 @@ public abstract class BaseFile {
 		return (using * 1.0D / maxMemory * 1.0D);
     }	
     
+    /**
+    * Performs the memoryUsage operation
+    * @return the memoryUsage result
+    * */
     public static double memoryUsage(){
         return memoryUsage(memoryUsing());
     }    
     
+	/**
+	* Performs the debugLog operation
+	* @param clazz - the clazz
+	* @param point - the point
+	* @param rf - the rf
+	* @param filter - the filter
+	* */
 	protected synchronized static void debugLog(Class clazz,String point,RemoteFile rf,CacheArrayFilter filter){
 	    long ctm = System.currentTimeMillis();
 	    boolean canWrite = (ctm - debugLogTime) >= 60000L;

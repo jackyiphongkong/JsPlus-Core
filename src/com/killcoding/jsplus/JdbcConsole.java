@@ -43,8 +43,15 @@ import java.nio.file.Files;
 
 
 
+/**
+* JDBC console: an interactive database REPL that executes SQL against a DriverDataSource
+* connection, supporting scripts, query result rendering and connection lifecycle management.
+* */
 public class JdbcConsole extends ScriptConsole {
 
+	/**
+	* Constructs a new JdbcConsole
+	* */
 	public JdbcConsole() {
 		super();
 		setUseJdbcEnv();

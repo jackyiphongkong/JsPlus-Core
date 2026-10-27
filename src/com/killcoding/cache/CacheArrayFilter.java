@@ -29,8 +29,8 @@ import com.killcoding.cache.CacheArray;
 import java.util.List;
 
 /**
- * This class is used with 'CacheArray'
- * */
+* This class is used with 'CacheArray'
+* */
 public class CacheArrayFilter {
 
 	private Long timer = 10L;
@@ -92,43 +92,81 @@ public class CacheArrayFilter {
 
 	}	
 	
+	/**
+	* Performs the terminate operation
+	* */
 	public void terminate(){
 	    this.terminated = true;
 	}
 	
+	/**
+	* Performs the forceTerminate operation
+	* */
 	public void forceTerminate(){
 	    this.terminated = true;
 	    this.forceTerminated = true;
 	}		
 	
+	/**
+	* Performs the isTerminated operation
+	* @return the isTerminated result
+	* */
 	public boolean isTerminated(){
 	    return terminated;
 	}
 	
+	/**
+	* Performs the isForceTerminated operation
+	* @return the isForceTerminated result
+	* */
 	public boolean isForceTerminated(){
 	    return forceTerminated;
 	}	
 	
+	/**
+	* Performs the setTimer operation
+	* @param timer - the timer
+	* */
 	public void setTimer(long timer) {
 		this.timer = timer;
 	}	
 
+	/**
+	* Performs the getTimer operation
+	* @return the getTimer result
+	* */
 	public Long getTimer() {
 		return timer;
 	}
 	
+	/**
+	* Performs the setLoopTimer operation
+	* @param loopTimer - the loopTimer
+	* */
 	public void setLoopTimer(long loopTimer) {
 		this.loopTimer = loopTimer;
 	}	
 	
+	/**
+	* Performs the getLoopTimer operation
+	* @return the getLoopTimer result
+	* */
 	public Long getLoopTimer() {
 		return loopTimer;
 	}	
 
+	/**
+	* Performs the setCacheArray operation
+	* @param cacheArray - the cacheArray
+	* */
 	public void setCacheArray(CacheArray cacheArray) {
 		this.cacheArray = cacheArray;
 	}
 
+	/**
+	* Performs the getCacheArray operation
+	* @return the getCacheArray result
+	* */
 	public CacheArray getCacheArray() {
 		return this.cacheArray;
 	}	

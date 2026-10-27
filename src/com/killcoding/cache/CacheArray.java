@@ -39,22 +39,22 @@ import com.killcoding.cache.CacheArray;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Asynchronous cache-list for large results / large collections.
- * Thread model:
- *   - Producer(s): call add()/addAll() - synchronized, append-only.
- *   - One worker per filter(): drains items on a shared fixed thread pool,
- *     invoking CacheArrayFilter.execute()/executeBatch()/completed()/
- *     terminated() on the worker thread (never call JS proxies from there -
- *     GraalJS forbids worker-thread JS entry; use a Runnable proxy + the
- *     owning console's callback queue instead).
- *   - Consumer(s): poll getIndex()/getObject()/isCompleted()/getProcessedTotal()
- *     from the owning (producer) thread; the volatile fields guarantee
- *     visibility of the worker's writes.
- * Lifecycle: initPool() optional -> filter() starts the worker -> the worker
- * ends when the producer feed is exhausted (completed), on forceTerminate(),
- * or when CacheArray.forceStop() is set globally. shutdownPool() releases the
- * shared executor (lazily re-created on the next filter()).
- * */
+* Asynchronous cache-list for large results / large collections.
+* Thread model:
+*   - Producer(s): call add()/addAll() - synchronized, append-only.
+*   - One worker per filter(): drains items on a shared fixed thread pool,
+*     invoking CacheArrayFilter.execute()/executeBatch()/completed()/
+*     terminated() on the worker thread (never call JS proxies from there -
+*     GraalJS forbids worker-thread JS entry; use a Runnable proxy + the
+*     owning console's callback queue instead).
+*   - Consumer(s): poll getIndex()/getObject()/isCompleted()/getProcessedTotal()
+*     from the owning (producer) thread; the volatile fields guarantee
+*     visibility of the worker's writes.
+* Lifecycle: initPool() optional -> filter() starts the worker -> the worker
+* ends when the producer feed is exhausted (completed), on forceTerminate(),
+* or when CacheArray.forceStop() is set globally. shutdownPool() releases the
+* shared executor (lazily re-created on the next filter()).
+* */
 public class CacheArray implements java.io.Serializable {
     
     private static Integer MAX_POOL_SIZE = 100;
@@ -103,11 +103,19 @@ public class CacheArray implements java.io.Serializable {
 		this.nullIsCompleted = true;
 	}
 	
+	/**
+	* Constructs a new CacheArray
+	* @param nullIsCompleted - the nullIsCompleted
+	* */
 	public CacheArray(boolean nullIsCompleted) {
 		super();
 		this.nullIsCompleted = nullIsCompleted;
 	}	
 
+	/**
+	* Performs the initPool operation
+	* @param poolSize - the poolSize
+	* */
 	public static synchronized void initPool(int poolSize) {
 		if (arrayPool == null) {
 		    MAX_POOL_SIZE = poolSize;
@@ -127,10 +135,24 @@ public class CacheArray implements java.io.Serializable {
 		}
 	}
 	
+	/**
+	* Performs the filter operation
+	* @param timer - the timer
+	* @param executeRun - the executeRun
+	* @param completedRun - the completedRun
+	* @param terminatedRun - the terminatedRun
+	* @return the filter result
+	* */
 	public CacheArrayFilter filter(final long timer,final Runnable executeRun,final Runnable completedRun,final Runnable terminatedRun) {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer){
 	        @Override
+
+        	/**
+        	* Performs the execute operation
+        	* @param index - the index
+        	* @param object - the object
+        	* */
         	public void execute(Integer index, Object object){
         	    the.INDEX = index;
         	    the.OBJECT = object;
@@ -138,12 +160,21 @@ public class CacheArray implements java.io.Serializable {
         	    if(executeRun != null) executeRun.run();
         	}
         	@Override
+
+        	/**
+        	* Performs the completed operation
+        	* @param size - the size
+        	* */
         	public void completed(Integer size) {
         	    the.SIZE = size;
         	    
                 if(completedRun != null) completedRun.run();
         	}   
         	@Override
+
+        	/**
+        	* Performs the terminated operation
+        	* */
         	public void terminated() {
         	    
         	    if(terminatedRun != null) terminatedRun.run();
@@ -153,28 +184,59 @@ public class CacheArray implements java.io.Serializable {
 	    return the.filter;
 	}
 
+	/**
+	* Performs the filter operation
+	* @param timer - the timer
+	* @param loopTimer - the loopTimer
+	* @param executeRun - the executeRun
+	* @param executeBatchRun - the executeBatchRun
+	* @param completedRun - the completedRun
+	* @param terminatedRun - the terminatedRun
+	* @return the filter result
+	* */
 	public CacheArrayFilter filter(final long timer,final long loopTimer,final Runnable executeRun,final Runnable executeBatchRun,final Runnable completedRun,final Runnable terminatedRun) {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer,loopTimer){
 	        @Override
+
+        	/**
+        	* Performs the execute operation
+        	* @param index - the index
+        	* @param object - the object
+        	* */
         	public void execute(Integer index, Object object){
         	    
         	    if(executeRun != null) executeRun.run();
         	}
         	
         	@Override
+
+        	/**
+        	* Performs the executeBatch operation
+        	* @param index - the index
+        	* @param batch - the batch
+        	* */
         	public void executeBatch(Integer index,List batch) {
         	    
                 if(executeBatchRun != null) executeBatchRun.run();
         	}    
         	
         	@Override
+
+        	/**
+        	* Performs the completed operation
+        	* @param size - the size
+        	* */
         	public void completed(Integer size) {
 
                 if(completedRun != null) completedRun.run();
         	}   
         	
         	@Override
+
+        	/**
+        	* Performs the terminated operation
+        	* */
         	public void terminated() {
         	    
         	    if(terminatedRun != null) terminatedRun.run();
@@ -196,6 +258,10 @@ public class CacheArray implements java.io.Serializable {
 		final CacheArray the = this;
 		Runnable runnable = new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				boolean usageReturned = false;
 				int index = 0;
@@ -450,48 +516,87 @@ public class CacheArray implements java.io.Serializable {
 		return completed;
 	}
 	
+	/**
+	* Performs the isStoped operation
+	* @return the isStoped result
+	* */
 	public static Boolean isStoped() {
 		return stop;
 	}	
 	
+	/**
+	* Performs the isForceStoped operation
+	* @return the isForceStoped result
+	* */
 	public static Boolean isForceStoped() {
 		return forceStop;
 	}	
 	
+	/**
+	* Performs the stop operation
+	* */
 	public static void stop() {
 		stop = true;
 	}
 	
+	/**
+	* Performs the forceStop operation
+	* */
 	public static void forceStop() {
 		stop = true;
 		forceStop = true;
 	}	
 	
+	/**
+	* Performs the start operation
+	* */
 	public static void start() {
 		stop = false;
 		forceStop = false;
 	}
 	
+	/**
+	* Performs the terminate operation
+	* */
 	public void terminate(){
 	    if(filter != null) filter.terminate();
 	}
 
+	/**
+	* Performs the forceTerminate operation
+	* */
 	public void forceTerminate(){
 	    if(filter != null) filter.forceTerminate();
 	}
 	
+	/**
+	* Performs the isTerminated operation
+	* @return the isTerminated result
+	* */
 	public Boolean isTerminated(){
 	    return filter == null ? true : filter.isTerminated();
 	}
 	
+	/**
+	* Performs the isForceTerminated operation
+	* @return the isForceTerminated result
+	* */
 	public Boolean isForceTerminated(){
 	    return filter == null ? true : filter.isForceTerminated();
 	}	
 	
+	/**
+	* Performs the getFilter operation
+	* @return the getFilter result
+	* */
 	public CacheArrayFilter getFilter(){
 	    return filter;
 	}
 	
+	/**
+	* Performs the getIndex operation
+	* @return the getIndex result
+	* */
 	public Integer getIndex(){
 	    return INDEX;
 	}
@@ -503,42 +608,83 @@ public class CacheArray implements java.io.Serializable {
 	    return processedTotal;
 	}
 	
+	/**
+	* Performs the getSize operation
+	* @return the getSize result
+	* */
 	public Integer getSize(){
 	    return SIZE;
 	}
 	
+	/**
+	* Performs the getObject operation
+	* @return the getObject result
+	* */
 	public Object getObject(){
 	    return OBJECT;
 	}		
 
+	/**
+	* Performs the getBatch operation
+	* @return the getBatch result
+	* */
 	public Object getBatch(){
 	    return BATCH;
 	}	
 	
+	/**
+	* Performs the getBatchIndex operation
+	* @return the getBatchIndex result
+	* */
 	public Integer getBatchIndex(){
 	    return BATCH_INDEX;
 	}
 	
+	/**
+	* Performs the setUsingPoolSize operation
+	* @param value - the value
+	* @return the setUsingPoolSize result
+	* */
 	private static synchronized Integer setUsingPoolSize(int value){
 	    return USING_POOL_SIZE += value;
 	}
 	
+	/**
+	* Performs the getUsingPoolSize operation
+	* @return the getUsingPoolSize result
+	* */
 	public static synchronized Integer getUsingPoolSize(){
 	    return USING_POOL_SIZE;
 	}	
 
+	/**
+	* Performs the getMaxPoolSize operation
+	* @return the getMaxPoolSize result
+	* */
 	public static Integer getMaxPoolSize(){
 	    return MAX_POOL_SIZE;
 	}	
 	
+	/**
+	* Performs the getUsage operation
+	* @return the getUsage result
+	* */
 	public static synchronized double getUsage(){
 	    return getUsingPoolSize()/(MAX_POOL_SIZE*1.0D);
 	}
 	
+	/**
+	* Performs the isNulIsCompleted operation
+	* @return the isNulIsCompleted result
+	* */
 	public boolean isNulIsCompleted(){
 	    return nullIsCompleted;
 	}
 	
+	/**
+	* Performs the setNulIsCompleted operation
+	* @param nullIsCompleted - the nullIsCompleted
+	* */
 	public void setNulIsCompleted(boolean nullIsCompleted){
 	    this.nullIsCompleted = nullIsCompleted;
 	}	

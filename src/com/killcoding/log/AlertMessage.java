@@ -28,9 +28,9 @@ import com.killcoding.log.Logger;
 import java.util.Map;
 
 /**
- * This abstract class is alert message base class
- * Can notify administrators via email or other means
- * */
+* This abstract class is alert message base class
+* Can notify administrators via email or other means
+* */
 public class AlertMessage {
     
     public static Map<String, Object> msg = null;
@@ -44,10 +44,18 @@ public class AlertMessage {
 		return t;
 	});
 
+	/**
+	* Constructs a new AlertMessage
+	* */
 	public AlertMessage() {
 		super();
 	}
 	
+    /**
+    * Performs the send operation
+    * @param String - the String
+    * @param msg - the msg
+    * */
     protected void send(Map<String, Object> msg){
         AlertMessage.msg = msg;
         if(AlertMessage.sendRun != null){
@@ -55,13 +63,26 @@ public class AlertMessage {
         }        
     }	
     
+    /**
+    * Performs the send operation
+    * @param sendRun - the sendRun
+    * */
     public static void send(Runnable sendRun){
         AlertMessage.sendRun = sendRun;
     }    
 	
+	/**
+	* Performs the push operation
+	* @param String - the String
+	* @param msg - the msg
+	* */
 	public void push(Map<String, Object> msg) {
 		final Runnable runnable = new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				try{
 				    send(msg);

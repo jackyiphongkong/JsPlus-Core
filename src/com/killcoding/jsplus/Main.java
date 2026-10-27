@@ -35,6 +35,11 @@ import java.util.Scanner;
 
 import com.killcoding.jsplus.GhostConsole;
 
+/**
+* JsPlus-Core entry point: parses command-line arguments (-ScriptEngine, -Env, -Task, -GhostName,
+* -WriteHistory ...), bootstraps the script engine and console, and dispatches the configured task
+* with uniform exit codes (EXIT_OK / EXIT_ERROR).
+* */
 public final class Main { 
     
     /** Exit code for successful termination. */
@@ -50,14 +55,25 @@ public final class Main {
 	private static boolean isEnd = false;
 	private static boolean isCancel = false;
     
+    /**
+    * Constructs a new Main
+    * */
     public Main(){
         super();
     }
     
+    /**
+    * Constructs a new Main
+    * @param args - the args
+    * */
     public static void main(String[] args){
         appMain(args);
     }
     
+	/**
+	* Performs the appMain operation
+	* @param args - the args
+	* */
 	public static void appMain(String[] args) {
 		Map<String, Object> params = ScriptConsole.parseArgs(args);
 		if (params == null) {

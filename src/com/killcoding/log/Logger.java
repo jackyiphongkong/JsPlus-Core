@@ -38,10 +38,10 @@ import com.killcoding.log.Logger;
 import java.util.ArrayList;
 
 /**
- * This is logger class
- * Sample,
- * Logger log = LoggerFactory.getLogger(clazz);
- * */
+* This is logger class
+* Sample,
+* Logger log = LoggerFactory.getLogger(clazz);
+* */
 public final class Logger {
 
 	private final static String DEFAULT_MESSAGE_FORMAT = ":level :log_time_format [:log_thread_name-:log_thread_id] :log_class_name.:log_method_name(:log_file_name::log_line_number) **:message** \r\n:stack_trace";
@@ -62,26 +62,47 @@ public final class Logger {
 	private static String classNameEnableRegex = null;
 	private static String classNameDisableRegex = null;
 
+	/**
+	* Constructs a new Logger
+	* @param clazz - the clazz
+	* */
 	public Logger(Class clazz) {
 		super();
 		this.clazzName = clazz.getName();
 		hostname = CommonTools.getHostname();
 	}
 
+	/**
+	* Constructs a new Logger
+	* @param clazzName - the clazzName
+	* */
 	public Logger(String clazzName) {
 		super();
 		this.clazzName = clazzName;
 		hostname = CommonTools.getHostname();
 	}
 
+	/**
+	* Performs the setClassNameEnableRegex operation
+	* @param _classNameEnableRegex - the _classNameEnableRegex
+	* */
 	protected static void setClassNameEnableRegex(String _classNameEnableRegex) {
 		classNameEnableRegex = _classNameEnableRegex;
 	}
 
+	/**
+	* Performs the setClassNameDisableRegex operation
+	* @param _classNameDisableRegex - the _classNameDisableRegex
+	* */
 	protected static void setClassNameDisableRegex(String _classNameDisableRegex) {
 		classNameDisableRegex = _classNameDisableRegex;
 	}
 
+	/**
+	* Performs the checkLevel operation
+	* @param _level - the _level
+	* @return the checkLevel result
+	* */
 	protected static boolean checkLevel(String _level) {
 		if (_level == null)
 			return false;
@@ -89,32 +110,60 @@ public final class Logger {
 		return LEVEL_LIST.contains(_level);
 	}
 
+	/**
+	* Performs the setLevel operation
+	* @param _level - the _level
+	* */
 	public static void setLevel(String _level) {
 		if (checkLevel(_level)) {
 			setLevel(LEVEL_LIST.indexOf(_level.toUpperCase()));
 		}
 	}
 
+	/**
+	* Performs the setLevel operation
+	* @param level - the level
+	* */
 	public static void setLevel(Integer level) {
 		LEVEL = (level == null ? LEVEL_DEBUG : level);
 	}
 
+	/**
+	* Performs the isDebugEnabled operation
+	* @return the isDebugEnabled result
+	* */
 	public boolean isDebugEnabled() {
 		return LEVEL == LEVEL_DEBUG;
 	}
 
+	/**
+	* Performs the isInfoEnabled operation
+	* @return the isInfoEnabled result
+	* */
 	public boolean isInfoEnabled() {
 		return LEVEL == LEVEL_INFO;
 	}
 
+	/**
+	* Performs the isWarnEnabled operation
+	* @return the isWarnEnabled result
+	* */
 	public boolean isWarnEnabled() {
 		return LEVEL == LEVEL_WARN;
 	}
 
+	/**
+	* Performs the isErrorEnabled operation
+	* @return the isErrorEnabled result
+	* */
 	public boolean isErrorEnabled() {
 		return LEVEL == LEVEL_ERROR;
 	}
 
+	/**
+	* Performs the debug operation
+	* @param obj - the obj
+	* */
 	public void debug(Object obj) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -127,6 +176,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the debug operation
+	* @param message - the message
+	* */
 	public void debug(String message) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -139,6 +192,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the debug operation
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public void debug(String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -152,6 +210,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the debug operation
+	* @param exception - the exception
+	* */
 	public void debug(Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -180,6 +242,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the debug operation
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public void debug(String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -195,6 +262,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the info operation
+	* @param message - the message
+	* */
 	public void info(String message) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -207,6 +278,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the info operation
+	* @param obj - the obj
+	* */
 	public void info(Object obj) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -219,6 +294,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the info operation
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public void info(String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -232,6 +312,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the info operation
+	* @param exception - the exception
+	* */
 	public void info(Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -260,6 +344,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the info operation
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public void info(String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -275,6 +364,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the warn operation
+	* @param message - the message
+	* */
 	public void warn(String message) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -287,6 +380,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the warn operation
+	* @param obj - the obj
+	* */
 	public void warn(Object obj) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -299,6 +396,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the warn operation
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public void warn(String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -312,6 +414,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the warn operation
+	* @param exception - the exception
+	* */
 	public void warn(Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -340,6 +446,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the warn operation
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public void warn(String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -355,6 +466,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the error operation
+	* @param message - the message
+	* */
 	public void error(String message) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -367,6 +482,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the error operation
+	* @param obj - the obj
+	* */
 	public void error(Object obj) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -379,6 +498,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the error operation
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public void error(String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -392,6 +516,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the error operation
+	* @param exception - the exception
+	* */
 	public void error(Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -420,6 +548,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the error operation
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public void error(String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -435,6 +568,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the mark operation
+	* @param message - the message
+	* */
 	public void mark(String message) {
 		try {
 			Map<String, Object> map = new HashMap<String, Object>();
@@ -445,6 +582,10 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the mark operation
+	* @param obj - the obj
+	* */
 	public void mark(Object obj) {
 		try {
 			Map<String, Object> map = new HashMap<String, Object>();
@@ -468,6 +609,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the mark operation
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public void mark(String message, Object obj) {
 		try {
 			String msg = (message + "").replaceAll("\\{\\}", "%s");
@@ -481,6 +627,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemError(String clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -498,6 +649,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param obj - the obj
+	* */
 	public static void systemError(String clazz, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -516,6 +672,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemError(Class clazz, String message) {
 		if (LEVEL <= LEVEL_ERROR) {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -529,6 +690,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param obj - the obj
+	* */
 	public static void systemError(Class clazz, Object obj) {
 		if (LEVEL <= LEVEL_ERROR) {
 			String message = obj + "";
@@ -543,6 +709,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemMark operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemMark(String clazz, String message, Exception exception) {
 		try {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -559,6 +731,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemMark operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemMark(Class clazz, String message, Exception exception) {
 		try {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -593,6 +771,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemMark operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemMark(String clazz, String message, Object obj) {
 		try {
 			Object[] params = new Object[] { obj + "" };
@@ -611,6 +795,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemMark operation
+	* @param clazz - the clazz
+	* @param obj - the obj
+	* */
 	public static void systemMark(String clazz, Object obj) {
 		try {
 			String message = obj + "";
@@ -645,6 +834,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemMark operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemMark(Class clazz, String message, Object obj) {
 		try {
 			Object[] params = new Object[] { obj + "" };
@@ -663,6 +858,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemMark operation
+	* @param clazz - the clazz
+	* @param obj - the obj
+	* */
 	public static void systemMark(Class clazz, Object obj) {
 		try {
 			String message = obj + "";
@@ -679,6 +879,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemError(String clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -697,6 +903,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemError(Class clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -715,6 +927,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemError(String clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -733,6 +950,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemError(Class clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -771,6 +993,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemError(String clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -811,6 +1039,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemError operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemError(Class clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -831,6 +1065,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemWarn(String clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -848,6 +1087,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemWarn(Class clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -865,6 +1109,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemWarn(String clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -883,6 +1133,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemWarn(Class clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -901,6 +1157,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemWarn(String clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -919,6 +1180,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemWarn(Class clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -957,6 +1223,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemWarn(String clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -997,6 +1269,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemWarn operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemWarn(Class clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -1017,6 +1295,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemInfo(String clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1034,6 +1317,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemInfo(Class clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1051,6 +1339,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemInfo(String clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1069,6 +1363,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemInfo(Class clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1087,6 +1387,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemInfo(String clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1105,6 +1410,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemInfo(Class clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1143,6 +1453,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemInfo(String clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1183,6 +1499,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemInfo operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemInfo(Class clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1203,6 +1525,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemDebug(String clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1220,6 +1547,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* */
 	public static void systemDebug(Class clazz, String message) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1237,6 +1569,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemDebug(String clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1255,6 +1593,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param exception - the exception
+	* */
 	public static void systemDebug(Class clazz, String message, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1273,6 +1617,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemDebug(String clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1291,6 +1640,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param exception - the exception
+	* */
 	public static void systemDebug(Class clazz, Exception exception) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1329,6 +1683,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemDebug(String clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1369,6 +1729,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the systemDebug operation
+	* @param clazz - the clazz
+	* @param message - the message
+	* @param obj - the obj
+	* */
 	public static void systemDebug(Class clazz, String message, Object obj) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1389,6 +1755,13 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the log operation
+	* @param level - the level
+	* @param clazzName - the clazzName
+	* @param String - the String
+	* @param map - the map
+	* */
 	private static void log(String level, String clazzName, Map<String, Object> map) {
 		map.put("level", level);
 
@@ -1474,10 +1847,23 @@ public final class Logger {
 		System.out.println(msg);
 	}
 
+	/**
+	* Performs the log operation
+	* @param level - the level
+	* @param clazz - the clazz
+	* @param String - the String
+	* @param map - the map
+	* */
 	private static void log(String level, Class clazz, Map<String, Object> map) {
 		log(level, clazz.getName(), map);
 	}
 
+	/**
+	* Performs the log operation
+	* @param _level - the _level
+	* @param String - the String
+	* @param map - the map
+	* */
 	protected void log(Integer _level, Map<String, Object> map) {
 		String levelStr = null;
 		String log4jMethodName = null;
@@ -1594,6 +1980,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Performs the checkClassNameEnableRegex operation
+	* @param logClassName - the logClassName
+	* @return the checkClassNameEnableRegex result
+	* */
 	private boolean checkClassNameEnableRegex(String logClassName) {
 		if (!ConfigProperties.isBlank(classNameEnableRegex)) {
 			return logClassName.matches(classNameEnableRegex);
@@ -1601,6 +1992,11 @@ public final class Logger {
 		return true;
 	}
 
+	/**
+	* Performs the checkClassNameDisableRegex operation
+	* @param logClassName - the logClassName
+	* @return the checkClassNameDisableRegex result
+	* */
 	private boolean checkClassNameDisableRegex(String logClassName) {
 		if (!ConfigProperties.isBlank(classNameDisableRegex)) {
 			return logClassName.matches(classNameDisableRegex);
@@ -1608,10 +2004,19 @@ public final class Logger {
 		return false;
 	}
 
+	/**
+	* Performs the getClazzName operation
+	* @return the getClazzName result
+	* */
 	public String getClazzName() {
 		return clazzName;
 	}
 
+	/**
+	* Performs the toSingle operation
+	* @param text - the text
+	* @return the toSingle result
+	* */
 	private String toSingle(String text) {
 		return CodeEscape.escapeToSingleLineForCsv(text);
 	}
@@ -1627,6 +2032,12 @@ public final class Logger {
 		return stringParams;
 	}
 	
+	/**
+	* Performs the stringFormat operation
+	* @param msg - the msg
+	* @param params - the params
+	* @return the stringFormat result
+	* */
 	private static String stringFormat(String msg,String[] params){
 	    String newMsg = msg + "";
 	    List<String> newParams = new ArrayList<String>();

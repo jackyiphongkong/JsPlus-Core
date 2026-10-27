@@ -22,6 +22,10 @@ package com.killcoding.tool;
 
 import java.io.File;
 
+/**
+* Custom configuration loader: attaches a Runnable to ConfigProperties so callers can post-process
+* the parsed configuration (file + properties) after the standard load completes.
+* */
 public class ConfigCustomLoad {
     
     protected Runnable loadRun = null;
@@ -30,18 +34,33 @@ public class ConfigCustomLoad {
     protected boolean updated = false;
     protected boolean useCustom = true;
     
+    /**
+    * Constructs a new ConfigCustomLoad
+    * */
     public ConfigCustomLoad(){
         super();
     }
     
+    /**
+    * Performs the load operation
+    * @param loadRun - the loadRun
+    * */
     public void load(Runnable loadRun){
         this.loadRun = loadRun;
     }
     
+    /**
+    * Performs the load operation
+    * */
     public void load(){
          
     }
     
+    /**
+    * Performs the load operation
+    * @param file - the file
+    * @param config - the config
+    * */
     protected void load(File file,ConfigProperties config){
         this.file = file;
         this.config = config;
@@ -51,26 +70,50 @@ public class ConfigCustomLoad {
         load();
     }
     
+    /**
+    * Performs the getConfig operation
+    * @return the getConfig result
+    * */
     public ConfigProperties getConfig(){
         return config;
     }
     
+    /**
+    * Performs the getFile operation
+    * @return the getFile result
+    * */
     public File getFile(){
         return file;
     }
     
+    /**
+    * Performs the setUpdated operation
+    * @param updated - the updated
+    * */
     public void setUpdated(boolean updated){
         this.updated = updated;
     }
 
+    /**
+    * Performs the isUpdated operation
+    * @return the isUpdated result
+    * */
     public boolean isUpdated(){
         return this.updated;
     }   
     
+    /**
+    * Performs the setUseCustom operation
+    * @param useCustom - the useCustom
+    * */
     public void setUseCustom(boolean useCustom){
         this.useCustom = useCustom;
     }
     
+    /**
+    * Performs the isUseCustom operation
+    * @return the isUseCustom result
+    * */
     public boolean isUseCustom(){
         return useCustom;
     }

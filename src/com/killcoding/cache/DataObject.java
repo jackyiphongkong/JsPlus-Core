@@ -45,8 +45,8 @@ import com.killcoding.log.LoggerFactory;
 import com.killcoding.tool.CipherTools;
 
 /**
- * This class is encrypting cache value
- * */
+* This class is encrypting cache value
+* */
 public class DataObject implements java.io.Serializable {
 
 	private static final Logger log = LoggerFactory.getLogger(DataObject.class);
@@ -59,12 +59,21 @@ public class DataObject implements java.io.Serializable {
 
 	private boolean useEncrypt = true;
 
+	/**
+	* Constructs a new DataObject
+	* @param path - the path
+	* */
 	public DataObject(String path) throws Exception {
 		super();
 		this.path = path;
 		this.aesKey = defaultAesKey;
 	}
 
+	/**
+	* Constructs a new DataObject
+	* @param aesKey - the aesKey
+	* @param path - the path
+	* */
 	public DataObject(String aesKey,String path) throws Exception {
 		super();
 		this.path = path;
@@ -76,6 +85,10 @@ public class DataObject implements java.io.Serializable {
 		}
 	}
 
+	/**
+	* Performs the getData operation
+	* @return the getData result
+	* */
 	public Object getData() throws Exception {
 		byte[] encData = Files.readAllBytes(Paths.get(path));
 		byte[] dec = decrypt(encData);
@@ -101,10 +114,18 @@ public class DataObject implements java.io.Serializable {
 		}
 	}
 
+	/**
+	* Performs the setObject operation
+	* @param data - the data
+	* */
 	public void setObject(Object data) throws Exception {
 	    setObjectTo(data);
 	}
 
+	/**
+	* Performs the setObjectTo operation
+	* @param data - the data
+	* */
 	private void setObjectTo(Object data) throws Exception {
 		ByteArrayOutputStream baos = null;
 		ObjectOutputStream objectOut = null;
@@ -137,6 +158,11 @@ public class DataObject implements java.io.Serializable {
 		}
 	}
 
+	/**
+	* Performs the encrypt operation
+	* @param data - the data
+	* @return the encrypt result
+	* */
 	private byte[] encrypt(byte[] data) throws Exception {
 		if (useEncrypt) {
 			return CipherTools.AESEncrypt(aesKey,data);
@@ -145,6 +171,11 @@ public class DataObject implements java.io.Serializable {
 		}
 	}
 
+	/**
+	* Performs the decrypt operation
+	* @param encData - the encData
+	* @return the decrypt result
+	* */
 	private byte[] decrypt(byte[] encData) throws Exception {
 		if (useEncrypt) {
 			return CipherTools.AESDecrypt(aesKey,encData);

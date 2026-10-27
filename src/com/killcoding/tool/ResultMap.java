@@ -32,31 +32,60 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings("serial")
+
+/**
+* Cloneable, serializable Map implementation backed by parallel key/value arrays (AbstractMap),
+* preserving insertion order and suited to small result sets returned to scripts.
+* */
 public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Serializable {
 
 	static class Entry<K, V> implements Map.Entry<K, V>, Cloneable, Serializable {
 		protected K key;
 		protected V value;
 
+		/**
+		* Performs the Entry operation
+		* @param key - the key
+		* @param value - the value
+		* @return the Entry result
+		* */
 		public Entry(K key, V value) {
 			this.key = key;
 			this.value = value;
 		}
 
+		/**
+		* Performs the getKey operation
+		* @return the getKey result
+		* */
 		public K getKey() {
 			return key;
 		}
 
+		/**
+		* Performs the getValue operation
+		* @return the getValue result
+		* */
 		public V getValue() {
 			return value;
 		}
 
+		/**
+		* Performs the setValue operation
+		* @param newValue - the newValue
+		* @return the setValue result
+		* */
 		public V setValue(V newValue) {
 			V oldValue = value;
 			value = newValue;
 			return oldValue;
 		}
 
+		/**
+		* Compares this ResultMap with another object for equality
+		* @param o - the o
+		* @return the equals result
+		* */
 		public boolean equals(Object o) {
 			if (!(o instanceof Map.Entry)) {
 				return false;
@@ -67,12 +96,20 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 					&& (value == null ? e.getValue() == null : value.equals(e.getValue()));
 		}
 
+		/**
+		* Returns the hash code value for this ResultMap
+		* @return the hashCode result
+		* */
 		public int hashCode() {
 			int keyHash = (key == null ? 0 : key.hashCode());
 			int valueHash = (value == null ? 0 : value.hashCode());
 			return keyHash ^ valueHash;
 		}
 
+		/**
+		* Returns a string representation of this ResultMap
+		* @return the toString result
+		* */
 		public String toString() {
 			return key + "=" + value;
 		}
@@ -81,17 +118,29 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 	private Set<java.util.Map.Entry<K, V>> entries = null;
 	private ArrayList<java.util.Map.Entry<K, V>> list;
 
+	/**
+	* Constructs a new ResultMap
+	* */
 	public ResultMap() {
 		super();
 		list = new ArrayList<java.util.Map.Entry<K, V>>();
 	}
 
+	/**
+	* Constructs a new ResultMap
+	* @param K - the K
+	* @param map - the map
+	* */
 	public ResultMap(Map<K, V> map) {
 		super();
 		list = new ArrayList<java.util.Map.Entry<K, V>>();
 		putAll(map);
 	}
 
+	/**
+	* Constructs a new ResultMap
+	* @param initialCapacity - the initialCapacity
+	* */
 	public ResultMap(int initialCapacity) {
 		super();
 		list = new ArrayList<java.util.Map.Entry<K, V>>(initialCapacity);
@@ -101,6 +150,10 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 	public Set<java.util.Map.Entry<K, V>> entrySet() {
 		if (entries == null) {
 			entries = new AbstractSet<java.util.Map.Entry<K, V>>() {
+
+				/**
+				* Performs the clear operation
+				* */
 				public void clear() {
 					list.clear();
 				}
@@ -109,6 +162,10 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 					return list.iterator();
 				}
 
+				/**
+				* Performs the size operation
+				* @return the size result
+				* */
 				public int size() {
 					return list.size();
 				}
@@ -118,6 +175,13 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 	}
 
 	@Override
+
+	/**
+	* Performs the put operation
+	* @param key - the key
+	* @param value - the value
+	* @return the put result
+	* */
 	public V put(K key, V value) {
 		int size = list.size();
 		Entry<K, V> entry = null;

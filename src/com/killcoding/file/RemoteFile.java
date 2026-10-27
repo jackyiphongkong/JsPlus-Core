@@ -76,6 +76,12 @@ import com.killcoding.tool.CipherTools;
 import com.killcoding.cache.Cache;
 import java.util.Date;
 
+/**
+* Remote-file engine that stores file content as chunked records in a datasource configured by
+* RemoteFile.properties: write / read / delete / list / sync / archive across data mappings, with
+* optional AES encryption (EncryptAesKey), identity-card integration, and a bounded merge-wait
+* (MERGE_WAIT_TIMEOUT) for asynchronous chunk completion.
+* */
 public class RemoteFile extends BaseFile implements RemoteFileSQL {
 
 	/** How long waitForCopy() polls for a remote copy to complete. */
@@ -144,6 +150,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 
 	private static ExecutorService mergePool = null;
 
+	/**
+	* Constructs a new RemoteFile
+	* @param path - the path
+	* */
 	public RemoteFile(String path) {
 		super(path);
 		log = LoggerFactory.getLogger(getClass());
@@ -151,6 +161,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		initGlobal();
 	}
 	
+	/**
+	* Constructs a new RemoteFile
+	* @param origin - the origin
+	* */
 	public RemoteFile(File origin) {
 		super(origin);
 		log = LoggerFactory.getLogger(getClass());
@@ -158,6 +172,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		initGlobal();
 	}	
 
+	/**
+	* Performs the initPool operation
+	* @param poolSize - the poolSize
+	* */
 	public static synchronized void initPool(int poolSize) {
 		if (mergePool == null) {
 			MAX_POOL_SIZE = poolSize;
@@ -166,6 +184,9 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the init operation
+	* */
 	private synchronized void init() {
 		dsKey = CommonTools.md5(this.appRemoteFile.getAbsolutePath());
 		dataSourceReader = DATASOURCE_REMOTE_FILE.get(String.format("%s.reader", dsKey));
@@ -179,6 +200,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				configProperties = new ConfigProperties();
 				Runnable updatedRun = new Runnable() {
 					@Override
+
+					/**
+					* Performs the run operation
+					* */
 					public void run() {
 						try {
 							reload();
@@ -209,6 +234,9 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		calculateDataMappingDataSourceWriter(this);
 	}
 
+	/**
+	* Performs the initGlobal operation
+	* */
 	private synchronized void initGlobal() {
 	    if(this.appRemoteFile == null){
     		this.appRemoteFile = CommonTools.getSystemProperties(RemoteFile.class, "APP_REMOTE_FILE",
@@ -218,6 +246,9 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		init();
 	}
 
+	/**
+	* Performs the reload operation
+	* */
 	private synchronized void reload() {
 		try {
 			LOGIC_TIMEOUT_MS = configProperties.getMilliSeconds("LogicTimeout", 300000L);
@@ -328,14 +359,29 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the formatSql operation
+	* @param sql - the sql
+	* @return the formatSql result
+	* */
 	public String formatSql(String sql) {
 		return String.format(sql, tableName);
 	}
 
+	/**
+	* Performs the formatSqlForFilePartData operation
+	* @param sql - the sql
+	* @return the formatSqlForFilePartData result
+	* */
 	public String formatSqlForFilePartData(String sql) {
 		return String.format(sql, getDataMappingTableName());
 	}
 
+	/**
+	* Performs the writeToDisk operation
+	* @param diskFile - the diskFile
+	* @return the writeToDisk result
+	* */
 	public DiskFile writeToDisk(DiskFile diskFile) throws IOException {
 		if (!exists()) {
 			log.mark(String.format("The remote file '%s' does not exist.", this.getPath()));
@@ -367,6 +413,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				DiskFile realDf = null;
 
 				@Override
+
+				/**
+				* Performs the process operation
+				* @param partIndex - the partIndex
+				* @param data - the data
+				* */
 				protected void process(int partIndex, byte[] data) throws IOException {
 					Thread.currentThread()
 							.setName(String.format("RemoteFile-writeToDisk-merge-%s", diskFile.getOrigin().getName()));
@@ -457,6 +509,13 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param lastPartIndex - the lastPartIndex
+				* @param modifyTime - the modifyTime
+				* @param fileSize - the fileSize
+				* */
 				protected void completed(int lastPartIndex, Timestamp modifyTime, long fileSize) throws IOException {
 					if (partDataList.size() > 0) {
 						ByteArrayOutputStream ops = new ByteArrayOutputStream();
@@ -512,6 +571,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the ended operation
+				* @param lastPartIndex - the lastPartIndex
+				* @param fileSize - the fileSize
+				* */
 				protected void ended(int lastPartIndex, long fileSize) {
 					try {
 						if (diskFile != null) {
@@ -565,18 +630,31 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return diskFile;
 	}
 
+	/**
+	* Performs the writeToDisk operation
+	* @return the writeToDisk result
+	* */
 	public DiskFile writeToDisk() throws IOException {
 		DiskFile df = new DiskFile(this.origin.getAbsolutePath());
 		DiskFile.copyAttrs(df, false, this.syncRoot);
 		return writeToDisk(df);
 	}
 
+	/**
+	* Performs the writeToDisk operation
+	* @param path - the path
+	* @return the writeToDisk result
+	* */
 	public DiskFile writeToDisk(String path) throws IOException {
 		DiskFile df = new DiskFile(path);
 		DiskFile.copyAttrs(df, false, this.syncRoot);
 		return writeToDisk(df);
 	}
 
+	/**
+	* Performs the isCompleted operation
+	* @return the isCompleted result
+	* */
 	public boolean isCompleted() throws IOException {
 		return getCompletedRecord() != null;
 	}
@@ -693,6 +771,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 	
+	/**
+	* Performs the getFirstCreatedAt operation
+	* @return the getFirstCreatedAt result
+	* */
 	protected Timestamp getFirstCreatedAt() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_FIRST_CREATED_AT);
 		Map dataRecord = new HashMap<String, Object>();
@@ -719,6 +801,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}	
 	
+	/**
+	* Performs the getMaxFilePartDataTable operation
+	* @return the getMaxFilePartDataTable result
+	* */
 	protected Integer getMaxFilePartDataTable() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_MAX_DATA_TABLE);
 		Map dataRecord = new HashMap<String, Object>();
@@ -773,6 +859,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return record;
 	}
 
+	/**
+	* Performs the countAllSubFiles operation
+	* @param fileParentPath - the fileParentPath
+	* @param fileName - the fileName
+	* @return the countAllSubFiles result
+	* */
 	private int countAllSubFiles(String fileParentPath, String fileName) throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_COUNT_ALL_SUB_FILES);
 		Map dataRecord = new HashMap<String, Object>();
@@ -893,6 +985,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return record;
 	}
 
+	/**
+	* Performs the isTimeout operation
+	* @param timeoutMs - the timeoutMs
+	* @return the isTimeout result
+	* */
 	public boolean isTimeout(long timeoutMs) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -960,6 +1057,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the merge operation
+	* @param filePart - the filePart
+	* */
 	public void merge(FilePart filePart) throws IOException {
 		if (isLink()) {
 			throw new IOException(String.format("The file '%s' is a link.", origin.getAbsolutePath()));
@@ -983,6 +1084,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 					Map<String, Object> item = null;
 
 					@Override
+
+					/**
+					* Performs the execute operation
+					* @param index - the index
+					* @param o - the o
+					* */
 					public void execute(Integer index, Object o) {
 
 						try {
@@ -1010,6 +1117,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 					}
 
 					@Override
+
+					/**
+					* Performs the completed operation
+					* @param size - the size
+					* */
 					public void completed(Integer size) {
 						try {
 							if (item != null) {
@@ -1023,6 +1135,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 					}
 
 					@Override
+
+					/**
+					* Performs the terminated operation
+					* */
 					public void terminated() {
 						if (item != null) {
 							Thread.currentThread()
@@ -1073,6 +1189,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the copyFrom operation
+	* @param copyStructureOnly - the copyStructureOnly
+	* @param diskFile - the diskFile
+	* */
 	protected void copyFrom(boolean copyStructureOnly, DiskFile diskFile) throws IOException {
 		var the = this;
 		if (diskFile.isLink()) {
@@ -1095,6 +1216,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 					int currentFilePartStartIndex = 0;
 
 					@Override
+
+					/**
+					* Performs the process operation
+					* @param partIndex - the partIndex
+					* @param data - the data
+					* */
 					protected void process(int partIndex, byte[] data) throws IOException {
 					    try{
     						if (partIndex == 0) {
@@ -1134,6 +1261,13 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 					}
 
 					@Override
+
+					/**
+					* Performs the completed operation
+					* @param lastPartIndex - the lastPartIndex
+					* @param modifyTime - the modifyTime
+					* @param fileSize - the fileSize
+					* */
 					protected void completed(int lastPartIndex, Timestamp modifyTime, long fileSize)
 							throws IOException {
 						try {
@@ -1174,6 +1308,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 					}
 
 					@Override
+
+					/**
+					* Performs the ended operation
+					* @param lastPartIndex - the lastPartIndex
+					* @param fileSize - the fileSize
+					* */
 					protected void ended(int lastPartIndex, long fileSize) {
 
 					}
@@ -1183,6 +1323,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the createEmptyFile operation
+	* @return the createEmptyFile result
+	* */
 	private boolean createEmptyFile() throws IOException {
 	    boolean allowed = beforeWrite();
 	    
@@ -1236,6 +1380,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the createStructureFile operation
+	* @param fileSize - the fileSize
+	* @return the createStructureFile result
+	* */
 	private boolean createStructureFile(long fileSize) throws IOException {
 	    boolean allowed = beforeWrite();
 	    
@@ -1290,6 +1439,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the syncedToDisk operation
+	* @return the syncedToDisk result
+	* */
 	protected boolean syncedToDisk() throws IOException {
 		Clock clock = new Clock();
 		CacheDriverExecutor executor = null;
@@ -1329,6 +1482,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the deletedToDiskAndSub operation
+	* @param id - the id
+	* @return the deletedToDiskAndSub result
+	* */
 	protected boolean deletedToDiskAndSub(Object id) throws IOException {
 		Clock clock = new Clock();
 		CacheDriverExecutor executor = null;
@@ -1376,6 +1534,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the complete operation
+	* @param filePartLastIndex - the filePartLastIndex
+	* @param fileSize - the fileSize
+	* @return the complete result
+	* */
 	private boolean complete(int filePartLastIndex, long fileSize) throws IOException {
 		Clock clock = new Clock();
 		CacheDriverExecutor executor = null;
@@ -1410,6 +1574,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the complete operation
+	* @return the complete result
+	* */
 	public boolean complete() throws IOException {
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
@@ -1459,22 +1628,47 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the forceDelete operation
+	* @return the forceDelete result
+	* */
 	public boolean forceDelete() throws IOException {
 		return forceDeleteAll(true);
 	}
 
+	/**
+	* Performs the forceDeleteDir operation
+	* @param realDeleted - the realDeleted
+	* @return the forceDeleteDir result
+	* */
 	public boolean forceDeleteDir(boolean realDeleted) throws IOException {
 		return forceDelete(realDeleted, "D");
 	}
 
+	/**
+	* Performs the forceDeleteLink operation
+	* @param realDeleted - the realDeleted
+	* @return the forceDeleteLink result
+	* */
 	public boolean forceDeleteLink(boolean realDeleted) throws IOException {
 		return forceDelete(realDeleted, "L");
 	}
 
+	/**
+	* Performs the forceDeleteFile operation
+	* @param realDeleted - the realDeleted
+	* @return the forceDeleteFile result
+	* */
 	public boolean forceDeleteFile(boolean realDeleted) throws IOException {
 		return forceDelete(realDeleted, "F");
 	}
 
+	/**
+	* Performs the forceDelete operation
+	* @param realDeleted - the realDeleted
+	* @param fileType - the fileType
+	* @return the forceDelete result
+	* */
 	public boolean forceDelete(boolean realDeleted, String fileType) throws IOException {
 		if (fileType.equalsIgnoreCase("D")) {
 			return forceDeleteAll(realDeleted);
@@ -1522,6 +1716,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 
+	/**
+	* Performs the forceDeleteAll operation
+	* @param realDeleted - the realDeleted
+	* @return the forceDeleteAll result
+	* */
 	public boolean forceDeleteAll(boolean realDeleted) throws IOException {
 		boolean allowed = beforeDelete(realDeleted);
 		if (allowed) {
@@ -1565,59 +1764,119 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the delete operation
+	* @return the delete result
+	* */
 	public boolean delete() throws IOException {
 		return forceDeleteAll(true);
 	}
 
+	/**
+	* Performs the delete operation
+	* @param realDeleted - the realDeleted
+	* @return the delete result
+	* */
 	public boolean delete(boolean realDeleted) throws IOException {
 		return forceDeleteAll(realDeleted);
 	}
 
 	@Override
+
+	/**
+	* Performs the beforeDelete operation
+	* @param realDeleted - the realDeleted
+	* @return the beforeDelete result
+	* */
 	public boolean beforeDelete(boolean realDeleted) {
 		return true;
 	}
 	
 	@Override
+
+	/**
+	* Performs the afterDelete operation
+	* @param realDeleted - the realDeleted
+	* */
 	public void afterDelete(boolean realDeleted) {
 	    
 	}	
 	
 	@Override
+
+	/**
+	* Performs the beforeMkdirs operation
+	* @return the beforeMkdirs result
+	* */
 	public boolean beforeMkdirs() {
 	    return true;
 	}
 	
 	@Override
+
+	/**
+	* Performs the afterMkdirs operation
+	* */
 	public void afterMkdirs() {
 	    
 	}
 	
 	@Override
+
+	/**
+	* Performs the beforeCreateLink operation
+	* @param target - the target
+	* @return the beforeCreateLink result
+	* */
 	public boolean beforeCreateLink(String target) {
 	    return true;
 	}
 	
 	@Override
+
+	/**
+	* Performs the afterCreateLink operation
+	* @param target - the target
+	* */
 	public void afterCreateLink(String target) {
 	    
 	}
 	
 	@Override
+
+	/**
+	* Performs the beforeWrite operation
+	* @return the beforeWrite result
+	* */
 	public boolean beforeWrite(){
 	    return true;
 	}
 	
 	@Override
+
+	/**
+	* Performs the afterWrite operation
+	* */
 	public void afterWrite(){
 	    
 	}	
 
 	@Override
+
+	/**
+	* Performs the exists operation
+	* @return the exists result
+	* */
 	public boolean exists() throws IOException {
 		return getFirstFilePart() != null;
 	}
 	
+	/**
+	* Performs the exists operation
+	* @param refresh - the refresh
+	* @return the exists result
+	* */
 	public boolean exists(boolean refresh) throws IOException {
 	    if(refresh){
 	        return getFirstFilePartRefresh() != null;
@@ -1627,10 +1886,20 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}	
 
 	@Override
+
+	/**
+	* Performs the mkdirs operation
+	* @return the mkdirs result
+	* */
 	public boolean mkdirs() throws IOException {
 		return mkdirs(false);
 	}
 
+	/**
+	* Performs the mkdirs operation
+	* @param checkSourceHostname - the checkSourceHostname
+	* @return the mkdirs result
+	* */
 	public boolean mkdirs(boolean checkSourceHostname) throws IOException {
 	    
 	    boolean allowed = beforeMkdirs();
@@ -1700,14 +1969,33 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param append - the append
+	* @return the write result
+	* */
 	public boolean write(byte[] data, boolean append) throws IOException {
 		return writeTo(data, append);
 	}
 
+	/**
+	* Performs the writeBlock operation
+	* @param data - the data
+	* @param append - the append
+	* @return the writeBlock result
+	* */
 	public synchronized boolean writeBlock(byte[] data, boolean append) throws IOException {
 		return writeTo(data, append);
 	}
 
+	/**
+	* Performs the writeToBatch operation
+	* @param currentFilePartStartIndex - the currentFilePartStartIndex
+	* @param partDataList - the partDataList
+	* @return the writeToBatch result
+	* */
 	private boolean writeToBatch(int currentFilePartStartIndex, List<byte[]> partDataList) throws IOException {
 	    
 	    boolean allowed = beforeWrite();
@@ -1790,6 +2078,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the writeTo operation
+	* @param data - the data
+	* @param append - the append
+	* @return the writeTo result
+	* */
 	private boolean writeTo(byte[] data, boolean append) throws IOException {
 	    
 	    boolean allowed = beforeWrite();
@@ -1893,21 +2187,46 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @return the write result
+	* */
 	public boolean write(byte[] data) throws IOException {
 		return write(data, false);
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param append - the append
+	* @return the write result
+	* */
 	public boolean write(String data, boolean append) throws IOException {
 		return write(data.getBytes(CHARSET), append);
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @return the write result
+	* */
 	public boolean write(String data) throws IOException {
 		return write(data.getBytes(CHARSET));
 	}
 
 	@Override
+
+	/**
+	* Performs the createLink operation
+	* @param target - the target
+	* @return the createLink result
+	* */
 	public boolean createLink(String target) throws IOException {
 	    boolean allowed = beforeCreateLink(target);
 	    
@@ -1990,15 +2309,29 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the readLink operation
+	* @return the readLink result
+	* */
 	public String readLink() throws IOException {
 		return new String(readAllBytes(),BaseFile.CHARSET);
 	}
 
 	@Override
+
+	/**
+	* Performs the readAllBytes operation
+	* @return the readAllBytes result
+	* */
 	public byte[] readAllBytes() throws IOException {
 		return readAllBytesFrom();
 	}
 
+	/**
+	* Performs the readAllBytesFrom operation
+	* @return the readAllBytesFrom result
+	* */
 	private byte[] readAllBytesFrom() throws IOException {
 		if (isDir()) {
 			throw new IOException(String.format("The file '%s' is a folder.", origin.getAbsolutePath()));
@@ -2052,6 +2385,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the isFile operation
+	* @return the isFile result
+	* */
 	public boolean isFile() throws IOException {
 		Map<String, Object> lastRecord = getFirstFilePart();
 
@@ -2062,6 +2400,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the isDirectory operation
+	* @return the isDirectory result
+	* */
 	public boolean isDirectory() throws IOException {
 		Map<String, Object> lastRecord = getFirstFilePart();
 
@@ -2072,6 +2415,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the isLink operation
+	* @return the isLink result
+	* */
 	public boolean isLink() throws IOException {
 		Map<String, Object> lastRecord = getFirstFilePart();
 
@@ -2082,6 +2430,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the readAllString operation
+	* @return the readAllString result
+	* */
 	public String readAllString() throws IOException {
 		ByteArrayOutputStream baos = null;
 		try {
@@ -2105,6 +2458,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the size operation
+	* @return the size result
+	* */
 	public long size() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -2153,14 +2511,29 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the listAll operation
+	* @param likeFileName - the likeFileName
+	* @param rows - the rows
+	* */
 	public void listAll(String likeFileName, CacheArray rows) throws IOException {
 		listAll(getPath(), likeFileName, rows);
 	}
 
+	/**
+	* Performs the listAll operation
+	* @param rows - the rows
+	* */
 	public void listAll(CacheArray rows) throws IOException {
 		listAll(getPath(), "%", rows);
 	}
 
+	/**
+	* Performs the listAll operation
+	* @param likeFolderName - the likeFolderName
+	* @param likeFileName - the likeFileName
+	* @param rows - the rows
+	* */
 	public void listAll(String likeFolderName, String likeFileName, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -2193,6 +2566,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the listAllForDelete operation
+	* @param likeFolderName - the likeFolderName
+	* @param likeFileName - the likeFileName
+	* @param rows - the rows
+	* */
 	protected void listAllForDelete(String likeFolderName, String likeFileName, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -2235,6 +2614,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the listAllForSync operation
+	* @param likeFolderName - the likeFolderName
+	* @param likeFileName - the likeFileName
+	* @param rows - the rows
+	* */
 	protected void listAllForSync(String likeFolderName, String likeFileName, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -2277,10 +2662,18 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the setModifyUserId operation
+	* @param modifyUserId - the modifyUserId
+	* */
 	public void setModifyUserId(String modifyUserId) {
 		this.modifyUserId = modifyUserId;
 	}
 
+	/**
+	* Performs the getDefaultModifyUserId operation
+	* @return the getDefaultModifyUserId result
+	* */
 	private String getDefaultModifyUserId() {
 		if (CommonTools.isBlank(modifyUserId)) {
 			return DEFAULE_MODIFY_USER_ID;
@@ -2290,11 +2683,21 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the setModifyTime operation
+	* @param modifyTime - the modifyTime
+	* */
 	public void setModifyTime(Timestamp modifyTime) throws IOException {
 		this.modifyTime = modifyTime;
 	}
 
 	@Override
+
+	/**
+	* Performs the getModifyTime operation
+	* @return the getModifyTime result
+	* */
 	public Timestamp getModifyTime() throws IOException {
 		Map<String, Object> record = getFirstFilePart();
 		if (record != null) {
@@ -2303,11 +2706,20 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the isTimeout operation
+	* @return the isTimeout result
+	* */
 	public boolean isTimeout() throws IOException {
 		return isTimeout(LOGIC_TIMEOUT_MS);
 	}
 
 	@Override
+
+	/**
+	* Performs the copyTo operation
+	* @param toPath - the toPath
+	* */
 	public void copyTo(String toPath) throws IOException {
 		log.debug("CopyTo: {} -> {}", getPath(), toPath);
 		if (!exists()) {
@@ -2330,6 +2742,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			}
 			merge(new FilePart() {
 				@Override
+
+				/**
+				* Performs the process operation
+				* @param partIndex - the partIndex
+				* @param data - the data
+				* */
 				protected void process(int partIndex, byte[] data) {
 					try {
 						_destRf.write(decrypt(data), partIndex > 0);
@@ -2339,6 +2757,13 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param lastPartIndex - the lastPartIndex
+				* @param modifyTime - the modifyTime
+				* @param fileSize - the fileSize
+				* */
 				protected void completed(int lastPartIndex, Timestamp modifyTime, long fileSize) {
 					try {
 						/**This is 0 bytes file**/
@@ -2359,6 +2784,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the ended operation
+				* @param lastPartIndex - the lastPartIndex
+				* @param fileSize - the fileSize
+				* */
 				protected void ended(int lastPartIndex, long fileSize) {
 
 				}
@@ -2401,6 +2832,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	}
 
 	@Override
+
+	/**
+	* Performs the moveTo operation
+	* @param toPath - the toPath
+	* */
 	public void moveTo(String toPath) throws IOException {
 		log.debug("MoveTo: {} -> {}", getPath(), toPath);
 		RemoteFile destRf = new RemoteFile(toPath);
@@ -2434,6 +2870,13 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the startFullAsyncThreadForDelete operation
+	* @param subFolders - the subFolders
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* */
 	private void startFullAsyncThreadForDelete(boolean subFolders, long timerMs, String replaceTo,
 			Runnable completedCallback) {
 		RemoteFile the = this;
@@ -2450,6 +2893,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			CacheArray rows = new CacheArray();
 			CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 				@Override
+
+				/**
+				* Performs the execute operation
+				* @param index - the index
+				* @param o - the o
+				* */
 				public void execute(Integer index, Object o) {
 					Map<String, Object> item = (Map<String, Object>) o;
 					String fileName = (String) item.get("file_name");
@@ -2479,11 +2928,20 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the terminated operation
+				* */
 				public void terminated() {
 					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().getId());
 				}
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param size - the size
+				* */
 				public void completed(Integer size) {
 					Thread.currentThread().setName(String
 							.format("RemoteFile-startFullAsyncThreadForDelete-completed-%s", the.origin.getName()));
@@ -2524,6 +2982,13 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the startFullAsyncThread operation
+	* @param subFolders - the subFolders
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* */
 	private void startFullAsyncThread(boolean subFolders, long timerMs, String replaceTo, Runnable completedCallback) {
 		RemoteFile the = this;
 		try {
@@ -2539,6 +3004,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			CacheArray rows = new CacheArray();
 			CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 				@Override
+
+				/**
+				* Performs the execute operation
+				* @param index - the index
+				* @param o - the o
+				* */
 				public void execute(Integer index, Object o) {
 					Map<String, Object> item = (Map<String, Object>) o;
 					String fileName = (String) item.get("file_name");
@@ -2566,11 +3037,20 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the terminated operation
+				* */
 				public void terminated() {
 					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().getId());
 				}
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param size - the size
+				* */
 				public void completed(Integer size) {
 					Thread.currentThread().setName(
 							String.format("RemoteFile-startFullAsyncThread-completed-%s", the.origin.getName()));
@@ -2611,18 +3091,38 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* */
 	public void startFullAsync(long timerMs) throws IOException {
 		startFullAsync(timerMs, getPath() + "/", null);
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param completedCallback - the completedCallback
+	* */
 	public void startFullAsync(long timerMs, Runnable completedCallback) throws IOException {
 		startFullAsync(timerMs, getPath() + "/", completedCallback);
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* */
 	public void startFullAsync(long timerMs, String replaceTo) throws IOException {
 		startFullAsync(timerMs, replaceTo, null);
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* */
 	public void startFullAsync(long timerMs, String replaceTo, Runnable completedCallback) throws IOException {
 
 		stopSync = false;
@@ -2633,6 +3133,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		Executors.newFixedThreadPool(1).execute(new Runnable() {
 
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				startFullAsyncThread(false, timerMs, replaceTo, completedCallback);
 			}
@@ -2642,6 +3146,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		Executors.newFixedThreadPool(1).execute(new Runnable() {
 
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				startFullAsyncThreadForDelete(false, timerMs, replaceTo, completedCallback);
 			}
@@ -2649,18 +3157,35 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		});
 	}
 
+	/**
+	* Performs the getDataSourceReader operation
+	* @return the getDataSourceReader result
+	* */
 	public DriverDataSource getDataSourceReader() {
 		return dataSourceReader;
 	}
 
+	/**
+	* Performs the getDataSourceWriter operation
+	* @return the getDataSourceWriter result
+	* */
 	public DriverDataSource getDataSourceWriter() {
 		return dataSourceWriter;
 	}
 
+	/**
+	* Performs the getConfigProperties operation
+	* @return the getConfigProperties result
+	* */
 	public ConfigProperties getConfigProperties() {
 		return configProperties;
 	}
 
+	/**
+	* Performs the encrypt operation
+	* @param data - the data
+	* @return the encrypt result
+	* */
 	private byte[] encrypt(byte[] data) throws Exception {
 		boolean useEncrypt = configProperties.getBoolean("EncryptEnable", false);
 		if (useEncrypt) {
@@ -2671,6 +3196,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the decrypt operation
+	* @param encData - the encData
+	* @return the decrypt result
+	* */
 	private byte[] decrypt(byte[] encData) throws Exception {
 		boolean useEncrypt = configProperties.getBoolean("EncryptEnable", false);
 		if (useEncrypt) {
@@ -2681,6 +3211,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the getSyncedOnHostnames operation
+	* @return the getSyncedOnHostnames result
+	* */
 	public String getSyncedOnHostnames() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -2689,6 +3223,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the getDeletedOnHostnames operation
+	* @return the getDeletedOnHostnames result
+	* */
 	public String getDeletedOnHostnames() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -2697,6 +3235,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the getSourceHostname operation
+	* @return the getSourceHostname result
+	* */
 	public String getSourceHostname() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -2705,6 +3247,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the getLastSourceHostname operation
+	* @return the getLastSourceHostname result
+	* */
 	protected String getLastSourceHostname() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -2713,6 +3259,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the getLastOperateTime operation
+	* @return the getLastOperateTime result
+	* */
 	protected Timestamp getLastOperateTime() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -2724,6 +3274,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the getLastModifyTime operation
+	* @return the getLastModifyTime result
+	* */
 	protected Timestamp getLastModifyTime() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -2732,6 +3286,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return null;
 	}
 
+	/**
+	* Performs the isLastOperateDelete operation
+	* @return the isLastOperateDelete result
+	* */
 	protected boolean isLastOperateDelete() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -2742,6 +3300,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 
+	/**
+	* Performs the isLastOperateRealDelete operation
+	* @return the isLastOperateRealDelete result
+	* */
 	protected boolean isLastOperateRealDelete() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -2757,6 +3319,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 	
+	/**
+	* Performs the listAllForScanDelete operation
+	* @param filePartDataTable - the filePartDataTable
+	* @param rows - the rows
+	* */
 	protected void listAllForScanDelete(Integer filePartDataTable, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -2791,6 +3358,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the isSyncedOnHostname operation
+	* @return the isSyncedOnHostname result
+	* */
 	protected boolean isSyncedOnHostname() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -2800,6 +3371,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 
+	/**
+	* Performs the isSyncedOnHostname operation
+	* @param id - the id
+	* @return the isSyncedOnHostname result
+	* */
 	protected boolean isSyncedOnHostname(Object id) throws IOException {
 		Map<String, Object> record = getRecordById(id);
 		if (record != null) {
@@ -2809,6 +3385,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 
+	/**
+	* Performs the isDeletedOnHostname operation
+	* @param id - the id
+	* @return the isDeletedOnHostname result
+	* */
 	protected boolean isDeletedOnHostname(Object id) throws IOException {
 		Map<String, Object> record = getRecordById(id);
 		if (record != null) {
@@ -2818,10 +3399,22 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 
+	/**
+	* Performs the getParentFile operation
+	* @return the getParentFile result
+	* */
 	public RemoteFile getParentFile() {
 		return new RemoteFile(getParent());
 	}
 
+	/**
+	* Performs the executeSyncRunnable operation
+	* @param filter - the filter
+	* @param String - the String
+	* @param item - the item
+	* @param df - the df
+	* @param rf - the rf
+	* */
 	private void executeSyncRunnable(final CacheArrayFilter filter, final Map<String, Object> item, final DiskFile df,
 			final RemoteFile rf) {
 	    try{
@@ -2838,10 +3431,23 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 	    }
 	}
 
+	/**
+	* Performs the getSyncRunnable operation
+	* @param filter - the filter
+	* @param String - the String
+	* @param item - the item
+	* @param rf - the rf
+	* @param df - the df
+	* @return the getSyncRunnable result
+	* */
 	private Runnable getSyncRunnable(final CacheArrayFilter filter, final Map<String, Object> item, final RemoteFile rf,
 			final DiskFile df) {
 		Runnable runnable = new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				try {
 					String fileName = (String) item.get("file_name");
@@ -3004,21 +3610,43 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return runnable;
 	}
 
+	/**
+	* Performs the startArchiveForFileDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveTime - the archiveTime
+	* */
 	public void startArchiveForFileDeleted(long timerMs, String archiveTime) throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
 		startArchiveForFileDeleted(timerMs, archiveMs, null);
 	}
 
+	/**
+	* Performs the startArchiveForFileDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveMs - the archiveMs
+	* */
 	public void startArchiveForFileDeleted(long timerMs, long archiveMs) throws IOException {
 		startArchiveForFileDeleted(timerMs, archiveMs, null);
 	}
 
+	/**
+	* Performs the startArchiveForFileDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveTime - the archiveTime
+	* @param completedCallback - the completedCallback
+	* */
 	public void startArchiveForFileDeleted(long timerMs, String archiveTime, Runnable completedCallback)
 			throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
 		startArchiveForFileDeleted(timerMs, archiveMs, completedCallback);
 	}
 
+	/**
+	* Performs the startArchiveForFileDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveMs - the archiveMs
+	* @param completedCallback - the completedCallback
+	* */
 	public void startArchiveForFileDeleted(long timerMs, long archiveMs, Runnable completedCallback)
 			throws IOException {
 		final RemoteFile the = this;
@@ -3045,6 +3673,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param size - the size
+				* */
 				public void completed(Integer size) {
 					if (isStopSync()) {
 						LoggerFactory.getLogger(RemoteFile.class).mark("Stoped archive for file deleted.");
@@ -3080,6 +3713,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the execute operation
+				* @param index - the index
+				* @param o - the o
+				* */
 				public void execute(Integer index, Object o) {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForFileDeleted-%s", index));
 					if(isDebug(the)){
@@ -3121,6 +3760,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			final CacheDriverExecutor finalExecutor = executor;
 			Executors.newFixedThreadPool(1).execute(new Runnable(){
 			    @Override
+
+			    /**
+			    * Performs the run operation
+			    * */
 			    public void run(){
 			        try{
 			             finalExecutor.find(formatSql(SQL_SELECT_FOR_ARCHIVE_FILE_DELETED), dataRecord, rows);
@@ -3142,21 +3785,43 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the startArchiveForDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveTime - the archiveTime
+	* */
 	public void startArchiveForDeleted(long timerMs, String archiveTime) throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
 		startArchiveForDeleted(timerMs, archiveMs, null);
 	}
 
+	/**
+	* Performs the startArchiveForDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveMs - the archiveMs
+	* */
 	public void startArchiveForDeleted(long timerMs, long archiveMs) throws IOException {
 		startArchiveForDeleted(timerMs, archiveMs, null);
 	}
 
+	/**
+	* Performs the startArchiveForDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveTime - the archiveTime
+	* @param completedCallback - the completedCallback
+	* */
 	public void startArchiveForDeleted(long timerMs, String archiveTime, Runnable completedCallback)
 			throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
 		startArchiveForDeleted(timerMs, archiveMs, completedCallback);
 	}
 
+	/**
+	* Performs the startArchiveForDeleted operation
+	* @param timerMs - the timerMs
+	* @param archiveMs - the archiveMs
+	* @param completedCallback - the completedCallback
+	* */
 	public void startArchiveForDeleted(long timerMs, long archiveMs, Runnable completedCallback) throws IOException {
 	    final RemoteFile the = this;
 		if (archiveMs <= 0) {
@@ -3183,6 +3848,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param size - the size
+				* */
 				public void completed(Integer size) {
 					if (isStopSync()) {
 						LoggerFactory.getLogger(RemoteFile.class).mark("Stoped archive for deleted.");
@@ -3217,6 +3887,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the execute operation
+				* @param index - the index
+				* @param o - the o
+				* */
 				public void execute(Integer index, Object o) {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForDeleted-%s", index));
 					CacheDriverExecutor dmExecutor = null;
@@ -3300,6 +3976,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			final CacheDriverExecutor finalExecutor = executor;
 			Executors.newFixedThreadPool(1).execute(new Runnable(){
 			    @Override
+
+			    /**
+			    * Performs the run operation
+			    * */
 			    public void run(){
 			        try{
 			            finalExecutor.find(formatSql(SQL_SELECT_FOR_ARCHIVE_DELETED), dataRecord, rows);
@@ -3321,10 +4001,19 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 	
+	/**
+	* Performs the startArchiveForTimeout operation
+	* @param timerMs - the timerMs
+	* */
 	public void startArchiveForTimeout(long timerMs) throws IOException {
 	    startArchiveForTimeout(timerMs,null);
 	}
 	
+	/**
+	* Performs the startArchiveForTimeout operation
+	* @param timerMs - the timerMs
+	* @param completedCallback - the completedCallback
+	* */
 	public void startArchiveForTimeout(long timerMs,Runnable completedCallback) throws IOException {
 	    final RemoteFile the = this;
 	    
@@ -3347,6 +4036,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 
 				@Override
+
+				/**
+				* Performs the completed operation
+				* @param size - the size
+				* */
 				public void completed(Integer size) {
 					if (isStopSync()) {
 						LoggerFactory.getLogger(RemoteFile.class).mark("Stoped archive for timeout deleted.");
@@ -3382,6 +4076,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 				}
 
 				@Override
+
+				/**
+				* Performs the execute operation
+				* @param index - the index
+				* @param o - the o
+				* */
 				public void execute(Integer index, Object o) {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForTimeout-%s", index));
 					if(isDebug(the)){
@@ -3423,6 +4123,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 			final CacheDriverExecutor finalExecutor = executor;
 			Executors.newFixedThreadPool(1).execute(new Runnable(){
 			    @Override
+
+			    /**
+			    * Performs the run operation
+			    * */
 			    public void run(){
 			        try{
 			            finalExecutor.find(formatSql(SQL_SELECT_FOR_ALL_TIMEOUT), dataRecord, rows);
@@ -3448,6 +4152,14 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return Collections.synchronizedMap(DATASOURCE_REMOTE_FILE);
 	}
 
+	/**
+	* Performs the generateId operation
+	* @param identityCardEnable - the identityCardEnable
+	* @param identityCardName - the identityCardName
+	* @param identityCardPrefix - the identityCardPrefix
+	* @param identityCardSuffix - the identityCardSuffix
+	* @return the generateId result
+	* */
 	private static synchronized String generateId(boolean identityCardEnable, String identityCardName,
 			String identityCardPrefix, int identityCardSuffix) throws SQLException {
 		if (identityCardEnable) {
@@ -3460,6 +4172,14 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the generateDataId operation
+	* @param identityCardEnable - the identityCardEnable
+	* @param identityCardName - the identityCardName
+	* @param identityCardSuffix - the identityCardSuffix
+	* @param theRf - the theRf
+	* @return the generateDataId result
+	* */
 	private static synchronized String generateDataId(boolean identityCardEnable, String identityCardName,
 			int identityCardSuffix, RemoteFile theRf) throws SQLException {
 		if (identityCardEnable) {
@@ -3472,6 +4192,11 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the addQueuePathMapping operation
+	* @param path - the path
+	* @return the addQueuePathMapping result
+	* */
 	protected static synchronized boolean addQueuePathMapping(String path) {
 		Long addTimeMs = null;
 
@@ -3490,6 +4215,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return false;
 	}
 
+	/**
+	* Performs the checkQueuePathMapping operation
+	* @return the checkQueuePathMapping result
+	* */
 	public static synchronized boolean checkQueuePathMapping() {
 		Long addTimeMs = null;
 		Map<String, Long> copyQueueMap = getQueuePathMapping();
@@ -3511,6 +4240,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return true;
 	}
 
+	/**
+	* Performs the removeQueuePathMapping operation
+	* @param path - the path
+	* */
 	protected static synchronized void removeQueuePathMapping(String path) {
 		QUEUE_PATH_MAPPING.remove(path);
 	}
@@ -3519,6 +4252,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return Collections.synchronizedMap(QUEUE_PATH_MAPPING);
 	}
 
+	/**
+	* Performs the loadDataMapping operation
+	* @param rf - the rf
+	* */
 	protected static synchronized void loadDataMapping(RemoteFile rf) throws Exception {
 		List<String> dmArray = rf.configProperties.getArray("DataMapping", new String[] {});
 		int size = dmArray.size();
@@ -3599,6 +4336,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 
 	}
 
+	/**
+	* Performs the calculateDataMappingDataSourceReader operation
+	* @param rf - the rf
+	* @param String - the String
+	* @param rfRecord - the rfRecord
+	* */
 	protected static synchronized void calculateDataMappingDataSourceReader(RemoteFile rf,
 			Map<String, Object> rfRecord) {
 		rf.dataMappingDs = (String) rfRecord.get("file_part_data_ds");
@@ -3611,6 +4354,10 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the calculateDataMappingDataSourceWriter operation
+	* @param rf - the rf
+	* */
 	protected static synchronized void calculateDataMappingDataSourceWriter(RemoteFile rf) {
 		if (DATA_MAPPING_INDEX.get(rf.dsKey) >= DATA_MAPPING_LIST.size() - 1) {
 			DATA_MAPPING_INDEX.put(rf.dsKey, 0);
@@ -3644,6 +4391,12 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		}
 	}
 
+	/**
+	* Performs the getDataMapping operation
+	* @param rf - the rf
+	* @param index - the index
+	* @return the getDataMapping result
+	* */
 	protected static synchronized ConfigProperties getDataMapping(RemoteFile rf, int index) {
 		List<String> dmList = DATA_MAPPING_LIST.get(rf.dsKey);
 		String dm = dmList.get(index);
@@ -3651,10 +4404,20 @@ public class RemoteFile extends BaseFile implements RemoteFileSQL {
 		return DATA_MAPPING.get(key);
 	}
 
+	/**
+	* Performs the getDataMappingTableName operation
+	* @return the getDataMappingTableName result
+	* */
 	protected String getDataMappingTableName() {
 		return String.format("%s_data_%s", this.tableName, this.dataMappingTable);
 	}
 	
+	/**
+	* Performs the debugLog operation
+	* @param point - the point
+	* @param rf - the rf
+	* @param filter - the filter
+	* */
 	private static void debugLog(String point,RemoteFile rf,CacheArrayFilter filter){
 		debugLog(RemoteFile.class,point,rf,filter);
 	}	

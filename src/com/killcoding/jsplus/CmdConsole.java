@@ -30,6 +30,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.killcoding.log.LoggerFactory;
 
+/**
+* Command-line console: an interactive REPL that reads scripts / commands from stdin or command
+* arguments, with monitor polling (MONITOR_POLL_MS) to watch for input and terminate on exit.
+* */
 public class CmdConsole extends ScriptConsole {
 
     /** Process monitor polling interval. */
@@ -40,10 +44,17 @@ public class CmdConsole extends ScriptConsole {
     private final ExecutorService monitorExecutor = Executors.newSingleThreadExecutor();
     private final ConcurrentHashMap<Long, ProcessInfo> processes = new ConcurrentHashMap<>();
 
+    /**
+    * Constructs a new CmdConsole
+    * */
     public CmdConsole() {
         this(true);
     }
 
+    /**
+    * Constructs a new CmdConsole
+    * @param enableSystemOut - the enableSystemOut
+    * */
     public CmdConsole(boolean enableSystemOut) {
         super();
         this.enableSystemOut = enableSystemOut;
@@ -57,6 +68,9 @@ public class CmdConsole extends ScriptConsole {
         startMonitor();
     }
 
+    /**
+    * Performs the startMonitor operation
+    * */
     private void startMonitor() {
         monitorExecutor.execute(() -> {
             while (true) {
@@ -76,6 +90,13 @@ public class CmdConsole extends ScriptConsole {
         });
     }
 
+    /**
+    * Performs the submit operation
+    * @param cmd - the cmd
+    * @param success - the success
+    * @param fail - the fail
+    * @return the submit result
+    * */
     public Process submit(String cmd, Runnable success, Runnable fail) {
         try {
             String[] fullCmd = new String[shellPrefix.length + 1];
@@ -96,6 +117,10 @@ public class CmdConsole extends ScriptConsole {
         }
     }
 
+    /**
+    * Performs the getCurrentPid operation
+    * @return the getCurrentPid result
+    * */
     public Long getCurrentPid() {
         return processes.keys().nextElement();
     }
@@ -114,6 +139,9 @@ public class CmdConsole extends ScriptConsole {
             this.failCallback = fail;
         }
 
+        /**
+        * Performs the waitForAndCallback operation
+        * */
         void waitForAndCallback() {
             if (callbackTriggered) return;
             synchronized (this) {

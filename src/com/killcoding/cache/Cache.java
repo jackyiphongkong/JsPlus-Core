@@ -29,8 +29,8 @@ import com.killcoding.log.LoggerFactory;
 import java.util.List;
 
 /**
- * This class is Cache entry
- * */
+* This class is Cache entry
+* */
 public final class Cache {
     
     /**

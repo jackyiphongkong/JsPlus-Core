@@ -23,14 +23,38 @@ package com.killcoding.file;
 import java.sql.Timestamp;
 import java.io.IOException;
 
+/**
+* Abstract chunk processor callback for large-file splitting: subclasses receive every part via
+* process(int,byte[]), a completion notice (completed) with modify time and total size, and a
+* final end signal (ended) with the last part index.
+* */
 public abstract class FilePart {
     
+    /**
+    * Performs the process operation
+    * @param partIndex - the partIndex
+    * @param buffer - the buffer
+    * */
     protected abstract void process(int partIndex,byte[] buffer) throws IOException;
     
+    /**
+    * Performs the completed operation
+    * @param lastPartIndex - the lastPartIndex
+    * @param modifyTime - the modifyTime
+    * @param fileSize - the fileSize
+    * */
     protected abstract void completed(int lastPartIndex,Timestamp modifyTime,long fileSize) throws IOException;
     
+    /**
+    * Performs the ended operation
+    * @param lastPartIndex - the lastPartIndex
+    * @param fileSize - the fileSize
+    * */
     protected abstract void ended(int lastPartIndex,long fileSize);
 
+	/**
+	* Constructs a new FilePart
+	* */
 	public FilePart() {
 		super();
 	}

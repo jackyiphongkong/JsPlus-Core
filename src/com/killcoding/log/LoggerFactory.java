@@ -39,6 +39,10 @@ import com.killcoding.log.Logger;
 import com.killcoding.tool.CommonTools;
 
 
+/**
+* Logger factory: builds Logger instances keyed by class name and resolves the logging
+* configuration (file targets, levels, output mode) from Logger properties.
+* */
 public final class LoggerFactory {
 
 	public final static String APP_LOGGER_KEY = "APP_LOGGER";
@@ -107,6 +111,10 @@ public final class LoggerFactory {
 		    defaultConfig = new ConfigProperties();
 		    Runnable updatedRun = new Runnable() {
 			    @Override
+
+				/**
+				* Performs the run operation
+				* */
 				public void run() {
 					try {
 						config(defaultConfig);
@@ -155,6 +163,10 @@ public final class LoggerFactory {
 		return new Logger(clazzName);
 	}
 	
+	/**
+	* Performs the getConfigProperties operation
+	* @return the getConfigProperties result
+	* */
 	public static ConfigProperties getConfigProperties(){
 	    return defaultConfig;
 	}

@@ -47,23 +47,49 @@ import java.nio.file.Path;
 import java.io.IOException;
 
 
+/**
+* Common static utility methods: hostname cache (volatile HOSTNAME), external-jar loading, blank /
+* null checks and miscellaneous helpers shared across the killcoding packages.
+* */
 public final class CommonTools {
     
     private static volatile String HOSTNAME = null;
 
 
+	/**
+	* Performs the loadJars operation
+	* @param libDirs - the libDirs
+	* @return the loadJars result
+	* */
 	public static URLClassLoader loadJars(String libDirs) throws Exception {
         return loadJars(libDirs,ClassLoader.getSystemClassLoader());
 	}
 	
+	/**
+	* Performs the loadJars operation
+	* @param libDirs - the libDirs
+	* @return the loadJars result
+	* */
 	public static URLClassLoader loadJars(String[] libDirs) throws Exception {
         return loadJars(libDirs,ClassLoader.getSystemClassLoader());
 	}	
 	
+	/**
+	* Performs the loadJars operation
+	* @param libDirs - the libDirs
+	* @param classLoader - the classLoader
+	* @return the loadJars result
+	* */
 	public static URLClassLoader loadJars(String[] libDirs,ClassLoader classLoader) throws Exception {
 	    return loadJars(String.join(";",libDirs),classLoader);
 	}
 
+	/**
+	* Performs the loadJars operation
+	* @param libDirs - the libDirs
+	* @param classLoader - the classLoader
+	* @return the loadJars result
+	* */
 	public static URLClassLoader loadJars(String libDirs,ClassLoader classLoader) throws Exception {
 		if (libDirs == null) 
 			return null;
@@ -134,6 +160,11 @@ public final class CommonTools {
                       .collect(Collectors.toList());                
     }    
 
+	/**
+	* Performs the getJarPath operation
+	* @param clazz - the clazz
+	* @return the getJarPath result
+	* */
 	public static String getJarPath(Class clazz) {
 		try {
 			return new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())
@@ -144,6 +175,11 @@ public final class CommonTools {
 		}
 	}
 	
+	/**
+	* Performs the isBlank operation
+	* @param o - the o
+	* @return the isBlank result
+	* */
 	public static boolean isBlank(Object o) {
 		if (o == null)
 			return true;
@@ -154,6 +190,13 @@ public final class CommonTools {
 		return false;
 	}
 
+	/**
+	* Performs the getSystemProperties operation
+	* @param clazz - the clazz
+	* @param envKey - the envKey
+	* @param propFileName - the propFileName
+	* @return the getSystemProperties result
+	* */
 	public static File getSystemProperties(Class clazz, String envKey, String propFileName) {
 		try {
 			File envFile = null;
@@ -242,6 +285,10 @@ public final class CommonTools {
 		return null;
 	}
 
+	/**
+	* Performs the getHostname operation
+	* @return the getHostname result
+	* */
 	public synchronized static String getHostname() {
 	    
 	    if(HOSTNAME != null) return HOSTNAME;
@@ -260,6 +307,11 @@ public final class CommonTools {
 		return HOSTNAME;
 	}
 
+	/**
+	* Performs the generateId operation
+	* @param len - the len
+	* @return the generateId result
+	* */
 	public static String generateId(int len) {
 		final Character[] CHARS = new Character[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c',
 				'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
@@ -295,6 +347,11 @@ public final class CommonTools {
 		return result;
 	}
 	
+	/**
+	* Performs the md5 operation
+	* @param text - the text
+	* @return the md5 result
+	* */
 	public static String md5(String text) {
 		char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 				'A', 'B', 'C', 'D', 'E', 'F' };

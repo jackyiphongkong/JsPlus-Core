@@ -69,11 +69,11 @@ import java.io.InputStream;
 import java.sql.CallableStatement;
 
 /**
- * This class is execute sql base class.
- * Support database replication.
- * Support database multi-activity.
- * Support database CRUD
- * */
+* This class is execute sql base class.
+* Support database replication.
+* Support database multi-activity.
+* Support database CRUD
+* */
 public class DriverExecutor {
 
 	protected final static Map<Integer, List<DriverExecutor>> SYNC_EXECUTOR_MARK = new ConcurrentHashMap<Integer, List<DriverExecutor>>();
@@ -592,6 +592,12 @@ public class DriverExecutor {
 		return callAndReturnRows(sql, cparams);
 	}
 	
+	/**
+	* Performs the callAndReturnRows operation
+	* @param sql - the sql
+	* @param params - the params
+	* @return the callAndReturnRows result
+	* */
 	public int callAndReturnRows(String sql, List<Object> params) throws SQLException {
         return (int)callAndReturnRows(Types.INTEGER,sql,params);
 	}
@@ -1292,6 +1298,12 @@ public class DriverExecutor {
 				long sqlLogFilterTimer = configProperties.getLong("SqlLogTimer", 1000L);
 				sqlLogCacheArray.filter(new CacheArrayFilter(0L,sqlLogFilterTimer) {
 					@Override
+
+					/**
+					* Performs the executeBatch operation
+					* @param index - the index
+					* @param batch - the batch
+					* */
 					public void executeBatch(Integer index, List batch) {
 					    final StringBuffer sbf = new StringBuffer();
 					    for(Object item : batch){
@@ -1530,6 +1542,11 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
+
+									/**
+									* Performs the getErrorCode operation
+									* @return the getErrorCode result
+									* */
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1610,6 +1627,11 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
+
+									/**
+									* Performs the getErrorCode operation
+									* @return the getErrorCode result
+									* */
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1658,6 +1680,11 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
+
+									/**
+									* Performs the getErrorCode operation
+									* @return the getErrorCode result
+									* */
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1706,6 +1733,11 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
+
+									/**
+									* Performs the getErrorCode operation
+									* @return the getErrorCode result
+									* */
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1784,6 +1816,11 @@ public class DriverExecutor {
 								String errorMsg = "Connection is null.";
 								throw new SQLException(errorMsg) {
 									@Override
+
+									/**
+									* Performs the getErrorCode operation
+									* @return the getErrorCode result
+									* */
 									public int getErrorCode() {
 										return errorCode;
 									}

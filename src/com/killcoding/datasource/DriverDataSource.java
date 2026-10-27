@@ -68,11 +68,11 @@ import java.nio.file.Paths;
 import java.util.Enumeration;
 
 /**
- *  Implement and enhance the datasource class
- *  Support write connection status log
- *  Support abort tiemout connection
- *  Support failover
- * */
+*  Implement and enhance the datasource class
+*  Support write connection status log
+*  Support abort tiemout connection
+*  Support failover
+* */
 public final class DriverDataSource implements DataSource {
 
 	private final Logger log = LoggerFactory.getLogger(DriverDataSource.class);
@@ -200,6 +200,9 @@ public final class DriverDataSource implements DataSource {
 		setConfig(configProperties);
 	}
 
+	/**
+	* Performs the initDs operation
+	* */
 	private void initDs() {
 		SimpleDateFormat datasourceIdFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 		DATASOURCE_ID = String.format("%s.%s.%s", datasourceIdFormat.format(new Date()), PID,
@@ -523,6 +526,10 @@ public final class DriverDataSource implements DataSource {
 		this.password = password;
 	}
 
+	/**
+	* Performs the getOpenConnectionSize operation
+	* @return the getOpenConnectionSize result
+	* */
 	private synchronized Integer getOpenConnectionSize() {
 		return connectionPool.getOpenConnectionSize();
 	}
@@ -715,6 +722,11 @@ public final class DriverDataSource implements DataSource {
 			for (int i = 0; i < willCreateConnTotal; i++) {
 				Callable callable = new Callable<Boolean>() {
 					@Override
+
+					/**
+					* Performs the call operation
+					* @return the call result
+					* */
 					public Boolean call() {
 						try {
 						    Thread.currentThread().setName("call-" + threadName);
@@ -856,6 +868,10 @@ public final class DriverDataSource implements DataSource {
     	        configProperties = new ConfigProperties();
     	        Runnable updateRun = new Runnable(){
     	            @Override
+
+    	            /**
+    	            * Performs the run operation
+    	            * */
     	            public void run(){
     	                try{
         	                the.setInternalConfig(configProperties);
@@ -1005,6 +1021,13 @@ public final class DriverDataSource implements DataSource {
 
 		Comparator comp = new Comparator() {
 			@Override
+
+			/**
+			* Performs the compare operation
+			* @param arg0 - the arg0
+			* @param arg1 - the arg1
+			* @return the compare result
+			* */
 			public int compare(Object arg0, Object arg1) {
 				Object[] objArr0 = (Object[]) arg0;
 				Object[] objArr1 = (Object[]) arg1;
@@ -1059,6 +1082,10 @@ public final class DriverDataSource implements DataSource {
 			executor.execute(new Runnable() {
 
 				@Override
+
+				/**
+				* Performs the run operation
+				* */
 				public void run() {
 					Thread.currentThread().setName(String.format("%s-manageConnectionPool-1", threadName));
 					while (true) {
@@ -1102,6 +1129,10 @@ public final class DriverDataSource implements DataSource {
 			executor.execute(new Runnable() {
 
 				@Override
+
+				/**
+				* Performs the run operation
+				* */
 				public void run() {
 					Thread.currentThread().setName(String.format("%s-manageConnectionPool-2", threadName));
 					while (true) {
@@ -1167,18 +1198,29 @@ public final class DriverDataSource implements DataSource {
 	    return null;
 	}
 	
+	/**
+	* Performs the throwConnIsNull operation
+	* */
 	private void throwConnIsNull() throws SQLException {
     	int errorCode = 99904;
 		String errorMsg = "Connection is null.";
 		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 		throw new SQLException(errorMsg) {
 			@Override
+
+			/**
+			* Performs the getErrorCode operation
+			* @return the getErrorCode result
+			* */
 			public int getErrorCode() {
 				return errorCode;
 			}
 		};
 	}
 
+	/**
+	* Performs the checkConnectionPoolSize operation
+	* */
 	private synchronized void checkConnectionPoolSize() throws SQLException {
 		int openConnectionSize = getOpenConnectionSize();
 		if (openConnectionSize >= maxPoolSize) {
@@ -1187,6 +1229,11 @@ public final class DriverDataSource implements DataSource {
 			log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 			throw new SQLException(errorMsg) {
 				@Override
+
+				/**
+				* Performs the getErrorCode operation
+				* @return the getErrorCode result
+				* */
 				public int getErrorCode() {
 					return errorCode;
 				}
@@ -1534,6 +1581,11 @@ public final class DriverDataSource implements DataSource {
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
 					@Override
+
+					/**
+					* Performs the getErrorCode operation
+					* @return the getErrorCode result
+					* */
 					public int getErrorCode() {
 						return errorCode;
 					}
@@ -1560,6 +1612,11 @@ public final class DriverDataSource implements DataSource {
 			throw new SQLException(e) {
 
 				@Override
+
+				/**
+				* Performs the getErrorCode operation
+				* @return the getErrorCode result
+				* */
 				public int getErrorCode() {
 					return errorCode;
 				}
@@ -1614,6 +1671,11 @@ public final class DriverDataSource implements DataSource {
 					String errorMsg = String.format("SyncDatasource is null - %s .", syncDsProp);
 					throw new SQLException(errorMsg) {
 						@Override
+
+						/**
+						* Performs the getErrorCode operation
+						* @return the getErrorCode result
+						* */
 						public int getErrorCode() {
 							return errorCode;
 						}
@@ -1634,6 +1696,10 @@ public final class DriverDataSource implements DataSource {
 		return CommonTools.md5(String.format("%s-%s", this.url, this.username));
 	}
 	
+	/**
+	* Performs the getAveUsage operation
+	* @return the getAveUsage result
+	* */
 	public synchronized double getAveUsage(){
 	    int size = aveUsageSum.size();
 	    double sum = 0.0D;
@@ -1646,10 +1712,18 @@ public final class DriverDataSource implements DataSource {
 	    return sum/size;
 	}
 	
+	/**
+	* Performs the setMaxAveUsageSize operation
+	* @param maxAveUsageSize - the maxAveUsageSize
+	* */
 	public void setMaxAveUsageSize(Integer maxAveUsageSize){
 	    this.maxAveUsageSize = maxAveUsageSize == null ? 10000 : maxAveUsageSize;
 	}
 
+	/**
+	* Performs the countUsage operation
+	* @param calAve - the calAve
+	* */
 	private synchronized void countUsage(boolean calAve) {
 		double usage = getUsage();
         if(calAve){
@@ -1698,29 +1772,61 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
+
+	/**
+	* Performs the setLogWriter operation
+	* @param arg0 - the arg0
+	* */
 	public void setLogWriter(PrintWriter arg0) throws SQLException {
 	}
 
 	@Override
+
+	/**
+	* Performs the getLogWriter operation
+	* @return the getLogWriter result
+	* */
 	public PrintWriter getLogWriter() throws SQLException {
 		return null;
 	}
 
 	@Override
+
+	/**
+	* Performs the getLoginTimeout operation
+	* @return the getLoginTimeout result
+	* */
 	public int getLoginTimeout() throws SQLException {
 		return 0;
 	}
 
 	@Override
+
+	/**
+	* Performs the setLoginTimeout operation
+	* @param arg0 - the arg0
+	* */
 	public void setLoginTimeout(int arg0) throws SQLException {
 	}
 
 	@Override
+
+	/**
+	* Performs the getConnection operation
+	* @param arg0 - the arg0
+	* @param arg1 - the arg1
+	* @return the getConnection result
+	* */
 	public Connection getConnection(String arg0, String arg1) throws SQLException {
 		return null;
 	}
 
 	@Override
+
+	/**
+	* Performs the createConnectionBuilder operation
+	* @return the createConnectionBuilder result
+	* */
 	public ConnectionBuilder createConnectionBuilder() throws SQLException {
 		return null;
 	}

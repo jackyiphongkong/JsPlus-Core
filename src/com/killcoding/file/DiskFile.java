@@ -84,6 +84,11 @@ import java.util.Collections;
 import java.nio.file.FileAlreadyExistsException;
 
 
+/**
+* Local disk-file engine: read / write / copy / move / delete and split of large files, using a
+* reusable split executor pool (splitPool). Watches file changes and supports chunked processing
+* through a FilePart callback while preserving the original file attributes and timestamps.
+* */
 public class DiskFile extends BaseFile {
     
     public static final int RETRY_OPEN_LIMITED = 100;
@@ -98,14 +103,26 @@ public class DiskFile extends BaseFile {
 	private FileLock lock = null;
 	private long modifyTimeMs = 0L;
 
+	/**
+	* Constructs a new DiskFile
+	* @param path - the path
+	* */
 	public DiskFile(String path) {
 		super(path);
 	}
 	
+	/**
+	* Constructs a new DiskFile
+	* @param origin - the origin
+	* */
 	public DiskFile(File origin) {
 		super(origin);
 	}	
 
+	/**
+	* Performs the initPool operation
+	* @param poolSize - the poolSize
+	* */
 	public static synchronized void initPool(int poolSize) {
 		if (splitPool == null) {
 			MAX_POOL_SIZE = poolSize;
@@ -114,6 +131,9 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the initDefaultPool operation
+	* */
 	private static synchronized void initDefaultPool() {
 		if (splitPool == null) {
 			LoggerFactory.getLogger(DiskFile.class).mark("MAX_POOL_SIZE={}", MAX_POOL_SIZE);
@@ -121,6 +141,11 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the split operation
+	* @param partSize - the partSize
+	* @param filePart - the filePart
+	* */
 	public void split(int partSize, FilePart filePart) throws IOException {
 		if (isLink()) {
 			throw new IOException(String.format("The disk file '%s' is a link.", origin.getAbsolutePath()));
@@ -134,6 +159,10 @@ public class DiskFile extends BaseFile {
 		initDefaultPool();
 		splitPool.execute(new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				SeekableByteChannel ch = null;
 				int partIndex = -1;
@@ -177,6 +206,11 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the copyTo operation
+	* @param toPath - the toPath
+	* */
 	public void copyTo(String toPath) throws IOException {
 		Path originPath = Paths.get(origin.toURI());
 		Path destPath = Paths.get(toPath);
@@ -185,6 +219,11 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the moveTo operation
+	* @param toPath - the toPath
+	* */
 	public void moveTo(String toPath) throws IOException {
 		Path originPath = Paths.get(origin.toURI());
 		Path destPath = Paths.get(toPath);
@@ -195,15 +234,30 @@ public class DiskFile extends BaseFile {
 		Files.move(originPath, destPath);
 	}
 
+	/**
+	* Performs the writeToRemote operation
+	* @param remoteFile - the remoteFile
+	* @return the writeToRemote result
+	* */
 	public RemoteFile writeToRemote(RemoteFile remoteFile) throws IOException {
 		return writeToRemote(remoteFile, new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 
 			}
 		});
 	}
 
+	/**
+	* Performs the writeToRemote operation
+	* @param remoteFile - the remoteFile
+	* @param completedCallback - the completedCallback
+	* @return the writeToRemote result
+	* */
 	public RemoteFile writeToRemote(RemoteFile remoteFile, Runnable completedCallback) throws IOException {
 		if (remoteFile.exists(true)) {
 			throw new IOException(String.format("The remote file '%s' already exists.", remoteFile.getPath()));
@@ -216,6 +270,10 @@ public class DiskFile extends BaseFile {
 		return remoteFile;
 	}
 
+	/**
+	* Performs the isLogicModify operation
+	* @return the isLogicModify result
+	* */
 	protected boolean isLogicModify() throws Exception {
 		boolean b = false;
 		String tmpPath = toModifyTmpFilePath();
@@ -234,10 +292,19 @@ public class DiskFile extends BaseFile {
 		return b;
 	}
 
+	/**
+	* Performs the logicModify operation
+	* @return the logicModify result
+	* */
 	protected DiskFile logicModify() throws Exception {
 		return logicModify(null);
 	}
 
+	/**
+	* Performs the logicModify operation
+	* @param msg - the msg
+	* @return the logicModify result
+	* */
 	protected DiskFile logicModify(String msg) throws Exception {
 		if (getParentFile().exists()) {
 			String tmpLogicPath = toModifyTmpFilePath();
@@ -262,6 +329,9 @@ public class DiskFile extends BaseFile {
 		return null;
 	}
 
+	/**
+	* Performs the removeLogicModify operation
+	* */
 	protected void removeLogicModify() {
 		try {
 			String tmpPath = toModifyTmpFilePath();
@@ -277,6 +347,10 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the isLogicAccess operation
+	* @return the isLogicAccess result
+	* */
 	protected boolean isLogicAccess() throws Exception {
 	    boolean b = false;
 		String tmpPath = toAccessTmpFilePath();
@@ -294,10 +368,19 @@ public class DiskFile extends BaseFile {
 		return b;
 	}
 
+	/**
+	* Performs the logicAccess operation
+	* @return the logicAccess result
+	* */
 	protected DiskFile logicAccess() throws Exception {
 		return logicAccess(null);
 	}
 
+	/**
+	* Performs the logicAccess operation
+	* @param msg - the msg
+	* @return the logicAccess result
+	* */
 	protected DiskFile logicAccess(String msg) throws Exception {
 		if (getParentFile().exists()) {
 			String tmpLogicPath = toAccessTmpFilePath();
@@ -317,6 +400,9 @@ public class DiskFile extends BaseFile {
 		return null;
 	}
 
+	/**
+	* Performs the removeLogicAccess operation
+	* */
 	protected void removeLogicAccess() {
 		try {
 			String tmpPath = toAccessTmpFilePath();
@@ -332,6 +418,10 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the isLogicCheck operation
+	* @return the isLogicCheck result
+	* */
 	protected boolean isLogicCheck() throws Exception {
 		boolean b = false;
 		String tmpPath = toCheckTmpFilePath();
@@ -350,10 +440,19 @@ public class DiskFile extends BaseFile {
 		return b;
 	}
 
+	/**
+	* Performs the logicCheck operation
+	* @return the logicCheck result
+	* */
 	protected DiskFile logicCheck() throws Exception {
 		return logicCheck(null);
 	}
 
+	/**
+	* Performs the logicCheck operation
+	* @param msg - the msg
+	* @return the logicCheck result
+	* */
 	public DiskFile logicCheck(String msg) throws Exception {
     	if (getParentFile().exists()) {
     		String tmpLogicPath = toCheckTmpFilePath();
@@ -376,6 +475,9 @@ public class DiskFile extends BaseFile {
 		return null;
 	}
 
+	/**
+	* Performs the removeLogicCheck operation
+	* */
 	protected void removeLogicCheck() {
 	    try{
     		String tmpPath = toCheckTmpFilePath();
@@ -397,50 +499,99 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the beforeDelete operation
+	* @param realDeleted - the realDeleted
+	* @return the beforeDelete result
+	* */
 	public boolean beforeDelete(boolean realDeleted) {
 		return true;
 	}
 
 	@Override
+
+	/**
+	* Performs the afterDelete operation
+	* @param realDeleted - the realDeleted
+	* */
 	public void afterDelete(boolean realDeleted) {
 
 	}
 
 	@Override
+
+	/**
+	* Performs the beforeMkdirs operation
+	* @return the beforeMkdirs result
+	* */
 	public boolean beforeMkdirs() {
 		return true;
 	}
 
 	@Override
+
+	/**
+	* Performs the afterMkdirs operation
+	* */
 	public void afterMkdirs() {
 
 	}
 
 	@Override
+
+	/**
+	* Performs the beforeCreateLink operation
+	* @param target - the target
+	* @return the beforeCreateLink result
+	* */
 	public boolean beforeCreateLink(String target) {
 		return true;
 	}
 
 	@Override
+
+	/**
+	* Performs the afterCreateLink operation
+	* @param target - the target
+	* */
 	public void afterCreateLink(String target) {
 
 	}
 
 	@Override
+
+	/**
+	* Performs the beforeWrite operation
+	* @return the beforeWrite result
+	* */
 	public boolean beforeWrite() {
 		return true;
 	}
 
 	@Override
+
+	/**
+	* Performs the afterWrite operation
+	* */
 	public void afterWrite() {
 
 	}
 
 	@Override
+
+	/**
+	* Performs the delete operation
+	* @return the delete result
+	* */
 	public boolean delete() throws IOException {
 		return deleteFrom();
 	}
 
+	/**
+	* Performs the deleteFrom operation
+	* @return the deleteFrom result
+	* */
 	private boolean deleteFrom() throws IOException {
 		boolean allowed = beforeDelete(true);
 		if (allowed) {
@@ -477,26 +628,51 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the isFile operation
+	* @return the isFile result
+	* */
 	public boolean isFile() throws IOException {
 		return this.origin.isFile() && !isLink();
 	}
 
 	@Override
+
+	/**
+	* Performs the isDirectory operation
+	* @return the isDirectory result
+	* */
 	public boolean isDirectory() throws IOException {
 		return this.origin.isDirectory() && !isLink();
 	}
 
 	@Override
+
+	/**
+	* Performs the isLink operation
+	* @return the isLink result
+	* */
 	public boolean isLink() throws IOException {
 		return Files.isSymbolicLink(Paths.get(this.origin.toURI()));
 	}
 
 	@Override
+
+	/**
+	* Performs the exists operation
+	* @return the exists result
+	* */
 	public boolean exists() throws IOException {
 		return this.origin.exists();
 	}
 
 	@Override
+
+	/**
+	* Performs the mkdirs operation
+	* @return the mkdirs result
+	* */
 	public boolean mkdirs() throws IOException {
 		boolean allowed = beforeMkdirs();
 		if (allowed) {
@@ -512,6 +688,13 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param append - the append
+	* @return the write result
+	* */
 	public boolean write(byte[] data, boolean append) throws IOException {
 
 		boolean allowed = beforeWrite();
@@ -569,6 +752,11 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the manualOpen operation
+	* @param append - the append
+	* @return the manualOpen result
+	* */
 	public boolean manualOpen(boolean append) throws IOException, FileAlreadyExistsException {
 
 		boolean allowed = beforeWrite();
@@ -612,6 +800,10 @@ public class DiskFile extends BaseFile {
 		return false;
 	}
 
+	/**
+	* Performs the manualWrite operation
+	* @param data - the data
+	* */
 	public void manualWrite(byte[] data) throws IOException {
 		if (data == null)
 			data = new byte[] {};
@@ -625,38 +817,83 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the manualWrite operation
+	* @param data - the data
+	* */
 	public void manualWrite(String data) throws IOException {
 		manualWrite(data.getBytes(CHARSET));
 	}
 
+	/**
+	* Performs the manualClose operation
+	* */
 	public void manualClose() throws IOException {
 		close();
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @return the write result
+	* */
 	public boolean write(byte[] data) throws IOException {
 		return write(data, false);
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param append - the append
+	* @return the write result
+	* */
 	public boolean write(String data, boolean append) throws IOException {
 		return write(data.getBytes(CHARSET), append);
 	}
 
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param charset - the charset
+	* @param append - the append
+	* @return the write result
+	* */
 	public boolean write(String data, String charset, boolean append) throws IOException {
 		return write(data.getBytes(charset), append);
 	}
 
 	@Override
+
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @return the write result
+	* */
 	public boolean write(String data) throws IOException {
 		return write(data.getBytes(CHARSET));
 	}
 
+	/**
+	* Performs the write operation
+	* @param data - the data
+	* @param charset - the charset
+	* @return the write result
+	* */
 	public boolean write(String data, String charset) throws IOException {
 		return write(data.getBytes(charset));
 	}
 
 	@Override
+
+	/**
+	* Performs the createLink operation
+	* @param target - the target
+	* @return the createLink result
+	* */
 	public boolean createLink(String target) throws IOException {
 		boolean allowed = beforeCreateLink(target);
 		if (allowed) {
@@ -678,16 +915,30 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the readLink operation
+	* @return the readLink result
+	* */
 	public String readLink() throws IOException {
 		Path link = Paths.get(origin.toURI());
 		return Files.readSymbolicLink(link).toString();
 	}
 
 	@Override
+
+	/**
+	* Performs the readAllBytes operation
+	* @return the readAllBytes result
+	* */
 	public byte[] readAllBytes() throws IOException {
 		return readAllBytesFrom();
 	}
 
+	/**
+	* Performs the readAllBytesFrom operation
+	* @return the readAllBytesFrom result
+	* */
 	private byte[] readAllBytesFrom() throws IOException {
 		if (isLink()) {
 			throw new IOException(String.format("The disk file '%s' is a link.", origin.getAbsolutePath()));
@@ -702,10 +953,20 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the readAllString operation
+	* @return the readAllString result
+	* */
 	public String readAllString() throws IOException {
 		return readAllString(BaseFile.CHARSET);
 	}
 
+	/**
+	* Performs the readAllString operation
+	* @param charset - the charset
+	* @return the readAllString result
+	* */
 	public String readAllString(String charset) throws IOException {
 		ByteArrayOutputStream baos = null;
 		try {
@@ -727,6 +988,11 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the size operation
+	* @return the size result
+	* */
 	public long size() throws IOException {
 		if (isFile()) {
 			Path path = Paths.get(origin.getAbsolutePath());
@@ -735,6 +1001,9 @@ public class DiskFile extends BaseFile {
 		return 0L;
 	}
 
+	/**
+	* Performs the close operation
+	* */
 	private void close() {
 		if (lock != null) {
 			try {
@@ -764,15 +1033,28 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the complete operation
+	* @return the complete result
+	* */
 	public boolean complete() throws IOException {
 		close();
 		return true;
 	}
 
+	/**
+	* Performs the setModifyTimeMs operation
+	* @param modifyTimeMs - the modifyTimeMs
+	* */
 	public void setModifyTimeMs(long modifyTimeMs) throws IOException {
 		this.modifyTimeMs = modifyTimeMs;
 	}
 
+	/**
+	* Performs the setModifyTimeMsFromClock operation
+	* @param modifyTimeMsFromClock - the modifyTimeMsFromClock
+	* */
 	public void setModifyTimeMsFromClock(long modifyTimeMsFromClock) throws IOException {
 		String remoteTzId = new Clock().getCalendar().getTimeZone().getID();
 		String localTzId = Calendar.getInstance().getTimeZone().getID();
@@ -781,6 +1063,11 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the setModifyTime operation
+	* @param modifyTime - the modifyTime
+	* */
 	public void setModifyTime(Timestamp modifyTime) throws IOException {
 		if (exists()) {
 			Path originPath = Paths.get(origin.toURI());
@@ -788,6 +1075,10 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the setModifyTimeFromClock operation
+	* @param modifyTimeFromClock - the modifyTimeFromClock
+	* */
 	public void setModifyTimeFromClock(Timestamp modifyTimeFromClock) throws IOException {
 		String remoteTzId = new Clock().getCalendar().getTimeZone().getID();
 		String localTzId = Calendar.getInstance().getTimeZone().getID();
@@ -796,6 +1087,11 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
+
+	/**
+	* Performs the getModifyTime operation
+	* @return the getModifyTime result
+	* */
 	public Timestamp getModifyTime() throws IOException {
 		Path originPath = Paths.get(origin.toURI());
 		if (Files.exists(originPath)) {
@@ -807,6 +1103,10 @@ public class DiskFile extends BaseFile {
 		return null;
 	}
 
+	/**
+	* Performs the getModifyTimeForClock operation
+	* @return the getModifyTimeForClock result
+	* */
 	public Timestamp getModifyTimeForClock() throws IOException {
 		Path originPath = Paths.get(origin.toURI());
 		if (Files.exists(originPath)) {
@@ -821,19 +1121,45 @@ public class DiskFile extends BaseFile {
 		return null;
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* */
 	public void startFullAsync(long timerMs, String replaceTo) throws IOException {
 		startFullAsync(timerMs, getPath() + "/", replaceTo, null, null);
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* */
 	public void startFullAsync(long timerMs, String replaceTo, Runnable completedCallback) throws IOException {
 		startFullAsync(timerMs, getPath() + "/", replaceTo, completedCallback, null);
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* @param checkDeleteCompletedCallback - the checkDeleteCompletedCallback
+	* */
 	public void startFullAsync(long timerMs, String replaceTo, Runnable completedCallback,
 			Runnable checkDeleteCompletedCallback) throws IOException {
 		startFullAsync(timerMs, getPath() + "/", replaceTo, completedCallback, checkDeleteCompletedCallback);
 	}
 
+	/**
+	* Performs the startFullAsync operation
+	* @param timerMs - the timerMs
+	* @param replaceRootPath - the replaceRootPath
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* @param checkDeleteCompletedCallback - the checkDeleteCompletedCallback
+	* */
 	private void startFullAsync(long timerMs, String replaceRootPath, String replaceTo, Runnable completedCallback,
 			Runnable checkDeleteCompletedCallback) throws IOException {
 
@@ -843,6 +1169,10 @@ public class DiskFile extends BaseFile {
 
 		Runnable runnable = new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				try {
 					startFullAsyncThread(timerMs, replaceRootPath, replaceTo, completedCallback);
@@ -856,6 +1186,10 @@ public class DiskFile extends BaseFile {
 
 		runnable = new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				try {
 					startFullSyncForDelete(-1, timerMs, replaceTo, replaceRootPath, checkDeleteCompletedCallback);
@@ -868,6 +1202,14 @@ public class DiskFile extends BaseFile {
 		splitPool.execute(runnable);
 	}
 
+	/**
+	* Performs the startFullSyncForDelete operation
+	* @param filePartDataTable - the filePartDataTable
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param replaceRootPath - the replaceRootPath
+	* @param completedCallback - the completedCallback
+	* */
 	private synchronized void startFullSyncForDelete(final Integer filePartDataTable, final long timerMs,
 			final String replaceTo, final String replaceRootPath, final Runnable completedCallback) throws IOException {
 		DiskFile the = this;
@@ -895,6 +1237,10 @@ public class DiskFile extends BaseFile {
 
 		Runnable runnable = new Runnable() {
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 				try {
 					_rootDir.listAllForScanDelete(finalFilePartDataTable, rows);
@@ -907,12 +1253,28 @@ public class DiskFile extends BaseFile {
 		splitPool.execute(runnable);
 	}
 
+	/**
+	* Performs the getScanDeleteFilter operation
+	* @param rootDir - the rootDir
+	* @param filePartDataTable - the filePartDataTable
+	* @param timerMs - the timerMs
+	* @param replaceTo - the replaceTo
+	* @param replaceRootPath - the replaceRootPath
+	* @param completedCallback - the completedCallback
+	* @return the getScanDeleteFilter result
+	* */
 	private CacheArrayFilter getScanDeleteFilter(final RemoteFile rootDir, final Integer filePartDataTable,
 			final long timerMs, final String replaceTo, final String replaceRootPath,
 			final Runnable completedCallback) {
 		DiskFile the = this;
 		CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 			@Override
+
+			/**
+			* Performs the execute operation
+			* @param index - the index
+			* @param o - the o
+			* */
 			public void execute(Integer index, Object o) {
 
 				try {
@@ -960,6 +1322,11 @@ public class DiskFile extends BaseFile {
 			}
 
 			@Override
+
+			/**
+			* Performs the completed operation
+			* @param size - the size
+			* */
 			public void completed(Integer size) {
 				if (isStopSync()) {
 					LoggerFactory.getLogger(DiskFile.class).mark("Stoped start full sync for delete.");
@@ -1004,6 +1371,13 @@ public class DiskFile extends BaseFile {
 		return filter;
 	}
 
+	/**
+	* Performs the startFullAsyncThread operation
+	* @param timerMs - the timerMs
+	* @param replaceRootPath - the replaceRootPath
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* */
 	private void startFullAsyncThread(final long timerMs, String replaceRootPath, String replaceTo,
 			final Runnable completedCallback) {
 		stopSync = false;
@@ -1111,6 +1485,15 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the getFullAsyncFilter operation
+	* @param the - the the
+	* @param timerMs - the timerMs
+	* @param replaceRootPath - the replaceRootPath
+	* @param replaceTo - the replaceTo
+	* @param completedCallback - the completedCallback
+	* @return the getFullAsyncFilter result
+	* */
 	private CacheArrayFilter getFullAsyncFilter(DiskFile the, long timerMs, String replaceRootPath, String replaceTo,
 			Runnable completedCallback) {
 
@@ -1119,6 +1502,11 @@ public class DiskFile extends BaseFile {
 			final CacheArrayFilter theFilter = this;
 
 			@Override
+
+			/**
+			* Performs the completed operation
+			* @param size - the size
+			* */
 			public void completed(Integer size) {
 				boolean isRootCompleted = the.getPath().equals(new DiskFile(replaceRootPath).getPath());
 
@@ -1146,6 +1534,12 @@ public class DiskFile extends BaseFile {
 			}
 
 			@Override
+
+			/**
+			* Performs the execute operation
+			* @param index - the index
+			* @param o - the o
+			* */
 			public void execute(Integer index, Object o) {
 				DiskFile df = null;
 				try {
@@ -1382,28 +1776,57 @@ public class DiskFile extends BaseFile {
 		};
 	}
 
+	/**
+	* Performs the setCopyStructureOnly operation
+	* @param copyStructureOnly - the copyStructureOnly
+	* */
 	public void setCopyStructureOnly(boolean copyStructureOnly) {
 		this.copyStructureOnly = copyStructureOnly;
 	}
 
+	/**
+	* Performs the isCopyStructureOnly operation
+	* @return the isCopyStructureOnly result
+	* */
 	public boolean isCopyStructureOnly() {
 		return this.copyStructureOnly;
 	}
 
+	/**
+	* Performs the isViEditSwp operation
+	* @param fileName - the fileName
+	* @return the isViEditSwp result
+	* */
 	private boolean isViEditSwp(String fileName) {
 		return fileName.matches(TMP_MATCHES_EDIT) || fileName.matches(TMP_MATCHES_VI_SWP);
 	}
 
+	/**
+	* Performs the copyAttrs operation
+	* @param source - the source
+	* @param _copyStructureOnly - the _copyStructureOnly
+	* @param _syncRoot - the _syncRoot
+	* @return the copyAttrs result
+	* */
 	protected static DiskFile copyAttrs(DiskFile source, boolean _copyStructureOnly, File _syncRoot) {
 		source.setCopyStructureOnly(_copyStructureOnly);
 		source.syncRoot = _syncRoot;
 		return source;
 	}
 
+	/**
+	* Performs the getParentFile operation
+	* @return the getParentFile result
+	* */
 	public File getParentFile() {
 		return new File(getParent());
 	}
 
+	/**
+	* Performs the checkSyncPathAvailable operation
+	* @param path - the path
+	* @return the checkSyncPathAvailable result
+	* */
 	protected boolean checkSyncPathAvailable(String path) {
 		try {
 			return checkSyncPathAvailable(path, RemoteFile.SHOW_HIDDEN, RemoteFile.SHOW_LINK, RemoteFile.MAX_FILE_SZIE,
@@ -1414,6 +1837,11 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
+	/**
+	* Performs the addQueuePathMapping operation
+	* @param path - the path
+	* @return the addQueuePathMapping result
+	* */
 	protected static synchronized boolean addQueuePathMapping(String path) {
 		Long addTimeMs = null;
 		boolean allowed = checkQueuePathMapping();
@@ -1431,6 +1859,10 @@ public class DiskFile extends BaseFile {
 		return false;
 	}
 
+	/**
+	* Performs the checkQueuePathMapping operation
+	* @return the checkQueuePathMapping result
+	* */
 	public static synchronized boolean checkQueuePathMapping() {
 		Long addTimeMs = null;
 		Map<String, Long> copyQueueMap = getQueuePathMapping();
@@ -1452,6 +1884,10 @@ public class DiskFile extends BaseFile {
 		return true;
 	}
 
+	/**
+	* Performs the removeQueuePathMapping operation
+	* @param path - the path
+	* */
 	protected static synchronized void removeQueuePathMapping(String path) {
 		QUEUE_PATH_MAPPING.remove(path);
 	}
@@ -1460,6 +1896,12 @@ public class DiskFile extends BaseFile {
 		return Collections.synchronizedMap(QUEUE_PATH_MAPPING);
 	}
 
+	/**
+	* Performs the debugLog operation
+	* @param point - the point
+	* @param rf - the rf
+	* @param filter - the filter
+	* */
 	private static void debugLog(String point, RemoteFile rf, CacheArrayFilter filter) {
 		debugLog(DiskFile.class, point, rf, filter);
 	}

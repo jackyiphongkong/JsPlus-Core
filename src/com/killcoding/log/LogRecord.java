@@ -67,8 +67,8 @@ import com.killcoding.log.LoggerFactory;
 import com.killcoding.log.Logger;
 
 /**
- * The class is write application log
- * */
+* The class is write application log
+* */
 public final class LogRecord {
 
 	protected final static String DEFAULT_MESSAGE_FORMAT = ":level :log_time_format [:log_thread_name-:log_thread_id] :log_class_name.:log_method_name(:log_file_name::log_line_number) **:message** \r\n:stack_trace";
@@ -208,6 +208,13 @@ public final class LogRecord {
 		}
 	}
 
+	/**
+	* Performs the process operation
+	* @param action - the action
+	* @param String - the String
+	* @param o - the o
+	* @return the process result
+	* */
 	private static Object process(String action, Map<String, Object> o) {
 		Integer outLogBatchLimit = config.getInteger("OutLogBatchLimit", 1000);
 		if (action.equals("ADD")) {
@@ -235,6 +242,12 @@ public final class LogRecord {
 		return null;
 	}
 
+	/**
+	* Performs the getLogFileIndex operation
+	* @param prefix - the prefix
+	* @param suffix - the suffix
+	* @return the getLogFileIndex result
+	* */
 	private static int getLogFileIndex(String prefix, String suffix) {
 		Integer fileOutMaxBackupIndex = config.getInteger("FileOutMaxBackupIndex", 10);
 		for (int i = 1; i <= fileOutMaxBackupIndex; i++) {
@@ -280,6 +293,13 @@ public final class LogRecord {
 		return logBatch;
 	}
 
+	/**
+	* Performs the format operation
+	* @param messageFormat - the messageFormat
+	* @param String - the String
+	* @param row - the row
+	* @return the format result
+	* */
 	public static String format(String messageFormat, Map<String, Object> row) {
 		List<Object> params = new ArrayList<Object>();
 		Pattern pattern = Pattern.compile(":[a-z0-9_]+");
@@ -293,6 +313,10 @@ public final class LogRecord {
 		return msg;
 	}
 
+	/**
+	* Performs the getLogFile operation
+	* @return the getLogFile result
+	* */
 	private static File getLogFile() {
 		String logFileNameFormat = config.getString("FileNameFormat", "`yyyyMMdd`.log");
 		int startIndex = logFileNameFormat.indexOf("`");
@@ -307,6 +331,10 @@ public final class LogRecord {
 		return new File(logFileNameFormat);
 	}
 	
+	/**
+	* Performs the getLogFileName operation
+	* @return the getLogFileName result
+	* */
 	public static String getLogFileName() {
 	    return getLogFile().getName();
 	}
@@ -334,6 +362,10 @@ public final class LogRecord {
 		}
 	}
 	
+	/**
+	* Performs the isSystemOut operation
+	* @return the isSystemOut result
+	* */
 	protected static boolean isSystemOut(){
 	    return customPrint == null;
 	}
@@ -674,6 +706,10 @@ public final class LogRecord {
 			executor.execute(new Runnable() {
 
 				@Override
+
+				/**
+				* Performs the run operation
+				* */
 				public void run() {
 					Thread.currentThread().setName(Logger.class.getSimpleName());
 					while (true) {
@@ -687,6 +723,10 @@ public final class LogRecord {
 							if (config.getBoolean("DatabaseOut", false)) {
     							DB_WRITE_POOL.execute(new Runnable(){
     							    @Override
+
+    							    /**
+    							    * Performs the run operation
+    							    * */
     							    public void run(){
     							        LogRecord.writeLogBatchToDatabase(list);
     							    }

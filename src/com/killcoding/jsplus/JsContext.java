@@ -39,6 +39,11 @@ import com.killcoding.tool.CipherTools;
 import com.killcoding.file.BaseFile;
 
 
+/**
+* Abstract JavaScript engine context: defines the common script-evaluation lifecycle (engine
+* manager init, eval of path / file / inline script, bindings, close) shared by the GraalVM and
+* Nashorn concrete contexts.
+* */
 public class JsContext extends JsPlusContext {
 
     private ScriptEngineManager scriptEngineManager = null;
@@ -47,41 +52,81 @@ public class JsContext extends JsPlusContext {
 	private ScriptContext context = null;
 	private Bindings bindings = null;
 	
+    /**
+    * Constructs a new JsContext
+    * @param engineName - the engineName
+    * */
     public JsContext(String engineName){
         super(engineName);
     }
     
 	@Override
+
+	/**
+	* Performs the getBindings operation
+	* @return the getBindings result
+	* */
 	public Object getBindings(){
 	    return bindings;
 	}    
     
 	@Override
+
+    /**
+    * Performs the getEngine operation
+    * @return the getEngine result
+    * */
     public ScriptEngineManager getEngine(){
         return scriptEngineManager;
     }
     
 	@Override
+
+    /**
+    * Performs the getContext operation
+    * @return the getContext result
+    * */
     public ScriptContext getContext(){
         return context;
     }    
     
     @Override
+
+	/**
+	* Performs the remove operation
+	* @param name - the name
+	* */
 	public void remove(String name){
 	    bindings.remove(name);
 	}        
     
     @Override
+
+	/**
+	* Performs the put operation
+	* @param name - the name
+	* @param value - the value
+	* */
 	public void put(String name,Object value){
 	    bindings.put(name,value);
 	}  
 	
 	@Override
+
+	/**
+	* Performs the get operation
+	* @param name - the name
+	* @return the get result
+	* */
 	public Object get(String name){
 	    return bindings.get(name);
 	}	
 
     @Override
+
+	/**
+	* Performs the initScriptEngineManager operation
+	* */
 	public void initScriptEngineManager() throws Exception {
 		ClassLoader classLoader = null;
 		classLoader = ClassLoader.getSystemClassLoader();
@@ -108,17 +153,34 @@ public class JsContext extends JsPlusContext {
 	}
 	
 	@Override
+
+	/**
+	* Performs the setAllowAllAccess operation
+	* @param allowAllAccess - the allowAllAccess
+	* */
 	public void setAllowAllAccess(boolean allowAllAccess){
 	    this.allowAllAccess = allowAllAccess;
 	    disableAllowAllAccess();
 	}
 
     @Override
+
+	/**
+	* Performs the eval operation
+	* @param scriptPath - the scriptPath
+	* @return the eval result
+	* */
 	public Object eval(String scriptPath) throws Exception {
 		return eval(new File(scriptPath));
 	}
 
     @Override
+
+	/**
+	* Performs the eval operation
+	* @param scriptPath - the scriptPath
+	* @return the eval result
+	* */
 	public Object eval(File scriptPath) throws Exception {
 	    String script = null;
 	    if(CommonTools.isBlank(scriptCipherAesKey)){
@@ -136,6 +198,12 @@ public class JsContext extends JsPlusContext {
 	}
 	
 	@Override
+
+	/**
+	* Performs the evalScript operation
+	* @param script - the script
+	* @return the evalScript result
+	* */
 	public Object evalScript(String script) throws Exception {
 		Object result = scriptEngine.eval(script, context);
 		scriptEngine.setContext(context);
@@ -144,6 +212,10 @@ public class JsContext extends JsPlusContext {
 	}	
 	
     @Override
+
+    /**
+    * Performs the close operation
+    * */
     public void close(){
         bindings.clear();
         bindings = null;
@@ -151,10 +223,18 @@ public class JsContext extends JsPlusContext {
     }	
     
 	@Override
+
+	/**
+	* Performs the getEngineName operation
+	* @return the getEngineName result
+	* */
 	public String getEngineName(){
 	    return engineName;
 	} 
 	
+	/**
+	* Performs the disableAllowAllAccess operation
+	* */
 	protected void disableAllowAllAccess(){
 	    if(!this.allowAllAccess && bindings != null){
     	    bindings.put("Java", null);

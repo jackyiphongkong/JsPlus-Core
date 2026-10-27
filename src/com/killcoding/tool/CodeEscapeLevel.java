@@ -23,6 +23,10 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.tool;
 
+/**
+* Escape levels for CodeEscape / CodeEscapeUtil: 1 = basic escape set, 2 = basic + all non-ASCII,
+* 3 = all non-alphanumeric, 4 = all characters.
+* */
 public enum CodeEscapeLevel {
 
     LEVEL_1_BASIC_ESCAPE_SET(1),
@@ -35,6 +39,12 @@ public enum CodeEscapeLevel {
 
     private final int escapeLevel;
 
+    /**
+     * Resolves the escape level constant for the given numeric level.
+     * @param level - the numeric escape level (1..4)
+     * @return the matching CodeEscapeLevel constant
+     * @throws IllegalArgumentException if the level is not one of 1..4
+     * */
     public static CodeEscapeLevel forLevel(final int level) {
         switch (level) {
             case 1: return LEVEL_1_BASIC_ESCAPE_SET;
@@ -47,11 +57,19 @@ public enum CodeEscapeLevel {
     }
 
 
+    /**
+     * Constructs a CodeEscapeLevel with its numeric level.
+     * @param escapeLevel - the numeric level backing this constant
+     * */
     CodeEscapeLevel(final int escapeLevel) {
         this.escapeLevel = escapeLevel;
     }
 
 
+    /**
+     * Returns the numeric escape level of this constant.
+     * @return the numeric escape level
+     * */
     public int getEscapeLevel() {
         return this.escapeLevel;
     }

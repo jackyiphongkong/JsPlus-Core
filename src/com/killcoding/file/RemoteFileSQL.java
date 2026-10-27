@@ -23,6 +23,10 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.file;
 
+/**
+* SQL statement constants for the RemoteFile engine (file + file_data tables). Every statement
+* carries a %s table-name placeholder that is bound to the configured table or data-mapping table.
+* */
 public interface RemoteFileSQL {
 
 	public static final String SQL_INSERT_INTO_FILE = "INSERT INTO %s (id,source_hostname,synced_on_hostnames,deleted_on_hostnames,file_id,file_name,file_parent_path,file_type,file_part_index,file_part_size,file_part_data_ds,file_part_data_table,file_part_last_index,file_size,file_modify_time,file_deleted,created_user_id,updated_user_id,deleted_user_id,created_at,updated_at,deleted_at,deleted) VALUES (:id,:source_hostname,:synced_on_hostnames,:deleted_on_hostnames,:file_id,:file_name,:file_parent_path,:file_type,:file_part_index,:file_part_size,:file_part_data_ds,:file_part_data_table,:file_part_last_index,:file_size,:file_modify_time,:file_deleted,:created_user_id,:updated_user_id,NULL,:created_at,:updated_at,NULL,0)";

@@ -41,12 +41,20 @@ import com.killcoding.tool.CipherTools;
 import com.killcoding.file.DiskFile;
 import com.killcoding.file.BaseFile;
 
+/**
+* GraalVM JavaScript engine context (org.graalvm.polyglot): evaluates scripts, configures host
+* access (allowAllAccess / PolyglotAccess) and option descriptors for the embedded engine.
+* */
 public class GraalVmContext extends JsPlusContext {
 
 	private Engine engine = null;
 	private Context context = null;
 	private Value value = null;
 	
+	/**
+	* Constructs a new GraalVmContext
+	* @param engineName - the engineName
+	* */
 	public GraalVmContext(String engineName) {
 		super(engineName);
 		String[] parseJsParams = engineName.split("\\.",2);
@@ -58,11 +66,20 @@ public class GraalVmContext extends JsPlusContext {
 	}
 	
 	@Override
+
+	/**
+	* Performs the getEngineName operation
+	* @return the getEngineName result
+	* */
 	public String getEngineName(){
 	    return engineName;
 	}
 
 	@Override
+
+	/**
+	* Performs the initScriptEngineManager operation
+	* */
 	public void initScriptEngineManager() throws Exception {
 		Engine.Builder builder = Engine.newBuilder();
 		ConfigProperties appenvCp = ScriptConsole.getAppenv();
@@ -92,41 +109,85 @@ public class GraalVmContext extends JsPlusContext {
 	}
 
 	@Override
+
+	/**
+	* Performs the getBindings operation
+	* @return the getBindings result
+	* */
 	public Object getBindings() {
 		return value;
 	}
 
 	@Override
+
+	/**
+	* Performs the getEngine operation
+	* @return the getEngine result
+	* */
 	public Engine getEngine() {
 		return engine;
 	}
 
 	@Override
+
+	/**
+	* Performs the getContext operation
+	* @return the getContext result
+	* */
 	public Context getContext() {
 		return context;
 	}
 
 	@Override
+
+	/**
+	* Performs the remove operation
+	* @param name - the name
+	* */
 	public void remove(String name) {
 		value.removeMember(name);
 	}
 
 	@Override
+
+	/**
+	* Performs the get operation
+	* @param name - the name
+	* @return the get result
+	* */
 	public Object get(String name) {
 		return value.getMember(name);
 	}
 
 	@Override
+
+	/**
+	* Performs the put operation
+	* @param name - the name
+	* @param obj - the obj
+	* */
 	public void put(String name, Object obj) {
 		value.putMember(name, obj);
 	}
 
 	@Override
+
+	/**
+	* Performs the eval operation
+	* @param scriptPath - the scriptPath
+	* @return the eval result
+	* */
 	public Object eval(String scriptPath) throws Exception {
 		return eval(new File(scriptPath));
 	}
 
 	@Override
+
+	/**
+	* Performs the eval operation
+	* @param scriptPath - the scriptPath
+	* @return the eval result
+	* */
 	public Object eval(File scriptPath) throws Exception {
 	    String script = null;
 	    if(CommonTools.isBlank(scriptCipherAesKey)){
@@ -141,6 +202,12 @@ public class GraalVmContext extends JsPlusContext {
 	}
 
 	@Override
+
+	/**
+	* Performs the evalScript operation
+	* @param script - the script
+	* @return the evalScript result
+	* */
 	public Object evalScript(String script) throws Exception {
 		synchronized (context) {
 			try {
@@ -153,6 +220,10 @@ public class GraalVmContext extends JsPlusContext {
 	}
 
 	@Override
+
+	/**
+	* Performs the close operation
+	* */
 	public void close() {
 		context.close(true);
 	}

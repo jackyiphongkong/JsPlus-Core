@@ -36,26 +36,33 @@ import java.sql.Timestamp;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 
-    CREATE TABLE identity_card (
-     id CHAR(16),
-     identity_name VARCHAR(200),
-     identity_value BIGINT,
-     generate_task_id CHAR(16),
-     created_user_id CHAR(16),
-     updated_user_id CHAR(16),
-     deleted_user_id CHAR(16), 
-     created_at DATETIME(6),
-     updated_at DATETIME(6),
-     deleted_at DATETIME(6),
-     deleted TINYINT(1)
-    ) ENGINE=InnoDB;
-    
-    ALTER TABLE identity_card ADD PRIMARY KEY (id);
-    ALTER TABLE identity_card ADD UNIQUE INDEX idx_idcard_unique_idname (identity_name);
-    ALTER TABLE identity_card ADD INDEX idx_idcard_deleted (deleted);
- *
- * */
+*
+CREATE TABLE identity_card (
+id CHAR(16),
+identity_name VARCHAR(200),
+identity_value BIGINT,
+generate_task_id CHAR(16),
+created_user_id CHAR(16),
+updated_user_id CHAR(16),
+deleted_user_id CHAR(16),
+created_at DATETIME(6),
+updated_at DATETIME(6),
+deleted_at DATETIME(6),
+deleted TINYINT(1)
+) ENGINE=InnoDB;
+
+ALTER TABLE identity_card ADD PRIMARY KEY (id);
+ALTER TABLE identity_card ADD UNIQUE INDEX idx_idcard_unique_idname (identity_name);
+ALTER TABLE identity_card ADD INDEX idx_idcard_deleted (deleted);
+*
+* */
+
+/**
+* Distributed identity-card sequence generator: produces fixed-length sequential IDs with
+* optional prefix / suffix / delimiter, persisted through a DB counter table so the next value
+* is unique across JVM instances. Requires IdentityCard.properties (Enable, TableName, Timeout,
+* StepValue, DataSource, GetAppClockSql). Invalid length configuration raises error 99801.
+* */
 public final class IdentityCard {
     
     private final static Map<String, Integer> CURRENT_VALUES = new ConcurrentHashMap<String, Integer>();
@@ -99,6 +106,10 @@ public final class IdentityCard {
 	private String generateTaskId = null;
 	private Object userId = null;
 
+	/**
+	* Constructs a new IdentityCard
+	* @param identityName - the identityName
+	* */
 	public IdentityCard(String identityName) {
 		super();
 		this.identityName = identityName;
@@ -106,6 +117,9 @@ public final class IdentityCard {
 		init();
 	}
 	
+	/**
+	* Performs the initValues operation
+	* */
 	private synchronized void initValues(){
 	    if(!CURRENT_VALUES.containsKey(identityName)){
     		CURRENT_VALUES.put(identityName,0);
@@ -113,12 +127,19 @@ public final class IdentityCard {
 	    }
 	}
 
+	/**
+	* Performs the initConn operation
+	* */
 	private void initConn() throws SQLException {
 		Connection conn = dataSource.getConnection();
 		conn.setAutoCommit(false);
 		driverExecutor = new CacheDriverExecutor(conn);
 	}
 	
+	/**
+	* Performs the generateId operation
+	* @return the generateId result
+	* */
 	public synchronized Long generateId() throws SQLException {
 	    if (!enable)
 			return null;
@@ -133,6 +154,10 @@ public final class IdentityCard {
 		return val;
 	}
 
+	/**
+	* Performs the generateIdForNextStep operation
+	* @return the generateIdForNextStep result
+	* */
 	public synchronized Long generateIdForNextStep() throws SQLException {
 
 		if (!enable)
@@ -168,6 +193,11 @@ public final class IdentityCard {
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
 					@Override
+
+					/**
+					* Performs the getErrorCode operation
+					* @return the getErrorCode result
+					* */
 					public int getErrorCode() {
 						return errorCode;
 					}
@@ -185,6 +215,11 @@ public final class IdentityCard {
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
     		throw new SQLException(errorMsg) {
     			@Override
+
+    			/**
+    			* Performs the getErrorCode operation
+    			* @return the getErrorCode result
+    			* */
     			public int getErrorCode() {
     				return errorCode;
     			}
@@ -197,6 +232,11 @@ public final class IdentityCard {
 		}
 	}
 
+	/**
+	* Performs the generateId operation
+	* @param length - the length
+	* @return the generateId result
+	* */
 	public synchronized String generateId(int length) throws SQLException {
 		if (!enable)
 			return null;
@@ -207,6 +247,11 @@ public final class IdentityCard {
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
     		throw new SQLException(errorMsg) {
     			@Override
+
+    			/**
+    			* Performs the getErrorCode operation
+    			* @return the getErrorCode result
+    			* */
     			public int getErrorCode() {
     				return errorCode;
     			}
@@ -226,6 +271,12 @@ public final class IdentityCard {
 		return String.format("%0" + length + "d", val);
 	}
 
+	/**
+	* Performs the generateId operation
+	* @param length - the length
+	* @param prefix - the prefix
+	* @return the generateId result
+	* */
 	public synchronized String generateId(int length, String prefix) throws SQLException {
 		if (!enable)
 			return null;
@@ -234,6 +285,14 @@ public final class IdentityCard {
 		return String.format("%s%s", prefix, generateId(valLen));
 	}
 	
+	/**
+	* Performs the generateId operation
+	* @param length - the length
+	* @param prefix - the prefix
+	* @param delimiter - the delimiter
+	* @param randomSuffixLength - the randomSuffixLength
+	* @return the generateId result
+	* */
 	public synchronized String generateId(int length, String prefix, String delimiter,int randomSuffixLength) throws SQLException {
 		if (!enable)
 			return null;
@@ -249,6 +308,9 @@ public final class IdentityCard {
 	    return String.format("%s%s%s%s", prefix,delimiter,generateId(valLen),suffix).substring(0,length);
 	}
 
+	/**
+	* Performs the init operation
+	* */
 	private synchronized void init() {
 		if (dataSource == null) {
 			try {
@@ -260,6 +322,10 @@ public final class IdentityCard {
 					configProperties = new ConfigProperties();
 					Runnable updatedRun = new Runnable() {
 						@Override
+
+						/**
+						* Performs the run operation
+						* */
 						public void run() {
 							try {
 								reload();
@@ -297,6 +363,9 @@ public final class IdentityCard {
 		}
 	}
 
+	/**
+	* Performs the reload operation
+	* */
 	private void reload() {
 		if (configProperties != null) {
 			enable = configProperties.getBoolean("Enable", false);
@@ -335,6 +404,11 @@ public final class IdentityCard {
 		}
 	}
 
+	/**
+	* Performs the update operation
+	* @param id - the id
+	* @return the update result
+	* */
 	private boolean update(Object id) throws SQLException {
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
@@ -349,6 +423,10 @@ public final class IdentityCard {
 		return driverExecutor.execute(sql, params) > 0;
 	}
 
+	/**
+	* Performs the clear operation
+	* @param id - the id
+	* */
 	private void clear(Object id) throws SQLException {
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
@@ -361,6 +439,11 @@ public final class IdentityCard {
 		driverExecutor.execute(sql, params);
 	}
 
+	/**
+	* Performs the reset operation
+	* @param id - the id
+	* @param resetValue - the resetValue
+	* */
 	private void reset(Object id,Long resetValue) throws SQLException {
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
@@ -374,6 +457,10 @@ public final class IdentityCard {
 		driverExecutor.execute(sql, params);
 	}
 	
+	/**
+	* Performs the resetForce operation
+	* @param id - the id
+	* */
 	private void resetForce(Object id) throws SQLException {
 		Clock clock = new Clock();
 		Timestamp currentTime = clock.getSqlTimestamp();
@@ -386,6 +473,10 @@ public final class IdentityCard {
 		driverExecutor.execute(sql, params);
 	}	
 
+	/**
+	* Performs the create operation
+	* @return the create result
+	* */
 	private Object create() throws SQLException {
 		Object id = CommonTools.generateId(16);
 		Clock clock = new Clock();
@@ -426,35 +517,71 @@ public final class IdentityCard {
 		return driverExecutor.first(sql, params);
 	}
 	
+	/**
+	* Performs the getMaxValueForLength operation
+	* @param length - the length
+	* @return the getMaxValueForLength result
+	* */
 	private Long getMaxValueForLength(int length) {
 	    String strValue = String.format("%0" + length + "d",0).replaceAll("0","9");
 	    return Long.parseLong(strValue);
 	}
 
+	/**
+	* Performs the getDataSource operation
+	* @return the getDataSource result
+	* */
 	public static DriverDataSource getDataSource() {
 		return dataSource;
 	}
 
+	/**
+	* Performs the formatSql operation
+	* @param sql - the sql
+	* @return the formatSql result
+	* */
 	public String formatSql(String sql) {
 		return String.format(sql, tableName);
 	}
 	
+	/**
+	* Performs the formatSql operation
+	* @param sql - the sql
+	* @param stepValue - the stepValue
+	* @return the formatSql result
+	* */
 	public String formatSql(String sql,Integer stepValue) {
 		return String.format(sql, tableName,stepValue);
 	}	
 
+	/**
+	* Performs the setUserId operation
+	* @param userId - the userId
+	* */
 	public void setUserId(Object userId) {
 		this.userId = userId;
 	}
 
+	/**
+	* Performs the getUserId operation
+	* @return the getUserId result
+	* */
 	public Object getUserId() {
 		return this.userId;
 	}
 
+	/**
+	* Performs the getIdentityName operation
+	* @return the getIdentityName result
+	* */
 	public String getIdentityName() {
 		return identityName;
 	}
 	
+	/**
+	* Performs the getConfigProperties operation
+	* @return the getConfigProperties result
+	* */
 	public static ConfigProperties getConfigProperties(){
 	    return configProperties;
 	}	

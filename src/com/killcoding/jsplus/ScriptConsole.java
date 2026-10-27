@@ -91,10 +91,20 @@ import java.time.ZoneId;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+* Script console: executes .js / .txt script files and inline scripts through the configured JS
+* engine. Manages the console variable map, task timers, Console.callback / getObject() /
+* getDataSource() plumbing, cache-api wiring and the ExitPolicy for controlled shutdown.
+* */
 public class ScriptConsole implements ConsoleImpl {
 
 	/** Callback used instead of System.exit - lets embedded hosts control termination. */
 	public interface ExitPolicy {
+
+		/**
+		* Performs the exit operation
+		* @param status - the status
+		* */
 		void exit(int status);
 	}
 
@@ -105,6 +115,11 @@ public class ScriptConsole implements ConsoleImpl {
 	/** Default policy keeps the historic behaviour (System.exit). */
 	private static volatile ExitPolicy EXIT_POLICY = new ExitPolicy() {
 		@Override
+
+		/**
+		* Performs the exit operation
+		* @param status - the status
+		* */
 		public void exit(int status) {
 			System.exit(status);
 		}
@@ -120,6 +135,11 @@ public class ScriptConsole implements ConsoleImpl {
 		} else {
 			EXIT_POLICY = new ExitPolicy() {
 				@Override
+
+				/**
+				* Performs the exit operation
+				* @param status - the status
+				* */
 				public void exit(int status) {
 					System.exit(status);
 				}
@@ -172,6 +192,9 @@ public class ScriptConsole implements ConsoleImpl {
 	protected Runnable callbackBatch = null;
 	protected boolean callbackSync = true;
 	
+	/**
+	* Constructs a new ScriptConsole
+	* */
 	public ScriptConsole() {
 		super();
 		initEnv();
@@ -180,10 +203,17 @@ public class ScriptConsole implements ConsoleImpl {
 		reset();
 	}
 	
+	/**
+	* Performs the getJsPlusPath operation
+	* @return the getJsPlusPath result
+	* */
 	public static String getJsPlusPath(){
 	    return System.getProperty(JS_PLUS_PATH_KEY);
 	}
 	
+	/**
+	* Performs the initEnv operation
+	* */
 	private synchronized void initEnv(){
 	    String jsPlusPath = getJsPlusPath();
 	    if(CommonTools.isBlank(jsPlusPath)){
@@ -201,10 +231,17 @@ public class ScriptConsole implements ConsoleImpl {
 		ScriptConsole.initPool();
 	}
 	
+	/**
+	* Performs the appenvReloaded operation
+	* @param apenvCp - the apenvCp
+	* */
 	public void appenvReloaded(ConfigProperties apenvCp){
 	    
 	}
 	
+	/**
+	* Performs the loadAppenv operation
+	* */
 	public void loadAppenv(){
 	    try{
 	        if(appenvCp == null){
@@ -218,6 +255,10 @@ public class ScriptConsole implements ConsoleImpl {
             	    appenvCp = new ConfigProperties();
             	    Runnable updateRun = new Runnable(){
             	        @Override
+
+            	        /**
+            	        * Performs the run operation
+            	        * */
             	        public void run(){
             	            Logger.systemDebug(ScriptConsole.class, "Appenv '{}' Reloading...", appenvPropFile);
     						List<String> propKeys = new ArrayList(appenvCp.keySet());
@@ -241,10 +282,18 @@ public class ScriptConsole implements ConsoleImpl {
 	    }
 	}
 	
+	/**
+	* Performs the getAppenv operation
+	* @return the getAppenv result
+	* */
 	public static ConfigProperties getAppenv(){
 	    return appenvCp;
 	}
 	
+	/**
+	* Performs the detectSystemExit operation
+	* @return the detectSystemExit result
+	* */
 	private static boolean detectSystemExit() throws IOException {
         String exitTmpPathStr = String.format("%s/exit.tmp", tmpPath.toString());
 		Path exitTmpPath = Paths.get(exitTmpPathStr);
@@ -265,6 +314,9 @@ public class ScriptConsole implements ConsoleImpl {
 		return false;
 	}
 	
+	/**
+	* Performs the initPool operation
+	* */
 	public synchronized static void initPool(){
 		if (exitExecute == null) {
     		String jsPlusPath = getJsPlusPath();
@@ -281,6 +333,10 @@ public class ScriptConsole implements ConsoleImpl {
 			exitExecute = Executors.newFixedThreadPool(1);
 			exitExecute.execute(new Runnable() {
 				@Override
+
+				/**
+				* Performs the run operation
+				* */
 				public void run() {
 					while (!Thread.currentThread().isInterrupted()) {
 					    try{
@@ -301,14 +357,26 @@ public class ScriptConsole implements ConsoleImpl {
 		}	    
 	}
 	
+	/**
+	* Performs the setStaticDataSource operation
+	* @param datasource - the datasource
+	* */
 	public static void setStaticDataSource(DriverDataSource datasource){
 	    ScriptConsole.datasource = datasource;
 	}
 	
+	/**
+	* Performs the setDataSource operation
+	* @param datasource - the datasource
+	* */
 	public void setDataSource(DriverDataSource datasource){
 	    setStaticDataSource(datasource);
 	}	
 
+	/**
+	* Performs the getDataSource operation
+	* @return the getDataSource result
+	* */
 	public synchronized DriverDataSource getDataSource() throws IOException {
 	    
 	    if(datasource == null){
@@ -327,18 +395,35 @@ public class ScriptConsole implements ConsoleImpl {
 		return datasource;
 	}
 
+	/**
+	* Performs the getIntoValue operation
+	* @return the getIntoValue result
+	* */
 	public String getIntoValue() {
 		return intoValue;
 	}
 
+	/**
+	* Performs the getLastSelectCommand operation
+	* @return the getLastSelectCommand result
+	* */
 	public String getLastSelectCommand() {
 		return lastSelectCommand;
 	}
 
+	/**
+	* Performs the getCacheDriverExecutor operation
+	* @return the getCacheDriverExecutor result
+	* */
 	public CacheDriverExecutor getCacheDriverExecutor() {
 		return cacheDriverExecutor;
 	}
 
+	/**
+	* Performs the getCacheDriverExecutor operation
+	* @param refreshConnection - the refreshConnection
+	* @return the getCacheDriverExecutor result
+	* */
 	public CacheDriverExecutor getCacheDriverExecutor(boolean refreshConnection) {
 		if (refreshConnection) {
 			open(true);
@@ -346,35 +431,67 @@ public class ScriptConsole implements ConsoleImpl {
 		return getCacheDriverExecutor();
 	}
 
+	/**
+	* Performs the getConsoleVariables operation
+	* @return the getConsoleVariables result
+	* */
 	public ConfigProperties getConsoleVariables() {
 		return consoleVariables;
 	}
 	
+	/**
+	* Performs the setConsoleVariables operation
+	* @param consoleVariables - the consoleVariables
+	* */
 	public void setConsoleVariables(ConfigProperties consoleVariables) {
 		this.consoleVariables = consoleVariables;
 	}	
 
+	/**
+	* Performs the setLastSelectCommand operation
+	* @param lastSelectCommand - the lastSelectCommand
+	* */
 	public void setLastSelectCommand(String lastSelectCommand) {
 		this.lastSelectCommand = lastSelectCommand;
 	}
 	
+	/**
+	* Performs the clearLastSelectCommand operation
+	* */
 	public void clearLastSelectCommand() {
 		lastSelectCommand = null;
 	}
 
+	/**
+	* Performs the into operation
+	* @param name - the name
+	* */
 	public void into(String name) {
 		consoleVariables.putAndReturnSlef(name, intoValue);
 	}
 
+	/**
+	* Performs the sleep operation
+	* @param sleepTime - the sleepTime
+	* */
 	public void sleep(String sleepTime) throws Exception {
 		Long ms = ConfigProperties.parseTimeToMs(sleepTime, 0L);
 		Thread.sleep(ms);
 	}
 
+	/**
+	* Performs the hostname operation
+	* @return the hostname result
+	* */
 	public String hostname() throws Exception {
 		return CommonTools.getHostname();
 	}
 
+	/**
+	* Performs the startTask operation
+	* @param taskTimer - the taskTimer
+	* @param taskFile - the taskFile
+	* */
 	public void startTask(String taskTimer, String taskFile) {
 		if (taskTimer == null) {
 			preExecuteTime = 0L;
@@ -387,12 +504,20 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the stopTask operation
+	* */
 	public void stopTask() {
 		preExecuteTime = 0L;
 		consoleVariables.putAndReturnSlef("TaskTimer", DEFAULT_TaskTimer + "ms");
 		consoleVariables.putAndReturnSlef("Task", null);
 	}
 	
+	/**
+	* Performs the callback operation
+	* @param callback - the callback
+	* @param callbackSync - the callbackSync
+	* */
 	public void callback(Runnable callback,boolean callbackSync) throws Exception {
 	    if(this.callback == null){
 	        this.callback = callback;
@@ -402,10 +527,19 @@ public class ScriptConsole implements ConsoleImpl {
 	    }
 	}	
 	
+	/**
+	* Performs the callback operation
+	* @param callback - the callback
+	* */
 	public void callback(Runnable callback) throws Exception {
 	    callback(callback,true);
 	}
 	
+	/**
+	* Performs the callbackBatch operation
+	* @param callbackBatch - the callbackBatch
+	* @param callbackSync - the callbackSync
+	* */
 	public void callbackBatch(Runnable callbackBatch,boolean callbackSync) throws Exception {
 	    if(this.callbackBatch == null){
 	        this.callbackBatch = callbackBatch;
@@ -415,23 +549,49 @@ public class ScriptConsole implements ConsoleImpl {
 	    }
 	}	
 	
+	/**
+	* Performs the callbackBatch operation
+	* @param callbackBatch - the callbackBatch
+	* */
 	public void callbackBatch(Runnable callbackBatch) throws Exception {
 	    callbackBatch(callbackBatch,true);
 	}	
 	
+	/**
+	* Performs the getGlobalCacheArray operation
+	* @param filterTimer - the filterTimer
+	* @param filterLoopTimer - the filterLoopTimer
+	* @return the getGlobalCacheArray result
+	* */
 	public CacheArray getGlobalCacheArray(long filterTimer,int filterLoopTimer){
 	    initGlobalCacheArray(filterTimer,filterLoopTimer);
 	    return globalCacheArray;
 	}
 	
+	/**
+	* Performs the getGlobalCacheArray operation
+	* @return the getGlobalCacheArray result
+	* */
 	public CacheArray getGlobalCacheArray(){
 	    initGlobalCacheArray(10L,100L);
 	    return globalCacheArray;
 	}	
 
+	/**
+	* Performs the createCacheArrayFilter operation
+	* @param filterTimer - the filterTimer
+	* @param filterLoopTimer - the filterLoopTimer
+	* @return the createCacheArrayFilter result
+	* */
 	protected CacheArrayFilter createCacheArrayFilter(long filterTimer,long filterLoopTimer){
 	    return new CacheArrayFilter(filterTimer,filterLoopTimer){
 	        @Override
+
+	        /**
+	        * Performs the execute operation
+	        * @param index - the index
+	        * @param o - the o
+	        * */
 	        public void execute(Integer index, Object o) {
                 if(callback != null) {
                     if(callbackSync){
@@ -443,6 +603,12 @@ public class ScriptConsole implements ConsoleImpl {
 	        }
 
 	        @Override
+
+	        /**
+	        * Performs the executeBatch operation
+	        * @param batchIndex - the batchIndex
+	        * @param batch - the batch
+	        * */
 	        public void executeBatch(Integer batchIndex,List batch) {
                 if(callbackBatch != null) {
                     if(callbackSync){
@@ -454,12 +620,21 @@ public class ScriptConsole implements ConsoleImpl {
 	        }
 	        
 	        @Override
+
+	        /**
+	        * Performs the terminated operation
+	        * */
 	        public void terminated() {
                 log.info("The GlobalCacheArray Terminated.");
 	        }
 	    };
 	}
 	
+	/**
+	* Performs the initGlobalCacheArray operation
+	* @param filterTimer - the filterTimer
+	* @param filterLoopTimer - the filterLoopTimer
+	* */
 	public void initGlobalCacheArray(long filterTimer,long filterLoopTimer){
 	    if(globalCacheArray == null){
     	    globalCacheArray = new CacheArray(false);
@@ -467,10 +642,17 @@ public class ScriptConsole implements ConsoleImpl {
 	    }
 	}
 	
+	/**
+	* Performs the initScriptEngineManager operation
+	* */
 	public void initScriptEngineManager() throws Exception {
 	    initScriptEngineManager(true);
 	}
 
+	/**
+	* Performs the initScriptEngineManager operation
+	* @param allowAllAccess - the allowAllAccess
+	* */
 	public void initScriptEngineManager(boolean allowAllAccess) throws Exception {
 	    String engineName = consoleVariables.getString("ScriptEngine", DEFAULT_ScriptEngine);
 	    this.engineName = engineName;
@@ -493,27 +675,54 @@ public class ScriptConsole implements ConsoleImpl {
 	    set("Name",displayEngineName);
 	}
 	
+	/**
+	* Performs the getContext operation
+	* @return the getContext result
+	* */
 	public JsPlusContext getContext(){
 	    return jsPlusContext;
 	}
 
+	/**
+	* Performs the eval operation
+	* @param scriptPath - the scriptPath
+	* @return the eval result
+	* */
 	public Object eval(String scriptPath) throws Exception {
 		return eval(new File(scriptPath));
 	}
 	
+	/**
+	* Performs the eval operation
+	* @param scriptPath - the scriptPath
+	* @return the eval result
+	* */
 	public Object eval(File scriptPath) throws Exception {
 		return jsPlusContext.eval(scriptPath);
 	}
 	
+	/**
+	* Performs the eval operation
+	* @param execRun - the execRun
+	* */
 	public void eval(Runnable execRun) throws Exception {
 		ExecutorService exec = Executors.newFixedThreadPool(1);
 		exec.execute(execRun);
 	}		
 
+	/**
+	* Performs the closeContext operation
+	* */
 	public void closeContext() throws Exception {
 		jsPlusContext.close();
 	}
 	
+	/**
+	* Performs the newBuilder operation
+	* @param _engineName - the _engineName
+	* @param allowAllAccess - the allowAllAccess
+	* @return the newBuilder result
+	* */
 	public ScriptConsole newBuilder(String _engineName,boolean allowAllAccess) throws Exception {
 	    ScriptConsole console = new ScriptConsole();
 	    console.useScriptEnv = this.useScriptEnv;
@@ -529,14 +738,28 @@ public class ScriptConsole implements ConsoleImpl {
 	    return console;
 	}	
 	
+	/**
+	* Performs the newBuilder operation
+	* @param _engineName - the _engineName
+	* @return the newBuilder result
+	* */
 	public ScriptConsole newBuilder(String _engineName) throws Exception {
 	    return newBuilder(_engineName,true);
 	}	
 	
+	/**
+	* Performs the newBuilder operation
+	* @param allowAllAccess - the allowAllAccess
+	* @return the newBuilder result
+	* */
 	public ScriptConsole newBuilder(boolean allowAllAccess) throws Exception {
 	    return newBuilder(this.engineName,allowAllAccess);
 	}
 	
+	/**
+	* Performs the newBuilder operation
+	* @return the newBuilder result
+	* */
 	public ScriptConsole newBuilder() throws Exception {
 	    return newBuilder(this.engineName,true);
 	}	
@@ -572,16 +795,31 @@ public class ScriptConsole implements ConsoleImpl {
 		return getCacheDriverExecutor(true).getColumnClasses(tableName);
 	}
 	
+	/**
+	* Performs the set operation
+	* @param key - the key
+	* @param value - the value
+	* @return the set result
+	* */
 	public String set(String key,Object value) {
 		consoleVariables.putAndReturnSlef(key,value);
 		return String.format("Set %s=%s", key, value);
 	}	
 
+	/**
+	* Performs the show operation
+	* @param key - the key
+	* @return the show result
+	* */
 	public String show(String key) {
 		Object value = consoleVariables.getString(key);
 		return String.format("Get %s=%s", key, value);
 	}
 
+	/**
+	* Performs the showAll operation
+	* @return the showAll result
+	* */
 	public String showAll() {
 		StringBuffer sbf = new StringBuffer();
 		Object[] keys = consoleVariables.keySet().toArray();
@@ -594,6 +832,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return sbf.toString();
 	}
 
+	/**
+	* Performs the setAutoCommit operation
+	* @param autoCommit - the autoCommit
+	* @return the setAutoCommit result
+	* */
 	public Boolean setAutoCommit(Boolean autoCommit) throws Exception {
 		if (cacheDriverExecutor == null) {
 			return false;
@@ -603,6 +846,12 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the genCreateTables operation
+	* @param schema - the schema
+	* @param sqlFilePath - the sqlFilePath
+	* @return the genCreateTables result
+	* */
 	public String genCreateTables(String schema, String sqlFilePath) {
 		try {
 			StringBuffer errMsg = null;
@@ -652,6 +901,12 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the genCreateTable operation
+	* @param schema - the schema
+	* @param tableName - the tableName
+	* @return the genCreateTable result
+	* */
 	public String genCreateTable(String schema, String tableName) throws Exception {
 		String schemaTableName = null;
 		if (CommonTools.isBlank(schema)) {
@@ -707,6 +962,13 @@ public class ScriptConsole implements ConsoleImpl {
 		return sql.toString();
 	}
 
+	/**
+	* Performs the getDataType operation
+	* @param isId - the isId
+	* @param javaType - the javaType
+	* @param precision - the precision
+	* @return the getDataType result
+	* */
 	public String getDataType(boolean isId, String javaType, int precision) {
 		if (isId) {
 			return "CHAR(16)";
@@ -747,6 +1009,10 @@ public class ScriptConsole implements ConsoleImpl {
 		return "TEXT";
 	}
 
+	/**
+	* Performs the setCacheApi operation
+	* @param apiClass - the apiClass
+	* */
 	public static void setCacheApi(String apiClass) throws Exception {
 		Class clazz = Class.forName(apiClass.trim());
 		Constructor con = clazz.getConstructor(Boolean.class);
@@ -754,6 +1020,9 @@ public class ScriptConsole implements ConsoleImpl {
 		StoredCache.setApi(api);
 	}
 
+	/**
+	* Performs the reset operation
+	* */
 	public synchronized void reset() {
 		consoleVariables.putAndReturnSlef("QueryCursorStart", DEFAULT_QueryCursorStart);
 		consoleVariables.putAndReturnSlef("QueryMaxRows", DEFAULT_QueryMaxRows);
@@ -790,6 +1059,13 @@ public class ScriptConsole implements ConsoleImpl {
 		consoleVariables.putAndReturnSlef("ConfigCipherAesKey", DEFAULT_Config_Cipher_AesKey);
 	}
 
+	/**
+	* Performs the converToSqlFromMap operation
+	* @param schema - the schema
+	* @param tableName - the tableName
+	* @param columns - the columns
+	* @return the converToSqlFromMap result
+	* */
 	public String converToSqlFromMap(String schema, String tableName, List<String> columns) {
 		int columnSize = columns.size();
 		StringBuffer sql = new StringBuffer();
@@ -815,6 +1091,13 @@ public class ScriptConsole implements ConsoleImpl {
 		return sql.toString();
 	}
 
+	/**
+	* Performs the conver operation
+	* @param tableObjectFolder - the tableObjectFolder
+	* @param javaType - the javaType
+	* @param encryptCell - the encryptCell
+	* @return the conver result
+	* */
 	public Object conver(String tableObjectFolder, String javaType, String encryptCell) throws Exception {
 		String _aesKey = consoleVariables.getString("JdbcCipherAesKey");
 
@@ -905,18 +1188,38 @@ public class ScriptConsole implements ConsoleImpl {
 		return objectValue;
 	}
 
+	/**
+	* Performs the getJarPath operation
+	* @return the getJarPath result
+	* */
 	public static String getJarPath() {
 		return CommonTools.getJarPath(ScriptConsole.class);
 	}
 	
+	/**
+	* Performs the exportTo operation
+	* @param _lastSelectCommand - the _lastSelectCommand
+	* @param folder - the folder
+	* @param filePrefix - the filePrefix
+	* */
 	public void exportTo(String _lastSelectCommand,File folder,String filePrefix) throws Exception {
 		exportTo(_lastSelectCommand,String.format("%s/%s",folder.getAbsolutePath(),filePrefix));
 	}	
 	
+	/**
+	* Performs the exportTo operation
+	* @param folder - the folder
+	* @param filePrefix - the filePrefix
+	* */
 	public void exportTo(File folder,String filePrefix) throws Exception {
 		exportTo(String.format("%s/%s",folder.getAbsolutePath(),filePrefix));
 	}	
 	
+	/**
+	* Performs the exportTo operation
+	* @param _lastSelectCommand - the _lastSelectCommand
+	* @param file - the file
+	* */
 	public synchronized void exportTo(String _lastSelectCommand,String file) throws Exception {
 	    setLastSelectCommand(_lastSelectCommand);
 		Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);
@@ -930,6 +1233,10 @@ public class ScriptConsole implements ConsoleImpl {
 		getCacheDriverExecutor(true).find(exportCursorStart, exportMaxRows, lastSelectCommand, cacheArray);
 	}	
 
+	/**
+	* Performs the exportTo operation
+	* @param file - the file
+	* */
 	public synchronized void exportTo(String file) throws Exception {
 		Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);
 		if (CommonTools.isBlank(lastSelectCommand)) {
@@ -942,10 +1249,24 @@ public class ScriptConsole implements ConsoleImpl {
 		getCacheDriverExecutor(true).find(exportCursorStart, exportMaxRows, lastSelectCommand, cacheArray);
 	}
 	
+	/**
+	* Performs the getCacheArrayFilterForExport operation
+	* @param showTaskLog - the showTaskLog
+	* @param file - the file
+	* @return the getCacheArrayFilterForExport result
+	* */
 	public CacheArrayFilter getCacheArrayFilterForExport(boolean showTaskLog, String file) {
 	    return getCacheArrayFilterForExport(showTaskLog,file,null,null);
 	}
 	
+	/**
+	* Performs the exportTo operation
+	* @param _lastSelectCommand - the _lastSelectCommand
+	* @param folder - the folder
+	* @param filePrefix - the filePrefix
+	* @param completedRun - the completedRun
+	* @param terminatedRun - the terminatedRun
+	* */
 	public void exportTo(String _lastSelectCommand,File folder,String filePrefix,Runnable completedRun,Runnable terminatedRun) throws Exception {
 	    setLastSelectCommand(_lastSelectCommand);
 		Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);
@@ -960,6 +1281,14 @@ public class ScriptConsole implements ConsoleImpl {
 		getCacheDriverExecutor(true).find(exportCursorStart, exportMaxRows, lastSelectCommand, cacheArray);
 	}		
 
+	/**
+	* Performs the getCacheArrayFilterForExport operation
+	* @param showTaskLog - the showTaskLog
+	* @param file - the file
+	* @param completedRun - the completedRun
+	* @param terminatedRun - the terminatedRun
+	* @return the getCacheArrayFilterForExport result
+	* */
 	public CacheArrayFilter getCacheArrayFilterForExport(boolean showTaskLog, String file,Runnable completedRun,Runnable terminatedRun) {
 		Integer exportMaxFileSize = consoleVariables.getInteger("ExportMaxFileSize", DEFAULT_ExportMaxFileSize);
 		Long exportTimer = consoleVariables.getLong("ExportTimer", DEFAULT_ExportTimer);
@@ -977,6 +1306,12 @@ public class ScriptConsole implements ConsoleImpl {
 			final StringBuffer header = new StringBuffer();
 			
 			@Override
+
+			/**
+			* Performs the executeBatch operation
+			* @param index - the index
+			* @param batch - the batch
+			* */
 			public void executeBatch(Integer index,List batch) {
                 if (showTaskLog) {
     				System.out.println(String.format("Exporting table %s (%s -> %s).", outFileName,index,batch.size()));
@@ -1045,11 +1380,22 @@ public class ScriptConsole implements ConsoleImpl {
 			}
 
 			@Override
+
+			/**
+			* Performs the execute operation
+			* @param index - the index
+			* @param o - the o
+			* */
 			public void execute(Integer index, Object o) {
 			    
 			}
 
 			@Override
+
+			/**
+			* Performs the completed operation
+			* @param size - the size
+			* */
 			public void completed(Integer size) {
 				try {
 					String outIndexFormat = String.format("%09d", 0);
@@ -1073,6 +1419,10 @@ public class ScriptConsole implements ConsoleImpl {
 			}
 			
 			@Override
+
+			/**
+			* Performs the terminated operation
+			* */
 			public void terminated(){
 			    if(csvFile != null){
 			        try{
@@ -1087,22 +1437,46 @@ public class ScriptConsole implements ConsoleImpl {
 		};
 	}
 
+	/**
+	* Performs the format operation
+	* @param objValue - the objValue
+	* @return the format result
+	* */
 	public String format(Object objValue) {
 		String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
 		String value = formatObjectValue(false, false, objValue, String.format("%s/tmp", getJarPath()));
 		return String.format(format, columnCut(value));
 	}
 
+	/**
+	* Performs the formatForExport operation
+	* @param objValue - the objValue
+	* @return the formatForExport result
+	* */
 	public String formatForExport(Object objValue) {
 		return formatObjectValue(false, true, objValue, String.format("%s/tmp", getJarPath()));
 	}
 
+	/**
+	* Performs the formatForExport operation
+	* @param tableObjectFolder - the tableObjectFolder
+	* @param objValue - the objValue
+	* @return the formatForExport result
+	* */
 	public String formatForExport(String tableObjectFolder, Object objValue) {
 		String _aesKey = consoleVariables.getString("JdbcCipherAesKey");
 		boolean useEncrypt = !CommonTools.isBlank(_aesKey);
 		return formatObjectValue(useEncrypt, true, objValue, tableObjectFolder);
 	}
 
+	/**
+	* Performs the formatObjectValue operation
+	* @param useEncrypt - the useEncrypt
+	* @param single - the single
+	* @param objValue - the objValue
+	* @param tableObjectFolder - the tableObjectFolder
+	* @return the formatObjectValue result
+	* */
 	public String formatObjectValue(boolean useEncrypt, boolean single, Object objValue,
 			String tableObjectFolder) {
 // 		SimpleDateFormat dateTimeFormat = new SimpleDateFormat(consoleVariables.getString("DateTimeFormat"));
@@ -1198,6 +1572,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return null;
 	}
 
+	/**
+	* Performs the toByteArray operation
+	* @param blobValue - the blobValue
+	* @return the toByteArray result
+	* */
 	public byte[] toByteArray(Blob blobValue) {
 		try {
 			return blobValue.getBinaryStream().readAllBytes();
@@ -1207,6 +1586,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the toByteArray operation
+	* @param clobValue - the clobValue
+	* @return the toByteArray result
+	* */
 	public byte[] toByteArray(Clob clobValue) {
 		try {
 			int length = Long.bitCount(clobValue.length());
@@ -1224,6 +1608,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the columnCut operation
+	* @param strValue - the strValue
+	* @return the columnCut result
+	* */
 	public String columnCut(String strValue) {
 		if (strValue == null)
 			strValue = "NULL";
@@ -1237,6 +1626,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return strValue;
 	}
 
+	/**
+	* Performs the toSingle operation
+	* @param text - the text
+	* @return the toSingle result
+	* */
 	public String toSingle(String text) {
 		if (text == null)
 			return null;
@@ -1244,10 +1638,17 @@ public class ScriptConsole implements ConsoleImpl {
         return escapeCsv(text);
 	}
 
+	/**
+	* Performs the clear operation
+	* */
 	public void clear() {
 		clear(true);
 	}
 
+	/**
+	* Performs the clear operation
+	* @param enableSystemOut - the enableSystemOut
+	* */
 	private void clear(Boolean enableSystemOut) {
 		if (enableSystemOut){
 		    try{
@@ -1266,10 +1667,17 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the open operation
+	* @return the open result
+	* */
 	public boolean open() {
 		return open(true);
 	}
 
+	/**
+	* Performs the close operation
+	* */
 	public void close() {
 		try {
 			close(true);
@@ -1279,6 +1687,9 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the commit operation
+	* */
 	public void commit() {
 		try {
 			commit(true);
@@ -1288,6 +1699,9 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the rollback operation
+	* */
 	public void rollback() {
 		try {
 			rollback(true);
@@ -1297,6 +1711,9 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the abort operation
+	* */
 	public void abort() {
 		try {
 			abort(true);
@@ -1306,6 +1723,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the abort operation
+	* @param enableSystemOut - the enableSystemOut
+	* */
 	private void abort(Boolean enableSystemOut) throws SQLException {
 		if (cacheDriverExecutor == null) {
 			if (enableSystemOut)
@@ -1318,6 +1739,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the rollback operation
+	* @param enableSystemOut - the enableSystemOut
+	* */
 	private void rollback(Boolean enableSystemOut) throws SQLException {
 		if (cacheDriverExecutor == null) {
 			if (enableSystemOut)
@@ -1329,6 +1754,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the commit operation
+	* @param enableSystemOut - the enableSystemOut
+	* */
 	private void commit(Boolean enableSystemOut) throws SQLException {
 		if (cacheDriverExecutor == null) {
 			if (enableSystemOut)
@@ -1340,6 +1769,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the close operation
+	* @param enableSystemOut - the enableSystemOut
+	* */
 	private void close(Boolean enableSystemOut) throws SQLException {
 		if (cacheDriverExecutor == null) {
 			if (enableSystemOut)
@@ -1352,6 +1785,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the open operation
+	* @param enableSystemOut - the enableSystemOut
+	* @return the open result
+	* */
 	private boolean open(Boolean enableSystemOut) {
 		if (cacheDriverExecutor == null || cacheDriverExecutor.isClosed()) {
 			firstOpen = false;
@@ -1379,6 +1817,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return true;
 	}
 
+	/**
+	* Performs the executeBatch operation
+	* @param batchFile - the batchFile
+	* @return the executeBatch result
+	* */
 	public Object executeBatch(String batchFile) throws Exception {
 	    if(isUseScriptEnv()){
 		    return eval(batchFile);
@@ -1392,6 +1835,11 @@ public class ScriptConsole implements ConsoleImpl {
 	    return null;
 	}
 	
+	/**
+	* Performs the executeCmdBatch operation
+	* @param _batchFile - the _batchFile
+	* @return the executeCmdBatch result
+	* */
 	protected String executeCmdBatch(String _batchFile) throws Exception {
 		try {
 		    File batchFile = new File(_batchFile);
@@ -1423,6 +1871,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}	
 	
+	/**
+	* Performs the executeJdbcBatch operation
+	* @param _batchFile - the _batchFile
+	* @return the executeJdbcBatch result
+	* */
 	protected String executeJdbcBatch(String _batchFile) throws Exception {
 		try {
 		    File batchFile = new File(_batchFile);
@@ -1454,14 +1907,30 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}		
 
+	/**
+	* Performs the evalScript operation
+	* @param script - the script
+	* @return the evalScript result
+	* */
 	public Object evalScript(String script) throws Exception {
 		return jsPlusContext.evalScript(script);
 	}
 	
+	/**
+	* Performs the executeViaGhost operation
+	* @param commands - the commands
+	* @return the executeViaGhost result
+	* */
 	public boolean executeViaGhost(String commands){
 	    return executeViaGhost(true,commands);
 	}	
 	
+	/**
+	* Performs the executeViaGhost operation
+	* @param enableSystemOut - the enableSystemOut
+	* @param commands - the commands
+	* @return the executeViaGhost result
+	* */
 	public boolean executeViaGhost(boolean enableSystemOut,String commands){
 	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
 	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
@@ -1575,10 +2044,24 @@ public class ScriptConsole implements ConsoleImpl {
 		return true;
 	}	
 	
+	/**
+	* Performs the executeViaCmd operation
+	* @param enableSystemOut - the enableSystemOut
+	* @param commands - the commands
+	* @return the executeViaCmd result
+	* */
 	public boolean executeViaCmd(boolean enableSystemOut,String commands){
 	    return executeViaCmd(enableSystemOut,commands,null,null);
 	}
 	
+	/**
+	* Performs the executeViaCmd operation
+	* @param enableSystemOut - the enableSystemOut
+	* @param commands - the commands
+	* @param successfullyRun - the successfullyRun
+	* @param faiiledRun - the faiiledRun
+	* @return the executeViaCmd result
+	* */
 	public boolean executeViaCmd(boolean enableSystemOut,String commands,Runnable successfullyRun,Runnable faiiledRun){
 	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
 	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
@@ -1705,6 +2188,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return true;
 	}
 
+	/**
+	* Performs the executeViaScript operation
+	* @param commands - the commands
+	* @return the executeViaScript result
+	* */
 	public boolean executeViaScript(String commands){
 	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
 	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
@@ -1786,6 +2274,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return true;
     }
     
+ 	/**
+ 	* Performs the execute operation
+ 	* @param commands - the commands
+ 	* @return the execute result
+ 	* */
  	public boolean execute(String commands) {
  	    if(isUseScriptEnv()) return executeViaScript(commands);
  	    
@@ -1796,18 +2289,42 @@ public class ScriptConsole implements ConsoleImpl {
  	    return false;
 	}   
 
+	/**
+	* Performs the executeViaJdbc operation
+	* @param commands - the commands
+	* @return the executeViaJdbc result
+	* */
 	public boolean executeViaJdbc(String commands) {
 		return executeViaJdbc(true, commands);
 	}
 	
+	/**
+	* Performs the executeViaCmd operation
+	* @param commands - the commands
+	* @return the executeViaCmd result
+	* */
 	public boolean executeViaCmd(String commands) {
 		return executeViaCmd(true, commands);
 	}
 	
+	/**
+	* Performs the executeViaCmd operation
+	* @param enableSystemOut - the enableSystemOut
+	* @param commands - the commands
+	* @param successfullyRun - the successfullyRun
+	* @param faiiledRun - the faiiledRun
+	* @return the executeViaCmd result
+	* */
 	public boolean executeViaCmd(Boolean enableSystemOut,String commands,Runnable successfullyRun,Runnable faiiledRun) {
 		return executeViaCmd(enableSystemOut, commands,successfullyRun,faiiledRun);
 	}	
 
+	/**
+	* Performs the executeViaJdbc operation
+	* @param enableSystemOut - the enableSystemOut
+	* @param commands - the commands
+	* @return the executeViaJdbc result
+	* */
 	public boolean executeViaJdbc(Boolean enableSystemOut,String commands) {
 	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
 	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
@@ -1980,6 +2497,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return true;
 	}
 
+	/**
+	* Performs the getCacheArrayFilter operation
+	* @param enableSystemOut - the enableSystemOut
+	* @return the getCacheArrayFilter result
+	* */
 	public CacheArrayFilter getCacheArrayFilter(Boolean enableSystemOut) {
 		return new CacheArrayFilter(1L,1L) {
 			final java.util.Date beginTime = new java.util.Date();
@@ -1987,6 +2509,12 @@ public class ScriptConsole implements ConsoleImpl {
 			String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
 
 			@Override
+
+			/**
+			* Performs the execute operation
+			* @param index - the index
+			* @param o - the o
+			* */
 			public void execute(Integer index, Object o) {
 				if (index == 0) {
 					StringBuffer header = new StringBuffer();
@@ -2035,6 +2563,11 @@ public class ScriptConsole implements ConsoleImpl {
 			}
 
 			@Override
+
+			/**
+			* Performs the completed operation
+			* @param size - the size
+			* */
 			public void completed(Integer size) {
 				boolean showResultFooter = consoleVariables.getBoolean("ShowResultFooter", DEFAULT_ShowResultFooter);
 				if (enableSystemOut && showResultFooter) {
@@ -2049,6 +2582,9 @@ public class ScriptConsole implements ConsoleImpl {
 		};
 	}
 
+	/**
+	* Performs the checkHistory operation
+	* */
 	public void checkHistory() {
 		try {
 			long pid = ProcessHandle.current().pid();
@@ -2065,6 +2601,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the addHistory operation
+	* @param command - the command
+	* */
 	public void addHistory(String command) {
 		try {
 			long pid = ProcessHandle.current().pid();
@@ -2076,6 +2616,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the showHistory operation
+	* @param hiscmd - the hiscmd
+	* */
 	public void showHistory(String hiscmd) {
 		try {
 			long pid = ProcessHandle.current().pid();
@@ -2119,6 +2663,12 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the toResultList operation
+	* @param String - the String
+	* @param list - the list
+	* @return the toResultList result
+	* */
 	public String toResultList(List<Map<String, Object>> list) {
 		String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
 		List<String> columns = null;
@@ -2170,11 +2720,21 @@ public class ScriptConsole implements ConsoleImpl {
 		return result.toString();
 	}
 
+	/**
+	* Performs the isCommandEnd operation
+	* @param command - the command
+	* @return the isCommandEnd result
+	* */
 	public boolean isCommandEnd(String command){
 	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
 		return command.matches(".*("+commandEnd+"){1,}[\s]*$");
 	}
 
+	/**
+	* Performs the isCommandCancel operation
+	* @param command - the command
+	* @return the isCommandCancel result
+	* */
 	public boolean isCommandCancel(String command){
 	    String commandCancel = consoleVariables.getString("CommandCancel",DEFAULT_CommandCancel);
 		return command.matches(".*("+commandCancel+"){1,}[\s]*$");
@@ -2208,12 +2768,20 @@ public class ScriptConsole implements ConsoleImpl {
 		return params;
 	}
 	
+	/**
+	* Performs the task operation
+	* */
 	protected void task() throws Exception {
         String task = consoleVariables.getString("Task", DEFAULT_Task);
 		Long taskTimer = consoleVariables.getMilliSeconds("TaskTimer", DEFAULT_TaskTimer);
 		task(task,taskTimer);
 	}	
 
+	/**
+	* Performs the task operation
+	* @param task - the task
+	* @param taskTimer - the taskTimer
+	* */
 	protected void task(String task,Long taskTimer) throws Exception {
 		String commandLines = null;
 		if (!CommonTools.isBlank(task)) {
@@ -2267,26 +2835,46 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 	
+	/**
+	* Performs the setTask operation
+	* @param taskTimer - the taskTimer
+	* @param task - the task
+	* */
 	public void setTask(String taskTimer,String task){
 	    set("Task",task);
 	    set("TaskTimer",taskTimer);
 	}
 	
+	/**
+	* Performs the setTask operation
+	* @param task - the task
+	* */
 	public void setTask(String task){
 	    set("Task",task);
 	    set("TaskTimer","0ms");
 	}	
 	
+	/**
+	* Performs the setTaskTimer operation
+	* @param taskTimer - the taskTimer
+	* */
 	public void setTaskTimer(String taskTimer){
 	    set("TaskTimer",taskTimer);
 	}		
 
+	/**
+	* Performs the taskExecute operation
+	* */
 	public void taskExecute() {
 		taskExecuted = true;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
 
 			@Override
+
+			/**
+			* Performs the run operation
+			* */
 			public void run() {
 
 				while (true) {
@@ -2314,6 +2902,13 @@ public class ScriptConsole implements ConsoleImpl {
 		});
 	}
 
+	/**
+	* Performs the importFrom operation
+	* @param schema - the schema
+	* @param tableName - the tableName
+	* @param csv - the csv
+	* @return the importFrom result
+	* */
 	public String importFrom(String schema, String tableName, String csv) throws Exception {
 		InputStream inputStream = null;
 		Scanner sc = null;
@@ -2391,6 +2986,12 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the importTables operation
+	* @param schema - the schema
+	* @param folder - the folder
+	* @return the importTables result
+	* */
 	public String importTables(String schema, String folder) {
 		Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);
 		int imported = 0;
@@ -2437,6 +3038,12 @@ public class ScriptConsole implements ConsoleImpl {
 		return String.format("%s tables imported and %s tables failed (%sms)", imported, failed, timeCostMs);
 	}
 
+	/**
+	* Performs the exportTables operation
+	* @param schema - the schema
+	* @param exportToFolder - the exportToFolder
+	* @return the exportTables result
+	* */
 	public String exportTables(String schema, String exportToFolder) {
 		Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);
 		int exported = 0;
@@ -2504,6 +3111,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the quote operation
+	* @param tableOrColumn - the tableOrColumn
+	* @return the quote result
+	* */
 	public String quote(String tableOrColumn) {
 		String quote = consoleVariables.getString("Quote", DEFAULT_Quote);
 		String[] schemaTableOrColumn = tableOrColumn.split("\\.");
@@ -2518,6 +3130,10 @@ public class ScriptConsole implements ConsoleImpl {
 		return tableOrColumn;
 	}
 
+	/**
+	* Performs the setIntoValue operation
+	* @param value - the value
+	* */
 	public void setIntoValue(Object value) {
 		if (CommonTools.isBlank(value)) {
 			intoValue = "NULL";
@@ -2536,6 +3152,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the formatCommand operation
+	* @param command - the command
+	* @return the formatCommand result
+	* */
 	public String formatCommand(String command) {
 
 		if (command == null)
@@ -2553,6 +3174,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return command;
 	}
 
+	/**
+	* Performs the exportUpperOrLowerCase operation
+	* @param s - the s
+	* @return the exportUpperOrLowerCase result
+	* */
 	public String exportUpperOrLowerCase(String s) {
 		String exportUpperOrLowerCase = consoleVariables.getString("ExportUpperOrLowerCase",
 				DEFAULT_ExportUpperOrLowerCase);
@@ -2565,10 +3191,19 @@ public class ScriptConsole implements ConsoleImpl {
 		return s;
 	}
 	
+	/**
+	* Performs the getCmdConsole operation
+	* @return the getCmdConsole result
+	* */
 	public CmdConsole getCmdConsole(){
 	    return cmdConsole;
 	}
 
+	/**
+	* Performs the error operation
+	* @param e - the e
+	* @return the error result
+	* */
 	public static String error(Exception e) {
 		if (e instanceof SQLException) {
 			SQLException se = (SQLException) e;
@@ -2578,6 +3213,10 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
     
+	/**
+	* Performs the exit operation
+	* @return the exit result
+	* */
 	public synchronized static String exit() {
 	    try{
     		String exitTmpPathStr = String.format("%s/exit.tmp", tmpPath.toString());
@@ -2591,6 +3230,10 @@ public class ScriptConsole implements ConsoleImpl {
 	    }
 	}
 	
+    /**
+    * Performs the memoryUsing operation
+    * @return the memoryUsing result
+    * */
     public long memoryUsing(){
         int mb = 1024 * 1024;
 		Runtime instance = Runtime.getRuntime();
@@ -2599,6 +3242,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return  (instance.totalMemory() - instance.freeMemory()) / mb;
     }	
 
+    /**
+    * Performs the memoryUsage operation
+    * @param using - the using
+    * @return the memoryUsage result
+    * */
     public double memoryUsage(long using){
         int mb = 1024 * 1024;
 		Runtime instance = Runtime.getRuntime();
@@ -2606,18 +3254,33 @@ public class ScriptConsole implements ConsoleImpl {
 		return (using * 1.0D / maxMemory * 1.0D);
     }	
     
+    /**
+    * Performs the memoryUsage operation
+    * @return the memoryUsage result
+    * */
     public double memoryUsage(){
         return memoryUsage(memoryUsing());
     }   	
 
+	/**
+	* Performs the addExitRunnable operation
+	* @param exitRun - the exitRun
+	* */
 	public void addExitRunnable(Runnable exitRun) {
 		exitRuns.add(exitRun);
 	}
 
+	/**
+	* Performs the version operation
+	* @return the version result
+	* */
 	public String version() {
 		return VERSION;
 	}
 	
+	/**
+	* Performs the setUseGhostEnv operation
+	* */
 	public void setUseGhostEnv(){
 	    this.useScriptEnv = false;
         this.useJdbcEnv = false;
@@ -2626,6 +3289,9 @@ public class ScriptConsole implements ConsoleImpl {
         set("Name","ghost");
 	}	
 	
+	/**
+	* Performs the setUseJdbcEnv operation
+	* */
 	public void setUseJdbcEnv(){
 	    this.useScriptEnv = false;
         this.useJdbcEnv = true;
@@ -2634,6 +3300,9 @@ public class ScriptConsole implements ConsoleImpl {
         set("Name","jdbc");
 	}
 	
+	/**
+	* Performs the setUseScriptEnv operation
+	* */
 	public void setUseScriptEnv(){
 	    this.useScriptEnv = true;
         this.useJdbcEnv = false;
@@ -2641,6 +3310,9 @@ public class ScriptConsole implements ConsoleImpl {
         this.useGhostEnv = false; 
 	}	
 	
+	/**
+	* Performs the setUseCmdEnv operation
+	* */
 	public void setUseCmdEnv(){
 	    this.useScriptEnv = false;
         this.useJdbcEnv = false;
@@ -2649,22 +3321,42 @@ public class ScriptConsole implements ConsoleImpl {
         set("Name","cmd");
 	}
 	
+	/**
+	* Performs the isUseGhostEnv operation
+	* @return the isUseGhostEnv result
+	* */
 	public boolean isUseGhostEnv(){
         return this.useGhostEnv;
 	}	
 	
+	/**
+	* Performs the isUseJdbcEnv operation
+	* @return the isUseJdbcEnv result
+	* */
 	public boolean isUseJdbcEnv(){
         return this.useJdbcEnv;
 	}	
 	
+	/**
+	* Performs the isUseScriptEnv operation
+	* @return the isUseScriptEnv result
+	* */
 	public boolean isUseScriptEnv(){
 	    return this.useScriptEnv;
 	}		
 	
+	/**
+	* Performs the isUseCmdEnv operation
+	* @return the isUseCmdEnv result
+	* */
 	public boolean isUseCmdEnv(){
         return this.useCmdEnv;
 	}	
 
+	/**
+	* Performs the help operation
+	* @return the help result
+	* */
 	public String help() {
 		StringBuffer content = new StringBuffer();
 		content.append("---------------------------------------------------------");
@@ -2742,6 +3434,10 @@ public class ScriptConsole implements ConsoleImpl {
 		return content.toString();
 	}
 	
+	/**
+	* Performs the connect operation
+	* @param consoleHashCode - the consoleHashCode
+	* */
 	public void connect(int consoleHashCode) {
         ScriptConsole sc = CONNECT_CONSOLES.get(consoleHashCode);
         if(sc == null){
@@ -2758,6 +3454,10 @@ public class ScriptConsole implements ConsoleImpl {
         }
 	}
 	
+	/**
+	* Performs the getConsole operation
+	* @return the getConsole result
+	* */
 	protected ScriptConsole getConsole(){
 
     	ScriptConsole sc = CONNECT_CONSOLES.get(0);
@@ -2767,6 +3467,10 @@ public class ScriptConsole implements ConsoleImpl {
 	    return this;
 	}
 	
+	/**
+	* Performs the getDisplayEngineName operation
+	* @return the getDisplayEngineName result
+	* */
 	protected String getDisplayEngineName(){
 	    if(isUseJdbcEnv()) return "jdbc";
 	    
@@ -2783,6 +3487,11 @@ public class ScriptConsole implements ConsoleImpl {
 	    return CONNECT_CONSOLES;
 	}
 	
+	/**
+	* Performs the decryptScript operation
+	* @param scriptPath - the scriptPath
+	* @return the decryptScript result
+	* */
 	public String decryptScript(File scriptPath) throws Exception {
 	    String aesKey = consoleVariables.getString("Script_Cipher_AesKey", DEFAULT_Script_Cipher_AesKey);
 	    String script = null;
@@ -2797,6 +3506,9 @@ public class ScriptConsole implements ConsoleImpl {
 	    return script;
 	}
 
+    /**
+    * Performs the startSchedule operation
+    * */
     public synchronized void startSchedule() {
         if (scheduleExecutor == null) {
             scheduleExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -2804,10 +3516,17 @@ public class ScriptConsole implements ConsoleImpl {
         }
     }
     
+    /**
+    * Performs the scheduleNextMinute operation
+    * */
     private void scheduleNextMinute() {
         long delay = getDelayToNextMinute();
         scheduleExecutor.schedule(new Runnable() {
             @Override
+
+            /**
+            * Performs the run operation
+            * */
             public void run() {
                 try {
                     executeTasks();
@@ -2818,6 +3537,9 @@ public class ScriptConsole implements ConsoleImpl {
         }, delay, TimeUnit.MILLISECONDS);
     }
     
+    /**
+    * Performs the executeTasks operation
+    * */
     private void executeTasks() {
         try{
             List<String> nameList = new ArrayList<String>(scheduleMap.keySet());
@@ -2862,6 +3584,12 @@ public class ScriptConsole implements ConsoleImpl {
         }
     }
 	
+	/**
+	* Performs the addSchedule operation
+	* @param name - the name
+	* @param cronRules - the cronRules
+	* @param runnable - the runnable
+	* */
 	public void addSchedule(String name,String cronRules,Runnable runnable) {
 	    clearSchedule(name);
 	    final Map<String,Object> map = new HashMap<String,Object>();
@@ -2870,10 +3598,18 @@ public class ScriptConsole implements ConsoleImpl {
 	    scheduleMap.put(name,map);
 	}
 	
+	/**
+	* Performs the clearSchedule operation
+	* @param name - the name
+	* */
 	public void clearSchedule(String name) {
 	    scheduleMap.remove(name);
 	}
 	
+	/**
+	* Performs the clearAllSchedule operation
+	* @param name - the name
+	* */
 	public void clearAllSchedule(String name) {
 	    scheduleMap.clear();
 	}	
@@ -2882,6 +3618,10 @@ public class ScriptConsole implements ConsoleImpl {
 	    return new HashMap<String, Map<String,Object>>(scheduleMap);
 	}
 	
+    /**
+    * Performs the getDelayToNextMinute operation
+    * @return the getDelayToNextMinute result
+    * */
     private long getDelayToNextMinute() {
         long now = System.currentTimeMillis();
         long nextMinute = ((now / 60000) + 1) * 60000;
@@ -2892,6 +3632,11 @@ public class ScriptConsole implements ConsoleImpl {
 	/* For base console */
 	
 	
+	/**
+	* Performs the version operation
+	* @param params - the params
+	* @return the version result
+	* */
 	public Object version(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.version()'";
@@ -2904,6 +3649,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the help operation
+	* @param params - the params
+	* @return the help result
+	* */
 	public Object help(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.help()'";
@@ -2916,6 +3666,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the exit operation
+	* @param params - the params
+	* @return the exit result
+	* */
 	public Object exit(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.exit()'";
@@ -2928,6 +3683,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the reset operation
+	* @param params - the params
+	* @return the reset result
+	* */
 	public Object reset(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.reset()'";
@@ -2936,6 +3696,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return "Successfully";
 	}
 
+	/**
+	* Performs the setCacheApi operation
+	* @param params - the params
+	* @return the setCacheApi result
+	* */
 	public Object setCacheApi(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -2953,6 +3718,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the when operation
+	* @param params - the params
+	* @return the when result
+	* */
 	public Object when(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -2980,6 +3750,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the into operation
+	* @param params - the params
+	* @return the into result
+	* */
 	public Object into(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -2992,6 +3767,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return null;
 	}
 
+	/**
+	* Performs the batch operation
+	* @param params - the params
+	* @return the batch result
+	* */
 	public Object batch(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3015,6 +3795,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return "Successfully";
 	}
 
+	/**
+	* Performs the sleep operation
+	* @param params - the params
+	* @return the sleep result
+	* */
 	public Object sleep(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3035,6 +3820,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the hostname operation
+	* @param params - the params
+	* @return the hostname result
+	* */
 	public Object hostname(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3050,6 +3840,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the startTask operation
+	* @param params - the params
+	* @return the startTask result
+	* */
 	public Object startTask(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3070,6 +3865,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return "Successfully";
 	}
 
+	/**
+	* Performs the stopTask operation
+	* @param params - the params
+	* @return the stopTask result
+	* */
 	public Object stopTask(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3082,6 +3882,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the set operation
+	* @param params - the params
+	* @return the set result
+	* */
 	public Object set(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3097,6 +3902,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return null;
 	}
 
+	/**
+	* Performs the show operation
+	* @param params - the params
+	* @return the show result
+	* */
 	public Object show(List<String> params) {
 	    if(isUseScriptEnv()){
 	        return "ERROR: JDBC or CMD environment is supported.";
@@ -3111,6 +3921,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return null;
 	}
 
+	/**
+	* Performs the showAll operation
+	* @param params - the params
+	* @return the showAll result
+	* */
 	public Object showAll(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.showAll()'";
@@ -3120,6 +3935,11 @@ public class ScriptConsole implements ConsoleImpl {
 	
 	/*For jdbc console*/
 	
+	/**
+	* Performs the importTables operation
+	* @param params - the params
+	* @return the importTables result
+	* */
 	public Object importTables(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3140,6 +3960,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return importTables(schema, csvFolder);
 	}
 
+	/**
+	* Performs the clearLastSelectCommand operation
+	* @param params - the params
+	* @return the clearLastSelectCommand result
+	* */
 	public Object clearLastSelectCommand(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3151,6 +3976,11 @@ public class ScriptConsole implements ConsoleImpl {
 		return "Cleared last select command";
 	}
 
+	/**
+	* Performs the exportTables operation
+	* @param params - the params
+	* @return the exportTables result
+	* */
 	public Object exportTables(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3189,6 +4019,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the desc operation
+	* @param params - the params
+	* @return the desc result
+	* */
 	public Object desc(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3215,6 +4050,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the showTables operation
+	* @param params - the params
+	* @return the showTables result
+	* */
 	public Object showTables(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3237,6 +4077,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the showColumnTypes operation
+	* @param params - the params
+	* @return the showColumnTypes result
+	* */
 	public Object showColumnTypes(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3257,6 +4102,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the showColumnClasses operation
+	* @param params - the params
+	* @return the showColumnClasses result
+	* */
 	public Object showColumnClasses(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3277,6 +4127,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the exportTo operation
+	* @param params - the params
+	* @return the exportTo result
+	* */
 	public Object exportTo(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3306,6 +4161,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the importFrom operation
+	* @param params - the params
+	* @return the importFrom result
+	* */
 	public Object importFrom(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3334,6 +4194,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}	
 	
+	/**
+	* Performs the setAutoCommit operation
+	* @param params - the params
+	* @return the setAutoCommit result
+	* */
 	public Object setAutoCommit(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3354,6 +4219,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the genCreateTables operation
+	* @param params - the params
+	* @return the genCreateTables result
+	* */
 	public Object genCreateTables(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3378,6 +4248,11 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+	/**
+	* Performs the genCreateTable operation
+	* @param params - the params
+	* @return the genCreateTable result
+	* */
 	public Object genCreateTable(List<String> params) {
 	    if(!isUseJdbcEnv()){
 	        return "ERROR: JDBC environment is supported only.";
@@ -3402,10 +4277,20 @@ public class ScriptConsole implements ConsoleImpl {
 		}
 	}
 
+    /**
+    * Performs the escapeCsv operation
+    * @param input - the input
+    * @return the escapeCsv result
+    * */
     public static String escapeCsv(String input) {
         return EscapeTools.escapeToSingleLineForCsv(input);
     }
     
+    /**
+    * Performs the unescapeCsv operation
+    * @param input - the input
+    * @return the unescapeCsv result
+    * */
     public static String unescapeCsv(String input) {
         return EscapeTools.unescape(input);
     }

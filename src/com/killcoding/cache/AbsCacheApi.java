@@ -26,8 +26,8 @@ package com.killcoding.cache;
 import java.util.List;
 
 /**
- * This abstract class, it is the framework base cache class.
- **/
+* This abstract class, it is the framework base cache class.
+* */
 public abstract class AbsCacheApi {
     
     protected static Long TIMER = 100L;
@@ -56,11 +56,38 @@ public abstract class AbsCacheApi {
 		this.stored = stored;
 	}	
 	
+	/**
+	* Performs the set operation
+	* @param name - the name
+	* @param value - the value
+	* @param live - the live
+	* */
 	abstract void set(String name,Object value,int live);
+
+	/**
+	* Performs the get operation
+	* @param name - the name
+	* @return the get result
+	* */
 	abstract Object get(String name);
 	abstract List<String> getNames();
+
+	/**
+	* Performs the included operation
+	* @param name - the name
+	* @return the included result
+	* */
 	abstract boolean included(String name);
+
+	/**
+	* Performs the remove operation
+	* @param name - the name
+	* */
 	abstract void remove(String name);
+
+	/**
+	* Performs the removeAll operation
+	* */
 	abstract void removeAll();
 
 }

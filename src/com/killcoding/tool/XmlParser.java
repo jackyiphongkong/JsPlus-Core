@@ -37,22 +37,40 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Attr;
 import org.xml.sax.InputSource;
 
+/**
+* Lightweight XML-to-Map parser: converts an XML document into a nested Map<String,Object> tree
+* (exposing the root element name) for script-friendly access.
+* */
 public class XmlParser {
 
     private String xml;
     private String rootName;
     private Map<String, Object> root;
 
+    /**
+    * Constructs a new XmlParser
+    * @param xml - the xml
+    * */
     public XmlParser(String xml) throws Exception {
         super();
         this.xml = xml;
         root = xml2Map(this.xml);
     }
     
+    /**
+    * Performs the put operation
+    * @param name - the name
+    * @param String - the String
+    * @param map - the map
+    * */
     public void put(String name, Map<String, Object> map) {
         root.put(getShortName(name), map);
     }
     
+    /**
+    * Performs the getRootName operation
+    * @return the getRootName result
+    * */
     public String getRootName() {
         return rootName;
     }
@@ -118,6 +136,11 @@ public class XmlParser {
         return list;
     }
 
+    /**
+    * Performs the path operation
+    * @param paths - the paths
+    * @return the path result
+    * */
     public Object path(String paths) {
         if (paths == null) return null;
         return get(paths.trim().split("\\."));
@@ -151,6 +174,12 @@ public class XmlParser {
         return map;
     }
 
+    /**
+    * Performs the processElement operation
+    * @param element - the element
+    * @param String - the String
+    * @param parentMap - the parentMap
+    * */
     private void processElement(Element element, Map<String, Object> parentMap) {
         String elementName = element.getNodeName();
         NodeList children = element.getChildNodes();
@@ -184,6 +213,14 @@ public class XmlParser {
         }
     }
 
+    /**
+    * Performs the handleValue operation
+    * @param String - the String
+    * @param map - the map
+    * @param key - the key
+    * @param value - the value
+    * @param element - the element
+    * */
     private void handleValue(Map<String, Object> map, String key, Object value, Element element) {
         Object existingValue = map.get(key);
         
@@ -210,6 +247,15 @@ public class XmlParser {
         }
     }
 
+    /**
+    * Performs the handleMap operation
+    * @param String - the String
+    * @param map - the map
+    * @param key - the key
+    * @param String - the String
+    * @param value - the value
+    * @param element - the element
+    * */
     private void handleMap(Map<String, Object> map, String key, Map<String, Object> value, Element element) {
         Object existingValue = map.get(key);
         
@@ -247,6 +293,11 @@ public class XmlParser {
         return atts;
     }
     
+    /**
+    * Performs the getElementText operation
+    * @param element - the element
+    * @return the getElementText result
+    * */
     private String getElementText(Element element) {
         StringBuilder text = new StringBuilder();
         NodeList childNodes = element.getChildNodes();
@@ -265,10 +316,21 @@ public class XmlParser {
         return root;
     }
 
+    /**
+    * Performs the blank operation
+    * @param value - the value
+    * @return the blank result
+    * */
     private static Object blank(Object value) {
         return (value == null || value.toString().trim().equals("")) ? null : value;
     }
     
+    /**
+    * Performs the join operation
+    * @param list - the list
+    * @param conjunction - the conjunction
+    * @return the join result
+    * */
     protected static String join(List<String> list, String conjunction) {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
@@ -283,6 +345,11 @@ public class XmlParser {
         return sb.toString();
     }
     
+    /**
+    * Performs the getShortName operation
+    * @param nodeName - the nodeName
+    * @return the getShortName result
+    * */
     private String getShortName(String nodeName) {
         return nodeName.replaceFirst("^.*:","");
     }    

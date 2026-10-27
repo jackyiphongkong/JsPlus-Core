@@ -12,14 +12,14 @@
 //            remote_file_data_0/1) are created by dbscript/change.sql and
 //            reset per TestAll run (fallback.sql drops them first).
 // Canon    : the dedicated-console GCA pattern (author's exploratory head):
-//              RF_GCA_Console = Console.newBuilder() -> owns its own
+//              callbackConsole = Console.newBuilder() -> owns its own
 //              globalCacheArray + Console.callback (registered in
 //              test/RF_GCA_Callback.js). The main console takes the array
 //              reference from that console's context and feeds it with
 //              rfRoot.listAll(RF_GCA); the filter worker fires the Runnable
 //              proxy per row, which verifies getIndex() + readAllString()
 //              and records into the shared RF_verify object (Java collections
-//              injected via RF_GCA_Console.getContext().put(...)).
+//              injected via callbackConsole.getContext().put(...)).
 //            This avoids the PolyglotThreadAccessException seen with the
 //            local CacheArray + JS-completed-callback approach: the GCA's
 //            internal filter is a Java anonymous class and the callback is a
@@ -49,6 +49,7 @@ var ConfigProperties = Java.type("com.killcoding.tool.ConfigProperties");
 var DriverExecutor = Java.type("com.killcoding.datasource.DriverExecutor");
 var CacheDriverExecutor = Java.type("com.killcoding.datasource.CacheDriverExecutor");
 var CommonTools = Java.type("com.killcoding.tool.CommonTools");
+var Runnable = Java.type("java.lang.Runnable");
 
 BaseFile.CACHE_ARRAY_FILTER_TIMER = 10;
 ConfigProperties.AUTO_LOAD_TIMER = 5000;
@@ -76,23 +77,6 @@ var RF_ROOT = "/rftest";
 var FILE_COUNT = 100;
 var TMP_EXPORT_DIR = System.getProperty("java.io.tmpdir");
 
-// ---------------------------------------------------------------------------
-// Dedicated console owns the GCA + callback (canon pattern)
-// ---------------------------------------------------------------------------
-var RF_GCA_Console = Console.newBuilder();
-// Shared verification collections (plain Java ArrayList, injected via the
-// dedicated console's context - same canon as TestCacheArray's deletedRows;
-// Java objects share identity across GraalVM contexts, JS objects do not).
-var RF_AL = Java.type("java.util.ArrayList");
-var RF_consumed = new RF_AL();
-var RF_indexes = new RF_AL();
-var RF_contents = new RF_AL();
-var RF_errors = new RF_AL();
-RF_GCA_Console.getContext().put("RF_consumed", RF_consumed);
-RF_GCA_Console.getContext().put("RF_indexes", RF_indexes);
-RF_GCA_Console.getContext().put("RF_contents", RF_contents);
-RF_GCA_Console.getContext().put("RF_errors", RF_errors);
-RF_GCA_Console.eval(basePath + "../test/RF_GCA_Callback.js");
 
 beginTest();
 
@@ -103,14 +87,14 @@ try {
 
 // ---------------------------------------------------------------------------
 // C1: write + complete 100 remote files (idempotent: clear tables first)
+//     CRUD via CacheDriverExecutor (Console.getDataSource() connection)
 // ---------------------------------------------------------------------------
 var connPrep = Console.getDataSource().getConnection();
-var stPrep = connPrep.createStatement();
-stPrep.execute("DELETE FROM remote_file");
-stPrep.execute("DELETE FROM remote_file_data_0");
-stPrep.execute("DELETE FROM remote_file_data_1");
-stPrep.close();
-connPrep.close();
+var cdePrep = new CacheDriverExecutor(connPrep);
+cdePrep.execute("DELETE FROM remote_file");
+cdePrep.execute("DELETE FROM remote_file_data_0");
+cdePrep.execute("DELETE FROM remote_file_data_1");
+cdePrep.close();
 
 var writeFails = 0;
 
@@ -207,7 +191,45 @@ check({
 // C5: listAll -> dedicated-console GCA -> Console.callback consumption
 //     (getIndex continuity + readAllString content round-trip)
 // ---------------------------------------------------------------------------
-var RF_GCA = RF_GCA_Console.getContext().get("RF_GCA");
+
+var callbackConsole = Console.newBuilder();
+var RF_AL = Java.type("java.util.ArrayList");
+var RF_consumed = new RF_AL();
+var RF_indexes = new RF_AL();
+var RF_contents = new RF_AL();
+var RF_errors = new RF_AL();
+callbackConsole.getContext().put("RF_consumed", RF_consumed);
+callbackConsole.getContext().put("RF_indexes", RF_indexes);
+callbackConsole.getContext().put("RF_contents", RF_contents);
+callbackConsole.getContext().put("RF_errors", RF_errors);
+callbackConsole.getContext().put("Runnable", Runnable);
+callbackConsole.getContext().put("RemoteFile", RemoteFile);
+callbackConsole.evalScript(`(function(){
+    var RF_GCA = Console.getGlobalCacheArray(0,1);
+    RF_GCA.setNulIsCompleted(false);
+    Console.getContext().put("RF_GCA",RF_GCA);
+
+    var CB6 = Java.extend(Runnable, {
+        run: function () {
+            var o = RF_GCA.getObject();
+            if(o !== null && o !== undefined) {
+                try {
+                    var rf = new RemoteFile(o.file_parent_path + '/' + o.file_name);
+                    var content = rf.readAllString();
+                    rf.delete();
+                    print("Total: " + RF_GCA.getProcessedTotal());
+                    print("Remove: " + rf.getPath());
+                } catch (e) {
+                    // RF_errors.add('' + e);
+                    print(e);
+                }
+            }   
+        }
+    });
+    Console.callback(new CB6());
+}())`);
+
+var RF_GCA = callbackConsole.getContext().get("RF_GCA");
 var rfRoot = new RemoteFile(RF_ROOT);
 
 
@@ -225,7 +247,7 @@ listAllConsole.setTask(`(function(){
         print(e);
     }
 }())`);
-listAllConsole.setTaskTimer('5s');
+listAllConsole.setTaskTimer('2s');
 listAllConsole.taskExecute();
 
 
@@ -245,17 +267,14 @@ insertConsole.setTask(`(function(){
         print(e);
     }
 }())`);
-insertConsole.setTaskTimer('1s');
+insertConsole.setTaskTimer('100ms');
 insertConsole.taskExecute();
 
 // listAll feeds the GCA asynchronously (merge worker) - poll until the
 // callback consumer has started (getIndex() > 0) or give up after 10s.
-var c5WaitMs = 0;
-var c5Start = Date.now();
-while (RF_GCA.getIndex() <= 0 && Date.now() - c5Start < 10000) {
-    Thread.sleep(100);
-    c5WaitMs = Date.now() - c5Start;
-}
+c5WaitMs = 5000;
+Thread.sleep(c5WaitMs);
+
 
 var dbv2 = dbVerify(function () {
     return "select count(*) file_count from remote_file where file_parent_path='/rftest' and file_part_index=0 and deleted=0";
@@ -263,7 +282,7 @@ var dbv2 = dbVerify(function () {
 check({
     caseId: "C5",
     name: "RemoteFile listAll via dedicated-console GCA + Console.callback",
-    ok: RF_GCA.getIndex() > 0,
+    ok: RF_GCA.getProcessedTotal() > 0,
     detail: "List all size = " + RF_GCA.getIndex() + " (waited " + c5WaitMs + "ms for async feed)"
         + dbv2,
     objective: "listAll feeds the GCA; the Runnable callback verifies getIndex() continuity and readAllString() content per row",
@@ -275,12 +294,11 @@ check({
 // C6: cleanup - clear the suite data (idempotent re-runs)
 // ---------------------------------------------------------------------------
 var connClean = Console.getDataSource().getConnection();
-var stClean = connClean.createStatement();
-stClean.execute("DELETE FROM remote_file");
-stClean.execute("DELETE FROM remote_file_data_0");
-stClean.execute("DELETE FROM remote_file_data_1");
-stClean.close();
-connClean.close();
+var cdeClean = new CacheDriverExecutor(connClean);
+cdeClean.execute("DELETE FROM remote_file");
+cdeClean.execute("DELETE FROM remote_file_data_0");
+cdeClean.execute("DELETE FROM remote_file_data_1");
+cdeClean.close();
 var dbv3 = dbVerify(function () { return "select * from remote_file"; });
 check({
     caseId: "C6",

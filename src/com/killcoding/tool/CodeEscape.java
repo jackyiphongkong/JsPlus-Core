@@ -28,8 +28,18 @@ import java.io.Reader;
 import java.io.Writer;
 
 
+/**
+* Java escape / unescape utility (thread-safe): escapes String / Reader / char[] input to
+* Java-source or CSV-safe single-line output at a configurable CodeEscapeLevel, and reverses the
+* operation (u-based and octal escapes fully unescaped).
+* */
 public final class CodeEscape {
     
+    /**
+    * Performs the escapeToSingleLineForCsv operation
+    * @param text - the text
+    * @return the escapeToSingleLineForCsv result
+    * */
     public static String escapeToSingleLineForCsv(final String text) {
         
         if(text == null) return "null";
@@ -37,15 +47,31 @@ public final class CodeEscape {
         return text.replaceAll(",","\\\\u002C").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r").replaceAll("\t", "\\\\t");
     }
 
+    /**
+    * Performs the escapeJavaMinimal operation
+    * @param text - the text
+    * @return the escapeJavaMinimal result
+    * */
     public static String escapeJavaMinimal(final String text) {
         return escapeJava(text, CodeEscapeLevel.LEVEL_1_BASIC_ESCAPE_SET);
     }
 
 
+    /**
+    * Performs the escapeJava operation
+    * @param text - the text
+    * @return the escapeJava result
+    * */
     public static String escapeJava(final String text) {
         return escapeJava(text, CodeEscapeLevel.LEVEL_2_ALL_NON_ASCII_PLUS_BASIC_ESCAPE_SET);
     }
 
+    /**
+    * Performs the escapeJava operation
+    * @param text - the text
+    * @param level - the level
+    * @return the escapeJava result
+    * */
     public static String escapeJava(final String text, final CodeEscapeLevel level) {
 
         if (level == null) {
@@ -58,17 +84,33 @@ public final class CodeEscape {
 
 
 
+    /**
+    * Performs the escapeJavaMinimal operation
+    * @param text - the text
+    * @param writer - the writer
+    * */
     public static void escapeJavaMinimal(final String text, final Writer writer)
             throws IOException {
         escapeJava(text, writer, CodeEscapeLevel.LEVEL_1_BASIC_ESCAPE_SET);
     }
 
 
+    /**
+    * Performs the escapeJava operation
+    * @param text - the text
+    * @param writer - the writer
+    * */
     public static void escapeJava(final String text, final Writer writer)
             throws IOException {
         escapeJava(text, writer, CodeEscapeLevel.LEVEL_2_ALL_NON_ASCII_PLUS_BASIC_ESCAPE_SET);
     }
 
+    /**
+    * Performs the escapeJava operation
+    * @param text - the text
+    * @param writer - the writer
+    * @param level - the level
+    * */
     public static void escapeJava(final String text, final Writer writer, final CodeEscapeLevel level)
             throws IOException {
 
@@ -84,17 +126,33 @@ public final class CodeEscape {
 
     }
     
+    /**
+    * Performs the escapeJavaMinimal operation
+    * @param reader - the reader
+    * @param writer - the writer
+    * */
     public static void escapeJavaMinimal(final Reader reader, final Writer writer)
             throws IOException {
         escapeJava(reader, writer, CodeEscapeLevel.LEVEL_1_BASIC_ESCAPE_SET);
     }
 
+    /**
+    * Performs the escapeJava operation
+    * @param reader - the reader
+    * @param writer - the writer
+    * */
     public static void escapeJava(final Reader reader, final Writer writer)
             throws IOException {
         escapeJava(reader, writer, CodeEscapeLevel.LEVEL_2_ALL_NON_ASCII_PLUS_BASIC_ESCAPE_SET);
     }
 
 
+    /**
+    * Performs the escapeJava operation
+    * @param reader - the reader
+    * @param writer - the writer
+    * @param level - the level
+    * */
     public static void escapeJava(final Reader reader, final Writer writer, final CodeEscapeLevel level)
             throws IOException {
 
@@ -110,16 +168,38 @@ public final class CodeEscape {
 
     }
 
+    /**
+    * Performs the escapeJavaMinimal operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @param writer - the writer
+    * */
     public static void escapeJavaMinimal(final char[] text, final int offset, final int len, final Writer writer)
                                          throws IOException {
         escapeJava(text, offset, len, writer, CodeEscapeLevel.LEVEL_1_BASIC_ESCAPE_SET);
     }
 
+    /**
+    * Performs the escapeJava operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @param writer - the writer
+    * */
     public static void escapeJava(final char[] text, final int offset, final int len, final Writer writer)
                                   throws IOException {
         escapeJava(text, offset, len, writer, CodeEscapeLevel.LEVEL_2_ALL_NON_ASCII_PLUS_BASIC_ESCAPE_SET);
     }
 
+    /**
+    * Performs the escapeJava operation
+    * @param text - the text
+    * @param offset - the offset
+    * @param len - the len
+    * @param writer - the writer
+    * @param level - the level
+    * */
     public static void escapeJava(final char[] text, final int offset, final int len, final Writer writer,
                                   final CodeEscapeLevel level)
                                   throws IOException {
@@ -302,6 +382,9 @@ public final class CodeEscape {
 
 
 
+    /**
+    * Constructs a new CodeEscape
+    * */
     private CodeEscape() {
         super();
     }
@@ -321,6 +404,11 @@ public final class CodeEscape {
         private int length;
         private int next = 0;
 
+        /**
+        * Performs the InternalStringReader operation
+        * @param s - the s
+        * @return the InternalStringReader result
+        * */
         public InternalStringReader(final String s) {
             super();
             this.str = s;
@@ -328,6 +416,11 @@ public final class CodeEscape {
         }
 
         @Override
+
+        /**
+        * Performs the read operation
+        * @return the read result
+        * */
         public int read() throws IOException {
             if (this.next >= length) {
                 return -1;
@@ -336,6 +429,14 @@ public final class CodeEscape {
         }
 
         @Override
+
+        /**
+        * Performs the read operation
+        * @param cbuf - the cbuf
+        * @param off - the off
+        * @param len - the len
+        * @return the read result
+        * */
         public int read(final char[] cbuf, final int off, final int len) throws IOException {
             if ((off < 0) || (off > cbuf.length) || (len < 0) ||
                     ((off + len) > cbuf.length) || ((off + len) < 0)) {
@@ -353,6 +454,10 @@ public final class CodeEscape {
         }
 
         @Override
+
+        /**
+        * Performs the close operation
+        * */
         public void close() throws IOException {
             this.str = null; // Just set the reference to null, help the GC
         }
