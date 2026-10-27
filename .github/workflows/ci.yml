@@ -34,7 +34,8 @@ jobs:
         run: |
           # Restore executable bits lost by the Git checkout (mode 644) on
           # every helper script under JsPlus/bin, then run the suite entry.
-          chmod +x TestAll.sh ../../JsPlus/bin/*.sh
+          # working-directory is test/, so ../JsPlus points at <repo>/JsPlus.
+          chmod +x TestAll.sh ../JsPlus/bin/*.sh
           ./TestAll.sh
         working-directory: test
 
