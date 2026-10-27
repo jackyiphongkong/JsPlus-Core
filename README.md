@@ -22,7 +22,6 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 | --- | --- |
 | `build.xml` | Fully consistent with the server edition's standard (single jar → `LibHome\jsplus\default`, `-Xlint:none`, clear/compile/package/build targets; the dead `org/*` include removed) |
 | Versioning | `version.properties` (6.1.x) auto-increments **patch +1** on every `ant build`; jar name `jsplus-core-${jr.version}.jar`; old jar removed before build; each build appends a version history entry to `changes.log` (EN) + `changes_zh-HK.log` (繁中) (`-Dchange.en` / `-Dchange.zh` / `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` / defaults) (server-edition quirk: the jar name lags one patch behind — see `QUALITY-REVIEW.md`) |
-| `JsPlus\bin` | 18 bat/sh scripts adapted as-is; renamed family: `StartTomcat→StartCore`, `BG_StartTomcat→BG_StartCore`, `StopTomcat→StopCore`; H2 companions keep their original names (`BG_StartH2` / `StartH2` / `StartH2Console` / `StopH2` / `Stop` / `StopAll`) |
 | `JsPlus\config` | 7 files + 2 sub-directories copied (server-edition `Logger.properties`; the original Core version is backed up at `build\.logger-core-backup.properties`) |
 | `dbscript\` | Rewritten: keeps only `ghost_remote_command` + 5 test tables; `tomcatdb` renamed everywhere to **`testdb`** |
 | Test framework | `TestBase.js` / `TestAll.js` renderer and report style aligned with the server edition (GitHub style + dbv nested tables) |

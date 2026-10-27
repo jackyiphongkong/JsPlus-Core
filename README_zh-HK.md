@@ -22,7 +22,6 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | --- | --- |
 | `build.xml` | 與伺服器版標準完全一致（單 jar → `LibHome\jsplus\default`、`-Xlint:none`、clear/compile/package/build；`org/*` include 為死配置已刪） |
 | 版本機制 | `version.properties`（6.1.x）每次 `ant build` 自動 patch+1，jar 名 `jsplus-core-${jr.version}.jar`，構建前刪舊 jar；每次構建向 `changes.log`（英）與 `changes_zh-HK.log`（繁中）各追加版本歷史（`-Dchange.en` / `-Dchange.zh` / `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` / 預設）（伺服器版怪癖：jar 名慢一個 patch，見 `QUALITY-REVIEW.md`） |
-| `JsPlus\bin` | 18 個 bat/sh 原樣適配；改名族：`StartTomcat→StartCore`、`BG_StartTomcat→BG_StartCore`、`StopTomcat→StopCore`；H2 配套原名保留（`BG_StartH2` / `StartH2` / `StartH2Console` / `StopH2` / `Stop` / `StopAll`） |
 | `JsPlus\config` | 7 檔 + 2 子目錄複製（伺服器版 `Logger.properties`；Core 原版備份於 `build\.logger-core-backup.properties`） |
 | `dbscript\` | 重寫：只保留 `ghost_remote_command` + 5 張測試表；`tomcatdb` 全域改名 **`testdb`** |
 | 測試體系 | `TestBase.js` / `TestAll.js` 渲染器與報告風格對齊伺服器版（GitHub 風格 + dbv 嵌套表） |
