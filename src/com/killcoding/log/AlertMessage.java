@@ -76,10 +76,10 @@ public class AlertMessage {
 	* */
 	public void push(Map<String, Object> msg) {
 		final Runnable runnable = new Runnable() {
-			@Override
-			/*
+						/*
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				try{
 				    send(msg);

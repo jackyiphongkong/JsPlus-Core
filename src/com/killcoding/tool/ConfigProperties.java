@@ -153,10 +153,10 @@ public class ConfigProperties extends Properties {
 		if (executor == null) {
 			executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
-				@Override
-				/*
+								/*
 				* Performs the run operation
 				* */
+				@Override
 				public void run() {
 				    while(!Thread.currentThread().isInterrupted()){
 				        Thread.currentThread().setName("ConfigProperties.startAutoLoad");
@@ -214,10 +214,10 @@ public class ConfigProperties extends Properties {
 		this.load(file);
 		final ConfigProperties the = this;
 		final Runnable cpRun = new Runnable() {
-			@Override
-			/*
+						/*
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				Thread.currentThread().setName(String.format("AutoLoad-%s", file.getName()));
 				try {
@@ -274,11 +274,11 @@ public class ConfigProperties extends Properties {
 	    }
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the load operation
 	* @param inputStream - the inputStream
 	* */
+	@Override
 	public void load(InputStream inputStream) throws IOException {
 		try {
 			Reader reader = new InputStreamReader(inputStream,BaseFile.CHARSET);
@@ -289,11 +289,11 @@ public class ConfigProperties extends Properties {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the load operation
 	* @param reader - the reader
 	* */
+	@Override
 	public void load(Reader reader) throws IOException {
 		try {
 			// Batch-read into a char[] buffer instead of read()-ing char by char.

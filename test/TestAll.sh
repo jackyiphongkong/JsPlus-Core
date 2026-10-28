@@ -188,4 +188,26 @@ fi
 # ------------------------------------------------------------------
 pkill -f 'script/StartH2.js' 2>/dev/null || true
 "${JS_PLUS_PATH}bin/StopAll.sh" || true
+
+# ------------------------------------------------------------------
+# Step 4b: Archive the test reports under the same docs layout as the
+# javadoc site: docs/reports/<version>.jar (one jar per run) plus
+# docs/latest/reports/ as the browsable newest reports. Version is taken
+# from the core jar name. A failure to archive is only a WARN and never
+# changes the suite exit code (RC was captured above).
+# ------------------------------------------------------------------
+CORE_VERSION="$(basename "$CORE_JAR" .jar)"
+CORE_VERSION="${CORE_VERSION#jsplus-core-}"
+if [ -z "$CORE_VERSION" ]; then
+    echo "WARN: Cannot extract version from $CORE_JAR, skipping report archive."
+else
+    echo "[TestAll] Archiving test reports as docs/reports/${CORE_VERSION}.jar (docs/latest/reports)..."
+    mkdir -p "${JS_PLUS_PATH_ORIGIN}../docs/reports" "${JS_PLUS_PATH_ORIGIN}../docs/latest/reports"
+    rm -f "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar"
+    "${JS_PLUS_PATH_ORIGIN}../Java/${JAVA_DIR}/bin/jar" cf "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar" -C "${JS_PLUS_PATH_ORIGIN}../test_reports" . || {
+        echo "WARN: Failed to pack test report jar (jar missing?), continuing."
+    }
+    cp -rf "${JS_PLUS_PATH_ORIGIN}../test_reports/." "${JS_PLUS_PATH_ORIGIN}../docs/latest/reports/" 2>/dev/null || true
+    echo "[TestAll] Copied newest reports to docs/latest/reports/"
+fi
 exit "$RC"

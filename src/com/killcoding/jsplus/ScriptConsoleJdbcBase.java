@@ -485,12 +485,12 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 			final List<String> columns = new ArrayList<String>();
 			final StringBuffer header = new StringBuffer();
 
-			@Override
-			/*
+						/*
 			* Performs the executeBatch operation
 			* @param index - the index
 			* @param batch - the batch
 			* */
+			@Override
 			public void executeBatch(Integer index,List<?> batch) {
                 if (showTaskLog) {
     				System.out.println(String.format("Exporting table %s (%s -> %s).", outFileName,index,batch.size()));
@@ -559,21 +559,21 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			    }
 			}
 
-			@Override
-			/*
+						/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
 			* */
+			@Override
 			public void execute(Integer index, Object o) {
 
 			}
 
-			@Override
-			/*
+						/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
+			@Override
 			public void completed(Integer size) {
 				try {
 					String outIndexFormat = String.format("%09d", 0);
@@ -596,10 +596,10 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 				if(completedRun != null) completedRun.run();
 			}
 
-			@Override
-			/*
+						/*
 			* Performs the terminated operation
 			* */
+			@Override
 			public void terminated(){
 			    if(csvFile != null){
 			        try{
@@ -848,8 +848,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			final List<String> columns = new ArrayList<String>();
 			String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
 
-			@Override
-			/*
+						/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
@@ -903,11 +902,11 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 				}
 			}
 
-			@Override
-			/*
+						/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
+			@Override
 			public void completed(Integer size) {
 				boolean showResultFooter = consoleVariables.getBoolean("ShowResultFooter", DEFAULT_ShowResultFooter);
 				if (enableSystemOut && showResultFooter) {

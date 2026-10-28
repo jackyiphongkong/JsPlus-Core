@@ -1295,12 +1295,12 @@ public class DriverExecutor {
 				sqlLogCacheArray = new CacheArray();
 				long sqlLogFilterTimer = configProperties.getLong("SqlLogTimer", 1000L);
 				sqlLogCacheArray.filter(new CacheArrayFilter(0L,sqlLogFilterTimer) {
-					@Override
-					/*
+										/*
 					* Performs the executeBatch operation
 					* @param index - the index
 					* @param batch - the batch
 					* */
+					@Override
 					public void executeBatch(Integer index, List<?> batch) {
 					    final StringBuffer sbf = new StringBuffer();
 					    for(Object item : batch){
@@ -1538,11 +1538,11 @@ public class DriverExecutor {
 								String errorMsg = String.format("The returned results are inconsistent '%s-%s'.",
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
-									@Override
-									/*
+																		/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
+									@Override
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1622,11 +1622,11 @@ public class DriverExecutor {
 								String errorMsg = String.format("The returned results are inconsistent '%s-%s'.",
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
-									@Override
-									/*
+																		/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
+									@Override
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1674,11 +1674,11 @@ public class DriverExecutor {
 								String errorMsg = String.format("The returned results are inconsistent '%s-%s'.",
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
-									@Override
-									/*
+																		/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
+									@Override
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1726,11 +1726,11 @@ public class DriverExecutor {
 								String errorMsg = String.format("The returned results are inconsistent '%s-%s'.",
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
-									@Override
-									/*
+																		/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
+									@Override
 									public int getErrorCode() {
 										return errorCode;
 									}
@@ -1808,11 +1808,11 @@ public class DriverExecutor {
 								int errorCode = 99904;
 								String errorMsg = "Connection is null.";
 								throw new SQLException(errorMsg) {
-									@Override
-									/*
+																		/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
 									* */
+									@Override
 									public int getErrorCode() {
 										return errorCode;
 									}

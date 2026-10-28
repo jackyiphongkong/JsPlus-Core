@@ -173,6 +173,33 @@ REM StopAll sweep (AppRootDir path match) so NO JsPlus/H2 JVM survives this
 REM run - any leftover JVM that escaped the precise recycle is killed here.
 powershell -NoProfile -Command "$kw='script/StartH2.js'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
 call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
+
+REM ------------------------------------------------------------------
+REM Step 4b: Archive the test reports under the same docs layout as the
+REM javadoc site: docs/reports/<version>.jar (one jar per run) plus
+REM docs/latest/reports/ as the browsable newest reports. Version is taken
+REM from the core jar name. A failure to archive is only a WARN and never
+REM changes the suite exit code (RC was captured above).
+REM ------------------------------------------------------------------
+for %%f in ("%CORE_JAR%") do set "CORE_FNAME=%%~nxf"
+set "CORE_VERSION=%CORE_FNAME:jsplus-core-=%"
+set "CORE_VERSION=%CORE_VERSION:.jar=%"
+if not defined CORE_VERSION (
+    echo WARN: Cannot extract version from %CORE_JAR%, skipping report archive.
+) else (
+    echo [TestAll] Archiving test reports as docs/reports/%CORE_VERSION%.jar ^(docs/latest/reports^)...
+    if not exist "%JS_PLUS_PATH_ORIGIN%..\docs\reports" mkdir "%JS_PLUS_PATH_ORIGIN%..\docs\reports"
+    if not exist "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports" mkdir "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports"
+    if exist "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" del "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar"
+    "%JS_PLUS_PATH_ORIGIN%..\Java\%JAVA_DIR%\bin\jar.exe" cf "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" -C "%JS_PLUS_PATH_ORIGIN%..\test_reports" .
+    if errorlevel 1 (
+        echo WARN: Failed to pack test report jar ^(jar.exe missing?^), continuing.
+    ) else (
+        echo [TestAll] Packed docs/reports/%CORE_VERSION%.jar
+    )
+    xcopy /y /q /e "%JS_PLUS_PATH_ORIGIN%..\test_reports\*" "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports\" >nul 2>&1
+    echo [TestAll] Copied newest reports to docs/latest/reports/
+)
 exit /b %RC%
 
 endlocal

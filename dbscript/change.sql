@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS test_user (
     deleted_at      TIMESTAMP,             -- Soft-delete time (NULL when active)
     deleted         BOOLEAN                -- Soft-delete flag: false=active, true=deleted
 );
+CREATE INDEX IF NOT EXISTS idx_tu_username ON test_user (username);
+CREATE INDEX IF NOT EXISTS idx_tu_status   ON test_user (status);
+CREATE INDEX IF NOT EXISTS idx_tu_deleted  ON test_user (deleted);
 
 -- ============================================================================
 -- Table 3: test_product (generic product test table)
@@ -68,6 +71,8 @@ CREATE TABLE IF NOT EXISTS test_product (
     deleted_at      TIMESTAMP,             -- Soft-delete time (NULL when active)
     deleted         BOOLEAN                -- Soft-delete flag: false=active, true=deleted
 );
+CREATE INDEX IF NOT EXISTS idx_tp_name    ON test_product (product_name);
+CREATE INDEX IF NOT EXISTS idx_tp_deleted ON test_product (deleted);
 
 -- ============================================================================
 -- Table 4: test_order (generic order test table)
@@ -88,6 +93,10 @@ CREATE TABLE IF NOT EXISTS test_order (
     deleted_at      TIMESTAMP,             -- Soft-delete time (NULL when active)
     deleted         BOOLEAN                -- Soft-delete flag: false=active, true=deleted
 );
+CREATE INDEX IF NOT EXISTS idx_to_order_no ON test_order (order_no);
+CREATE INDEX IF NOT EXISTS idx_to_user_id  ON test_order (user_id);
+CREATE INDEX IF NOT EXISTS idx_to_status   ON test_order (status);
+CREATE INDEX IF NOT EXISTS idx_to_deleted  ON test_order (deleted);
 
 -- ============================================================================
 -- Table 5: test_log (generic log test table)
@@ -104,6 +113,9 @@ CREATE TABLE IF NOT EXISTS test_log (
     deleted_at      TIMESTAMP,             -- Soft-delete time (NULL when active)
     deleted         BOOLEAN                -- Soft-delete flag: false=active, true=deleted
 );
+CREATE INDEX IF NOT EXISTS idx_tl_level ON test_log (level);
+CREATE INDEX IF NOT EXISTS idx_tl_time  ON test_log (log_time);
+CREATE INDEX IF NOT EXISTS idx_tl_deleted ON test_log (deleted);
 
 -- ============================================================================
 -- Table 6: test_kv (generic key-value test table)
@@ -120,6 +132,8 @@ CREATE TABLE IF NOT EXISTS test_kv (
     deleted_at      TIMESTAMP,             -- Soft-delete time (NULL when active)
     deleted         BOOLEAN                -- Soft-delete flag: false=active, true=deleted
 );
+CREATE INDEX IF NOT EXISTS idx_tk_key    ON test_kv (kv_key);
+CREATE INDEX IF NOT EXISTS idx_tk_deleted ON test_kv (deleted);
 
 -- ============================================================================
 -- Table 7: remote_file (RemoteFile file metadata)

@@ -405,11 +405,11 @@ public final class CodeEscape {
             this.length = s.length();
         }
 
-        @Override
-        /*
+                /*
         * Performs the read operation
         * @return the read result
         * */
+        @Override
         public int read() throws IOException {
             if (this.next >= length) {
                 return -1;
@@ -417,14 +417,14 @@ public final class CodeEscape {
             return this.str.charAt(this.next++);
         }
 
-        @Override
-        /*
+                /*
         * Performs the read operation
         * @param cbuf - the cbuf
         * @param off - the off
         * @param len - the len
         * @return the read result
         * */
+        @Override
         public int read(final char[] cbuf, final int off, final int len) throws IOException {
             if ((off < 0) || (off > cbuf.length) || (len < 0) ||
                     ((off + len) > cbuf.length) || ((off + len) < 0)) {
@@ -441,10 +441,10 @@ public final class CodeEscape {
             return n;
         }
 
-        @Override
-        /*
+                /*
         * Performs the close operation
         * */
+        @Override
         public void close() throws IOException {
             this.str = null; // Just set the reference to null, help the GC
         }

@@ -148,32 +148,32 @@ public class CacheArray implements java.io.Serializable {
 	public CacheArrayFilter filter(final long timer,final Runnable executeRun,final Runnable completedRun,final Runnable terminatedRun) {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer){
-	        @Override
-        	/*
+	                	/*
         	* Performs the execute operation
         	* @param index - the index
         	* @param object - the object
         	* */
+        	@Override
         	public void execute(Integer index, Object object){
         	    the.INDEX = index;
         	    the.OBJECT = object;
 
         	    if(executeRun != null) executeRun.run();
         	}
-        	@Override
-        	/*
+        	        	/*
         	* Performs the completed operation
         	* @param size - the size
         	* */
+        	@Override
         	public void completed(Integer size) {
         	    the.SIZE = size;
 
                 if(completedRun != null) completedRun.run();
         	}
-        	@Override
-        	/*
+        	        	/*
         	* Performs the terminated operation
         	* */
+        	@Override
         	public void terminated() {
 
         	    if(terminatedRun != null) terminatedRun.run();
@@ -196,42 +196,42 @@ public class CacheArray implements java.io.Serializable {
 	public CacheArrayFilter filter(final long timer,final long loopTimer,final Runnable executeRun,final Runnable executeBatchRun,final Runnable completedRun,final Runnable terminatedRun) {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer,loopTimer){
-	        @Override
-        	/*
+	                	/*
         	* Performs the execute operation
         	* @param index - the index
         	* @param object - the object
         	* */
+        	@Override
         	public void execute(Integer index, Object object){
 
         	    if(executeRun != null) executeRun.run();
         	}
 
-        	@Override
-        	/*
+        	        	/*
         	* Performs the executeBatch operation
         	* @param index - the index
         	* @param batch - the batch
         	* */
+        	@Override
         	public void executeBatch(Integer index,List<?> batch) {
 
                 if(executeBatchRun != null) executeBatchRun.run();
         	}
 
-        	@Override
-        	/*
+        	        	/*
         	* Performs the completed operation
         	* @param size - the size
         	* */
+        	@Override
         	public void completed(Integer size) {
 
                 if(completedRun != null) completedRun.run();
         	}
 
-        	@Override
-        	/*
+        	        	/*
         	* Performs the terminated operation
         	* */
+        	@Override
         	public void terminated() {
 
         	    if(terminatedRun != null) terminatedRun.run();
@@ -252,10 +252,10 @@ public class CacheArray implements java.io.Serializable {
         }
 		final CacheArray the = this;
 		Runnable runnable = new Runnable() {
-			@Override
-			/*
+						/*
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				boolean usageReturned = false;
 				int index = 0;

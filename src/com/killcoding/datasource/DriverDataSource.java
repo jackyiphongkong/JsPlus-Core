@@ -721,11 +721,11 @@ public final class DriverDataSource implements DataSource {
 			}
 			for (int i = 0; i < willCreateConnTotal; i++) {
 				Callable<Boolean> callable = new Callable<Boolean>() {
-					@Override
-					/*
+										/*
 					* Performs the call operation
 					* @return the call result
 					* */
+					@Override
 					public Boolean call() {
 						try {
 						    Thread.currentThread().setName("call-" + threadName);
@@ -866,10 +866,10 @@ public final class DriverDataSource implements DataSource {
     	    if (this.appDataSource != null) {
     	        configProperties = new ConfigProperties();
     	        Runnable updateRun = new Runnable(){
-    	            @Override
-    	            /*
+    	                	            /*
     	            * Performs the run operation
     	            * */
+    	            @Override
     	            public void run(){
     	                try{
         	                the.setInternalConfig(configProperties);
@@ -1018,13 +1018,13 @@ public final class DriverDataSource implements DataSource {
 		}
 
 		Comparator<Object[]> comp = new Comparator<Object[]>() {
-			@Override
-			/*
+						/*
 			* Performs the compare operation
 			* @param arg0 - the arg0
 			* @param arg1 - the arg1
 			* @return the compare result
 			* */
+			@Override
 			public int compare(Object[] arg0, Object[] arg1) {
 				Date date0 = (Date) arg0[1];
 				Date date1 = (Date) arg1[1];
@@ -1082,10 +1082,10 @@ public final class DriverDataSource implements DataSource {
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 
-				@Override
-				/*
+								/*
 				* Performs the run operation
 				* */
+				@Override
 				public void run() {
 					Thread.currentThread().setName(String.format("%s-manageConnectionPool-1", threadName));
 					while (true) {
@@ -1128,10 +1128,10 @@ public final class DriverDataSource implements DataSource {
             executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 
-				@Override
-				/*
+								/*
 				* Performs the run operation
 				* */
+				@Override
 				public void run() {
 					Thread.currentThread().setName(String.format("%s-manageConnectionPool-2", threadName));
 					while (true) {
@@ -1211,11 +1211,11 @@ public final class DriverDataSource implements DataSource {
 		String errorMsg = "Connection is null.";
 		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 		throw new SQLException(errorMsg) {
-			@Override
-			/*
+						/*
 			* Performs the getErrorCode operation
 			* @return the getErrorCode result
 			* */
+			@Override
 			public int getErrorCode() {
 				return errorCode;
 			}
@@ -1232,11 +1232,11 @@ public final class DriverDataSource implements DataSource {
 			String errorMsg = String.format("Full connection pool,current size is %s.", openConnectionSize);
 			log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 			throw new SQLException(errorMsg) {
-				@Override
-				/*
+								/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
 				* */
+				@Override
 				public int getErrorCode() {
 					return errorCode;
 				}
@@ -1583,11 +1583,11 @@ public final class DriverDataSource implements DataSource {
 				String errorMsg = "Driver jar is null.";
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
-					@Override
-					/*
+										/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
 					* */
+					@Override
 					public int getErrorCode() {
 						return errorCode;
 					}
@@ -1613,11 +1613,11 @@ public final class DriverDataSource implements DataSource {
 			log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 			throw new SQLException(e) {
 
-				@Override
-				/*
+								/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
 				* */
+				@Override
 				public int getErrorCode() {
 					return errorCode;
 				}
@@ -1671,11 +1671,11 @@ public final class DriverDataSource implements DataSource {
 					int errorCode = 99905;
 					String errorMsg = String.format("SyncDatasource is null - %s .", syncDsProp);
 					throw new SQLException(errorMsg) {
-						@Override
-						/*
+												/*
 						* Performs the getErrorCode operation
 						* @return the getErrorCode result
 						* */
+						@Override
 						public int getErrorCode() {
 							return errorCode;
 						}
@@ -1770,56 +1770,56 @@ public final class DriverDataSource implements DataSource {
 		return null;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the setLogWriter operation
 	* @param arg0 - the arg0
 	* */
+	@Override
 	public void setLogWriter(PrintWriter arg0) throws SQLException {
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getLogWriter operation
 	* @return the getLogWriter result
 	* */
+	@Override
 	public PrintWriter getLogWriter() throws SQLException {
 		return null;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getLoginTimeout operation
 	* @return the getLoginTimeout result
 	* */
+	@Override
 	public int getLoginTimeout() throws SQLException {
 		return 0;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the setLoginTimeout operation
 	* @param arg0 - the arg0
 	* */
+	@Override
 	public void setLoginTimeout(int arg0) throws SQLException {
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getConnection operation
 	* @param arg0 - the arg0
 	* @param arg1 - the arg1
 	* @return the getConnection result
 	* */
+	@Override
 	public Connection getConnection(String arg0, String arg1) throws SQLException {
 		return null;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the createConnectionBuilder operation
 	* @return the createConnectionBuilder result
 	* */
+	@Override
 	public ConnectionBuilder createConnectionBuilder() throws SQLException {
 		return null;
 	}

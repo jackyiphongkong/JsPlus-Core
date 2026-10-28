@@ -42,7 +42,10 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | `dbscript/` | `fallback.sql` → `change.sql`（建庫順序固定；`ghost_remote_command` 永不 DROP、測試不碰） |
 | `test/` | 測試框架（`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`）與資料源/測試庫套件 |
 | `test_reports/` | 測試報告（HTML / Markdown / CI 摘要） |
-| `docs/api/` | API javadoc 站點，每次 `ant build` 重新生成（可用 `-Djavadoc.skip=true` 略過） |
+| `docs/latest/api/` | 最新版本的 API javadoc 站點，每次 `ant build` 重新生成（可用 `-Djavadoc.skip=true` 略過）；開啟 `docs/latest/api/index.html` |
+| `docs/apis/<version>.jar` | 每個發佈版本的 API javadoc 歸檔 jar（一版本一 jar） |
+| `docs/latest/reports/` | 最新一次執行的測試報告，每次 `TestAll.bat` / `TestAll.sh` 覆蓋更新；開啟 `docs/latest/reports/TestAll-Report.html` |
+| `docs/reports/<version>.jar` | 每次執行的測試報告歸檔 jar（一版本一 jar） |
 | `logs/` | 執行期日誌（`app\`、`DS\` 池狀態、`SqlLog\`） |
 | `Database/` | H2 服務端資料庫檔案（`testdb.mv.db`，`.gitignore` 忽略） |
 | `build/classes/` | 中間編譯產物（僅構建時存在） |
@@ -50,12 +53,13 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 
 ## 測試體系
 
-**`TestAll.bat` 流程（4 步，每次 init testdb）**：
+**`TestAll.bat` 流程（5 步，每次 init testdb）**：
 
 1. 查 `:3306` 未監聽則 `BG_StartH2.bat %SCRIPT_ENGINE%`（→ `StartH2.bat` → `Main -Task script/StartH2.js`，獨立 JVM），輪詢 45×2s 就緒；
 2. `RunScript` 以 `jdbc:h2:tcp://localhost:3306/testdb`（`-user sa`、`-checkResults`）先 `fallback.sql` 再 `change.sql`；
-3. 跑 `TestAll.js`（`JSPLUS_TEST_EXIT=1`，`< NUL` 關 stdin）；
-4. 精準殺含 `script/StartH2.js` 的 java 進程後 `exit /b %RC%`（不用 `StopAll`，避免誤殺 VS Code Java Language Server）。
+3. 跑 `TestAll.js`（`JSPLUS_TEST_EXIT=1`，`< NUL` 關 stdin），再跑 `LoadTest.js`（同一 testdb，`test_reports/LoadTest-Report.html`；負載失敗即整輪失敗）；
+4. 精準殺含 `script/StartH2.js` 的 java 進程，再執行完整 `StopAll.bat` 全面清掃（專案慣例：不留任何 JsPlus/H2 JVM）；
+5. 將 `test_reports/` 歸檔至 **`docs/reports/<version>.jar`**（版本取自 core jar 檔名）並複製最新報告至 **`docs/latest/reports/`**——歸檔失敗僅 WARN、不影響退出碼；然後 `exit /b %RC%`。
 
 **2 個套件**：
 
@@ -79,7 +83,8 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 - 每次構建刪除舊 `jsplus-core-*.jar`，輸出帶版本 jar。
 - 每次構建向 **兩個** changelog 檔（UTF-8）各追加一筆版本歷史：`changes.log`（英文）與 `changes_zh-HK.log`（繁體中文），標題 `## <版本> (<建構日期> <建構時間>)`。每語言之說明優先序：`-Dchange.en="..."` / `-Dchange.zh="..."`（CI）→ `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt`（本地註記，消費後刪除）→ 預設 `- build: automatic version bump` / `- build: 自動版本遞增`。
 - 每次構建亦會對比 Java 源碼與 `jr.diffroot`（預設 `../../Githubrepos/JsPlus-Core/src`，不存在時略過）的姊妹副本，將差異檔案以 `- found diffed: <path> (A|M|D)` 寫入兩個 changelog——作為稍後檢視/完善的臨時標記（例如將變更同步至 Githubrepos 工作副本）。
-- 每次構建重新生成 API 站點至 **`docs/api/`**（window title 帶版本號、`-Xdoclint:none`、附原始碼連結）——開啟 `docs/api/index.html`；可用 `-Djavadoc.skip=true` 略過。
+- 每次構建重新生成 API 站點至 **`docs/latest/api/`**（window title 帶版本號、`-Xdoclint:none`、附原始碼連結）並歸檔為 **`docs/apis/<version>.jar`**（一版本一 jar）；可用 `-Djavadoc.skip=true` 略過。
+- 每次 `TestAll.bat` / `TestAll.sh` 執行後將測試報告歸檔至 **`docs/reports/<version>.jar`** 並複製最新報告至 **`docs/latest/reports/`**（與 javadoc 站點同一 docs 架構）。
 
 ## 資料庫與配置
 

@@ -324,6 +324,112 @@ check({
 });
 
 // ---------------------------------------------------------------------------
+// C14: byte[] append - write(byte[], true) concatenates binary parts
+// ---------------------------------------------------------------------------
+var p14 = ROOT + "c14_bin_append.dat";
+var df14 = new DiskFile(p14);
+var bin14a = Java.to([10, 20, 30], "byte[]");
+var bin14b = Java.to([40, 50], "byte[]");
+df14.write(bin14a);
+df14.write(bin14b, true);
+var rb14 = df14.readAllBytes();
+var eq14 = (rb14 !== null) && (rb14.length === 5);
+if (eq14) {
+    var expect14 = [10, 20, 30, 40, 50];
+    for (var i14 = 0; i14 < 5; i14++) {
+        if (rb14[i14] !== expect14[i14]) { eq14 = false; break; }
+    }
+}
+check({
+    caseId: "C14",
+    name: "DiskFile byte[] append (write(byte[], append=true))",
+    ok: eq14 && df14.size() === 5,
+    detail: "readBackLen=" + (rb14 === null ? "null" : rb14.length) + " size=" + df14.size() + " concatOk=" + eq14,
+    objective: "byte[] append mode concatenates the second array after the first",
+    objectiveZh: "位元組陣列追加模式：第二段資料正確接續第一段",
+    command: "df.write(byte[]); df.write(byte[], true); df.readAllBytes()"
+});
+
+// ---------------------------------------------------------------------------
+// C15: readAllString() no-arg variant (default charset == explicit UTF-8)
+// ---------------------------------------------------------------------------
+var p15 = ROOT + "c15_default_charset.txt";
+var df15 = new DiskFile(p15);
+df15.write("default charset read, 中文一致", UTF8);
+var r15a = df15.readAllString();
+var r15b = df15.readAllString(UTF8);
+check({
+    caseId: "C15",
+    name: "DiskFile readAllString() default charset == UTF-8 variant",
+    ok: r15a === r15b && r15a === "default charset read, 中文一致",
+    detail: "noArg=" + r15a + " explicit=" + r15b,
+    objective: "the no-arg readAllString() resolves to the same default charset as the explicit UTF-8 call",
+    objectiveZh: "無參數 readAllString() 與明確指定 UTF-8 讀回內容一致",
+    command: "df.readAllString() / df.readAllString(\"UTF-8\")"
+});
+
+// ---------------------------------------------------------------------------
+// C16: clock-modify-time variants - setModifyTimeFromClock / getModifyTime /
+//      getModifyTimeForClock agree within FS precision
+// ---------------------------------------------------------------------------
+var p16 = ROOT + "c16_clock_time.txt";
+var df16 = new DiskFile(p16);
+df16.write("clock ts", UTF8);
+var baseMs16 = Date.now();
+var ts16in = new Timestamp(baseMs16);
+df16.setModifyTimeFromClock(ts16in);
+var ts16plain = df16.getModifyTime();
+var ts16clock = df16.getModifyTimeForClock();
+var diff16a = (ts16plain === null ? -1 : Math.abs(ts16plain.getTime() - baseMs16));
+var diff16b = (ts16clock === null ? -1 : Math.abs(ts16clock.getTime() - baseMs16));
+check({
+    caseId: "C16",
+    name: "DiskFile clock modify time (setModifyTimeFromClock + getModifyTime/getModifyTimeForClock)",
+    ok: ts16plain !== null && ts16clock !== null && diff16a <= 2000 && diff16b <= 2000,
+    detail: "set=" + baseMs16 + " getModifyTime diff=" + diff16a + " getModifyTimeForClock diff=" + diff16b,
+    objective: "the FromClock setter persists; both plain and clock getters read it back within FS precision",
+    objectiveZh: "FromClock 設定落盤後，兩種讀取器（plain / ForClock）均在檔案系統精度內讀回",
+    command: "df.setModifyTimeFromClock(ts); df.getModifyTime(); df.getModifyTimeForClock()"
+});
+
+// ---------------------------------------------------------------------------
+// C17: lifecycle hooks - beforeWrite/afterWrite API contract
+// ---------------------------------------------------------------------------
+var p17 = ROOT + "c17_hooks.txt";
+var df17 = new DiskFile(p17);
+var before17 = df17.beforeWrite();
+var wrote17 = df17.write("hook target", UTF8);
+var after17ok = true;
+try { df17.afterWrite(); } catch (e17) { after17ok = false; }
+check({
+    caseId: "C17",
+    name: "DiskFile lifecycle hooks (beforeWrite/afterWrite)",
+    ok: before17 === true && wrote17 === true && after17ok === true,
+    detail: "beforeWrite=" + before17 + " write=" + wrote17 + " afterWriteOk=" + after17ok,
+    objective: "beforeWrite allows the write (true) and afterWrite completes without error",
+    objectiveZh: "beforeWrite 放行寫入（返回 true），afterWrite 正常完成無異常",
+    command: "df.beforeWrite(); df.write(s); df.afterWrite()"
+});
+
+// ---------------------------------------------------------------------------
+// C18: getParentFile - java.io.File parent accessor
+// ---------------------------------------------------------------------------
+var p18 = ROOT + "dirB/c18_parent.txt";
+var df18 = new DiskFile(p18);
+df18.write("parent file", UTF8);
+var pf18 = df18.getParentFile();
+var pf18Path = (pf18 === null || pf18 === undefined) ? "null" : String(pf18.getPath());
+check({
+    caseId: "C18",
+    name: "DiskFile getParentFile (java.io.File parent)",
+    ok: pf18 !== null && pf18.isDirectory() === true && ("" + pf18Path).indexOf("dirB") >= 0,
+    detail: "parentFile=" + pf18Path + " isDir=" + (pf18 === null ? "?" : pf18.isDirectory()),
+    objective: "getParentFile exposes the parent as a real java.io.File directory",
+    objectiveZh: "getParentFile 返回真實存在的父目錄 java.io.File",
+    command: "df.getParentFile().getPath() / isDirectory()"
+});
+
+// ---------------------------------------------------------------------------
 // C13: cleanup - workspace removed, no leftovers
 // ---------------------------------------------------------------------------
 cleanupWorkspace();

@@ -65,19 +65,19 @@ public class GraalVmContext extends JsPlusContext {
         this.engineName = useEngineName;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */
+	@Override
 	public String getEngineName(){
 	    return engineName;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the initScriptEngineManager operation
 	* */
+	@Override
 	public void initScriptEngineManager() throws Exception {
 		Engine.Builder builder = Engine.newBuilder();
 		ConfigProperties appenvCp = ScriptConsole.getAppenv();
@@ -110,78 +110,78 @@ public class GraalVmContext extends JsPlusContext {
 		value.putMember("ScriptClassLoader", context.getClass().getClassLoader());
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
+	@Override
 	public Object getBindings() {
 		return value;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getEngine operation
 	* @return the getEngine result
 	* */
+	@Override
 	public Engine getEngine() {
 		return engine;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the getContext operation
 	* @return the getContext result
 	* */
+	@Override
 	public Context getContext() {
 		return context;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
+	@Override
 	public void remove(String name) {
 		value.removeMember(name);
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
 	* */
+	@Override
 	public Object get(String name) {
 		return value.getMember(name);
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the put operation
 	* @param name - the name
 	* @param obj - the obj
 	* */
+	@Override
 	public void put(String name, Object obj) {
 		value.putMember(name, obj);
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
 	* */
+	@Override
 	public Object eval(String scriptPath) throws Exception {
 		return eval(new File(scriptPath));
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
 	* */
+	@Override
 	public Object eval(File scriptPath) throws Exception {
 	    String script = null;
 	    if(CommonTools.isBlank(scriptCipherAesKey)){
@@ -195,12 +195,12 @@ public class GraalVmContext extends JsPlusContext {
 	    return evalScript(script);
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the evalScript operation
 	* @param script - the script
 	* @return the evalScript result
 	* */
+	@Override
 	public Object evalScript(String script) throws Exception {
 		synchronized (context) {
 			try {
@@ -212,10 +212,10 @@ public class GraalVmContext extends JsPlusContext {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the close operation
 	* */
+	@Override
 	public void close() {
 		context.close(true);
 	}

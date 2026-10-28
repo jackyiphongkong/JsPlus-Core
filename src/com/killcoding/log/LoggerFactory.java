@@ -107,10 +107,10 @@ public final class LoggerFactory {
 		if (!LOADED_CONFIG) {
 		    defaultConfig = new ConfigProperties();
 		    Runnable updatedRun = new Runnable() {
-			    @Override
-				/*
+			    				/*
 				* Performs the run operation
 				* */
+				@Override
 				public void run() {
 					try {
 						config(defaultConfig);

@@ -42,7 +42,10 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 | `dbscript/` | `fallback.sql` → `change.sql` (fixed DB-init order; `ghost_remote_command` is never DROPped and never touched by tests) |
 | `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and the datasource/test-db suites |
 | `test_reports/` | Test reports (HTML / Markdown / CI summary) |
-| `docs/api/` | API javadoc site, regenerated on every `ant build` (skip with `-Djavadoc.skip=true`) |
+| `docs/latest/api/` | API javadoc site of the newest release, regenerated on every `ant build` (skip with `-Djavadoc.skip=true`); open `docs/latest/api/index.html` |
+| `docs/apis/<version>.jar` | Archived API javadoc jar per release (one jar per version) |
+| `docs/latest/reports/` | Test reports of the newest run, refreshed on every `TestAll.bat` / `TestAll.sh` run; open `docs/latest/reports/TestAll-Report.html` |
+| `docs/reports/<version>.jar` | Archived test-report jar per run (one jar per version) |
 | `logs/` | Runtime logs (`app\`, `DS\` pool status, `SqlLog\`) |
 | `Database/` | H2 server database files (`testdb.mv.db`, gitignored) |
 | `build/classes/` | Intermediate compilation output (build-time only) |
@@ -50,12 +53,13 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 
 ## Test Suite
 
-**`TestAll.bat` flow (4 steps, re-inits testdb every run)**:
+**`TestAll.bat` flow (5 steps, re-inits testdb every run)**:
 
 1. If `:3306` is not listening, run `BG_StartH2.bat %SCRIPT_ENGINE%` (→ `StartH2.bat` → `Main -Task script/StartH2.js`, separate JVM), poll 45×2s until ready;
 2. `RunScript` against `jdbc:h2:tcp://localhost:3306/testdb` (`-user sa`, `-checkResults`) runs `fallback.sql` then `change.sql`;
-3. Run `TestAll.js` (`JSPLUS_TEST_EXIT=1`, `< NUL` closes stdin);
-4. Precisely kill the java process whose command line contains `script/StartH2.js`, then `exit /b %RC%` (`StopAll` is deliberately not used to avoid killing VS Code's Java Language Server).
+3. Run `TestAll.js` (`JSPLUS_TEST_EXIT=1`, `< NUL` closes stdin), then `LoadTest.js` (same testdb, `test_reports/LoadTest-Report.html`; a load failure fails the run);
+4. Precisely kill the java process whose command line contains `script/StartH2.js`, then run the full `StopAll.bat` sweep so no JsPlus/H2 JVM survives the run;
+5. Archive `test_reports/` into **`docs/reports/<version>.jar`** (version from the core jar name) and copy the newest into **`docs/latest/reports/`** — an archive failure is WARN-only and never changes the exit code; then `exit /b %RC%`.
 
 **2 suites**:
 
@@ -79,7 +83,8 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 - Each build removes the old `jsplus-core-*.jar` and outputs the versioned jar.
 - Each build appends one history entry (UTF-8) to **two** changelog files: `changes.log` (English) and `changes_zh-HK.log` (Traditional Chinese), each headed `## <version> (<builddate> <buildtime>)`. Entry priority per language: `-Dchange.en="..."` / `-Dchange.zh="..."` (CI) → `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` (local note, consumed and deleted) → default `- build: automatic version bump` / `- build: 自動版本遞增`.
 - Each build also diffs the Java sources against the sibling copy at `jr.diffroot` (default `../../Githubrepos/JsPlus-Core/src`, skipped when absent) and writes every differing file into both changelogs as `- found diffed: <path> (A|M|D)` — a temporary marker for later review/refinement (e.g. syncing the change to the Githubrepos checkout).
-- Each build regenerates the API site into **`docs/api/`** (version-tagged window title, `-Xdoclint:none`, source links) — open `docs/api/index.html`; use `-Djavadoc.skip=true` to skip.
+- Each build regenerates the API site into **`docs/latest/api/`** (window title carries the version, `-Xdoclint:none`, source links) and archives it as **`docs/apis/<version>.jar`** (one jar per release); use `-Djavadoc.skip=true` to skip.
+- Each `TestAll.bat` / `TestAll.sh` run archives the test reports into **`docs/reports/<version>.jar`** and copies the newest into **`docs/latest/reports/`** (same docs layout as the javadoc site).
 
 ## Database & Configuration
 

@@ -95,11 +95,11 @@ public class ScriptConsoleBase implements ConsoleImpl {
 
 	/** Default policy keeps the historic behaviour (System.exit). */
 	private static volatile ExitPolicy EXIT_POLICY = new ExitPolicy() {
-		@Override
-		/*
+				/*
 		* Performs the exit operation
 		* @param status - the status
 		* */
+		@Override
 		public void exit(int status) {
 			System.exit(status);
 		}
@@ -114,11 +114,11 @@ public class ScriptConsoleBase implements ConsoleImpl {
 			EXIT_POLICY = policy;
 		} else {
 			EXIT_POLICY = new ExitPolicy() {
-				@Override
-				/*
+								/*
 				* Performs the exit operation
 				* @param status - the status
 				* */
+				@Override
 				public void exit(int status) {
 					System.exit(status);
 				}
@@ -225,10 +225,10 @@ public class ScriptConsoleBase implements ConsoleImpl {
         	        final File appenvPropFile = _appenvPropFile;
             	    appenvCp = new ConfigProperties();
             	    Runnable updateRun = new Runnable(){
-            	        @Override
-            	        /*
+            	                    	        /*
             	        * Performs the run operation
             	        * */
+            	        @Override
             	        public void run(){
             	            Logger.systemDebug(ScriptConsole.class, "Appenv '{}' Reloading...", appenvPropFile);
     						List<String> propKeys = new ArrayList<String>(appenvCp.stringPropertyNames());
@@ -302,10 +302,10 @@ public class ScriptConsoleBase implements ConsoleImpl {
     		}
 			exitExecute = java.util.concurrent.Executors.newFixedThreadPool(1);
 			exitExecute.execute(new Runnable() {
-				@Override
-				/*
+								/*
 				* Performs the run operation
 				* */
+				@Override
 				public void run() {
 					while (!Thread.currentThread().isInterrupted()) {
 					    try{

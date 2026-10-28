@@ -191,11 +191,11 @@ public final class IdentityCard {
 				String errorMsg = String.format("The '%s' next value is null.", identityName);
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
-					@Override
-					/*
+										/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
 					* */
+					@Override
 					public int getErrorCode() {
 						return errorCode;
 					}
@@ -212,11 +212,11 @@ public final class IdentityCard {
     		String errorMsg = e.getMessage();
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
     		throw new SQLException(errorMsg) {
-    			@Override
-    			/*
+    			    			/*
     			* Performs the getErrorCode operation
     			* @return the getErrorCode result
     			* */
+    			@Override
     			public int getErrorCode() {
     				return errorCode;
     			}
@@ -243,11 +243,11 @@ public final class IdentityCard {
     		String errorMsg = String.format("The value length '%s' cannot be less than 1.", length);
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
     		throw new SQLException(errorMsg) {
-    			@Override
-    			/*
+    			    			/*
     			* Performs the getErrorCode operation
     			* @return the getErrorCode result
     			* */
+    			@Override
     			public int getErrorCode() {
     				return errorCode;
     			}
@@ -317,10 +317,10 @@ public final class IdentityCard {
 				if (APP_IDENTITY_CARD != null && APP_IDENTITY_CARD.exists() && configProperties == null) {
 					configProperties = new ConfigProperties();
 					Runnable updatedRun = new Runnable() {
-						@Override
-						/*
+												/*
 						* Performs the run operation
 						* */
+						@Override
 						public void run() {
 							try {
 								reload();

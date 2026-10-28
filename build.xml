@@ -300,18 +300,19 @@
 	</target>
 	<target name="build" depends="package,javadoc" />
 	<!-- ============================================================
-	     javadoc - generate the API site into docs/api after every build.
-	     Version-tagged window title; -Xdoclint:none keeps the build green
-	     even when a comment is not 100% javadoc-clean. Skip a build with
-	     -Djavadoc.skip=true when only the jar is needed.
+	     javadoc - generate the API site into docs/latest/api, archive
+	     it as docs/apis/<version>.jar, and keep docs/latest/api as the
+	     browsable site of the newest release. -Xdoclint:none keeps the
+	     build green even when a comment is not 100% javadoc-clean. Skip
+	     a build with -Djavadoc.skip=true when only the jar is needed.
 	     NOTE: ConsoleImpl.java carries a version placeholder that is
 	     swapped to the real version only during compile; javadoc reads the
 	     source, so the restored placeholder form is used - fine.
 	     ============================================================ -->
 	<target name="javadoc" depends="version-final" unless="javadoc.skip">
-		<delete dir="${jr.root}/docs/api" />
-		<mkdir dir="${jr.root}/docs/api" />
-		<javadoc destdir="${jr.root}/docs/api"
+		<delete dir="${jr.root}/docs/latest/api" />
+		<mkdir dir="${jr.root}/docs/latest/api" />
+		<javadoc destdir="${jr.root}/docs/latest/api"
 			sourcepath="${jr.src}"
 			classpathref="classpath"
 			encoding="${jr.charset}"
@@ -325,6 +326,13 @@
 			<doctitle><![CDATA[<h1>JsPlus-Core ${jr.version}</h1>]]></doctitle>
 			<bottom><![CDATA[<i>JsPlus-Core ${jr.version} - KILLCODING.COM - MIT License</i>]]></bottom>
 		</javadoc>
-		<echo message="Generated javadoc to docs/api (JsPlus-Core ${jr.version})" />
+		<!-- Archive the generated API site as docs/apis/<version>.jar
+		     (one jar per release); docs/latest/api stays as the browsable
+		     site of the newest version. -->
+		<mkdir dir="${jr.root}/docs/apis" />
+		<jar jarfile="${jr.root}/docs/apis/${jr.version}.jar">
+			<fileset dir="${jr.root}/docs/latest/api" />
+		</jar>
+		<echo message="Generated docs/apis/${jr.version}.jar + docs/latest/api (JsPlus-Core ${jr.version})" />
 	</target>
 </project>

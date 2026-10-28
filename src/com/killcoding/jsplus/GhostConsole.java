@@ -167,8 +167,7 @@ public class GhostConsole extends ScriptConsole {
     * */
     private Runnable getExecuteRun(){
         return new Runnable(){
-            @Override
-            /*
+                        /*
             * Performs the run operation
             * */
             @SuppressWarnings("unchecked")
@@ -217,10 +216,10 @@ public class GhostConsole extends ScriptConsole {
     private Runnable getCompletedRun(){
         final GhostConsole the = this;
         return new Runnable(){
-            @Override
-            /*
+                        /*
             * Performs the run operation
             * */
+            @Override
             public void run(){
                 try{
                     the.requestRows = null;
@@ -245,8 +244,7 @@ public class GhostConsole extends ScriptConsole {
    * */
    private Runnable getDetectExecuteRun(){
         return new Runnable(){
-            @Override
-            /*
+                        /*
             * Performs the run operation
             * */
             @SuppressWarnings("unchecked")
@@ -296,10 +294,10 @@ public class GhostConsole extends ScriptConsole {
     private Runnable getDetectCompletedRun(){
         final GhostConsole the = this;
         return new Runnable(){
-            @Override
-            /*
+                        /*
             * Performs the run operation
             * */
+            @Override
             public void run(){
                 try{
                     the.responseRows = null;

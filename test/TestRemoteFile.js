@@ -291,6 +291,60 @@ check({
 });
 
 // ---------------------------------------------------------------------------
+// C7: large-file auto split - a local file larger than FilePartSize (1kb in
+//     RemoteFile.properties) imported via writeToRemote() must be split into
+//     multiple file_part rows (DiskFile.split -> copyFrom) and read back as
+//     one identical byte stream. writeToRemote() is asynchronous (split runs
+//     on the DiskFile worker pool), so the case polls isCompleted() first.
+// ---------------------------------------------------------------------------
+var BIG_CHARS = 5000; // 5000 ASCII chars = 5000 bytes; FilePartSize=1kb -> 5 parts
+var bigSb = [];
+for (var i7 = 0; i7 < BIG_CHARS; i7++) {
+    bigSb.push(String.fromCharCode(48 + (i7 % 10))); // digits 0-9 repeating
+}
+var bigContent = bigSb.join("");
+var localBigPath = System.getProperty("java.io.tmpdir") + "/jsplus_big_local.txt";
+var diskBig = new DiskFile(localBigPath);
+diskBig.write(bigContent);
+var rfBig = new RemoteFile(RF_ROOT + "/big_split.txt");
+var wBig = diskBig.writeToRemote(rfBig);
+// async split -> poll until the completed() callback has finalized the file
+var bigReady = false;
+for (var poll7 = 0; poll7 < 20; poll7++) {
+    try {
+        if (rfBig.exists(true) === true && rfBig.isCompleted() === true) {
+            bigReady = true;
+            break;
+        }
+    } catch (e7) { /* transient: rows still landing */ }
+    Thread.sleep(500);
+}
+try { diskBig.delete(); } catch (e7d) { /* temp cleanup best effort */ }
+var rbBig = rfBig.readAllBytes();
+var bigBack = (rbBig === null || rbBig === undefined) ? "<null>" : new Str(rbBig, "UTF-8");
+var dbvBig = dbVerify(function () {
+    return "select * from remote_file where file_name='big_split.txt' and deleted=0 order by file_part_index";
+});
+// exact part-row count via CacheDriverExecutor (COLUMN_NAME_CASE_MODE=LOWER at top)
+var conn7 = Console.getDataSource().getConnection();
+var cde7 = new CacheDriverExecutor(conn7);
+var cntRows7 = cde7.find("select count(*) cnt from remote_file where file_name='big_split.txt' and deleted=0");
+var partCount7 = (cntRows7 !== null && cntRows7.size() > 0) ? Number(cntRows7.get(0).get("cnt")) : -1;
+cde7.close();
+var EXPECT_PARTS = 5; // ceil(5000 / 1024)
+check({
+    caseId: "C7",
+    name: "RemoteFile large-file auto split (5KB > FilePartSize=1kb, via writeToRemote)",
+    ok: wBig !== null && wBig !== undefined && bigReady === true && bigBack === bigContent
+        && rfBig.size() === BIG_CHARS && partCount7 === EXPECT_PARTS,
+    detail: "writeToRemote=ok, ready=" + bigReady + ", readBackLen=" + bigBack.length
+        + ", size=" + rfBig.size() + ", partRows=" + partCount7 + " (expect " + EXPECT_PARTS + ")" + dbvBig,
+    objective: "local content larger than FilePartSize splits into multiple file_part rows; readAllBytes reassembles the identical stream",
+    objectiveZh: "大於 FilePartSize 的本地內容匯入時自動分片寫入多個 part 行；讀回為完整一致的位元組串",
+    command: "diskFile.writeToRemote(rf); poll isCompleted(); rf.readAllBytes(); rf.size() + count(remote_file parts)"
+});
+
+// ---------------------------------------------------------------------------
 // C6: cleanup - clear the suite data (idempotent re-runs)
 // ---------------------------------------------------------------------------
 var connClean = Console.getDataSource().getConnection();

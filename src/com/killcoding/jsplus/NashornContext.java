@@ -53,12 +53,12 @@ public class NashornContext extends JsPlusContext {
     private ClassLoader customClassLoader = null;
 
     private class SecurityClassFilter implements ClassFilter {
-        @Override
-        /*
+                /*
         * Performs the exposeToScripts operation
         * @param className - the className
         * @return the exposeToScripts result
         * */
+        @Override
         public boolean exposeToScripts(String className) {
             if (allowAllAccess) {
                 return true;
@@ -75,70 +75,70 @@ public class NashornContext extends JsPlusContext {
         super(engineName);
     }
 
-    @Override
-    /*
+        /*
     * Performs the getBindings operation
     * @return the getBindings result
     * */
+    @Override
     public Object getBindings(){
         return bindings;
     }
 
-    @Override
-    /*
+        /*
     * Performs the getEngine operation
     * @return the getEngine result
     * */
+    @Override
     public Object getEngine(){
         return nashornFactory;
     }
 
-    @Override
-    /*
+        /*
     * Performs the getContext operation
     * @return the getContext result
     * */
+    @Override
     public ScriptContext getContext(){
         return context;
     }
 
-    @Override
-    /*
+        /*
     * Performs the remove operation
     * @param name - the name
     * */
+    @Override
     public void remove(String name){
         if (bindings != null) {
             bindings.remove(name);
         }
     }
 
-    @Override
-    /*
+        /*
     * Performs the put operation
     * @param name - the name
     * @param value - the value
     * */
+    @Override
     public void put(String name,Object value){
         if (bindings != null) {
             bindings.put(name,value);
         }
     }
 
-    @Override
-    /*
+        /*
     * Performs the get operation
     * @param name - the name
     * @return the get result
     * */
+    @Override
     public Object get(String name){
         return bindings != null ? bindings.get(name) : null;
     }
 
-    @Override
-    /*
+        /*
     * Performs the initScriptEngineManager operation
     * */
+    @Override
     public void initScriptEngineManager() throws Exception {
         ConfigProperties appenvCp = ScriptConsole.getAppenv();
         String[] options = new String[]{};
@@ -183,11 +183,11 @@ public class NashornContext extends JsPlusContext {
         invocable = (Invocable) scriptEngine;
     }
 
-    @Override
-    /*
+        /*
     * Performs the setAllowAllAccess operation
     * @param allowAllAccess - the allowAllAccess
     * */
+    @Override
     public void setAllowAllAccess(boolean allowAllAccess){
         boolean changed = this.allowAllAccess != allowAllAccess;
         this.allowAllAccess = allowAllAccess;
@@ -201,22 +201,22 @@ public class NashornContext extends JsPlusContext {
         }
     }
 
-    @Override
-    /*
+        /*
     * Performs the eval operation
     * @param scriptPath - the scriptPath
     * @return the eval result
     * */
+    @Override
     public Object eval(String scriptPath) throws Exception {
         return eval(new File(scriptPath));
     }
 
-    @Override
-    /*
+        /*
     * Performs the eval operation
     * @param scriptPath - the scriptPath
     * @return the eval result
     * */
+    @Override
     public Object eval(File scriptPath) throws Exception {
         String script = null;
         if(CommonTools.isBlank(scriptCipherAesKey)){
@@ -233,12 +233,12 @@ public class NashornContext extends JsPlusContext {
         return result;
     }
 
-    @Override
-    /*
+        /*
     * Performs the evalScript operation
     * @param script - the script
     * @return the evalScript result
     * */
+    @Override
     public Object evalScript(String script) throws Exception {
         Object result = scriptEngine.eval(script, context);
         scriptEngine.setContext(context);
@@ -246,10 +246,10 @@ public class NashornContext extends JsPlusContext {
         return result;
     }
 
-    @Override
-    /*
+        /*
     * Performs the close operation
     * */
+    @Override
     public void close(){
         if (bindings != null) {
             bindings.clear();
@@ -262,11 +262,11 @@ public class NashornContext extends JsPlusContext {
         customClassLoader = null;
     }
 
-    @Override
-    /*
+        /*
     * Performs the getEngineName operation
     * @return the getEngineName result
     * */
+    @Override
     public String getEngineName(){
         return engineName;
     }

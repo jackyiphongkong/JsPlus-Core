@@ -81,10 +81,10 @@ public final class Clock {
 				if (APP_CLOCK != null && APP_CLOCK.exists() && configProperties == null) {
 					configProperties = new ConfigProperties();
 					Runnable updatedRun = new Runnable(){
-        		        @Override
-        		        /*
+        		                		        /*
         		        * Performs the run operation
         		        * */
+        		        @Override
         		        public void run(){
         	            	try {
         						reload();

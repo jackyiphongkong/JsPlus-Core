@@ -701,10 +701,10 @@ public final class LogRecord {
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 
-				@Override
-				/*
+								/*
 				* Performs the run operation
 				* */
+				@Override
 				public void run() {
 					Thread.currentThread().setName(Logger.class.getSimpleName());
 					while (true) {
@@ -717,10 +717,10 @@ public final class LogRecord {
 							writeLogBatch(logBatch);
 							if (config.getBoolean("DatabaseOut", false)) {
     							DB_WRITE_POOL.execute(new Runnable(){
-    							    @Override
-    							    /*
+    							        							    /*
     							    * Performs the run operation
     							    * */
+    							    @Override
     							    public void run(){
     							        LogRecord.writeLogBatchToDatabase(list);
     							    }

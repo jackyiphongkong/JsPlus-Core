@@ -118,10 +118,10 @@ public class DiskCache extends AbsCacheApi {
 	    isStartRemoveExpiredThread = true;
 		executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
-			@Override
-			/*
+						/*
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				Thread.currentThread().setName("DiskCache");
 				while(true){
@@ -153,12 +153,12 @@ public class DiskCache extends AbsCacheApi {
 		});
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the included operation
 	* @param name - the name
 	* @return the included result
 	* */
+	@Override
 	synchronized boolean included(String name) {
 	    if(stored){
 	        return CACHE_FILE.containsKey(name);
@@ -190,10 +190,10 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the removeAll operation
 	* */
+	@Override
 	synchronized void removeAll() {
 		Set<String> names = CACHE_FILE.keySet();
 		for (String name : names) {
@@ -201,11 +201,11 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
+	@Override
 	synchronized void remove(String name) {
 		String cacheFileName = CACHE_FILE.get(name);
 		if (cacheFileName != null) {
@@ -217,12 +217,12 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
 	* */
+	@Override
 	synchronized Object get(String name) {
 		try {
 			if (included(name)) {
@@ -242,13 +242,13 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the set operation
 	* @param name - the name
 	* @param value - the value
 	* @param lifeSeconds - the lifeSeconds
 	* */
+	@Override
 	synchronized void set(String name, Object value, int lifeSeconds) {
 	    if(value != null) {
 

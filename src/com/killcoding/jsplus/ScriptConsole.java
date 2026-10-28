@@ -168,12 +168,12 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	* */
 	protected CacheArrayFilter createCacheArrayFilter(long filterTimer,long filterLoopTimer){
 	    return new CacheArrayFilter(filterTimer,filterLoopTimer){
-	        @Override
 	        /*
 	        * Performs the execute operation
 	        * @param index - the index
 	        * @param o - the o
 	        * */
+	        @Override
 	        public void execute(Integer index, Object o) {
                 if(callback != null) {
                     if(callbackSync){
@@ -184,12 +184,17 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
                 }
 	        }
 
-	        @Override
+			@Override
+        	public void completed(Integer size) {
+                log.info("The GlobalCacheArray completed (Processed Total = {}).",globalCacheArray.getProcessedTotal());
+        	}
+
 	        /*
 	        * Performs the executeBatch operation
 	        * @param batchIndex - the batchIndex
 	        * @param batch - the batch
 	        * */
+	        @Override
 	        public void executeBatch(Integer batchIndex,List<?> batch) {
                 if(callbackBatch != null) {
                     if(callbackSync){
@@ -200,12 +205,12 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
                 }
 	        }
 
-	        @Override
 	        /*
 	        * Performs the terminated operation
 	        * */
+	        @Override
 	        public void terminated() {
-                log.info("The GlobalCacheArray Terminated.");
+				log.info("The GlobalCacheArray Terminated.");
 	        }
 	    };
 	}
@@ -1067,10 +1072,10 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
 
-			@Override
 			/*
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 
 				while (true) {
@@ -1114,10 +1119,10 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
     private void scheduleNextMinute() {
         long delay = getDelayToNextMinute();
         scheduleExecutor.schedule(new Runnable() {
-            @Override
             /*
             * Performs the run operation
             * */
+            @Override
             public void run() {
                 try {
                     executeTasks();

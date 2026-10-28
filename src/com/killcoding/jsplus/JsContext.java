@@ -60,66 +60,66 @@ public class JsContext extends JsPlusContext {
         super(engineName);
     }
 
-	@Override
-	/*
+		/*
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
+	@Override
 	public Object getBindings(){
 	    return bindings;
 	}
 
-	@Override
-    /*
+	    /*
     * Performs the getEngine operation
     * @return the getEngine result
     * */
+    @Override
     public ScriptEngineManager getEngine(){
         return scriptEngineManager;
     }
 
-	@Override
-    /*
+	    /*
     * Performs the getContext operation
     * @return the getContext result
     * */
+    @Override
     public ScriptContext getContext(){
         return context;
     }
 
-    @Override
-	/*
+    	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
+	@Override
 	public void remove(String name){
 	    bindings.remove(name);
 	}
 
-    @Override
-	/*
+    	/*
 	* Performs the put operation
 	* @param name - the name
 	* @param value - the value
 	* */
+	@Override
 	public void put(String name,Object value){
 	    bindings.put(name,value);
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
 	* */
+	@Override
 	public Object get(String name){
 	    return bindings.get(name);
 	}
 
-    @Override
-	/*
+    	/*
 	* Performs the initScriptEngineManager operation
 	* */
+	@Override
 	public void initScriptEngineManager() throws Exception {
 		ClassLoader classLoader = null;
 		classLoader = ClassLoader.getSystemClassLoader();
@@ -145,32 +145,32 @@ public class JsContext extends JsPlusContext {
 		}
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the setAllowAllAccess operation
 	* @param allowAllAccess - the allowAllAccess
 	* */
+	@Override
 	public void setAllowAllAccess(boolean allowAllAccess){
 	    this.allowAllAccess = allowAllAccess;
 	    disableAllowAllAccess();
 	}
 
-    @Override
-	/*
+    	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
 	* */
+	@Override
 	public Object eval(String scriptPath) throws Exception {
 		return eval(new File(scriptPath));
 	}
 
-    @Override
-	/*
+    	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
 	* */
+	@Override
 	public Object eval(File scriptPath) throws Exception {
 	    String script = null;
 	    if(CommonTools.isBlank(scriptCipherAesKey)){
@@ -187,12 +187,12 @@ public class JsContext extends JsPlusContext {
 		return result;
 	}
 
-	@Override
-	/*
+		/*
 	* Performs the evalScript operation
 	* @param script - the script
 	* @return the evalScript result
 	* */
+	@Override
 	public Object evalScript(String script) throws Exception {
 		Object result = scriptEngine.eval(script, context);
 		scriptEngine.setContext(context);
@@ -200,21 +200,21 @@ public class JsContext extends JsPlusContext {
 		return result;
 	}
 
-    @Override
-    /*
+        /*
     * Performs the close operation
     * */
+    @Override
     public void close(){
         bindings.clear();
         bindings = null;
         context = null;
     }
 
-	@Override
-	/*
+		/*
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */
+	@Override
 	public String getEngineName(){
 	    return engineName;
 	}
