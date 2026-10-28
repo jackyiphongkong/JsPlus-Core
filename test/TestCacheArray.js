@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestCacheArray.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestCacheArray-Report.html
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestCacheArray-Report.html
 // Scope    : com.killcoding.cache.CacheArray - synchronized cache list with an
 //            async filter worker. Covers: add/get/getCacheKey/size/remove/
 //            addAll/sweepProcessed, nullIsCompleted semantics, filter

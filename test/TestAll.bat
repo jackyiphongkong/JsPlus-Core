@@ -20,12 +20,12 @@ REM      (com.killcoding.jsplus.Main, same entry the JsPlus-Tomcat suite uses).
 REM      No external server, H2 or Tomcat is required.
 REM      JS_PLUS_PATH=<PROJECT_ROOT>/JsPlus/ (runtime anchor), so the suites
 REM      resolve <PROJECT_ROOT>/test/TestBase.js + suites and write reports to
-REM      <PROJECT_ROOT>/test_reports/ (logs land in <PROJECT_ROOT>/logs/app/).
+REM      <PROJECT_ROOT>/docs/latest/report/ (logs land in <PROJECT_ROOT>/logs/app/).
 REM      Stdin is redirected to NUL so com.killcoding.jsplus.Main exits
 REM      right after the -Task completes (otherwise it blocks on the
 REM      interactive scanner, see Main.java scanner loop).
 REM   3b) Run LoadTest.js (DB CRUD load test over the same testdb) and write
-REM      test_reports/LoadTest-Report.html. Any load failure fails the run.
+REM      docs/latest/report/LoadTest-Report.html. Any load failure fails the run.
 REM   4) Exit with the JVM's exit code (0 = all checks passed, 1 = failure).
 REM Override via env (same convention as JsPlus-Tomcat):
 REM      JsPlus_JavaDir_JsPlus-Core   - JDK directory under Java\ (default: default)
@@ -158,7 +158,7 @@ REM ------------------------------------------------------------------
 REM Step 3b: Run LoadTest.js against this JVM (DB CRUD load test, same H2
 REM server and freshly initialized testdb as the suites above). Uses the
 REM default runtime datasource (config/DataSource.properties) exactly like
-REM test/LoadTest.bat; writes test_reports/LoadTest-Report.html. Any load
+REM test/LoadTest.bat; writes docs/latest/report/LoadTest-Report.html. Any load
 REM failure is merged into the overall exit code below.
 REM ------------------------------------------------------------------
 set JSPLUS_TEST_EXIT=1
@@ -177,7 +177,7 @@ call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
 REM ------------------------------------------------------------------
 REM Step 4b: Archive the test reports under the same docs layout as the
 REM javadoc site: docs/reports/<version>.jar (one jar per run) plus
-REM docs/latest/reports/ as the browsable newest reports. Version is taken
+REM docs/latest/report/ as the browsable newest reports. Version is taken
 REM from the core jar name. A failure to archive is only a WARN and never
 REM changes the suite exit code (RC was captured above).
 REM ------------------------------------------------------------------
@@ -187,18 +187,16 @@ set "CORE_VERSION=%CORE_VERSION:.jar=%"
 if not defined CORE_VERSION (
     echo WARN: Cannot extract version from %CORE_JAR%, skipping report archive.
 ) else (
-    echo [TestAll] Archiving test reports as docs/reports/%CORE_VERSION%.jar ^(docs/latest/reports^)...
+    echo [TestAll] Archiving test reports as docs/reports/%CORE_VERSION%.jar ^(docs/latest/report^)...
     if not exist "%JS_PLUS_PATH_ORIGIN%..\docs\reports" mkdir "%JS_PLUS_PATH_ORIGIN%..\docs\reports"
     if not exist "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports" mkdir "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports"
     if exist "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" del "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar"
-    "%JS_PLUS_PATH_ORIGIN%..\Java\%JAVA_DIR%\bin\jar.exe" cf "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" -C "%JS_PLUS_PATH_ORIGIN%..\test_reports" .
+    "%JS_PLUS_PATH_ORIGIN%..\Java\%JAVA_DIR%\bin\jar.exe" cf "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" -C "%JS_PLUS_PATH_ORIGIN%..\docs/latest/report" .
     if errorlevel 1 (
         echo WARN: Failed to pack test report jar ^(jar.exe missing?^), continuing.
     ) else (
         echo [TestAll] Packed docs/reports/%CORE_VERSION%.jar
     )
-    xcopy /y /q /e "%JS_PLUS_PATH_ORIGIN%..\test_reports\*" "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports\" >nul 2>&1
-    echo [TestAll] Copied newest reports to docs/latest/reports/
 )
 exit /b %RC%
 

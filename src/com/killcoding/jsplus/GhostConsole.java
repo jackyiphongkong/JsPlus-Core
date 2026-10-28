@@ -20,9 +20,6 @@ THE SOFTWARE.
 
 package com.killcoding.jsplus;
 
-import com.killcoding.jsplus.ScriptConsole;
-
-
 import com.killcoding.log.Logger;
 import com.killcoding.datasource.CacheDriverExecutor;
 import java.sql.Connection;

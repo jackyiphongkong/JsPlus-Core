@@ -23,15 +23,12 @@ package com.killcoding.datasource;
 import java.io.File;
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
-import com.killcoding.datasource.DriverDataSource;
 import com.killcoding.tool.ConfigProperties;
 import com.killcoding.tool.CommonTools;
 import java.sql.Connection;
 import java.sql.SQLException;
-import com.killcoding.datasource.CacheDriverExecutor;
 import java.util.Map;
 import java.util.HashMap;
-import com.killcoding.datasource.Clock;
 import java.sql.Timestamp;
 import java.util.concurrent.ConcurrentHashMap;
 

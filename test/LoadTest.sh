@@ -6,7 +6,7 @@ set -e
 # Same flow as TestAll.sh (H2 start -> db init -> run suite -> stop H2),
 # but runs test/LoadTest.js: a database CRUD load test over the runtime
 # project datasource (Console.getDataSource() -> CacheDriverExecutor).
-# Dashboard written to <PROJECT_ROOT>/test_reports/LoadTest-Report.html
+# Dashboard written to <PROJECT_ROOT>/docs/latest/report/LoadTest-Report.html
 # (format follows JsPlus-Tomcat LoadTest.js: dark cards + SVG bars +
 # percentile table).
 # Override via env:

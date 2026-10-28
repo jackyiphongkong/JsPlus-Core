@@ -6,9 +6,10 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestEvalJava.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestEvalJava-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestEvalJava-Report.html (TestBase
 //            format, same as the other suites)
-// Scope    : Console.evalJavaSource(String) - dynamic compilation with the JDK
+// Scope    : Console.evalJavaSource(String) / evalJavaSource(String[]) /
+//            evalJavaFile(file-or-folder) - dynamic compilation with the JDK
 //            system compiler, packaging into a temporary jar under
 //            <PROJECT_ROOT>/work/evaljava and loading through a dedicated
 //            URLClassLoader. Evaluated sources may use the default package or
@@ -184,6 +185,139 @@ try {
         objective: "every call packages a fresh jar under a fresh URLClassLoader",
         objectiveZh: "每次呼叫都打包新 jar 並以新的 URLClassLoader 載入",
         command: "Console.evalJavaSource(SRC_HELLO) twice"
+    });
+
+    // C8: evalJavaSource(String[]) - a JS array of complete class sources is compiled
+    //     in one javac task; each class is usable, classes may reference each other
+    var SRC_CLASS_ONE = `
+        public class EvalArrayFirst {
+            public String who() { return "first"; }
+        }`;
+    var SRC_CLASS_TWO = `
+        public class EvalArraySecond {
+            public String who() { return "second"; }
+            public String callFirst() { return new EvalArrayFirst().who(); }
+        }`;
+    var SRC_MULTI_CLASS = [SRC_CLASS_ONE, SRC_CLASS_TWO];
+    var classes8 = Console.evalJavaSource(SRC_MULTI_CLASS);
+    var inst8a = classes8[0].newInstance();
+    var inst8b = classes8[1].newInstance();
+    var who8a = inst8a.who();
+    var who8b = inst8b.who();
+    var cross8 = inst8b.callFirst();
+    check({
+        caseId: "C8",
+        name: "evalJavaSource accepts an array of complete classes (multi-class compile)",
+        ok: classes8.length === 2
+            && classes8[0].getName() === "EvalArrayFirst"
+            && classes8[1].getName() === "EvalArraySecond"
+            && who8a === "first" && who8b === "second"
+            && cross8 === "first",
+        detail: "classes=" + classes8.length + " whoA=" + who8a + " whoB=" + who8b + " cross=" + cross8,
+        objective: "each array element is one class; all are compiled in one task and returned in input order",
+        objectiveZh: "陣列每元素為一個類別；全部在一次任務編譯並按輸入順序返回",
+        command: "Console.evalJavaSource([class1Source, class2Source, ...])"
+    });
+
+    // C9: evalJavaFile(folder) - every .java under a folder is compiled in one task
+    var DiskFileType = Java.type("com.killcoding.file.DiskFile");
+    var folderDir = basePath + "../test/.core-test-tmp/evaljavafolder/";
+    var folderSrc1 = `
+        public class FolderFirst {
+            public String who() { return "folder-first"; }
+        }`;
+    var folderSrc2 = `
+        public class FolderSecond {
+            public String who() { return "folder-second"; }
+            public String callFirst() { return new FolderFirst().who(); }
+        }`;
+    new DiskFileType(folderDir + "FolderFirst.java").write(folderSrc1, "UTF-8");
+    new DiskFileType(folderDir + "FolderSecond.java").write(folderSrc2, "UTF-8");
+    var classes9 = Console.evalJavaFile(folderDir);
+    var inst9a = classes9[0].newInstance();
+    var inst9b = classes9[1].newInstance();
+    var who9a = inst9a.who();
+    var who9b = inst9b.who();
+    var cross9 = inst9b.callFirst();
+    check({
+        caseId: "C9",
+        name: "evalJavaFile compiles a whole folder of classes",
+        ok: classes9.length === 2
+            && classes9[0].getName() === "FolderFirst"
+            && classes9[1].getName() === "FolderSecond"
+            && who9a === "folder-first" && who9b === "folder-second"
+            && cross9 === "folder-first",
+        detail: "classes=" + classes9.length + " whoA=" + who9a + " whoB=" + who9b + " cross=" + cross9,
+        objective: "a folder path is scanned recursively and all .java files compile in one task",
+        objectiveZh: "資料夾路徑會被遞迴掃描並在一次任務內編譯全部 .java 檔案",
+        command: "Console.evalJavaFile(folderPath)"
+    });
+
+    // C10: evalJavaFile(single .java file) keeps the single-file behaviour (array of length 1)
+    var singleClazz10 = Console.evalJavaFile(folderDir + "FolderFirst.java");
+    var inst10 = singleClazz10[0].newInstance();
+    check({
+        caseId: "C10",
+        name: "evalJavaFile single-file path returns an array of length 1",
+        ok: singleClazz10.length === 1 && singleClazz10[0].getName() === "FolderFirst" && inst10.who() === "folder-first",
+        detail: "length=" + singleClazz10.length + " class=" + singleClazz10[0].getName(),
+        objective: "a .java file path compiles that single file (folder form stays compatible)",
+        objectiveZh: ".java 檔案路徑只編譯該單一檔案（資料夾形式保持相容）",
+        command: "Console.evalJavaFile(singleFilePath)"
+    });
+
+    // C11: the evaluated Class exposes its ClassLoader - loadClass can fetch any
+    //     class inside the same eval jar (here the nested static class, which the
+    //     returned array does not list)
+    var SRC_WITH_NESTED = `
+        public class EvalNested {
+            public static class Helper {
+                public String tag() { return "helper-ok"; }
+            }
+            public String outer() { return "outer-ok"; }
+        }`;
+    var clazzN = Console.evalJavaSource(SRC_WITH_NESTED);
+    var loaderN = clazzN.getClassLoader();
+    var nestedClazz = loaderN.loadClass("EvalNested$Helper");
+    var nestedInst = nestedClazz.newInstance();
+    var outerMsgN = clazzN.newInstance().outer();
+    check({
+        caseId: "C11",
+        name: "ClassLoader.loadClass loads classes inside the eval jar",
+        ok: loaderN !== null
+            && nestedClazz.getName() === "EvalNested$Helper"
+            && nestedInst.tag() === "helper-ok"
+            && outerMsgN === "outer-ok",
+        detail: "loader=" + loaderN + " nested=" + nestedClazz.getName() + " tag=" + nestedInst.tag(),
+        objective: "the returned Class exposes its URLClassLoader, so loadClass reaches any class in the jar",
+        objectiveZh: "返回的 Class 暴露其 URLClassLoader，loadClass 可達 jar 內任何類別",
+        command: "Console.evalJavaSource(src)[0].getClassLoader().loadClass('EvalNested$Helper')"
+    });
+
+    // C12: folder eval recurses into sub-folders - classes in child directories
+    //     compile together and can reference classes from other directories
+    var folderSubDir = basePath + "../test/.core-test-tmp/evaljavafolder-sub/";
+    var folderSubChild = folderSubDir + "sub/";
+    new DiskFileType(folderSubDir + "FolderAlpha.java").write(
+        "public class FolderAlpha { public String who() { return \"alpha\"; } }", "UTF-8");
+    new DiskFileType(folderSubChild + "FolderBeta.java").write(
+        "public class FolderBeta { public String who() { return \"beta\"; } public String callAlpha() { return new FolderAlpha().who(); } }", "UTF-8");
+    var classes12 = Console.evalJavaFile(folderSubDir);
+    var inst12a = classes12[0].newInstance();
+    var inst12b = classes12[1].newInstance();
+    var cross12 = inst12b.callAlpha();
+    check({
+        caseId: "C12",
+        name: "evalJavaFile recurses into sub-folders (multi-directory compile)",
+        ok: classes12.length === 2
+            && classes12[0].getName() === "FolderAlpha"
+            && classes12[1].getName() === "FolderBeta"
+            && inst12a.who() === "alpha" && inst12b.who() === "beta"
+            && cross12 === "alpha",
+        detail: "classes=" + classes12.length + " cross=" + cross12,
+        objective: "Files.walk recursion covers child directories; one javac task links them all",
+        objectiveZh: "Files.walk 遞迴涵蓋子目錄；單次 javac 任務串起全部類別",
+        command: "Console.evalJavaFile(folderWithSubFolders)"
     });
 
 } catch (e) {

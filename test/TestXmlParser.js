@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestXmlParser.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestXmlParser-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestXmlParser-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.tool.XmlParser - lightweight XML -> nested
 //            Map<String,Object> tree. Covers: constructor parse, getRootName,

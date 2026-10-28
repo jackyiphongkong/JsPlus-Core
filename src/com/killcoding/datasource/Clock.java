@@ -29,9 +29,7 @@ import com.killcoding.tool.CommonTools;
 import com.killcoding.tool.ConfigProperties;
 
 
-import com.killcoding.datasource.DriverDataSource;
 import java.sql.Time;
-import com.killcoding.datasource.CacheDriverExecutor;
 import java.sql.Connection;
 import java.sql.SQLException;
 import com.killcoding.log.Logger;

@@ -9,9 +9,9 @@
 //     through the project's standard data path (DriverDataSource ->
 //     CacheDriverExecutor -> CacheArray) and append the result to the detail
 //     line (JsPlus-Tomcat's dbVerify, adapted to Core's data-access shape)
-//   - writeReport() -> <PROJECT_ROOT>/test_reports/<REPORT_NAME>.html via DiskFile
-//   - writeMd()     -> <PROJECT_ROOT>/test_reports/<REPORT_NAME>.md via DiskFile
-//   - writeCiSummary() -> <PROJECT_ROOT>/test_reports/<REPORT_NAME>.md (CI-facing)
+//   - writeReport() -> <PROJECT_ROOT>/docs/latest/report/<REPORT_NAME>.html via DiskFile
+//   - writeMd()     -> <PROJECT_ROOT>/docs/latest/report/<REPORT_NAME>.md via DiskFile
+//   - writeCiSummary() -> <PROJECT_ROOT>/docs/latest/report/<REPORT_NAME>.md (CI-facing)
 //   - configSnapshot() -> reads <JS_PLUS_PATH>/config/Logger.properties
 // Loaded by each suite (TestConsole.js / TestCache.js / TestFile.js / ...):
 //   load(System.getProperty("JS_PLUS_PATH") + "../test/TestBase.js")
@@ -310,11 +310,11 @@ function writeReport() {
         var reportName = (typeof REPORT_NAME !== "undefined" && REPORT_NAME !== null && REPORT_NAME.length > 0)
             ? REPORT_NAME : "TestAll-Report.html";
         var File = Java.type("java.io.File");
-        var reportDir = new File(System.getProperty("JS_PLUS_PATH") + "../test_reports");
+        var reportDir = new File(System.getProperty("JS_PLUS_PATH") + "../docs/latest/report");
         if (!reportDir.exists()) {
             reportDir.mkdirs();
         }
-        var reportPath = System.getProperty("JS_PLUS_PATH") + "../test_reports/" + reportName;
+        var reportPath = System.getProperty("JS_PLUS_PATH") + "../docs/latest/report/" + reportName;
         var report = new DiskFile(reportPath);
         report.write(html, "UTF-8");
         print("Test report written to " + reportPath);
@@ -324,7 +324,7 @@ function writeReport() {
 }
 
 // Markdown test report - mirrors writeReport() but emits a GitHub-friendly
-// Markdown file into <PROJECT_ROOT>/test_reports/<REPORT_NAME>.md via DiskFile.
+// Markdown file into <PROJECT_ROOT>/docs/latest/report/<REPORT_NAME>.md via DiskFile.
 function writeMd() {
     var durationMs = Date.now() - suiteStart;
     var reportTitle = (typeof REPORT_TITLE !== "undefined" && REPORT_TITLE !== null && REPORT_TITLE.length > 0)
@@ -363,11 +363,11 @@ function writeMd() {
             reportName = reportName.substring(0, reportName.length - 5) + ".md";
         }
         var File = Java.type("java.io.File");
-        var reportDir = new File(System.getProperty("JS_PLUS_PATH") + "../test_reports");
+        var reportDir = new File(System.getProperty("JS_PLUS_PATH") + "../docs/latest/report");
         if (!reportDir.exists()) {
             reportDir.mkdirs();
         }
-        var reportPath = System.getProperty("JS_PLUS_PATH") + "../test_reports/" + reportName;
+        var reportPath = System.getProperty("JS_PLUS_PATH") + "../docs/latest/report/" + reportName;
         var report = new DiskFile(reportPath);
         report.write(md, "UTF-8");
         print("Markdown report written to " + reportPath);
@@ -377,8 +377,8 @@ function writeMd() {
 }
 
 // CI-oriented summary - writes a compact Markdown file into
-// <PROJECT_ROOT>/test_reports/ so the CI job can surface it after a run:
-//   1) it is included in the uploaded test_reports/ artifact (downloadable),
+// <PROJECT_ROOT>/docs/latest/report/ so the CI job can surface it after a run:
+//   1) it is included in the uploaded docs/latest/report/ artifact (downloadable),
 //   2) the workflow can append it to $GITHUB_STEP_SUMMARY so the GitHub
 //      Actions run page shows the result without opening the artifact.
 // Params (all optional):
@@ -439,11 +439,11 @@ function writeCiSummary(params) {
         var reportName = (p.reportName !== undefined && p.reportName !== null && p.reportName.length > 0)
             ? p.reportName : "TestAll-CI-Summary.md";
         var File = Java.type("java.io.File");
-        var reportDir = new File(System.getProperty("JS_PLUS_PATH") + "../test_reports");
+        var reportDir = new File(System.getProperty("JS_PLUS_PATH") + "../docs/latest/report");
         if (!reportDir.exists()) {
             reportDir.mkdirs();
         }
-        var reportPath = System.getProperty("JS_PLUS_PATH") + "../test_reports/" + reportName;
+        var reportPath = System.getProperty("JS_PLUS_PATH") + "../docs/latest/report/" + reportName;
         var report = new DiskFile(reportPath);
         report.write(md, "UTF-8");
         print("CI summary written to " + reportPath);

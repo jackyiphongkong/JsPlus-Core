@@ -52,8 +52,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-import com.killcoding.file.DiskFile;
-
 import com.killcoding.cache.CacheArray;
 import com.killcoding.cache.CacheArrayFilter;
 

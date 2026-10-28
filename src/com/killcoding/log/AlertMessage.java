@@ -24,7 +24,6 @@ THE SOFTWARE.
 package com.killcoding.log;
 
 import java.util.concurrent.Executors;
-import com.killcoding.log.Logger;
 import java.util.Map;
 
 /**

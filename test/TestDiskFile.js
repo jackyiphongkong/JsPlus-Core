@@ -7,7 +7,7 @@
 //                     -Task <PROJECT_ROOT>/test/TestDiskFile.js < NUL
 //            Interactive console eval:
 //              Console.eval(<PROJECT_ROOT>/test/TestDiskFile.js)
-// Output   : <PROJECT_ROOT>/test_reports/TestDiskFile-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestDiskFile-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.file.DiskFile - the embedded engine's disk file
 //            abstraction (write/read round-trips, byte + charset variants,

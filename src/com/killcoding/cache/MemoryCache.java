@@ -23,8 +23,6 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.cache;
 
-import com.killcoding.cache.AbsCacheApi;
-
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -222,7 +220,7 @@ public class MemoryCache extends AbsCacheApi {
         			    CACHE_LIFE.put(name, life);
     			    }
     			    if(lifeSeconds > 0){
-    			        long lifeLong = System.currentTimeMillis() + lifeSeconds * 1000;
+    			        long lifeLong = System.currentTimeMillis() + lifeSeconds * 1000L;
 
     			        if(lifeLong > Long.MAX_VALUE) lifeLong = Long.MAX_VALUE;
 
@@ -234,7 +232,7 @@ public class MemoryCache extends AbsCacheApi {
     			log.warn(e);
     		}
 
-    		if (!isStartRemoveExpiredThread)
+    		if (!stored && !isStartRemoveExpiredThread)
     			startRemoveExpiredThread();
 
 	    }

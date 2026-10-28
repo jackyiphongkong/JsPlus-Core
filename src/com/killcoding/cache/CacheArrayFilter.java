@@ -23,9 +23,6 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.cache;
 
-import com.killcoding.cache.CacheArray;
-
-
 import java.util.List;
 
 /**

@@ -31,8 +31,6 @@ import com.killcoding.cache.CacheArray;
 import java.util.Scanner;
 
 
-import com.killcoding.jsplus.GhostConsole;
-
 /**
 * JsPlus-Core entry point: parses command-line arguments (-ScriptEngine, -Env, -Task, -GhostName,
 * -WriteHistory ...), bootstraps the script engine and console, and dispatches the configured task

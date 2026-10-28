@@ -8,8 +8,8 @@
 //            Interactive console eval:
 //              Console.eval(<PROJECT_ROOT>/test/TestAll.js)
 // Output   : Runs, in order:
-//              1) TestDatasource.js -> <PROJECT_ROOT>/test_reports/TestDatasource-Report.html
-//              2) TestCrud.js      -> <PROJECT_ROOT>/test_reports/TestCrud-Report.html
+//              1) TestDatasource.js -> <PROJECT_ROOT>/docs/latest/report/TestDatasource-Report.html
+//              2) TestCrud.js      -> <PROJECT_ROOT>/docs/latest/report/TestCrud-Report.html
 //            This entry point then prints an aggregate pass/fail summary and
 //            writes TestAll-Report.md / TestAll-Report.html / TestAll-CI-Summary.md.
 // NOTE     : Each suite calls beginTest() and reports its own counters, so
@@ -48,7 +48,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCacheArray -> TestEvalJava -> TestJsString");
+print("Suites       : TestDatasource -> TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestJsString");
 
 var suites = [
     { file: "TestDatasource.js", title: "TestDatasource" },
@@ -66,6 +66,7 @@ var suites = [
     { file: "TestCipherTools.js",     title: "TestCipherTools" },
     { file: "TestEscapeTools.js",     title: "TestEscapeTools" },
     { file: "TestFileTools.js",       title: "TestFileTools" },
+    { file: "TestCache.js",           title: "TestCache" },
     { file: "TestCacheArray.js",      title: "TestCacheArray" },
     { file: "TestEvalJava.js",        title: "TestEvalJava" },
     { file: "TestJsString.js",        title: "TestJsString" }
@@ -109,6 +110,11 @@ if (cfgCheck.ok) {
 // load() run in the SAME global scope, and their own top-level 'var i'
 // loops would otherwise clobber a 'var i' here (GraalJS: load() shares the
 // global lexical environment), re-running the loop forever from the middle.
+// IN_TEST_ALL marks that the suites below are being run under the TestAll
+// orchestrator: standalone runners (e.g. TestDatasource.bat/.sh) may then
+// consume JSPLUS_TEST_EXIT themselves, while suites loaded here never
+// System.exit() mid-run (TestAll owns the JVM exit at the end).
+var IN_TEST_ALL = true;
 for (let i = 0; i < suites.length; i++) {
     var s = suites[i];
     print("");
@@ -156,9 +162,9 @@ if (totalFail > 0) {
     print("ALL TESTS PASSED");
 }
 
-// Aggregate markdown + HTML summary into <PROJECT_ROOT>/test_reports/
+// Aggregate markdown + HTML summary into <PROJECT_ROOT>/docs/latest/report/
 try {
-    var reportDir = new File(basePath + "../test_reports");
+    var reportDir = new File(basePath + "../docs/latest/report");
     if (!reportDir.exists()) {
         reportDir.mkdirs();
     }
@@ -172,7 +178,7 @@ try {
     for (var m = 0; m < suiteResults.length; m++) {
         md += "| " + suiteResults[m].title + " | " + suiteResults[m].pass + " | " + suiteResults[m].fail + " |\n";
     }
-    var reportPath = basePath + "../test_reports/TestAll-Report.md";
+    var reportPath = basePath + "../docs/latest/report/TestAll-Report.md";
     var report = new DiskFile(reportPath);
     report.write(md, "UTF-8");
     print("Markdown report written to " + reportPath);
@@ -200,14 +206,14 @@ try {
         html += "<tr><td>" + suiteResults[m2].title + "</td><td>" + suiteResults[m2].pass + "</td><td>" + suiteResults[m2].fail + "</td></tr>\n";
     }
     html += "</table>\n</body>\n</html>\n";
-    var htmlPath = basePath + "../test_reports/TestAll-Report.html";
+    var htmlPath = basePath + "../docs/latest/report/TestAll-Report.html";
     var report2 = new DiskFile(htmlPath);
     report2.write(html, "UTF-8");
     print("HTML report written to " + htmlPath);
 
     // CI summary (from TestBase.writeCiSummary) - compact Markdown that the
     // workflow appends to $GITHUB_STEP_SUMMARY (visible on the Actions run page)
-    // and that ships inside the uploaded test_reports/ artifact.
+    // and that ships inside the uploaded docs/latest/report/ artifact.
     load(basePath + "../test/TestBase.js");
     writeCiSummary({
         title: "JsPlus-Core CI Summary",

@@ -6,7 +6,7 @@ REM JsPlus-Core load test - LoadTest.bat
 REM Same flow as TestAll.bat (H2 start -> db init -> run suite -> stop H2),
 REM but runs test/LoadTest.js: a database CRUD load test over the runtime
 REM project datasource (Console.getDataSource() -> CacheDriverExecutor).
-REM Dashboard written to <PROJECT_ROOT>/test_reports/LoadTest-Report.html
+REM Dashboard written to <PROJECT_ROOT>/docs/latest/report/LoadTest-Report.html
 REM (format follows JsPlus-Tomcat LoadTest.js: dark cards + SVG bars +
 REM percentile table).
 REM Override via env:

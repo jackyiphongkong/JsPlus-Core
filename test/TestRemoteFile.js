@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestRemoteFile.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestRemoteFile-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestRemoteFile-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.file.RemoteFile - the embedded engine's remote
 //            (database-backed, encrypted) file store. Tables (remote_file,

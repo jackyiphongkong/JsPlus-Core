@@ -4,7 +4,7 @@
 // Run      : test/TestAll.bat / test/TestAll.sh (or inside the JsPlus console:
 //              Console.eval(<PROJECT_ROOT>/test/TestCrud.js))
 // Harness  : Shared plumbing lives in TestBase.js and is loaded below.
-// Output   : <PROJECT_ROOT>/test_reports/TestCrud-Report.html / .md
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestCrud-Report.html / .md
 // Coverage : The 6 tables defined in dbscript/change.sql
 //              (ghost_remote_command + test_user / test_product / test_order
 //              / test_log / test_kv)

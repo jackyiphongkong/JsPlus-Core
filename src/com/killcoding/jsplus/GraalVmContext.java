@@ -20,7 +20,6 @@ THE SOFTWARE.
 
 package com.killcoding.jsplus;
 
-import com.killcoding.jsplus.JsPlusContext;
 import java.io.File;
 import com.killcoding.tool.FileTools;
 

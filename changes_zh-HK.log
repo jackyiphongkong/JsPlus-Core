@@ -1872,3 +1872,181 @@ ${jr.diff.changes}- build: 自動版本遞增
 - found diffed: com/killcoding/tool/ConfigProperties.java (M)
 - build: 自動版本遞增
 
+
+## 6.1.124 (2026.10.28 16:54:40)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.125 (2026.10.28 17:12:19)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.126 (2026.10.28 17:24:28)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.127 (2026.10.28 17:27:58)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.128 (2026.10.28 17:32:45)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.129 (2026.10.28 17:35:34)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.130 (2026.10.28 17:39:14)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.131 (2026.10.28 17:55:28)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.132 (2026.10.28 18:41:40)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/cache/CacheArrayFilter.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/cache/StoredCache.java (M)
+- found diffed: com/killcoding/datasource/Clock.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/IdentityCard.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/jsplus/GhostConsole.java (M)
+- found diffed: com/killcoding/jsplus/GraalVmContext.java (M)
+- found diffed: com/killcoding/jsplus/JsContext.java (M)
+- found diffed: com/killcoding/jsplus/Main.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/AlertMessage.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/log/LoggerFactory.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.133 (2026.10.28 21:12:17)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/cache/CacheArrayFilter.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/cache/StoredCache.java (M)
+- found diffed: com/killcoding/datasource/Clock.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/IdentityCard.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/jsplus/GhostConsole.java (M)
+- found diffed: com/killcoding/jsplus/GraalVmContext.java (M)
+- found diffed: com/killcoding/jsplus/JsContext.java (M)
+- found diffed: com/killcoding/jsplus/Main.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/AlertMessage.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/log/LoggerFactory.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.134 (2026.10.28 21:17:23)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/cache/CacheArrayFilter.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/cache/StoredCache.java (M)
+- found diffed: com/killcoding/datasource/Clock.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/IdentityCard.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/jsplus/GhostConsole.java (M)
+- found diffed: com/killcoding/jsplus/GraalVmContext.java (M)
+- found diffed: com/killcoding/jsplus/JsContext.java (M)
+- found diffed: com/killcoding/jsplus/Main.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/AlertMessage.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/log/LoggerFactory.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.135 (2026.10.28 21:26:07)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/cache/CacheArrayFilter.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/cache/StoredCache.java (M)
+- found diffed: com/killcoding/datasource/Clock.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/IdentityCard.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/jsplus/GhostConsole.java (M)
+- found diffed: com/killcoding/jsplus/GraalVmContext.java (M)
+- found diffed: com/killcoding/jsplus/JsContext.java (M)
+- found diffed: com/killcoding/jsplus/Main.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/AlertMessage.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/log/LoggerFactory.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.136 (2026.10.28 21:49:22)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/cache/CacheArrayFilter.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/cache/StoredCache.java (M)
+- found diffed: com/killcoding/datasource/Clock.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/IdentityCard.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/jsplus/GhostConsole.java (M)
+- found diffed: com/killcoding/jsplus/GraalVmContext.java (M)
+- found diffed: com/killcoding/jsplus/JsContext.java (M)
+- found diffed: com/killcoding/jsplus/Main.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/AlertMessage.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/log/LoggerFactory.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: 自動版本遞增
+

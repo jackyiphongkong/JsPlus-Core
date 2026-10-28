@@ -31,7 +31,6 @@ import java.text.SimpleDateFormat;
 import java.io.File;
 import java.util.Map;
 import java.util.ArrayList;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.util.regex.Pattern;
@@ -52,7 +51,6 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import javax.tools.Diagnostic;
@@ -369,16 +367,43 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		if (CommonTools.isBlank(javaSource)) {
 			throw new Exception("evalJavaSource: blank Java source code.");
 		}
-		return compileAndLoadJava(javaSource);
+		return compileAndLoadJava(javaSource, CommonTools.md5(javaSource));
 	}
 
 	/**
-	* Dynamically compiles the given Java source file (.java) into a temporary jar and loads the
-	* compiled class into a dedicated ClassLoader.
-	* @param javaFilePath - the path of the .java file to compile
-	* @return the compiled and loaded Class
+	* Array / list form of evalJavaSource - compiles a JS array of Java source segments
+	* where each element is a complete class source (may carry its own package/import).
+	* All segments are compiled in a single javac task, so the classes can reference each
+	* other, and the produced jar is loaded with one dedicated URLClassLoader. Returns the
+	* compiled classes in the same order as the input array. Content addressing uses the
+	* MD5 of all joined sources, so identical segment sets reuse the compiled jar.
+	* @param javaSources - Java source code segments, one complete class per element
+	* @return the compiled and loaded Classes, in input order
 	* */
-	public Class<?> evalJavaFile(String javaFilePath) throws Exception {
+	public Class<?>[] evalJavaSource(String[] javaSources) throws Exception {
+		if (javaSources == null || javaSources.length == 0) {
+			throw new Exception("evalJavaSource(String[]): blank Java source array.");
+		}
+		StringBuilder joined = new StringBuilder();
+		for (int i = 0; i < javaSources.length; i++) {
+			if (i > 0) {
+				joined.append('\n');
+			}
+			joined.append(javaSources[i] == null ? "" : javaSources[i]);
+		}
+		return compileAndLoadJavaMulti(javaSources, CommonTools.md5(joined.toString()));
+	}
+
+	/**
+	* Dynamically compiles the given Java source file (.java) - or a whole folder of
+	* .java files - into a temporary jar and loads the compiled classes. When the path
+	* points to a folder, every .java file under it (recursively) is compiled in a single
+	* javac task, so the folder classes can reference each other. Content addressing uses
+	* the MD5 of the joined sources, so identical content reuses the compiled jar.
+	* @param javaFilePath - the path of a .java file or a folder containing .java files
+	* @return the compiled and loaded Classes (single file -> array of length 1)
+	* */
+	public Class<?>[] evalJavaFile(String javaFilePath) throws Exception {
 		if (CommonTools.isBlank(javaFilePath)) {
 			throw new Exception("evalJavaFile: blank Java file path.");
 		}
@@ -386,108 +411,209 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Dynamically compiles the given Java source file (.java) into a temporary jar and loads the
-	* compiled class into a dedicated ClassLoader.
-	* @param javaFile - the .java file to compile
-	* @return the compiled and loaded Class
+	* Folder / file form of evalJavaFile - see the String overload. A folder is scanned
+	* recursively; the file list is sorted by path so the compile order (and the returned
+	* Class array order) stays stable across runs regardless of OS traversal order. The
+	* eval workspace key is the MD5 of the most recently modified .java file - a fresh
+	* edit to the newest file invalidates the cached jar and recompiles; untouched
+	* folders keep their cached jar.
+	* @param javaFile - a .java file or a folder containing .java files
+	* @return the compiled and loaded Classes (single file -> array of length 1)
 	* */
-	public Class<?> evalJavaFile(File javaFile) throws Exception {
-		if (javaFile == null || !javaFile.exists() || !javaFile.getName().endsWith(".java")) {
-			throw new Exception("evalJavaFile: Java file not found: " + javaFile);
+	public Class<?>[] evalJavaFile(File javaFile) throws Exception {
+		if (javaFile == null || !javaFile.exists()) {
+			throw new Exception("evalJavaFile: Java file or folder not found: " + javaFile);
 		}
-		return compileAndLoadJava(new String(Files.readAllBytes(javaFile.toPath()), StandardCharsets.UTF_8));
+		if (javaFile.isFile()) {
+			if (!javaFile.getName().endsWith(".java")) {
+				throw new Exception("evalJavaFile: not a .java file: " + javaFile);
+			}
+			String javaSource = new String(Files.readAllBytes(javaFile.toPath()), StandardCharsets.UTF_8);
+			return compileAndLoadJavaMulti(new String[]{javaSource}, CommonTools.md5(javaSource));
+		}
+		List<String> found = CommonTools.findFiles(javaFile.getAbsolutePath(), ".java");
+		if (found.isEmpty()) {
+			throw new Exception("evalJavaFile: no .java files under folder: " + javaFile);
+		}
+		found.sort(null); // stable compile order -> stable returned Class array order
+		String[] javaSources = new String[found.size()];
+		File newestFile = null;
+		String newestSource = null;
+		for (int i = 0; i < found.size(); i++) {
+			javaSources[i] = new String(Files.readAllBytes(new File(found.get(i)).toPath()), StandardCharsets.UTF_8);
+			File candidate = new File(found.get(i));
+			if (newestFile == null || candidate.lastModified() > newestFile.lastModified()) {
+				newestFile = candidate;
+				newestSource = javaSources[i];
+			}
+		}
+		// The eval key follows the most recently modified file: a fresh edit to it
+		// invalidates the content-addressed cache and forces a recompile.
+		return compileAndLoadJavaMulti(javaSources, CommonTools.md5(newestSource));
 	}
 
 	/**
-	* Compiles a Java source string with the JDK system compiler, packages the produced .class
-	* files into a temporary jar and loads that jar with a dedicated URLClassLoader.
+	* Compiles a single Java source string with the JDK system compiler, packages the
+	* produced .class files into a content-addressed jar under <JS_PLUS_PATH>/.tmp/java/<evalKey>
+	* and loads that jar with a dedicated URLClassLoader. evalJavaSource keys the workspace by
+	* the source-content MD5; evalJavaFile by the file-content MD5 - identical content reuses
+	* the compiled jar while every call still gets a fresh ClassLoader (so the same source
+	* evaluated twice yields two distinct Class objects).
 	* @param javaSource - the Java source code to compile
+	* @param evalKey - content MD5 used as the eval workspace directory name
 	* @return the compiled and loaded Class
 	* */
-	private Class<?> compileAndLoadJava(String javaSource) throws Exception {
-		// 1) Resolve the package and the primary class name from the source.
-		String packageName = null;
-		Matcher packageMatcher = Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)\\s*;").matcher(javaSource);
-		if (packageMatcher.find()) {
-			packageName = packageMatcher.group(1);
-		}
-		String className = null;
-		Matcher classMatcher = Pattern.compile("(?m)\\bclass\\s+(\\w+)").matcher(javaSource);
-		if (classMatcher.find()) {
-			className = classMatcher.group(1);
-		}
-		if (CommonTools.isBlank(className)) {
-			throw new Exception("evalJavaSource: cannot resolve a class name from the given source.");
-		}
-		String qualifiedName = CommonTools.isBlank(packageName) ? className : packageName + "." + className;
+	private Class<?> compileAndLoadJava(String javaSource, String evalKey) throws Exception {
+		return compileAndLoadJavaMulti(new String[]{javaSource}, evalKey)[0];
+	}
 
-		// 2) Create the temporary eval workspace under <PROJECT_ROOT>/work/evaljava.
+	/**
+	* Multi-class form of the dynamic compiler - compiles every segment of the given
+	* source array in one javac task (one .java file per segment, named after the class),
+	* packages all produced .class files into a content-addressed jar and loads that jar
+	* with a single dedicated URLClassLoader. Classes may reference each other regardless
+	* of array order.
+	* @param javaSources - Java source code segments, one complete class per element
+	* @param evalKey - content MD5 of all joined sources, used as the eval workspace directory name
+	* @return the compiled and loaded Classes, in input order
+	* */
+	private Class<?>[] compileAndLoadJavaMulti(String[] javaSources, String evalKey) throws Exception {
+		// 1) Resolve the package and the class name for every source segment.
+		List<String[]> resolved = new ArrayList<String[]>(); // {packageName, className, qualifiedName}
+		for (String javaSource : javaSources) {
+			String packageName = null;
+			Matcher packageMatcher = Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)\\s*;").matcher(javaSource);
+			if (packageMatcher.find()) {
+				packageName = packageMatcher.group(1);
+			}
+			String className = null;
+			Matcher classMatcher = Pattern.compile("(?m)\\bclass\\s+(\\w+)").matcher(javaSource);
+			if (classMatcher.find()) {
+				className = classMatcher.group(1);
+			}
+			if (CommonTools.isBlank(className)) {
+				throw new Exception("evalJavaSource: cannot resolve a class name from one of the given sources.");
+			}
+			String qualifiedName = CommonTools.isBlank(packageName) ? className : packageName + "." + className;
+			resolved.add(new String[]{packageName == null ? "" : packageName, className, qualifiedName});
+		}
+
+		// 2) Content-addressed eval workspace: <JS_PLUS_PATH>/.tmp/java/<evalKey>.
 		File jsPlusHome = new File(getJsPlusPath());
-		File evalRoot = new File(jsPlusHome.getParentFile(), "work/evaljava");
-		File evalDir = new File(evalRoot, "eval-" + System.currentTimeMillis() + "-" + Math.abs(new Random().nextInt(100000)));
-		File srcDir = new File(evalDir, "src");
-		if (!CommonTools.isBlank(packageName)) {
-			srcDir = new File(srcDir, packageName.replace('.', File.separatorChar));
-		}
+		File evalRoot = new File(jsPlusHome, ".tmp/java");
+		File evalDir = new File(evalRoot, evalKey);
+		File srcBaseDir = new File(evalDir, "src");
 		File classesDir = new File(evalDir, "classes");
-		srcDir.mkdirs();
-		classesDir.mkdirs();
-		File sourceFile = new File(srcDir, className + ".java");
-		Files.write(sourceFile.toPath(), javaSource.getBytes(StandardCharsets.UTF_8));
+		File jarFile = new File(evalDir, resolved.get(0)[2] + ".jar");
 
-		// 3) Compile with the JDK system compiler.
-		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-		if (compiler == null) {
-			throw new Exception("evalJavaSource: no system Java compiler available (run on a JDK, not a JRE).");
-		}
-		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-		StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
-		List<String> compileOptions = new ArrayList<String>();
-		compileOptions.add("-d");
-		compileOptions.add(classesDir.getAbsolutePath());
-		compileOptions.add("-encoding");
-		compileOptions.add("UTF-8");
-		compileOptions.add("-classpath");
-		compileOptions.add(buildEvalClassPath());
-		compileOptions.add("-Xlint:none");
-		StringWriter compilerOutput = new StringWriter();
-		boolean compiled = compiler.getTask(compilerOutput, fileManager, diagnostics, compileOptions, null,
-		        fileManager.getJavaFileObjects(sourceFile)).call();
-		fileManager.close();
-		if (!compiled) {
-			StringBuilder message = new StringBuilder("evalJavaSource: compilation failed for " + qualifiedName);
-			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-				message.append(System.lineSeparator()).append(diagnostic);
+		// 3) Compile and package only when the content-addressed jar is not cached yet.
+		if (!jarFile.exists()) {
+			classesDir.mkdirs();
+			File[] sourceFiles = new File[resolved.size()];
+			for (int i = 0; i < resolved.size(); i++) {
+				String[] info = resolved.get(i);
+				File srcDir = srcBaseDir;
+				if (!CommonTools.isBlank(info[0])) {
+					srcDir = new File(srcDir, info[0].replace('.', File.separatorChar));
+				}
+				srcDir.mkdirs();
+				File sourceFile = new File(srcDir, info[1] + ".java");
+				Files.write(sourceFile.toPath(), javaSources[i].getBytes(StandardCharsets.UTF_8));
+				sourceFiles[i] = sourceFile;
 			}
-			throw new Exception(message.toString());
+
+			// 4) Compile all segments with the JDK system compiler in a single task.
+			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+			if (compiler == null) {
+				throw new Exception("evalJavaSource: no system Java compiler available (run on a JDK, not a JRE).");
+			}
+			DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+			StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
+			List<String> compileOptions = new ArrayList<String>();
+			compileOptions.add("-d");
+			compileOptions.add(classesDir.getAbsolutePath());
+			compileOptions.add("-encoding");
+			compileOptions.add("UTF-8");
+			compileOptions.add("-classpath");
+			compileOptions.add(buildEvalClassPath());
+			compileOptions.add("-Xlint:none");
+			StringWriter compilerOutput = new StringWriter();
+			boolean compiled = compiler.getTask(compilerOutput, fileManager, diagnostics, compileOptions, null,
+			        fileManager.getJavaFileObjects(sourceFiles)).call();
+			fileManager.close();
+			if (!compiled) {
+				StringBuilder message = new StringBuilder("evalJavaSource: compilation failed for " + resolved.size() + " source(s)");
+				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+					message.append(System.lineSeparator()).append(diagnostic);
+				}
+				// Failed compilation leaves no cache residue: drop the whole MD5 eval folder.
+				deleteRecursively(evalDir);
+				throw new Exception(message.toString());
+			}
+			// Remove the compiled source files: the eval workspace keeps only the .class/jar cache.
+			for (File sourceFile : sourceFiles) {
+				sourceFile.delete();
+			}
+
+			// 5) Package the compiled .class files into the content-addressed jar.
+			JarOutputStream jarOutput = new JarOutputStream(new FileOutputStream(jarFile));
+			try {
+				List<String> classFiles = CommonTools.findFiles(classesDir.getAbsolutePath(), ".class");
+				if (classFiles.isEmpty()) {
+					throw new Exception("evalJavaSource: no .class files produced for " + resolved.get(0)[2]);
+				}
+				for (String classFilePath : classFiles) {
+					File classFile = new File(classFilePath);
+					String entryName = classesDir.toURI().relativize(classFile.toURI()).getPath().replace('\\', '/');
+					jarOutput.putNextEntry(new JarEntry(entryName));
+					jarOutput.write(Files.readAllBytes(classFile.toPath()));
+					jarOutput.closeEntry();
+				}
+			} finally {
+				jarOutput.close();
+			}
+
+			// Keep only the content-addressed jar: drop the transient src/classes workspace.
+			File[] evalChildren = evalDir.listFiles();
+			if (evalChildren != null) {
+				for (File evalChild : evalChildren) {
+					if (!evalChild.getName().equals(jarFile.getName())) {
+						deleteRecursively(evalChild);
+					}
+				}
+			}
 		}
 
-		// 4) Package the compiled .class files into a temporary jar.
-		File jarFile = new File(evalDir, qualifiedName + ".jar");
-		JarOutputStream jarOutput = new JarOutputStream(new FileOutputStream(jarFile));
-		try {
-			List<String> classFiles = CommonTools.findFiles(classesDir.getAbsolutePath(), ".class");
-			if (classFiles.isEmpty()) {
-				throw new Exception("evalJavaSource: no .class files produced for " + qualifiedName);
-			}
-			for (String classFilePath : classFiles) {
-				File classFile = new File(classFilePath);
-				String entryName = classesDir.toURI().relativize(classFile.toURI()).getPath().replace('\\', '/');
-				jarOutput.putNextEntry(new JarEntry(entryName));
-				jarOutput.write(Files.readAllBytes(classFile.toPath()));
-				jarOutput.closeEntry();
-			}
-		} finally {
-			jarOutput.close();
-		}
-
-		// 5) Load the jar with a dedicated URLClassLoader and keep the loader referenced so the
-		//    evaluated class stays usable for the life of this console.
+		// 6) Load the jar with a dedicated URLClassLoader and keep the loader referenced so the
+		//    evaluated classes stay usable for the life of this console.
 		URLClassLoader classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, getClass().getClassLoader());
 		evalJavaClassLoaders.add(classLoader);
-		Class<?> loadedClass = Class.forName(qualifiedName, true, classLoader);
-		log.info("evalJavaSource: compiled and loaded " + qualifiedName + " -> " + jarFile.getAbsolutePath());
-		return loadedClass;
+		Class<?>[] loadedClasses = new Class<?>[resolved.size()];
+		for (int i = 0; i < resolved.size(); i++) {
+			loadedClasses[i] = Class.forName(resolved.get(i)[2], true, classLoader);
+		}
+		log.info("evalJavaSource: compiled and loaded " + loadedClasses.length + " class(es) -> " + jarFile.getAbsolutePath());
+		return loadedClasses;
+	}
+
+	/**
+	* Recursively deletes a file or directory (used to drop the transient eval src/classes
+	* workspace, keeping only the content-addressed jar).
+	* @param file - the file or directory to delete
+	* */
+	private void deleteRecursively(File file) {
+		if (file == null || !file.exists()) {
+			return;
+		}
+		if (file.isDirectory()) {
+			File[] children = file.listFiles();
+			if (children != null) {
+				for (File child : children) {
+					deleteRecursively(child);
+				}
+			}
+		}
+		file.delete();
 	}
 
 	/**

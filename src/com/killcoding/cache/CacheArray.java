@@ -30,12 +30,10 @@ import java.util.ArrayList;
 import com.killcoding.tool.CommonTools;
 
 import java.util.Collections;
-import com.killcoding.cache.CacheArrayFilter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.killcoding.log.LoggerFactory;
 import com.killcoding.log.Logger;
-import com.killcoding.cache.CacheArray;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**

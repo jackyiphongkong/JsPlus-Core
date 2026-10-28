@@ -4,7 +4,7 @@
 // Run      : test/LoadTest.bat / test/LoadTest.sh (or inside the JsPlus console:
 //              Console.eval(<PROJECT_ROOT>/test/LoadTest.js))
 // Harness  : Shared plumbing (escapeHtml, DiskFile, System) from TestBase.js.
-// Output   : <PROJECT_ROOT>/test_reports/LoadTest-Report.html
+// Output   : <PROJECT_ROOT>/docs/latest/report/LoadTest-Report.html
 //            Dashboard format follows JsPlus-Tomcat's LoadTest.js (dark cards +
 //            SVG bars + percentile table), adapted from HTTP load to embedded
 //            database CRUD load: every round runs the full row lifecycle
@@ -277,9 +277,9 @@ var html = buildDashboard(rounds, tableCount, ts, Math.round(elapsedMs),
 
 try {
     var File = Java.type("java.io.File");
-    var reportDir = new File(basePath + "../test_reports");
+    var reportDir = new File(basePath + "../docs/latest/report");
     if (!reportDir.exists()) reportDir.mkdirs();
-    var reportPath = basePath + "../test_reports/" + REPORT_NAME;
+    var reportPath = basePath + "../docs/latest/report/" + REPORT_NAME;
     var report = new DiskFile(reportPath);
     report.write(html, "UTF-8");
     print("Dashboard written to " + reportPath);

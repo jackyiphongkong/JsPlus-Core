@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestJsString.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestJsString-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestJsString-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.jsplus.JsString - the GraalJS-friendly wrapper
 //            around java.lang.String. GraalJS auto-converts every

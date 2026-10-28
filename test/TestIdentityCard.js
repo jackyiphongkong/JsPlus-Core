@@ -7,7 +7,7 @@
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -DAPP_IDENTITY_CARD=<PROJECT_ROOT>/JsPlus/config/IdentityCard.properties
 //                     -Task <PROJECT_ROOT>/test/TestIdentityCard.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestIdentityCard-Report.html
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestIdentityCard-Report.html
 // Scope    : IdentityCard sequence generator - config loading, generateId()
 //            polymorphs (Long / fixed-length / prefix / delimiter+suffix),
 //            cross-instance uniqueness, DB round-trip verification and the

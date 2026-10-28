@@ -27,9 +27,6 @@ import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
 
 import java.util.List;
-import com.killcoding.cache.AbsCacheApi;
-import com.killcoding.cache.MemoryCache;
-
 /**
 * This class is a permanent cache storage that requires manual deletion of the cache
 * */

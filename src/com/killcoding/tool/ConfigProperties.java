@@ -55,8 +55,6 @@ import java.util.regex.Pattern;
 import com.killcoding.file.BaseFile;
 import com.killcoding.file.DiskFile;
 import com.killcoding.log.Logger;
-import com.killcoding.tool.CipherTools;
-
 /**
 * Extended Properties: reads .properties files with ${VAR} environment expansion and typed value
 * parsing (time -> seconds / millis via TIME_UNIT_PATTERN, file sizes via FILE_SIZE_PATTERN),

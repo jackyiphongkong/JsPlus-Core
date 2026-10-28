@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestCommonTools.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestCommonTools-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestCommonTools-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.tool.CommonTools - static helpers: isBlank,
 //            generateId, md5, getHostname, averageAssign, findFiles /

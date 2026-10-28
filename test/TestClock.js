@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestClock.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestClock-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestClock-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.datasource.Clock - the time facade used across
 //            JsPlus (getDate/getTime/getSqlTimestamp/getLocalDate/...).

@@ -11,10 +11,10 @@ The toolchain is bundled with this project (no Java / Ant installation, no `JAVA
 | Step | Command | Output |
 | --- | --- | --- |
 | 1. Build | `ant.bat` (Linux/macOS: `ant.sh`) | `LibHome\jsplus\default\jsplus-core-<version>.jar` |
-| 2. Test | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) | `test_reports\*` (HTML / MD / CI summary) |
+| 2. Test | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) | `docs\latest\reports\*` (HTML / MD / CI summary) |
 | 3. Slim runtime | `packJdk.bat` (Linux/macOS: `packJdk.sh`) | `Java\runtime` (jlink cut-down) |
 
-Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 failed, exit 0** (includes H2 server TCP integration, connection-pool behaviour tests and the `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray` queue test); cleanup releases `:3306` with no leftover process.
+Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **237 passed / 0 failed, exit 0** (19 JS suites + LoadTest.js; H2 server TCP integration, pool tuning-parameter behaviour, `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray`, Cache static API, `evalJavaSource` dynamic compilation, `JsString` interop); cleanup releases `:3306` with no leftover process.
 
 ## Alignment with the Server Edition (adapted items)
 
@@ -40,11 +40,10 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 | `JsPlus/ghost` | GhostConsole working directory |
 | `JsPlus/script` | `StartH2.js` / `H2Server.js` (H2 server bootstrap scripts, no external dependency) |
 | `dbscript/` | `fallback.sql` → `change.sql` (fixed DB-init order; `ghost_remote_command` is never DROPped and never touched by tests) |
-| `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and the datasource/test-db suites |
-| `test_reports/` | Test reports (HTML / Markdown / CI summary) |
+| `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and the 19 JS suites + `LoadTest.js` |
 | `docs/latest/api/` | API javadoc site of the newest release, regenerated on every `ant build` (skip with `-Djavadoc.skip=true`); open `docs/latest/api/index.html` |
 | `docs/apis/<version>.jar` | Archived API javadoc jar per release (one jar per version) |
-| `docs/latest/reports/` | Test reports of the newest run, refreshed on every `TestAll.bat` / `TestAll.sh` run; open `docs/latest/reports/TestAll-Report.html` |
+| `docs/latest/report/` | Test reports of the newest run - suites write directly here on every `TestAll.bat` / `TestAll.sh` run; open `docs/latest/report/TestAll-Report.html` |
 | `docs/reports/<version>.jar` | Archived test-report jar per run (one jar per version) |
 | `logs/` | Runtime logs (`app\`, `DS\` pool status, `SqlLog\`) |
 | `Database/` | H2 server database files (`testdb.mv.db`, gitignored) |
@@ -53,28 +52,70 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 
 ## Test Suite
 
-**`TestAll.bat` flow (5 steps, re-inits testdb every run)**:
+### Framework signature: JavaScript verifies Java
+
+The defining trait of JsPlus-Core is that **every test suite is a JavaScript file running inside the embedded console engine** — the very engine production code embeds. A suite calls the real Java APIs directly (`Console`, `Cache`, `CacheDriverExecutor`, `DiskFile`, JDBC), asserts on their live results, and renders a GitHub-style HTML/MD report. There is no JUnit and no separate test framework: `test/*.js` + `test/TestBase.js` is the whole harness.
+
+### How to run
+
+| Want | Command |
+| --- | --- |
+| Full run: init H2 + testdb, 19 suites + load test, cleanup, archive reports | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) |
+| Datasource-only (dedicated `TestDatasource.properties` pool tuning) | `test\TestDatasource.bat` (`.sh`) |
+| Load test only (DB CRUD stress, `LOADTEST_ROUNDS` / `LOADTEST_TABLES`) | `test\LoadTest.bat` (`.sh`) |
+| Any single suite | copy the `-Task test/TestXxx.js` line from `TestAll.bat`; every suite is a plain console task and runs standalone too |
+
+Reports land in `docs\latest\reports\*` (HTML + MD + CI summary) and are archived to `docs/reports/<version>.jar` on every run.
+
+### `TestAll.bat` flow (5 steps, re-inits testdb every run)
 
 1. If `:3306` is not listening, run `BG_StartH2.bat %SCRIPT_ENGINE%` (→ `StartH2.bat` → `Main -Task script/StartH2.js`, separate JVM), poll 45×2s until ready;
 2. `RunScript` against `jdbc:h2:tcp://localhost:3306/testdb` (`-user sa`, `-checkResults`) runs `fallback.sql` then `change.sql`;
-3. Run `TestAll.js` (`JSPLUS_TEST_EXIT=1`, `< NUL` closes stdin), then `LoadTest.js` (same testdb, `test_reports/LoadTest-Report.html`; a load failure fails the run);
+3. Run `TestAll.js` (`JSPLUS_TEST_EXIT=1`, `< NUL` closes stdin), then `LoadTest.js` (same testdb, `docs/latest/report/LoadTest-Report.html`; a load failure fails the run);
 4. Precisely kill the java process whose command line contains `script/StartH2.js`, then run the full `StopAll.bat` sweep so no JsPlus/H2 JVM survives the run;
-5. Archive `test_reports/` into **`docs/reports/<version>.jar`** (version from the core jar name) and copy the newest into **`docs/latest/reports/`** — an archive failure is WARN-only and never changes the exit code; then `exit /b %RC%`.
+5. Archive `docs/latest/report/` into **`docs/reports/<version>.jar`** (version from the core jar name) — an archive failure is WARN-only and never changes the exit code; then `exit /b %RC%`.
 
-**2 suites**:
+### The suites
 
-| Suite | Cases | Coverage |
+| Suite | Cases | Focus |
 | --- | --- | --- |
-| TestDatasource | 14 | Clock, `Console.getDataSource()` connection, DDL/DML roundtrip, pool borrow/return, **pool-full cap (MaxPoolSize overflow rejected)**, **6 pool tuning params (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle) config-applied + behaviour**, **`CacheDriverExecutor.find(sql, Map, CacheArray)` in the canonical `getGlobalCacheArray()` + `Console.callback()` pairing** (async queue: find fills synchronously, the CacheArrayFilter worker consumes; the JS callback body is best-effort — GraalJS forbids the worker thread from entering the JS context) |
-| TestCrud | 23 | **Independent c/r/u/d cases per table** (5 tables × 4) + schema existence + soft-delete + 6-table dbVerify |
+| TestDatasource | 13 | Clock, `Console.getDataSource()` connect, DDL/DML roundtrip, pool borrow/return, **pool-full cap (MaxPoolSize overflow rejected)**, **6 pool tuning params (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle) config-applied + behaviour** |
+| TestCrud | 23 | **Independent c/r/u/d per table** (5 tables × 4) + schema existence + soft-delete + 6-table dbVerify |
+| TestRemoteFile | 7 | RemoteFile datasource: list / write / read / delete + mkdirs against the mapped table |
+| TestFind | 5 | `CacheDriverExecutor.find` feeding a global `CacheArray` (canonical async pairing) |
+| TestDiskFile | 18 | DiskFile write/read/delete, dirs, size, encode/decode |
+| TestClock | 11 | `Clock` time API + `AppClock.properties` |
+| TestIdentityCard | 9 | IdentityCard datasource + table roundtrip |
+| TestXmlParser | 14 | XML parse + `toMap()` |
+| TestCommonTools | 17 | CommonTools helpers |
+| TestDataObject | 7 | DataObject store/get |
+| TestResultMap | 12 | ResultMap access |
+| TestConfigProperties | 17 | ConfigProperties parse / get / env |
+| TestCipherTools | 11 | cipher encode/decode |
+| TestEscapeTools | 16 | escape/unescape |
+| TestFileTools | 10 | file utilities |
+| TestCache | 11 | Cache static API: set/get/included/remove/removeAll/getNames + StoredCache (covers the life overflow / 0=never-expire / lazy-init fixes) |
+| TestCacheArray | 15 | CacheArray add/remove/sweep + filter worker (execute / executeBatch / completed) |
+| TestEvalJava | 7 | `Console.evalJavaSource` dynamic compile + load (content-addressed jar cache under `JsPlus/.tmp/java`) |
+| TestJsString | 13 | JsString interop layer for GraalJS strings |
+| LoadTest | — | heavy DB CRUD stress on the same testdb (run by `TestAll.bat` step 3b) |
 
-**Mandatory test conventions (enforced throughout)**:
+### Mandatory test conventions
 
 - **All DB connections go through `Console.getDataSource()`** (runtime datasource, `config/DataSource.properties` → `jdbc:h2:tcp://localhost:3306/testdb`, user `sample_user`);
 - **All CRUD goes through `CacheDriverExecutor`** (the DriverExecutor synchronous API: `execute()` / `first()` / `find()`); every phase is followed by a **re-select**;
 - **dbVerify always uses `SELECT *`** (full-column nested-table rendering, incl. row num); asserts 1 row after INSERT and 0 rows after DELETE;
 - **`ghost_remote_command` is not tested**: `fallback.sql` does not DROP it, `change.sql` uses `CREATE TABLE IF NOT EXISTS`, suites never touch its data — running tests while GhostConsole is up no longer hits `42104 Table not found`;
 - Reports use the GitHub-style four-column table (Case Id / Test Objective / Result / Detail) + Config Snapshot + yellow-toned dbv nested tables (renderer and style aligned with the server edition).
+
+### How to write a new suite
+
+1. Copy the shape of an existing suite (e.g. `test/TestClock.js`).
+2. Load the harness — `load(System.getProperty("JS_PLUS_PATH") + "../test/TestBase.js")` — and set `REPORT_TITLE` / `REPORT_NAME`.
+3. Call `beginTest()` to reset counters, then one `check({caseId, name, ok, detail, objective, objectiveZh, command})` per assertion; the report numbers the rows C1…Cn automatically.
+4. For DB assertions: connect via `Console.getDataSource()`, run CRUD via `CacheDriverExecutor`, and verify the persisted rows with `dbVerify(function () { return "SELECT * FROM ..."; })`.
+5. Finish with `writeReport()`; **never call `System.exit()`** — `TestAll.js` owns the JVM exit so a failing suite cannot kill the whole run.
+6. Register the suite in `test/TestAll.js` (the `suites` array **and** the one-line suites print); LoadTest and ordering follow the same array.
 
 ## Build & Versioning
 
@@ -84,7 +125,7 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 - Each build appends one history entry (UTF-8) to **two** changelog files: `changes.log` (English) and `changes_zh-HK.log` (Traditional Chinese), each headed `## <version> (<builddate> <buildtime>)`. Entry priority per language: `-Dchange.en="..."` / `-Dchange.zh="..."` (CI) → `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` (local note, consumed and deleted) → default `- build: automatic version bump` / `- build: 自動版本遞增`.
 - Each build also diffs the Java sources against the sibling copy at `jr.diffroot` (default `../../Githubrepos/JsPlus-Core/src`, skipped when absent) and writes every differing file into both changelogs as `- found diffed: <path> (A|M|D)` — a temporary marker for later review/refinement (e.g. syncing the change to the Githubrepos checkout).
 - Each build regenerates the API site into **`docs/latest/api/`** (window title carries the version, `-Xdoclint:none`, source links) and archives it as **`docs/apis/<version>.jar`** (one jar per release); use `-Djavadoc.skip=true` to skip.
-- Each `TestAll.bat` / `TestAll.sh` run archives the test reports into **`docs/reports/<version>.jar`** and copies the newest into **`docs/latest/reports/`** (same docs layout as the javadoc site).
+- Each `TestAll.bat` / `TestAll.sh` run archives `docs/latest/report/` into **`docs/reports/<version>.jar`** (same docs layout as the javadoc site).
 
 ## Database & Configuration
 
@@ -104,7 +145,7 @@ MinPoolSize=1         MaxPoolSize=100
 ## Quality
 
 - `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — server-edition alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
-- **GraalJS thread confinement** (verified on 25.0.3): a `CacheArray` filter worker thread cannot enter the JS context (`Multi threaded access … not allowed for language(s) js`), so a JS `Console.callback(...)` body never fires on the worker thread. TestDatasource C14 uses `callbackSync=false` and asserts the observable consumption link instead (value removed, key kept, `dbVerify` independent).
+- **GraalJS thread confinement** (verified on 25.0.3): a `CacheArray` filter worker thread cannot enter the JS context (`Multi threaded access … not allowed for language(s) js`), so a JS `Console.callback(...)` body never fires on the worker thread. The canonical pattern (see TestFind / TestCacheArray) is: a feeding console runs `find(...)` into `getGlobalCacheArray()`, and a separate callback console observes consumption through the `CacheArrayFilter` worker (`execute` / `executeBatch` / `completed`).
 
 ## Architecture Reference: Open-Source Counterparts
 

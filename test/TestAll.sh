@@ -25,12 +25,12 @@ set -e
 #      No external Tomcat is required.
 #      JS_PLUS_PATH=<PROJECT_ROOT>/JsPlus/ (runtime anchor), so the suites
 #      resolve <PROJECT_ROOT>/test/TestBase.js + suites and write reports to
-#      <PROJECT_ROOT>/test_reports/ (logs land in <PROJECT_ROOT>/logs/app/).
+#      <PROJECT_ROOT>/docs/latest/report/ (logs land in <PROJECT_ROOT>/logs/app/).
 #      Stdin is redirected to /dev/null so com.killcoding.jsplus.Main exits
 #      right after the -Task completes (otherwise it blocks on the
 #      interactive scanner, see Main.java scanner loop).
 #   4b) Run LoadTest.js (DB CRUD load test over the same testdb) and write
-#      test_reports/LoadTest-Report.html. Any load failure fails the run.
+#      docs/latest/report/LoadTest-Report.html. Any load failure fails the run.
 #   5) Exit with the JVM's exit code (0 = all checks passed, 1 = failure),
 #      after stopping the H2 server started for this run.
 # Override via env (same convention as JsPlus-Tomcat):
@@ -166,7 +166,7 @@ echo "TestAll exit code: $RC"
 # Step 3b: Run LoadTest.js against this JVM (DB CRUD load test, same H2
 # server and freshly initialized testdb as the suites above). Uses the
 # default runtime datasource (config/DataSource.properties) exactly like
-# test/LoadTest.sh; writes test_reports/LoadTest-Report.html. Any load
+# test/LoadTest.sh; writes docs/latest/report/LoadTest-Report.html. Any load
 # failure is merged into the overall exit code below.
 # ------------------------------------------------------------------
 export JSPLUS_TEST_EXIT=1
@@ -192,7 +192,7 @@ pkill -f 'script/StartH2.js' 2>/dev/null || true
 # ------------------------------------------------------------------
 # Step 4b: Archive the test reports under the same docs layout as the
 # javadoc site: docs/reports/<version>.jar (one jar per run) plus
-# docs/latest/reports/ as the browsable newest reports. Version is taken
+# docs/latest/report/ as the browsable newest reports. Version is taken
 # from the core jar name. A failure to archive is only a WARN and never
 # changes the suite exit code (RC was captured above).
 # ------------------------------------------------------------------
@@ -201,13 +201,11 @@ CORE_VERSION="${CORE_VERSION#jsplus-core-}"
 if [ -z "$CORE_VERSION" ]; then
     echo "WARN: Cannot extract version from $CORE_JAR, skipping report archive."
 else
-    echo "[TestAll] Archiving test reports as docs/reports/${CORE_VERSION}.jar (docs/latest/reports)..."
-    mkdir -p "${JS_PLUS_PATH_ORIGIN}../docs/reports" "${JS_PLUS_PATH_ORIGIN}../docs/latest/reports"
+    echo "[TestAll] Archiving test reports as docs/reports/${CORE_VERSION}.jar (docs/latest/report)..."
+    mkdir -p "${JS_PLUS_PATH_ORIGIN}../docs/reports" "${JS_PLUS_PATH_ORIGIN}../docs/latest/report"
     rm -f "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar"
-    "${JS_PLUS_PATH_ORIGIN}../Java/${JAVA_DIR}/bin/jar" cf "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar" -C "${JS_PLUS_PATH_ORIGIN}../test_reports" . || {
+    "${JS_PLUS_PATH_ORIGIN}../Java/${JAVA_DIR}/bin/jar" cf "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar" -C "${JS_PLUS_PATH_ORIGIN}../docs/latest/report" . || {
         echo "WARN: Failed to pack test report jar (jar missing?), continuing."
     }
-    cp -rf "${JS_PLUS_PATH_ORIGIN}../test_reports/." "${JS_PLUS_PATH_ORIGIN}../docs/latest/reports/" 2>/dev/null || true
-    echo "[TestAll] Copied newest reports to docs/latest/reports/"
 fi
 exit "$RC"

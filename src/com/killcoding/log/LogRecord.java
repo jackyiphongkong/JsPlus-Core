@@ -60,9 +60,6 @@ import java.sql.Timestamp;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import com.killcoding.file.BaseFile;
-import com.killcoding.log.LoggerFactory;
-import com.killcoding.log.Logger;
-
 /**
 * The class is write application log
 * */

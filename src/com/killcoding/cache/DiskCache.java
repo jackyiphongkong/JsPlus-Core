@@ -23,7 +23,6 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.cache;
 
-import com.killcoding.cache.AbsCacheApi;
 import com.killcoding.tool.CommonTools;
 import java.util.Date;
 import java.util.Map;
@@ -262,14 +261,23 @@ public class DiskCache extends AbsCacheApi {
 
     		try {
     			String cacheFileName = CommonTools.generateId(16);
-    			CACHE_FILE.put(name, cacheFileName);
+    			File cacheFile = new File(String.format("%s/%s", cacheTmpdir.getAbsolutePath(), cacheFileName));
+    			DataObject data = new DataObject(cacheFile.getAbsolutePath());
+    			data.setObject(value);
+    			// Only after the file is persisted do we register it; an overwrite
+    			// removes the previous cached file so re-set keys never leak on disk.
+    			String oldCacheFileName = CACHE_FILE.put(name, cacheFileName);
+    			if (oldCacheFileName != null) {
+    				File oldCacheFile = new File(String.format("%s/%s", cacheTmpdir.getAbsolutePath(), oldCacheFileName));
+    				if (oldCacheFile.exists()) oldCacheFile.delete();
+    			}
     			if(!stored){
     			    if(lifeSeconds == 0){
         			    Date life = new Date(Long.MAX_VALUE);
         			    CACHE_LIFE.put(name, life);
     			    }
     			    if(lifeSeconds > 0){
-    			        long lifeLong = System.currentTimeMillis() + lifeSeconds * 1000;
+    			        long lifeLong = System.currentTimeMillis() + lifeSeconds * 1000L;
 
     			        if(lifeLong > Long.MAX_VALUE) lifeLong = Long.MAX_VALUE;
 
@@ -277,9 +285,6 @@ public class DiskCache extends AbsCacheApi {
         			    CACHE_LIFE.put(name, life);
     			    }
     		    }
-    			File cacheFile = new File(String.format("%s/%s", cacheTmpdir.getAbsolutePath(), cacheFileName));
-    			DataObject data = new DataObject(cacheFile.getAbsolutePath());
-    			data.setObject(value);
     		} catch (Exception e) {
     			log.warn(e);
     		}

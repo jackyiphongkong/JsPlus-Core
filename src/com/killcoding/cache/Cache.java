@@ -59,12 +59,12 @@ public final class Cache {
 	* Set a cache
 	* @param name - It is cache key name
 	* @param value - It is cache value
-	* @param life - It is life length seconds
+	* @param life - It is life length seconds (0 means never expire, negative means skip cache)
 	* */
 	public synchronized static void set(String name,Object value,int life){
 	    if(api == null) setApi(new MemoryCache());
 
-		if(life > 0){
+		if(life >= 0){
     		log.debug("Set Cache: {}",name);
     		api.set(name, value, life);
 		}
@@ -123,6 +123,8 @@ public final class Cache {
 	* Remove all cache
 	* */
 	public synchronized static void removeAll(){
+	    if(api == null) setApi(new MemoryCache());
+
 		log.debug("Remove All Cache");
 		api.removeAll();
 	}
@@ -132,6 +134,8 @@ public final class Cache {
 	* @return List&lt;String&gt; - It is key name list
 	* */
 	public synchronized static List<String> getNames(){
+	    if(api == null) setApi(new MemoryCache());
+
 		return api.getNames();
 	}
 

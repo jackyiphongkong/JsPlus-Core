@@ -27,7 +27,6 @@ import javax.script.Invocable;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleScriptContext;
-import com.killcoding.jsplus.JsPlusContext;
 import com.killcoding.tool.CommonTools;
 
 import java.util.List;

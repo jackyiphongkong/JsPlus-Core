@@ -5,7 +5,7 @@
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
 //                     -ScriptEngine graalvm.js -Env script -WriteHistory false
 //                     -Task <PROJECT_ROOT>/test/TestFind.js < NUL
-// Output   : <PROJECT_ROOT>/test_reports/TestFind-Report.html (TestBase
+// Output   : <PROJECT_ROOT>/docs/latest/report/TestFind-Report.html (TestBase
 //            format, same as the other suites)
 // Scope    : com.killcoding.datasource.CacheDriverExecutor.find(sql, params,
 //            CacheArray) - feeds query rows into a CacheArray (here the

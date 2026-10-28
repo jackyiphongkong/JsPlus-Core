@@ -41,8 +41,6 @@ import java.sql.DatabaseMetaData;
 import com.killcoding.log.LoggerFactory;
 import com.killcoding.log.Logger;
 import java.util.concurrent.Executors;
-import com.killcoding.datasource.DriverConnection;
-import com.killcoding.datasource.DriverDataSource;
 import java.util.concurrent.ConcurrentHashMap;
 import com.killcoding.tool.CommonTools;
 import com.killcoding.tool.ConfigProperties;
