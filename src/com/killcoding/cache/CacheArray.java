@@ -149,7 +149,6 @@ public class CacheArray implements java.io.Serializable {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer){
 	        @Override
-
         	/*
         	* Performs the execute operation
         	* @param index - the index
@@ -162,7 +161,6 @@ public class CacheArray implements java.io.Serializable {
         	    if(executeRun != null) executeRun.run();
         	}
         	@Override
-
         	/*
         	* Performs the completed operation
         	* @param size - the size
@@ -173,7 +171,6 @@ public class CacheArray implements java.io.Serializable {
                 if(completedRun != null) completedRun.run();
         	}
         	@Override
-
         	/*
         	* Performs the terminated operation
         	* */
@@ -200,7 +197,6 @@ public class CacheArray implements java.io.Serializable {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer,loopTimer){
 	        @Override
-
         	/*
         	* Performs the execute operation
         	* @param index - the index
@@ -212,7 +208,6 @@ public class CacheArray implements java.io.Serializable {
         	}
 
         	@Override
-
         	/*
         	* Performs the executeBatch operation
         	* @param index - the index
@@ -224,7 +219,6 @@ public class CacheArray implements java.io.Serializable {
         	}
 
         	@Override
-
         	/*
         	* Performs the completed operation
         	* @param size - the size
@@ -235,7 +229,6 @@ public class CacheArray implements java.io.Serializable {
         	}
 
         	@Override
-
         	/*
         	* Performs the terminated operation
         	* */
@@ -249,7 +242,7 @@ public class CacheArray implements java.io.Serializable {
 	}
 	/**
 	 * Need override the method to process logic handle
-	 * @param filter - CacheArrayFilter
+	 * @param _filter - CacheArrayFilter
 	 * */
 	public synchronized void filter(CacheArrayFilter _filter) {
 	    this.filter = _filter;
@@ -260,7 +253,6 @@ public class CacheArray implements java.io.Serializable {
 		final CacheArray the = this;
 		Runnable runnable = new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -392,7 +384,7 @@ public class CacheArray implements java.io.Serializable {
 
 	/**
 	 * Get all cache size
-	 * @reteurn int
+	 * @return int
 	 * */
 	public synchronized int size() {
 		return cacheKeys.size();

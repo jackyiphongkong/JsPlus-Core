@@ -56,7 +56,6 @@ ALTER TABLE identity_card ADD UNIQUE INDEX idx_idcard_unique_idname (identity_na
 ALTER TABLE identity_card ADD INDEX idx_idcard_deleted (deleted);
 *
 * */
-
 /**
 * Distributed identity-card sequence generator: produces fixed-length sequential IDs with
 * optional prefix / suffix / delimiter, persisted through a DB counter table so the next value
@@ -193,7 +192,6 @@ public final class IdentityCard {
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
 					@Override
-
 					/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
@@ -215,7 +213,6 @@ public final class IdentityCard {
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
     		throw new SQLException(errorMsg) {
     			@Override
-
     			/*
     			* Performs the getErrorCode operation
     			* @return the getErrorCode result
@@ -247,7 +244,6 @@ public final class IdentityCard {
     		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
     		throw new SQLException(errorMsg) {
     			@Override
-
     			/*
     			* Performs the getErrorCode operation
     			* @return the getErrorCode result
@@ -322,7 +318,6 @@ public final class IdentityCard {
 					configProperties = new ConfigProperties();
 					Runnable updatedRun = new Runnable() {
 						@Override
-
 						/*
 						* Performs the run operation
 						* */

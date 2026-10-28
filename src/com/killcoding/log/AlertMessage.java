@@ -53,7 +53,6 @@ public class AlertMessage {
 
     /**
     * Performs the send operation
-    * @param String - the String
     * @param msg - the msg
     * */
     protected void send(Map<String, Object> msg){
@@ -73,13 +72,11 @@ public class AlertMessage {
 
 	/**
 	* Performs the push operation
-	* @param String - the String
 	* @param msg - the msg
 	* */
 	public void push(Map<String, Object> msg) {
 		final Runnable runnable = new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */

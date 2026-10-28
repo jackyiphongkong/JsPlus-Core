@@ -57,7 +57,6 @@ deleted SMALLINT
 );
 *
  * */
-
 /**
 * Ghost-mode console for daemon / service sessions: headless command processing without an
 * interactive prompt, with a response-line delay (RESPONSE_LINE_DELAY_MS) between command outputs.
@@ -169,7 +168,6 @@ public class GhostConsole extends ScriptConsole {
     private Runnable getExecuteRun(){
         return new Runnable(){
             @Override
-
             /*
             * Performs the run operation
             * */
@@ -220,7 +218,6 @@ public class GhostConsole extends ScriptConsole {
         final GhostConsole the = this;
         return new Runnable(){
             @Override
-
             /*
             * Performs the run operation
             * */
@@ -249,7 +246,6 @@ public class GhostConsole extends ScriptConsole {
    private Runnable getDetectExecuteRun(){
         return new Runnable(){
             @Override
-
             /*
             * Performs the run operation
             * */
@@ -301,7 +297,6 @@ public class GhostConsole extends ScriptConsole {
         final GhostConsole the = this;
         return new Runnable(){
             @Override
-
             /*
             * Performs the run operation
             * */

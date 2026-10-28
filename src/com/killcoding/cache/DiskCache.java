@@ -119,7 +119,6 @@ public class DiskCache extends AbsCacheApi {
 		executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -155,7 +154,6 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	@Override
-
 	/*
 	* Performs the included operation
 	* @param name - the name
@@ -193,7 +191,6 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	@Override
-
 	/*
 	* Performs the removeAll operation
 	* */
@@ -205,7 +202,6 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	@Override
-
 	/*
 	* Performs the remove operation
 	* @param name - the name
@@ -222,7 +218,6 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	@Override
-
 	/*
 	* Performs the get operation
 	* @param name - the name
@@ -248,7 +243,6 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	@Override
-
 	/*
 	* Performs the set operation
 	* @param name - the name

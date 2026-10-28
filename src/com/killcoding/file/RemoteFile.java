@@ -75,7 +75,7 @@ public class RemoteFile extends RemoteFileSync {
 
 	/**
 	* Performs the initPool operation
-	* @param poolSize - the poolSize
+	* @param fileId - the fileId
 	* */
 	public Map<String, Object> getRecordByFileId(Object fileId) throws IOException {
 		String sql = formatSql(SQL_SELECT_GET_RECORD_BY_FILE_ID);
@@ -223,7 +223,6 @@ public class RemoteFile extends RemoteFileSync {
 	* Performs the listAll operation
 	* @param rows - the rows
 	* */
-
 	public void listAll(CacheArray rows) throws IOException {
 		listAll(getPath(), "%", rows);
 	}
@@ -234,7 +233,6 @@ public class RemoteFile extends RemoteFileSync {
 	* @param likeFileName - the likeFileName
 	* @param rows - the rows
 	* */
-
 	public void listAll(String likeFolderName, String likeFileName, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -280,16 +278,12 @@ public class RemoteFile extends RemoteFileSync {
 	* Performs the copyTo operation
 	* @param toPath - the toPath
 	* */
-
-
 	/**
 
 	/*
 	* Performs the getDataSourceReader operation
 	* @return the getDataSourceReader result
 	* */
-
-
 	/**
 	* Performs the getConfigProperties operation
 	* @return the getConfigProperties result

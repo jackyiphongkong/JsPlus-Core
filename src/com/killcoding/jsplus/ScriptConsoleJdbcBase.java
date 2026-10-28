@@ -63,7 +63,7 @@ import java.time.LocalTime;
 * showColumnTypes / showColumnClasses / genCreateTables / genCreateTable / getDataType),
 * the value converter (conver / converToSqlFromMap) used by CSV import, the whole
 * import / export pipeline (importFrom / importTables / exportTables / exportTo /
-* getCacheArrayFilterForExport) and the 11 JDBC-side Console functions (List<String>
+* getCacheArrayFilterForExport) and the 11 JDBC-side Console functions (List&lt;String&gt;
 * overloads) that executeViaJdbc dispatches to by reflection.
 * */
 public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
@@ -486,7 +486,6 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 			final StringBuffer header = new StringBuffer();
 
 			@Override
-
 			/*
 			* Performs the executeBatch operation
 			* @param index - the index
@@ -561,7 +560,6 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			}
 
 			@Override
-
 			/*
 			* Performs the execute operation
 			* @param index - the index
@@ -572,7 +570,6 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			}
 
 			@Override
-
 			/*
 			* Performs the completed operation
 			* @param size - the size
@@ -600,7 +597,6 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			}
 
 			@Override
-
 			/*
 			* Performs the terminated operation
 			* */
@@ -853,7 +849,6 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
 
 			@Override
-
 			/*
 			* Performs the execute operation
 			* @param index - the index
@@ -909,7 +904,6 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			}
 
 			@Override
-
 			/*
 			* Performs the completed operation
 			* @param size - the size
@@ -1138,7 +1132,6 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 	}
 
 	/*For jdbc console*/
-
 	/**
 	* Performs the importTables operation
 	* @param params - the params

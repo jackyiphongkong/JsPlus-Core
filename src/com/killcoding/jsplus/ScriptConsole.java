@@ -75,7 +75,7 @@ import javax.tools.ToolProvider;
 * This top level owns: the script engine bootstrap (initScriptEngineManager / newBuilder /
 * eval / evalScript), the GlobalCacheArray + Console.callback plumbing, the task timer and
 * cron-like schedule machinery, the command router (execute / executeViaScript / executeViaCmd /
-* executeViaGhost) and the 15 base-side Console functions (List<String> overloads).
+* executeViaGhost) and the 15 base-side Console functions (List&lt;String&gt; overloads).
 * */
 public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl {
 
@@ -169,7 +169,6 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	protected CacheArrayFilter createCacheArrayFilter(long filterTimer,long filterLoopTimer){
 	    return new CacheArrayFilter(filterTimer,filterLoopTimer){
 	        @Override
-
 	        /*
 	        * Performs the execute operation
 	        * @param index - the index
@@ -186,7 +185,6 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	        }
 
 	        @Override
-
 	        /*
 	        * Performs the executeBatch operation
 	        * @param batchIndex - the batchIndex
@@ -203,7 +201,6 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	        }
 
 	        @Override
-
 	        /*
 	        * Performs the terminated operation
 	        * */
@@ -503,6 +500,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		if (!CommonTools.isBlank(libHome)) {
 			File libDir = new File(libHome);
 			File[] jars = libDir.listFiles(new java.io.FilenameFilter() {
+				@Override
 				public boolean accept(File dir, String name) {
 					return name.endsWith(".jar");
 				}
@@ -1070,7 +1068,6 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		executor.execute(new Runnable() {
 
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -1118,7 +1115,6 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
         long delay = getDelayToNextMinute();
         scheduleExecutor.schedule(new Runnable() {
             @Override
-
             /*
             * Performs the run operation
             * */
@@ -1225,7 +1221,6 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
     }
 
 	/* For base console */
-
 	/**
 	* Performs the version operation
 	* @param params - the params

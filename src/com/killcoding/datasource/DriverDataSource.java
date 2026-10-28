@@ -314,7 +314,7 @@ public final class DriverDataSource implements DataSource {
 
 	/**
 	 * Get test valid timeout
-	 * @retrn Long - Unit is seconds
+	 * @return Long - Unit is seconds
 	 * */
 	public Long getTestValidTimeout() {
 		return this.testValidTimeout;
@@ -358,7 +358,7 @@ public final class DriverDataSource implements DataSource {
 	 * Set execute transaction timeout
 	 * Default is 0s
 	 * Disabled timeou if value is 0s
-	 * @param idleTimeout - Unit is seconds,
+	 * @param transactionTimeout - Unit is seconds,
 	 * */
 	public void setTransactionTimeout(Long transactionTimeout) {
 		this.transactionTimeout = (transactionTimeout == null ? 0L : transactionTimeout);
@@ -693,9 +693,9 @@ public final class DriverDataSource implements DataSource {
 	/**
 	 * Create connection to pool
 	 * When,
-	 *   (loadPoolSize + usedPoolSize) < maxPoolSize
+	 *   (loadPoolSize + usedPoolSize) &lt; maxPoolSize
 	 *   and
-	 *   loadPoolSize < minPoolSize
+	 *   loadPoolSize &lt; minPoolSize
 	 * */
 	private synchronized void createConnectionToPool() {
 		final String threadName = String.format("%s-createConnectionToPool", this.name);
@@ -722,7 +722,6 @@ public final class DriverDataSource implements DataSource {
 			for (int i = 0; i < willCreateConnTotal; i++) {
 				Callable<Boolean> callable = new Callable<Boolean>() {
 					@Override
-
 					/*
 					* Performs the call operation
 					* @return the call result
@@ -868,7 +867,6 @@ public final class DriverDataSource implements DataSource {
     	        configProperties = new ConfigProperties();
     	        Runnable updateRun = new Runnable(){
     	            @Override
-
     	            /*
     	            * Performs the run operation
     	            * */
@@ -1021,7 +1019,6 @@ public final class DriverDataSource implements DataSource {
 
 		Comparator<Object[]> comp = new Comparator<Object[]>() {
 			@Override
-
 			/*
 			* Performs the compare operation
 			* @param arg0 - the arg0
@@ -1086,7 +1083,6 @@ public final class DriverDataSource implements DataSource {
 			executor.execute(new Runnable() {
 
 				@Override
-
 				/*
 				* Performs the run operation
 				* */
@@ -1133,7 +1129,6 @@ public final class DriverDataSource implements DataSource {
 			executor.execute(new Runnable() {
 
 				@Override
-
 				/*
 				* Performs the run operation
 				* */
@@ -1217,7 +1212,6 @@ public final class DriverDataSource implements DataSource {
 		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 		throw new SQLException(errorMsg) {
 			@Override
-
 			/*
 			* Performs the getErrorCode operation
 			* @return the getErrorCode result
@@ -1239,7 +1233,6 @@ public final class DriverDataSource implements DataSource {
 			log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 			throw new SQLException(errorMsg) {
 				@Override
-
 				/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
@@ -1591,7 +1584,6 @@ public final class DriverDataSource implements DataSource {
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
 					@Override
-
 					/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
@@ -1622,7 +1614,6 @@ public final class DriverDataSource implements DataSource {
 			throw new SQLException(e) {
 
 				@Override
-
 				/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
@@ -1656,7 +1647,7 @@ public final class DriverDataSource implements DataSource {
 	 * Get sync data source list
 	 * @exception SQLException
 	 * @param owner - From master data source thread name
-	 * @return List<DriverDataSource>
+	 * @return List&lt;DriverDataSource&gt;
 	 * */
 	protected final synchronized List<DriverDataSource> getSyncDataSourceList(String owner) throws SQLException {
 		if (syncDriverDataSource == null) {
@@ -1681,7 +1672,6 @@ public final class DriverDataSource implements DataSource {
 					String errorMsg = String.format("SyncDatasource is null - %s .", syncDsProp);
 					throw new SQLException(errorMsg) {
 						@Override
-
 						/*
 						* Performs the getErrorCode operation
 						* @return the getErrorCode result
@@ -1765,7 +1755,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/** Abandon the following methods **/
-
 	@Override
 	public <T> T unwrap(java.lang.Class<T> arg0) throws java.sql.SQLException {
 		return null;
@@ -1782,7 +1771,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-
 	/*
 	* Performs the setLogWriter operation
 	* @param arg0 - the arg0
@@ -1791,7 +1779,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-
 	/*
 	* Performs the getLogWriter operation
 	* @return the getLogWriter result
@@ -1801,7 +1788,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-
 	/*
 	* Performs the getLoginTimeout operation
 	* @return the getLoginTimeout result
@@ -1811,7 +1797,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-
 	/*
 	* Performs the setLoginTimeout operation
 	* @param arg0 - the arg0
@@ -1820,7 +1805,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-
 	/*
 	* Performs the getConnection operation
 	* @param arg0 - the arg0
@@ -1832,7 +1816,6 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-
 	/*
 	* Performs the createConnectionBuilder operation
 	* @return the createConnectionBuilder result

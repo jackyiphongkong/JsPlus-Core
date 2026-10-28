@@ -82,7 +82,6 @@ public final class Clock {
 					configProperties = new ConfigProperties();
 					Runnable updatedRun = new Runnable(){
         		        @Override
-
         		        /*
         		        * Performs the run operation
         		        * */

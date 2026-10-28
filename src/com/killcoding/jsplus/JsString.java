@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
-* JString - a GraalJS-friendly wrapper around java.lang.String.
+* JsString - a GraalJS-friendly wrapper around java.lang.String.
 *
 * WHY IT EXISTS
 * -------------
@@ -37,11 +37,11 @@ import java.util.Locale;
 * no Java methods, so chains like String.valueOf(s).getBytes("UTF-8") fail
 * with "getBytes is not a function" - the caller only ever sees the primitive.
 *
-* JString wraps the real java.lang.String inside a plain object. GraalJS never
+* JsString wraps the real java.lang.String inside a plain object. GraalJS never
 * converts the wrapper, so every public String method stays callable from JS:
 *
-*   var JString = Java.type("com.killcoding.jsplus.JString");
-*   var j = JString.valueOf("JsPlus-Core 加密");
+*   var JsString = Java.type("com.killcoding.jsplus.JsString");
+*   var j = JsString.valueOf("JsPlus-Core 加密");
 *   var bytes = j.getBytes("UTF-8");            // -> real byte[], passes to
 *                                               //    CipherTools.AESEncrypt etc.
 *   var tail = j.substring(3);                  // chained Java String methods
@@ -50,58 +50,58 @@ import java.util.Locale;
 * (length / charAt / substring / indexOf / replace / split / getBytes / ...)
 * plus the common static helpers (valueOf / format / join / copyValueOf).
 * */
-public class JString {
+public class JsString {
 
 	/** The wrapped value. Never null - null inputs become an empty string. */
 	private final String value;
 
 	/**
-	* Performs the JString construction operation
+	* Performs the JsString construction operation
 	* @param value - the raw java.lang.String to wrap (null becomes empty)
 	* */
-	public JString(String value) {
+	public JsString(String value) {
 		this.value = (value == null ? "" : value);
 	}
 
 	/**
-	* Performs the JString construction operation from a character array
+	* Performs the JsString construction operation from a character array
 	* @param chars - the source character array
 	* */
-	public JString(char[] chars) {
+	public JsString(char[] chars) {
 		this(chars == null ? "" : new String(chars));
 	}
 
 	/**
-	* Performs the JString construction operation from bytes using the given charset
+	* Performs the JsString construction operation from bytes using the given charset
 	* @param bytes - the source byte array
 	* @param charsetName - the charset name, e.g. "UTF-8" (null -> UTF-8)
 	* */
-	public JString(byte[] bytes, String charsetName) {
+	public JsString(byte[] bytes, String charsetName) {
 		this(bytes == null ? "" : decode(bytes, charsetName));
 	}
 
 	/**
-	* Performs the JString construction operation from bytes using the given charset
+	* Performs the JsString construction operation from bytes using the given charset
 	* @param bytes - the source byte array
 	* @param charset - the charset, e.g. StandardCharsets.UTF_8 (null -> UTF-8)
 	* */
-	public JString(byte[] bytes, Charset charset) {
+	public JsString(byte[] bytes, Charset charset) {
 		this(bytes == null ? "" : new String(bytes, charset == null ? StandardCharsets.UTF_8 : charset));
 	}
 
 	/**
-	* Performs the JString construction operation from a StringBuilder
+	* Performs the JsString construction operation from a StringBuilder
 	* @param builder - the source builder (null becomes empty)
 	* */
-	public JString(StringBuilder builder) {
+	public JsString(StringBuilder builder) {
 		this(builder == null ? "" : builder.toString());
 	}
 
 	/**
-	* Performs the JString construction operation from a StringBuffer
+	* Performs the JsString construction operation from a StringBuffer
 	* @param buffer - the source buffer (null becomes empty)
 	* */
-	public JString(StringBuffer buffer) {
+	public JsString(StringBuffer buffer) {
 		this(buffer == null ? "" : buffer.toString());
 	}
 
@@ -124,23 +124,34 @@ public class JString {
 	/* ------------------------------------------------------------------ *
 	 *  Static factories (JS entry points)                                *
 	 * ------------------------------------------------------------------ */
+	/**
+	* Performs the wrap operation - the null-safe JS entry point. Unlike valueOf,
+	* this factory has a single Object overload, so a JS null resolves without the
+	* GraalJS "Multiple applicable overloads found" ambiguity that afflicts the
+	* constructor and the primitive valueOf overloads.
+	* @param o - the object to wrap (null -> empty string)
+	* @return the JsString result
+	* */
+	public static JsString wrap(Object o) {
+		return new JsString(o == null ? "" : String.valueOf(o));
+	}
 
 	/**
-	* Performs the valueOf operation - wraps an Object as JString (null -> empty)
+	* Performs the valueOf operation - wraps an Object as JsString (null -> empty)
 	* @param o - the object to wrap
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(Object o) {
-		return new JString(o == null ? "" : String.valueOf(o));
+	public static JsString valueOf(Object o) {
+		return new JsString(o == null ? "" : String.valueOf(o));
 	}
 
 	/**
 	* Performs the valueOf operation - wraps a char array
 	* @param chars - the character array
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(char[] chars) {
-		return new JString(chars);
+	public static JsString valueOf(char[] chars) {
+		return new JsString(chars);
 	}
 
 	/**
@@ -148,106 +159,105 @@ public class JString {
 	* @param chars - the character array
 	* @param offset - the starting offset
 	* @param count - the number of characters
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(char[] chars, int offset, int count) {
+	public static JsString valueOf(char[] chars, int offset, int count) {
 		if (chars == null) {
-			return new JString("");
+			return new JsString("");
 		}
 		try {
-			return new JString(new String(chars, offset, count));
+			return new JsString(new String(chars, offset, count));
 		} catch (Exception e) {
-			return new JString("");
+			return new JsString("");
 		}
 	}
 
 	/**
 	* Performs the valueOf operation - wraps a boolean
 	* @param b - the boolean value
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(boolean b) {
-		return new JString(String.valueOf(b));
+	public static JsString valueOf(boolean b) {
+		return new JsString(String.valueOf(b));
 	}
 
 	/**
 	* Performs the valueOf operation - wraps a character
 	* @param c - the character value
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(char c) {
-		return new JString(String.valueOf(c));
+	public static JsString valueOf(char c) {
+		return new JsString(String.valueOf(c));
 	}
 
 	/**
 	* Performs the valueOf operation - wraps an int
 	* @param i - the int value
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(int i) {
-		return new JString(String.valueOf(i));
+	public static JsString valueOf(int i) {
+		return new JsString(String.valueOf(i));
 	}
 
 	/**
 	* Performs the valueOf operation - wraps a long
 	* @param l - the long value
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(long l) {
-		return new JString(String.valueOf(l));
+	public static JsString valueOf(long l) {
+		return new JsString(String.valueOf(l));
 	}
 
 	/**
 	* Performs the valueOf operation - wraps a float
 	* @param f - the float value
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(float f) {
-		return new JString(String.valueOf(f));
+	public static JsString valueOf(float f) {
+		return new JsString(String.valueOf(f));
 	}
 
 	/**
 	* Performs the valueOf operation - wraps a double
 	* @param d - the double value
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString valueOf(double d) {
-		return new JString(String.valueOf(d));
+	public static JsString valueOf(double d) {
+		return new JsString(String.valueOf(d));
 	}
 
 	/**
 	* Performs the format operation - printf-style string formatting
 	* @param format - the format string
 	* @param args - the format arguments
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString format(String format, Object... args) {
-		return new JString(String.format(format, args));
+	public static JsString format(String format, Object... args) {
+		return new JsString(String.format(format, args));
 	}
 
 	/**
 	* Performs the join operation - joins the elements with a delimiter
 	* @param delimiter - the delimiter between elements
 	* @param elements - the elements to join
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString join(CharSequence delimiter, CharSequence... elements) {
-		return new JString(String.join(delimiter, elements));
+	public static JsString join(CharSequence delimiter, CharSequence... elements) {
+		return new JsString(String.join(delimiter, elements));
 	}
 
 	/**
-	* Performs the copyValueOf operation - copies a char array into a JString
+	* Performs the copyValueOf operation - copies a char array into a JsString
 	* @param chars - the character array
-	* @return the JString result
+	* @return the JsString result
 	* */
-	public static JString copyValueOf(char[] chars) {
-		return new JString(String.copyValueOf(chars));
+	public static JsString copyValueOf(char[] chars) {
+		return new JsString(String.copyValueOf(chars));
 	}
 
 	/* ------------------------------------------------------------------ *
 	 *  Instance methods - full java.lang.String public surface            *
 	 * ------------------------------------------------------------------ */
-
 	/**
 	* Performs the length operation
 	* @return the number of characters
@@ -315,13 +325,13 @@ public class JString {
 	}
 
 	/**
-	* Performs the equals operation - compares against another JString or String
-	* @param other - the other JString, String or Object
+	* Performs the equals operation - compares against another JsString or String
+	* @param other - the other JsString, String or Object
 	* @return true when the wrapped values are equal
 	* */
 	public boolean equals(Object other) {
-		if (other instanceof JString) {
-			return value.equals(((JString) other).value);
+		if (other instanceof JsString) {
+			return value.equals(((JsString) other).value);
 		}
 		if (other instanceof String) {
 			return value.equals(other);
@@ -331,37 +341,64 @@ public class JString {
 
 	/**
 	* Performs the equalsIgnoreCase operation
-	* @param other - the other JString or String
+	* @param other - the other JsString or String
 	* @return true when the wrapped values are equal ignoring case
 	* */
-	public boolean equalsIgnoreCase(JString other) {
+	public boolean equalsIgnoreCase(JsString other) {
 		return value.equalsIgnoreCase(other == null ? null : other.value);
 	}
 
 	/**
+	* Performs the equalsIgnoreCase operation against a native String
+	* @param other - the other String (also accepts a JS string directly)
+	* @return true when the wrapped values are equal ignoring case
+	* */
+	public boolean equalsIgnoreCase(String other) {
+		return value.equalsIgnoreCase(other);
+	}
+
+	/**
 	* Performs the compareTo operation
-	* @param other - the other JString
+	* @param other - the other JsString
 	* @return the lexicographic comparison result
 	* */
-	public int compareTo(JString other) {
+	public int compareTo(JsString other) {
 		return value.compareTo(other == null ? "" : other.value);
 	}
 
 	/**
+	* Performs the compareTo operation against a native String
+	* @param other - the other String (also accepts a JS string directly)
+	* @return the lexicographic comparison result
+	* */
+	public int compareTo(String other) {
+		return value.compareTo(other == null ? "" : other);
+	}
+
+	/**
 	* Performs the compareToIgnoreCase operation
-	* @param other - the other JString
+	* @param other - the other JsString
 	* @return the case-insensitive comparison result
 	* */
-	public int compareToIgnoreCase(JString other) {
+	public int compareToIgnoreCase(JsString other) {
 		return value.compareToIgnoreCase(other == null ? "" : other.value);
 	}
 
 	/**
-	* Performs the indexOf operation - searches for a JString
+	* Performs the compareToIgnoreCase operation against a native String
+	* @param other - the other String (also accepts a JS string directly)
+	* @return the case-insensitive comparison result
+	* */
+	public int compareToIgnoreCase(String other) {
+		return value.compareToIgnoreCase(other == null ? "" : other);
+	}
+
+	/**
+	* Performs the indexOf operation - searches for a JsString
 	* @param search - the string to find
 	* @return the first index or -1
 	* */
-	public int indexOf(JString search) {
+	public int indexOf(JsString search) {
 		return value.indexOf(search == null ? null : search.value);
 	}
 
@@ -380,8 +417,18 @@ public class JString {
 	* @param fromIndex - the starting index
 	* @return the first index at or after fromIndex, or -1
 	* */
-	public int indexOf(JString search, int fromIndex) {
+	public int indexOf(JsString search, int fromIndex) {
 		return value.indexOf(search == null ? null : search.value, fromIndex);
+	}
+
+	/**
+	* Performs the indexOf operation - searches a native String from a start index
+	* @param search - the string to find (also accepts a JS string directly)
+	* @param fromIndex - the starting index
+	* @return the first index at or after fromIndex, or -1
+	* */
+	public int indexOf(String search, int fromIndex) {
+		return value.indexOf(search, fromIndex);
 	}
 
 	/**
@@ -413,11 +460,11 @@ public class JString {
 	}
 
 	/**
-	* Performs the lastIndexOf operation - searches backwards for a JString
+	* Performs the lastIndexOf operation - searches backwards for a JsString
 	* @param search - the string to find
 	* @return the last index or -1
 	* */
-	public int lastIndexOf(JString search) {
+	public int lastIndexOf(JsString search) {
 		return value.lastIndexOf(search == null ? null : search.value);
 	}
 
@@ -453,79 +500,79 @@ public class JString {
 	/**
 	* Performs the substring operation from an index
 	* @param beginIndex - the start index
-	* @return the JString tail from beginIndex
+	* @return the JsString tail from beginIndex
 	* */
-	public JString substring(int beginIndex) {
-		return new JString(value.substring(beginIndex));
+	public JsString substring(int beginIndex) {
+		return new JsString(value.substring(beginIndex));
 	}
 
 	/**
 	* Performs the substring operation between two indices
 	* @param beginIndex - the start index
 	* @param endIndex - the end index (exclusive)
-	* @return the JString slice
+	* @return the JsString slice
 	* */
-	public JString substring(int beginIndex, int endIndex) {
-		return new JString(value.substring(beginIndex, endIndex));
+	public JsString substring(int beginIndex, int endIndex) {
+		return new JsString(value.substring(beginIndex, endIndex));
 	}
 
 	/**
 	* Performs the subSequence operation
 	* @param beginIndex - the start index
 	* @param endIndex - the end index (exclusive)
-	* @return the JString slice
+	* @return the JsString slice
 	* */
-	public JString subSequence(int beginIndex, int endIndex) {
-		return new JString(value.substring(beginIndex, endIndex));
+	public JsString subSequence(int beginIndex, int endIndex) {
+		return new JsString(value.substring(beginIndex, endIndex));
 	}
 
 	/**
 	* Performs the concat operation
 	* @param other - the string to append
-	* @return the concatenated JString
+	* @return the concatenated JsString
 	* */
-	public JString concat(String other) {
-		return new JString(value.concat(other == null ? "" : other));
+	public JsString concat(String other) {
+		return new JsString(value.concat(other == null ? "" : other));
 	}
 
 	/**
 	* Performs the replace operation - single character replacement
 	* @param oldChar - the character to replace
 	* @param newChar - the replacement character
-	* @return the replaced JString
+	* @return the replaced JsString
 	* */
-	public JString replace(char oldChar, char newChar) {
-		return new JString(value.replace(oldChar, newChar));
+	public JsString replace(char oldChar, char newChar) {
+		return new JsString(value.replace(oldChar, newChar));
 	}
 
 	/**
 	* Performs the replace operation - substring replacement
 	* @param target - the substring to replace
 	* @param replacement - the replacement substring
-	* @return the replaced JString
+	* @return the replaced JsString
 	* */
-	public JString replace(CharSequence target, CharSequence replacement) {
-		return new JString(value.replace(target, replacement));
+	public JsString replace(CharSequence target, CharSequence replacement) {
+		return new JsString(value.replace(target, replacement));
 	}
 
 	/**
 	* Performs the replaceAll operation - regex replacement
 	* @param regex - the regular expression
 	* @param replacement - the replacement string
-	* @return the replaced JString
+	* @return the replaced JsString
 	* */
-	public JString replaceAll(String regex, String replacement) {
-		return new JString(value.replaceAll(regex, replacement));
+	public JsString replaceAll(String regex, String replacement) {
+		return new JsString(value.replaceAll(regex, replacement));
 	}
 
 	/**
 	* Performs the replaceFirst operation - first regex match replacement
 	* @param regex - the regular expression
 	* @param replacement - the replacement string
-	* @return the replaced JString
+	* @return the replaced JsString
 	* */
-	public JString replaceFirst(String regex, String replacement) {
-		return new JString(value.replaceFirst(regex, replacement));
+	public JsString replaceFirst(String regex, String replacement) {
+		return new JsString(value.replaceFirst(regex, replacement));
 	}
 
 	/**
@@ -567,50 +614,50 @@ public class JString {
 
 	/**
 	* Performs the toLowerCase operation
-	* @return the lower-cased JString
+	* @return the lower-cased JsString
 	* */
-	public JString toLowerCase() {
-		return new JString(value.toLowerCase(Locale.ROOT));
+	public JsString toLowerCase() {
+		return new JsString(value.toLowerCase(Locale.ROOT));
 	}
 
 	/**
 	* Performs the toUpperCase operation
-	* @return the upper-cased JString
+	* @return the upper-cased JsString
 	* */
-	public JString toUpperCase() {
-		return new JString(value.toUpperCase(Locale.ROOT));
+	public JsString toUpperCase() {
+		return new JsString(value.toUpperCase(Locale.ROOT));
 	}
 
 	/**
 	* Performs the trim operation
-	* @return the trimmed JString
+	* @return the trimmed JsString
 	* */
-	public JString trim() {
-		return new JString(value.trim());
+	public JsString trim() {
+		return new JsString(value.trim());
 	}
 
 	/**
 	* Performs the strip operation
-	* @return the whitespace-stripped JString
+	* @return the whitespace-stripped JsString
 	* */
-	public JString strip() {
-		return new JString(value.strip());
+	public JsString strip() {
+		return new JsString(value.strip());
 	}
 
 	/**
 	* Performs the stripLeading operation
-	* @return the leading-whitespace-stripped JString
+	* @return the leading-whitespace-stripped JsString
 	* */
-	public JString stripLeading() {
-		return new JString(value.stripLeading());
+	public JsString stripLeading() {
+		return new JsString(value.stripLeading());
 	}
 
 	/**
 	* Performs the stripTrailing operation
-	* @return the trailing-whitespace-stripped JString
+	* @return the trailing-whitespace-stripped JsString
 	* */
-	public JString stripTrailing() {
-		return new JString(value.stripTrailing());
+	public JsString stripTrailing() {
+		return new JsString(value.stripTrailing());
 	}
 
 	/**
@@ -672,10 +719,10 @@ public class JString {
 
 	/**
 	* Performs the intern operation
-	* @return the interned JString
+	* @return the interned JsString
 	* */
-	public JString intern() {
-		return new JString(value.intern());
+	public JsString intern() {
+		return new JsString(value.intern());
 	}
 
 	/**

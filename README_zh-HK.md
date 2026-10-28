@@ -42,6 +42,7 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 | `dbscript/` | `fallback.sql` → `change.sql`（建庫順序固定；`ghost_remote_command` 永不 DROP、測試不碰） |
 | `test/` | 測試框架（`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`）與資料源/測試庫套件 |
 | `test_reports/` | 測試報告（HTML / Markdown / CI 摘要） |
+| `docs/api/` | API javadoc 站點，每次 `ant build` 重新生成（可用 `-Djavadoc.skip=true` 略過） |
 | `logs/` | 執行期日誌（`app\`、`DS\` 池狀態、`SqlLog\`） |
 | `Database/` | H2 服務端資料庫檔案（`testdb.mv.db`，`.gitignore` 忽略） |
 | `build/classes/` | 中間編譯產物（僅構建時存在） |
@@ -78,6 +79,7 @@ JsPlus-Core 是 **JsPlus 的嵌入式控制台引擎**——只含核心引擎�
 - 每次構建刪除舊 `jsplus-core-*.jar`，輸出帶版本 jar。
 - 每次構建向 **兩個** changelog 檔（UTF-8）各追加一筆版本歷史：`changes.log`（英文）與 `changes_zh-HK.log`（繁體中文），標題 `## <版本> (<建構日期> <建構時間>)`。每語言之說明優先序：`-Dchange.en="..."` / `-Dchange.zh="..."`（CI）→ `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt`（本地註記，消費後刪除）→ 預設 `- build: automatic version bump` / `- build: 自動版本遞增`。
 - 每次構建亦會對比 Java 源碼與 `jr.diffroot`（預設 `../../Githubrepos/JsPlus-Core/src`，不存在時略過）的姊妹副本，將差異檔案以 `- found diffed: <path> (A|M|D)` 寫入兩個 changelog——作為稍後檢視/完善的臨時標記（例如將變更同步至 Githubrepos 工作副本）。
+- 每次構建重新生成 API 站點至 **`docs/api/`**（window title 帶版本號、`-Xdoclint:none`、附原始碼連結）——開啟 `docs/api/index.html`；可用 `-Djavadoc.skip=true` 略過。
 
 ## 資料庫與配置
 

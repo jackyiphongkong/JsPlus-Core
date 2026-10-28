@@ -28,6 +28,14 @@ set JS_PLUS_PATH_ORIGIN=%BIN_PATH%..\JsPlus\
 SET "JS_PLUS_PATH=%JS_PLUS_PATH_ORIGIN:\=/%"
 set LIB_HOME=%JS_PLUS_PATH%../LibHome/
 
+REM ------------------------------------------------------------------
+REM Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+REM build/test script runs StopAll up front) so a stale H2 ghost, a locked
+REM testdb file or a JVM pinning an old JAR cannot skew the load metrics
+REM below.
+REM ------------------------------------------------------------------
+call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
+
 set "DEPEND_LIBS="
 for /r "%JS_PLUS_PATH_ORIGIN%..\LibHome" %%j in (*.jar) do set "DEPEND_LIBS=!DEPEND_LIBS!;%%j"
 set "DEPEND_LIBS=!DEPEND_LIBS:~1!"
@@ -123,8 +131,8 @@ set "RC=%ERRORLEVEL%"
 echo LoadTest exit code: %RC%
 REM Step 4: stop the H2 server started for this run (java ghost keyed by
 REM script/StartH2.js) so LoadTest leaves nothing behind. RC was captured
-REM above. Deliberately not StopAll.bat: its AppRootDir path pattern could
-REM match the VS Code Java Language Server's command line in this workspace.
+REM above. StopAll.bat was already run up front as Step 0; this step only
+REM recycles this run's H2 ghost precisely.
 powershell -NoProfile -Command "$kw='script/StartH2.js'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
 exit /b %RC%
 

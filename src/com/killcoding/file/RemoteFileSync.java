@@ -68,7 +68,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param replaceTo - the replaceTo
 	* @param completedCallback - the completedCallback
 	* */
-
 	protected void startFullAsyncThreadForDelete(boolean subFolders, long timerMs, String replaceTo,
 			Runnable completedCallback) {
 		RemoteFileBase the = this;
@@ -90,6 +89,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* @param index - the index
 				* @param o - the o
 				* */
+				@Override
 				@SuppressWarnings("unchecked")
 				public void execute(Integer index, Object o) {
 					Map<String, Object> item = (Map<String, Object>) o;
@@ -123,6 +123,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				/**
 				* Performs the terminated operation
 				* */
+				@Override
 				public void terminated() {
 					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().threadId());
 				}
@@ -132,6 +133,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* Performs the completed operation
 				* @param size - the size
 				* */
+				@Override
 				public void completed(Integer size) {
 					Thread.currentThread().setName(String
 							.format("RemoteFile-startFullAsyncThreadForDelete-completed-%s", the.origin.getName()));
@@ -179,7 +181,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param replaceTo - the replaceTo
 	* @param completedCallback - the completedCallback
 	* */
-
 	@SuppressWarnings("unchecked")
 	protected void startFullAsyncThread(boolean subFolders, long timerMs, String replaceTo, Runnable completedCallback) {
 		RemoteFileBase the = this;
@@ -201,6 +202,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* @param index - the index
 				* @param o - the o
 				* */
+				@Override
 				public void execute(Integer index, Object o) {
 					Map<String, Object> item = (Map<String, Object>) o;
 					String fileName = (String) item.get("file_name");
@@ -231,6 +233,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				/**
 				* Performs the terminated operation
 				* */
+				@Override
 				public void terminated() {
 					log.warn("Terminated: {}-{}", Thread.currentThread().getName(), Thread.currentThread().threadId());
 				}
@@ -240,6 +243,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* Performs the completed operation
 				* @param size - the size
 				* */
+				@Override
 				public void completed(Integer size) {
 					Thread.currentThread().setName(
 							String.format("RemoteFile-startFullAsyncThread-completed-%s", the.origin.getName()));
@@ -286,7 +290,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param likeFileName - the likeFileName
 	* @param rows - the rows
 	* */
-
 	protected void listAllForSync(String likeFolderName, String likeFileName, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -345,7 +348,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the getLastOperateTime operation
 	* @return the getLastOperateTime result
 	* */
-
 	protected Timestamp getLastOperateTime() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -361,7 +363,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the getLastModifyTime operation
 	* @return the getLastModifyTime result
 	* */
-
 	protected Timestamp getLastModifyTime() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -374,7 +375,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the isLastOperateDelete operation
 	* @return the isLastOperateDelete result
 	* */
-
 	protected boolean isLastOperateDelete() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -389,7 +389,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the isLastOperateRealDelete operation
 	* @return the isLastOperateRealDelete result
 	* */
-
 	protected boolean isLastOperateRealDelete() throws IOException {
 		Map<String, Object> record = getLastUpdateRecord();
 		if (record != null) {
@@ -410,7 +409,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param filePartDataTable - the filePartDataTable
 	* @param rows - the rows
 	* */
-
 	protected void listAllForScanDelete(Integer filePartDataTable, CacheArray rows) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -449,7 +447,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the isSyncedOnHostname operation
 	* @return the isSyncedOnHostname result
 	* */
-
 	protected boolean isSyncedOnHostname() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -464,7 +461,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param id - the id
 	* @return the isSyncedOnHostname result
 	* */
-
 	protected boolean isSyncedOnHostname(Object id) throws IOException {
 		Map<String, Object> record = getRecordById(id);
 		if (record != null) {
@@ -479,7 +475,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param id - the id
 	* @return the isDeletedOnHostname result
 	* */
-
 	protected boolean isDeletedOnHostname(Object id) throws IOException {
 		Map<String, Object> record = getRecordById(id);
 		if (record != null) {
@@ -492,12 +487,10 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	/**
 	* Performs the executeSyncRunnable operation
 	* @param filter - the filter
-	* @param String - the String
 	* @param item - the item
 	* @param df - the df
 	* @param rf - the rf
 	* */
-
 	protected void executeSyncRunnable(final CacheArrayFilter filter, final Map<String, Object> item, final DiskFile df,
 			final RemoteFileSync rf) {
 	    try{
@@ -523,7 +516,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param df - the df
 	* @return the getSyncRunnable result
 	* */
-
 	private Runnable getSyncRunnable(final CacheArrayFilter filter, final Map<String, Object> item, final RemoteFileSync rf,
 			final DiskFile df) {
 		Runnable runnable = new Runnable() {
@@ -531,6 +523,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			/**
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				try {
 					String fileName = (String) item.get("file_name");
@@ -706,7 +699,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param timerMs - the timerMs
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startFullAsync(long timerMs, Runnable completedCallback) throws IOException {
 		startFullAsync(timerMs, getPath() + "/", completedCallback);
 	}
@@ -716,7 +708,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param timerMs - the timerMs
 	* @param replaceTo - the replaceTo
 	* */
-
 	public void startFullAsync(long timerMs, String replaceTo) throws IOException {
 		startFullAsync(timerMs, replaceTo, null);
 	}
@@ -727,7 +718,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param replaceTo - the replaceTo
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startFullAsync(long timerMs, String replaceTo, Runnable completedCallback) throws IOException {
 
 		stopSync = false;
@@ -741,6 +731,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			/**
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				startFullAsyncThread(false, timerMs, replaceTo, completedCallback);
 			}
@@ -753,6 +744,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			/**
 			* Performs the run operation
 			* */
+			@Override
 			public void run() {
 				startFullAsyncThreadForDelete(false, timerMs, replaceTo, completedCallback);
 			}
@@ -776,7 +768,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the getDeletedOnHostnames operation
 	* @return the getDeletedOnHostnames result
 	* */
-
 	public String getDeletedOnHostnames() throws IOException {
 		Map<String, Object> record = getCompletedRecord();
 		if (record != null) {
@@ -800,7 +791,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param timerMs - the timerMs
 	* @param archiveMs - the archiveMs
 	* */
-
 	public void startArchiveForFileDeleted(long timerMs, long archiveMs) throws IOException {
 		startArchiveForFileDeleted(timerMs, archiveMs, null);
 	}
@@ -811,7 +801,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param archiveTime - the archiveTime
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startArchiveForFileDeleted(long timerMs, String archiveTime, Runnable completedCallback)
 			throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
@@ -824,7 +813,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param archiveMs - the archiveMs
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startArchiveForFileDeleted(long timerMs, long archiveMs, Runnable completedCallback)
 			throws IOException {
 		final RemoteFileBase the = this;
@@ -855,6 +843,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* Performs the completed operation
 				* @param size - the size
 				* */
+				@Override
 				public void completed(Integer size) {
 					if (isStopSync()) {
 						LoggerFactory.getLogger(RemoteFileSync.class).mark("Stoped archive for file deleted.");
@@ -895,6 +884,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* @param index - the index
 				* @param o - the o
 				* */
+				@Override
 				public void execute(Integer index, Object o) {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForFileDeleted-%s", index));
 					if(isDebug(the)){
@@ -940,6 +930,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			    /**
 			    * Performs the run operation
 			    * */
+			    @Override
 			    public void run(){
 			        try{
 			             finalExecutor.find(formatSql(SQL_SELECT_FOR_ARCHIVE_FILE_DELETED), dataRecord, rows);
@@ -966,7 +957,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param timerMs - the timerMs
 	* @param archiveTime - the archiveTime
 	* */
-
 	public void startArchiveForDeleted(long timerMs, String archiveTime) throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
 		startArchiveForDeleted(timerMs, archiveMs, null);
@@ -977,7 +967,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param timerMs - the timerMs
 	* @param archiveMs - the archiveMs
 	* */
-
 	public void startArchiveForDeleted(long timerMs, long archiveMs) throws IOException {
 		startArchiveForDeleted(timerMs, archiveMs, null);
 	}
@@ -988,7 +977,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param archiveTime - the archiveTime
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startArchiveForDeleted(long timerMs, String archiveTime, Runnable completedCallback)
 			throws IOException {
 		long archiveMs = ConfigProperties.parseTimeToMs(archiveTime, 0L);
@@ -1001,7 +989,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param archiveMs - the archiveMs
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startArchiveForDeleted(long timerMs, long archiveMs, Runnable completedCallback) throws IOException {
 	    final RemoteFileBase the = this;
 		if (archiveMs <= 0) {
@@ -1032,6 +1019,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* Performs the completed operation
 				* @param size - the size
 				* */
+				@Override
 				public void completed(Integer size) {
 					if (isStopSync()) {
 						LoggerFactory.getLogger(RemoteFileSync.class).mark("Stoped archive for deleted.");
@@ -1071,6 +1059,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* @param index - the index
 				* @param o - the o
 				* */
+				@Override
 				public void execute(Integer index, Object o) {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForDeleted-%s", index));
 					CacheDriverExecutor dmExecutor = null;
@@ -1158,6 +1147,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			    /**
 			    * Performs the run operation
 			    * */
+			    @Override
 			    public void run(){
 			        try{
 			            finalExecutor.find(formatSql(SQL_SELECT_FOR_ARCHIVE_DELETED), dataRecord, rows);
@@ -1183,7 +1173,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* Performs the startArchiveForTimeout operation
 	* @param timerMs - the timerMs
 	* */
-
 	public void startArchiveForTimeout(long timerMs) throws IOException {
 	    startArchiveForTimeout(timerMs,null);
 	}
@@ -1193,7 +1182,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	* @param timerMs - the timerMs
 	* @param completedCallback - the completedCallback
 	* */
-
 	public void startArchiveForTimeout(long timerMs,Runnable completedCallback) throws IOException {
 	    final RemoteFileBase the = this;
 
@@ -1220,6 +1208,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* Performs the completed operation
 				* @param size - the size
 				* */
+				@Override
 				public void completed(Integer size) {
 					if (isStopSync()) {
 						LoggerFactory.getLogger(RemoteFileSync.class).mark("Stoped archive for timeout deleted.");
@@ -1260,6 +1249,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 				* @param index - the index
 				* @param o - the o
 				* */
+				@Override
 				public void execute(Integer index, Object o) {
 				    Thread.currentThread().setName(String.format("RemoteFile-execute-archiveForTimeout-%s", index));
 					if(isDebug(the)){
@@ -1305,6 +1295,7 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 			    /**
 			    * Performs the run operation
 			    * */
+			    @Override
 			    public void run(){
 			        try{
 			            finalExecutor.find(formatSql(SQL_SELECT_FOR_ALL_TIMEOUT), dataRecord, rows);

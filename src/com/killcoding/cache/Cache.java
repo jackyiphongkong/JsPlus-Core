@@ -129,7 +129,7 @@ public final class Cache {
 
 	/**
 	 * Get all cache key name list
-	 * @return List<String> - It is key name list
+	 * @return List&lt;String&gt; - It is key name list
 	 * */
 	public synchronized static List<String> getNames(){
 		return api.getNames();

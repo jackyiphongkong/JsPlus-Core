@@ -406,7 +406,6 @@ public final class CodeEscape {
         }
 
         @Override
-
         /*
         * Performs the read operation
         * @return the read result
@@ -419,7 +418,6 @@ public final class CodeEscape {
         }
 
         @Override
-
         /*
         * Performs the read operation
         * @param cbuf - the cbuf
@@ -444,7 +442,6 @@ public final class CodeEscape {
         }
 
         @Override
-
         /*
         * Performs the close operation
         * */

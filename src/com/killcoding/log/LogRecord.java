@@ -160,8 +160,7 @@ public final class LogRecord {
 
     /**
      * Set log list
-     * @param list
-     * @return List<Map<String, Object>>
+     * @return List&lt;Map&lt;String, Object&gt;>
      * */
 	@SuppressWarnings("unchecked")
 	protected static synchronized List<Map<String, Object>> list() {
@@ -294,7 +293,6 @@ public final class LogRecord {
 	/**
 	* Performs the format operation
 	* @param messageFormat - the messageFormat
-	* @param String - the String
 	* @param row - the row
 	* @return the format result
 	* */
@@ -704,7 +702,6 @@ public final class LogRecord {
 			executor.execute(new Runnable() {
 
 				@Override
-
 				/*
 				* Performs the run operation
 				* */
@@ -721,7 +718,6 @@ public final class LogRecord {
 							if (config.getBoolean("DatabaseOut", false)) {
     							DB_WRITE_POOL.execute(new Runnable(){
     							    @Override
-
     							    /*
     							    * Performs the run operation
     							    * */

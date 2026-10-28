@@ -54,7 +54,6 @@ public class NashornContext extends JsPlusContext {
 
     private class SecurityClassFilter implements ClassFilter {
         @Override
-
         /*
         * Performs the exposeToScripts operation
         * @param className - the className
@@ -77,7 +76,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the getBindings operation
     * @return the getBindings result
@@ -87,7 +85,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the getEngine operation
     * @return the getEngine result
@@ -97,7 +94,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the getContext operation
     * @return the getContext result
@@ -107,7 +103,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the remove operation
     * @param name - the name
@@ -119,7 +114,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the put operation
     * @param name - the name
@@ -132,7 +126,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the get operation
     * @param name - the name
@@ -143,7 +136,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the initScriptEngineManager operation
     * */
@@ -192,7 +184,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the setAllowAllAccess operation
     * @param allowAllAccess - the allowAllAccess
@@ -211,7 +202,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the eval operation
     * @param scriptPath - the scriptPath
@@ -222,7 +212,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the eval operation
     * @param scriptPath - the scriptPath
@@ -245,7 +234,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the evalScript operation
     * @param script - the script
@@ -259,7 +247,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the close operation
     * */
@@ -276,7 +263,6 @@ public class NashornContext extends JsPlusContext {
     }
 
     @Override
-
     /*
     * Performs the getEngineName operation
     * @return the getEngineName result

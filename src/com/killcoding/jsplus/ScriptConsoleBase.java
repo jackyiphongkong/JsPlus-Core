@@ -96,7 +96,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	/** Default policy keeps the historic behaviour (System.exit). */
 	private static volatile ExitPolicy EXIT_POLICY = new ExitPolicy() {
 		@Override
-
 		/*
 		* Performs the exit operation
 		* @param status - the status
@@ -116,7 +115,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
 		} else {
 			EXIT_POLICY = new ExitPolicy() {
 				@Override
-
 				/*
 				* Performs the exit operation
 				* @param status - the status
@@ -228,7 +226,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
             	    appenvCp = new ConfigProperties();
             	    Runnable updateRun = new Runnable(){
             	        @Override
-
             	        /*
             	        * Performs the run operation
             	        * */
@@ -306,7 +303,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
 			exitExecute = java.util.concurrent.Executors.newFixedThreadPool(1);
 			exitExecute.execute(new Runnable() {
 				@Override
-
 				/*
 				* Performs the run operation
 				* */
@@ -1068,7 +1064,6 @@ public class ScriptConsoleBase implements ConsoleImpl {
 
 	/**
 	* Performs the toResultList operation
-	* @param String - the String
 	* @param list - the list
 	* @return the toResultList result
 	* */

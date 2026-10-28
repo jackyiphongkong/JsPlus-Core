@@ -103,7 +103,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createSQLXML operation
 	* @return the createSQLXML result
@@ -113,7 +112,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createNClob operation
 	* @return the createNClob result
@@ -123,7 +121,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createBlob operation
 	* @return the createBlob result
@@ -133,7 +130,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createClob operation
 	* @return the createClob result
@@ -143,7 +139,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareStatement operation
 	* @param arg0 - the arg0
@@ -155,7 +150,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createArrayOf operation
 	* @param arg0 - the arg0
@@ -167,7 +161,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getClientInfo operation
 	* @return the getClientInfo result
@@ -177,7 +170,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getClientInfo operation
 	* @param arg0 - the arg0
@@ -188,7 +180,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setClientInfo operation
 	* @param arg0 - the arg0
@@ -198,7 +189,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setClientInfo operation
 	* @param arg0 - the arg0
@@ -209,7 +199,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the isValid operation
 	* @param arg0 - the arg0
@@ -220,7 +209,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the abort operation
 	* @param arg0 - the arg0
@@ -231,7 +219,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getSchema operation
 	* @return the getSchema result
@@ -241,7 +228,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setSchema operation
 	* @param arg0 - the arg0
@@ -251,7 +237,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createStruct operation
 	* @param arg0 - the arg0
@@ -263,7 +248,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the isReadOnly operation
 	* @return the isReadOnly result
@@ -273,7 +257,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setShardingKey operation
 	* @param arg0 - the arg0
@@ -284,7 +267,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setReadOnly operation
 	* @param arg0 - the arg0
@@ -294,7 +276,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setShardingKeyIfValid operation
 	* @param arg0 - the arg0
@@ -306,7 +287,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getMetaData operation
 	* @return the getMetaData result
@@ -316,7 +296,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setShardingKeyIfValid operation
 	* @param arg0 - the arg0
@@ -329,7 +308,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the endRequest operation
 	* */
@@ -338,7 +316,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the beginRequest operation
 	* */
@@ -347,7 +324,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getNetworkTimeout operation
 	* @return the getNetworkTimeout result
@@ -357,7 +333,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setNetworkTimeout operation
 	* @param arg0 - the arg0
@@ -368,7 +343,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the nativeSQL operation
 	* @param arg0 - the arg0
@@ -379,7 +353,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareCall operation
 	* @param arg0 - the arg0
@@ -390,7 +363,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getAutoCommit operation
 	* @return the getAutoCommit result
@@ -400,7 +372,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setAutoCommit operation
 	* @param arg0 - the arg0
@@ -410,7 +381,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareStatement operation
 	* @param arg0 - the arg0
@@ -421,7 +391,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createStatement operation
 	* @return the createStatement result
@@ -431,7 +400,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the createStatement operation
 	* @param arg0 - the arg0
@@ -443,7 +411,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the clearWarnings operation
 	* */
@@ -452,7 +419,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getWarnings operation
 	* @return the getWarnings result
@@ -462,7 +428,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the rollback operation
 	* */
@@ -471,7 +436,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getTransactionIsolation operation
 	* @return the getTransactionIsolation result
@@ -481,7 +445,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the commit operation
 	* */
@@ -490,7 +453,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setTransactionIsolation operation
 	* @param arg0 - the arg0
@@ -500,7 +462,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the isClosed operation
 	* @return the isClosed result
@@ -510,7 +471,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getCatalog operation
 	* @return the getCatalog result
@@ -520,7 +480,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the close operation
 	* */
@@ -529,7 +488,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setCatalog operation
 	* @param arg0 - the arg0
@@ -539,7 +497,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setShardingKey operation
 	* @param arg0 - the arg0
@@ -549,7 +506,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setTypeMap operation
 	* @param arg0 - the arg0
@@ -559,7 +515,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getTypeMap operation
 	* @return the getTypeMap result
@@ -569,7 +524,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareCall operation
 	* @param arg0 - the arg0
@@ -582,7 +536,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareStatement operation
 	* @param arg0 - the arg0
@@ -595,7 +548,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the releaseSavepoint operation
 	* @param arg0 - the arg0
@@ -605,7 +557,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the rollback operation
 	* @param arg0 - the arg0
@@ -615,7 +566,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setSavepoint operation
 	* @param arg0 - the arg0
@@ -626,7 +576,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setSavepoint operation
 	* @return the setSavepoint result
@@ -636,7 +585,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the getHoldability operation
 	* @return the getHoldability result
@@ -646,7 +594,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the setHoldability operation
 	* @param arg0 - the arg0
@@ -656,7 +603,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareStatement operation
 	* @param arg0 - the arg0
@@ -668,7 +614,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareStatement operation
 	* @param arg0 - the arg0
@@ -692,7 +637,6 @@ public final class DriverConnection implements Connection {
 	}
 
     @Override
-
 	/*
 	* Performs the prepareStatement operation
 	* @param arg0 - the arg0
@@ -706,7 +650,6 @@ public final class DriverConnection implements Connection {
 	}
 
 	@Override
-
 	/*
 	* Performs the createStatement operation
 	* @param arg0 - the arg0

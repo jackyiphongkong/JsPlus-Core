@@ -152,7 +152,6 @@ public class DiskFile extends BaseFile {
 		initDefaultPool();
 		splitPool.execute(new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -199,7 +198,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the copyTo operation
 	* @param toPath - the toPath
@@ -212,7 +210,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the moveTo operation
 	* @param toPath - the toPath
@@ -235,7 +232,6 @@ public class DiskFile extends BaseFile {
 	public RemoteFile writeToRemote(RemoteFile remoteFile) throws IOException {
 		return writeToRemote(remoteFile, new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -492,7 +488,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the beforeDelete operation
 	* @param realDeleted - the realDeleted
@@ -503,7 +498,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the afterDelete operation
 	* @param realDeleted - the realDeleted
@@ -513,7 +507,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the beforeMkdirs operation
 	* @return the beforeMkdirs result
@@ -523,7 +516,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the afterMkdirs operation
 	* */
@@ -532,7 +524,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the beforeCreateLink operation
 	* @param target - the target
@@ -543,7 +534,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the afterCreateLink operation
 	* @param target - the target
@@ -553,7 +543,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the beforeWrite operation
 	* @return the beforeWrite result
@@ -563,7 +552,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the afterWrite operation
 	* */
@@ -572,7 +560,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the delete operation
 	* @return the delete result
@@ -621,7 +608,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the isFile operation
 	* @return the isFile result
@@ -631,7 +617,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the isDirectory operation
 	* @return the isDirectory result
@@ -641,7 +626,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the isLink operation
 	* @return the isLink result
@@ -651,7 +635,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the exists operation
 	* @return the exists result
@@ -661,7 +644,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the mkdirs operation
 	* @return the mkdirs result
@@ -681,7 +663,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the write operation
 	* @param data - the data
@@ -826,7 +807,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the write operation
 	* @param data - the data
@@ -837,7 +817,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the write operation
 	* @param data - the data
@@ -860,7 +839,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the write operation
 	* @param data - the data
@@ -881,7 +859,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the createLink operation
 	* @param target - the target
@@ -908,7 +885,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the readLink operation
 	* @return the readLink result
@@ -919,7 +895,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the readAllBytes operation
 	* @return the readAllBytes result
@@ -946,7 +921,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the readAllString operation
 	* @return the readAllString result
@@ -981,7 +955,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the size operation
 	* @return the size result
@@ -1026,7 +999,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the complete operation
 	* @return the complete result
@@ -1056,7 +1028,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the setModifyTime operation
 	* @param modifyTime - the modifyTime
@@ -1080,7 +1051,6 @@ public class DiskFile extends BaseFile {
 	}
 
 	@Override
-
 	/*
 	* Performs the getModifyTime operation
 	* @return the getModifyTime result
@@ -1162,7 +1132,6 @@ public class DiskFile extends BaseFile {
 
 		Runnable runnable = new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -1179,7 +1148,6 @@ public class DiskFile extends BaseFile {
 
 		runnable = new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -1230,7 +1198,6 @@ public class DiskFile extends BaseFile {
 
 		Runnable runnable = new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -1262,7 +1229,6 @@ public class DiskFile extends BaseFile {
 		DiskFile the = this;
 		CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
 			@Override
-
 			/*
 			* Performs the execute operation
 			* @param index - the index
@@ -1316,7 +1282,6 @@ public class DiskFile extends BaseFile {
 			}
 
 			@Override
-
 			/*
 			* Performs the completed operation
 			* @param size - the size
@@ -1496,7 +1461,6 @@ public class DiskFile extends BaseFile {
 			final CacheArrayFilter theFilter = this;
 
 			@Override
-
 			/*
 			* Performs the completed operation
 			* @param size - the size
@@ -1528,7 +1492,6 @@ public class DiskFile extends BaseFile {
 			}
 
 			@Override
-
 			/*
 			* Performs the execute operation
 			* @param index - the index

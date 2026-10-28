@@ -37,7 +37,7 @@ import org.w3c.dom.Attr;
 import org.xml.sax.InputSource;
 
 /**
-* Lightweight XML-to-Map parser: converts an XML document into a nested Map<String,Object> tree
+* Lightweight XML-to-Map parser: converts an XML document into a nested Map&lt;String,Object&gt; tree
 * (exposing the root element name) for script-friendly access.
 * */
 public class XmlParser {
@@ -60,7 +60,6 @@ public class XmlParser {
     /**
     * Performs the put operation
     * @param name - the name
-    * @param String - the String
     * @param map - the map
     * */
     public void put(String name, Map<String, Object> map) {

@@ -24,10 +24,13 @@ REM      <PROJECT_ROOT>/test_reports/ (logs land in <PROJECT_ROOT>/logs/app/).
 REM      Stdin is redirected to NUL so com.killcoding.jsplus.Main exits
 REM      right after the -Task completes (otherwise it blocks on the
 REM      interactive scanner, see Main.java scanner loop).
+REM   3b) Run LoadTest.js (DB CRUD load test over the same testdb) and write
+REM      test_reports/LoadTest-Report.html. Any load failure fails the run.
 REM   4) Exit with the JVM's exit code (0 = all checks passed, 1 = failure).
 REM Override via env (same convention as JsPlus-Tomcat):
 REM      JsPlus_JavaDir_JsPlus-Core   - JDK directory under Java\ (default: default)
 REM      JsPlus_JvmParams_JsPlus-Core - JVM params (default: -Xms256m -Xmx1024m -Xss256k)
+REM      LOADTEST_ROUNDS / LOADTEST_TABLES - LoadTest.js tuning (default 100 / 5)
 REM      SCRIPT_ENGINE (arg %1)       - default: graalvm.js
 REM ------------------------------------------------------------------
 
@@ -41,6 +44,14 @@ set BIN_PATH=%~dp0
 set JS_PLUS_PATH_ORIGIN=%BIN_PATH%..\JsPlus\
 SET "JS_PLUS_PATH=%JS_PLUS_PATH_ORIGIN:\=/%"
 set LIB_HOME=%JS_PLUS_PATH%../LibHome/
+
+REM ------------------------------------------------------------------
+REM Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+REM build/test script runs StopAll up front) so a stale H2 ghost, a locked
+REM testdb file or a JVM pinning an old JAR cannot interfere with the db
+REM init and the suite JVM below.
+REM ------------------------------------------------------------------
+call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
 
 set "DEPEND_LIBS="
 for /r "%JS_PLUS_PATH_ORIGIN%..\LibHome" %%j in (*.jar) do set "DEPEND_LIBS=!DEPEND_LIBS!;%%j"
@@ -142,11 +153,26 @@ set JSPLUS_TEST_EXIT=1
 %JAVA_BIN% %JvmParams% -DAPP_REMOTE_FILE="%JS_PLUS_PATH_ORIGIN%config\RemoteFile.properties" -DAPP_CLOCK="%JS_PLUS_PATH_ORIGIN%config\AppClock.properties" -DAPP_IDENTITY_CARD="%JS_PLUS_PATH_ORIGIN%config\IdentityCard.properties" -DAPP_DATASOURCE="%JS_PLUS_PATH_ORIGIN%config\TestDatasource.properties" -cp "%DEPEND_LIBS%" com.killcoding.jsplus.Main -ScriptEngine "%SCRIPT_ENGINE%" -Env script -WriteHistory false -Task "%JS_PLUS_PATH%../test/TestAll.js" < NUL
 set "RC=%ERRORLEVEL%"
 echo TestAll exit code: %RC%
+
+REM ------------------------------------------------------------------
+REM Step 3b: Run LoadTest.js against this JVM (DB CRUD load test, same H2
+REM server and freshly initialized testdb as the suites above). Uses the
+REM default runtime datasource (config/DataSource.properties) exactly like
+REM test/LoadTest.bat; writes test_reports/LoadTest-Report.html. Any load
+REM failure is merged into the overall exit code below.
+REM ------------------------------------------------------------------
+set JSPLUS_TEST_EXIT=1
+%JAVA_BIN% %JvmParams% -cp "%DEPEND_LIBS%" com.killcoding.jsplus.Main -ScriptEngine "%SCRIPT_ENGINE%" -Env script -WriteHistory false -Task "%JS_PLUS_PATH%../test/LoadTest.js" < NUL
+set "RC_LOAD=%ERRORLEVEL%"
+echo LoadTest exit code: %RC_LOAD%
+if not "%RC_LOAD%"=="0" set "RC=%RC_LOAD%"
 REM Step 4: stop the H2 server started for this run (java ghost keyed by
 REM script/StartH2.js) so TestAll leaves nothing behind. RC was captured
-REM above. Deliberately not StopAll.bat: its AppRootDir path pattern could
-REM match the VS Code Java Language Server's command line in this workspace.
+REM above. Then, per the project convention, the run finishes with a full
+REM StopAll sweep (AppRootDir path match) so NO JsPlus/H2 JVM survives this
+REM run - any leftover JVM that escaped the precise recycle is killed here.
 powershell -NoProfile -Command "$kw='script/StartH2.js'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
+call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
 exit /b %RC%
 
 endlocal

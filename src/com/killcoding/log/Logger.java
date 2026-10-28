@@ -1860,7 +1860,6 @@ public final class Logger {
 	/**
 	* Performs the log operation
 	* @param _level - the _level
-	* @param String - the String
 	* @param map - the map
 	* */
 	protected void log(Integer _level, Map<String, Object> map) {

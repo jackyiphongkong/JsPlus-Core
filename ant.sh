@@ -4,6 +4,15 @@ set -e
 BIN_PATH_ORIGIN="$(cd "$(dirname "$0")" && pwd)/"
 BIN_PATH="${BIN_PATH_ORIGIN//\\//}"
 
+# ------------------------------------------------------------------
+# Step 0: stop leftover JsPlus/H2 JVMs first (project convention: ant.sh
+# and Test*.bat/sh always run StopAll first) so a stale H2 ghost or a
+# JVM locking the previous JAR cannot break the build.
+# ------------------------------------------------------------------
+if [ -f "${BIN_PATH_ORIGIN}JsPlus/bin/StopAll.sh" ]; then
+    "${BIN_PATH_ORIGIN}JsPlus/bin/StopAll.sh" || true
+fi
+
 JAVA_HOME_ORIG="${JAVA_HOME:-}"
 ANT_HOME_ORIG="${ANT_HOME:-}"
 

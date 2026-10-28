@@ -42,6 +42,7 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 | `dbscript/` | `fallback.sql` → `change.sql` (fixed DB-init order; `ghost_remote_command` is never DROPped and never touched by tests) |
 | `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and the datasource/test-db suites |
 | `test_reports/` | Test reports (HTML / Markdown / CI summary) |
+| `docs/api/` | API javadoc site, regenerated on every `ant build` (skip with `-Djavadoc.skip=true`) |
 | `logs/` | Runtime logs (`app\`, `DS\` pool status, `SqlLog\`) |
 | `Database/` | H2 server database files (`testdb.mv.db`, gitignored) |
 | `build/classes/` | Intermediate compilation output (build-time only) |
@@ -78,6 +79,7 @@ Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **53 passed / 0 fa
 - Each build removes the old `jsplus-core-*.jar` and outputs the versioned jar.
 - Each build appends one history entry (UTF-8) to **two** changelog files: `changes.log` (English) and `changes_zh-HK.log` (Traditional Chinese), each headed `## <version> (<builddate> <buildtime>)`. Entry priority per language: `-Dchange.en="..."` / `-Dchange.zh="..."` (CI) → `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` (local note, consumed and deleted) → default `- build: automatic version bump` / `- build: 自動版本遞增`.
 - Each build also diffs the Java sources against the sibling copy at `jr.diffroot` (default `../../Githubrepos/JsPlus-Core/src`, skipped when absent) and writes every differing file into both changelogs as `- found diffed: <path> (A|M|D)` — a temporary marker for later review/refinement (e.g. syncing the change to the Githubrepos checkout).
+- Each build regenerates the API site into **`docs/api/`** (version-tagged window title, `-Xdoclint:none`, source links) — open `docs/api/index.html`; use `-Djavadoc.skip=true` to skip.
 
 ## Database & Configuration
 

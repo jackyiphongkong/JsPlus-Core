@@ -132,7 +132,6 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 
 	/**
 	* Constructs a new ResultMap
-	* @param K - the K
 	* @param map - the map
 	* */
 	@SuppressWarnings("this-escape")
@@ -180,7 +179,6 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 	}
 
 	@Override
-
 	/*
 	* Performs the put operation
 	* @param key - the key

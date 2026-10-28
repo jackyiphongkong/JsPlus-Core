@@ -124,7 +124,7 @@ public class DriverExecutor {
 	/**
 	 * Get column classes by table name
 	 * @exception SQLException
-	 * @return Map<String,Object> - column and java type class mapping
+	 * @return Map&lt;String,Object&gt; - column and java type class mapping
 	 * @param tableName - table name
 	 * */
 	public Map<String, Object> getColumnClasses(String tableName) throws SQLException {
@@ -148,7 +148,7 @@ public class DriverExecutor {
 	/**
 	 * Get column db data types by table name
 	 * @exception SQLException
-	 * @return Map<String, Object> - column and db data type mapping
+	 * @return Map&lt;String, Object&gt; - column and db data type mapping
 	 * @param tableName - Table name
 	 * */
 	public Map<String, Object> getColumnTypes(String tableName) throws SQLException {
@@ -171,7 +171,7 @@ public class DriverExecutor {
 	/**
 	 * Show column data type and java type mapping
 	 * @exception SQLException
-	 * @return List<Map<String, Object>> - Mapping list
+	 * @return List&lt;Map&lt;String, Object&gt;> - Mapping list
 	 * @param tableName - Table name
 	 * */
 	public List<Map<String, Object>> desc(String tableName) throws SQLException {
@@ -205,7 +205,7 @@ public class DriverExecutor {
 
 	/**
 	 * Get primary Keys by table name
-	 * @return List<String> - Primary Keys
+	 * @return List&lt;String&gt; - Primary Keys
 	 * @param _tableName - Table name
 	 * */
 	public List<String> getPrimaryKeys(String _tableName) {
@@ -234,7 +234,7 @@ public class DriverExecutor {
 
 	/**
 	 * Get all tables
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @exception SQLException
 	 * */
 	public List<Map<String, Object>> getAllTables() throws SQLException {
@@ -255,7 +255,7 @@ public class DriverExecutor {
 
 	/**
 	 * Get all tables by schema
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @exception SQLException
 	 * */
 	public List<Map<String, Object>> getAllTables(String _schema) throws SQLException {
@@ -279,7 +279,7 @@ public class DriverExecutor {
 	/**
 	 * Query first record
 	 * @exception SQLException
-	 * @return Map<String,Object> - First result
+	 * @return Map&lt;String,Object&gt; - First result
 	 * @param sql - Condition use format ':column_name'
 	 * @param params
 	 * */
@@ -294,7 +294,7 @@ public class DriverExecutor {
 	/**
 	 * Query first record
 	 * @exception SQLException
-	 * @return Map<String,Object> - First result
+	 * @return Map&lt;String,Object&gt; - First result
 	 * @param sql
 	 * */
 	public Map<String, Object> first(String sql) throws SQLException {
@@ -304,7 +304,7 @@ public class DriverExecutor {
 	/**
 	 * Query first record
 	 * @exception SQLException
-	 * @return Map<String,Object> - First result
+	 * @return Map&lt;String,Object&gt; - First result
 	 * @param sql - Condition use format '?'
 	 * @param params
 	 * */
@@ -319,9 +319,8 @@ public class DriverExecutor {
 	/**
 	 * Query all matched records
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @param sql
-	 * @param params
 	 * */
 	public List<Map<String, Object>> find(String sql) throws SQLException {
 		return find(0, 0, sql, Arrays.asList(new Object[] {}));
@@ -330,11 +329,10 @@ public class DriverExecutor {
 	/**
 	 * Query all matched records
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql
-	 * @param params
 	 * */
 	public List<Map<String, Object>> find(int cursorStart, int maxRows, String sql) throws SQLException {
 		return find(cursorStart, maxRows, sql, Arrays.asList(new Object[] {}));
@@ -343,7 +341,7 @@ public class DriverExecutor {
 	/**
 	 * Query all matched records
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @param sql - Condition use format ':column_name'
 	 * @param params
 	 * */
@@ -354,7 +352,7 @@ public class DriverExecutor {
 	/**
 	 * Query all matched records
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Condition use format ':column_name'
@@ -370,7 +368,7 @@ public class DriverExecutor {
 	/**
 	 * Query all matched records
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * @param cursorStart - JDBC result Cursor start index
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Condition use format '?'
@@ -604,7 +602,7 @@ public class DriverExecutor {
 
 	/**
 	 * Execute stored proc (and return rows)
-	 * @param sqltypes - e.g Types.INTEGER
+	 * @param sqlTypes - e.g Types.INTEGER
 	 * @param sql - Query sql,condition use format '?'
 	 * @param params
 	 * @exception SQLException
@@ -661,7 +659,7 @@ public class DriverExecutor {
 	 * Execute stored proc (and return List)
 	 * @param sql - Query sql
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(String sql) throws SQLException {
 		return callAndReturnList(0, 0, sql, Arrays.asList(new Object[] {}));
@@ -673,7 +671,7 @@ public class DriverExecutor {
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(int cursorStart, int maxRows, String sql) throws SQLException {
 		return callAndReturnList(cursorStart, maxRows, sql, Arrays.asList(new Object[] {}));
@@ -685,7 +683,7 @@ public class DriverExecutor {
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql, condition use format ':column_name'
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(int cursorStart, int maxRows, String sql,
 			Map<String, Object> params) throws SQLException {
@@ -700,7 +698,7 @@ public class DriverExecutor {
 	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	 * @param sql - Query sql, condition use format '?'
 	 * @exception SQLException
-	 * @return List<Map<String, Object>>
+	 * @return List&lt;Map&lt;String, Object&gt;>
 	 * */
 	public List<Map<String, Object>> callAndReturnList(int cursorStart, int maxRows, String sql, List<Object> params)
 			throws SQLException {
@@ -1112,7 +1110,7 @@ public class DriverExecutor {
 	 * Conver param from map to list
 	 * @param sql
 	 * @param map
-	 * @return List<Object>
+	 * @return List&lt;Object&gt;
 	 * */
 	protected List<Object> converParams(String sql, Map<String, Object> map) {
 		List<String> paramKeys = new ArrayList<String>();
@@ -1298,7 +1296,6 @@ public class DriverExecutor {
 				long sqlLogFilterTimer = configProperties.getLong("SqlLogTimer", 1000L);
 				sqlLogCacheArray.filter(new CacheArrayFilter(0L,sqlLogFilterTimer) {
 					@Override
-
 					/*
 					* Performs the executeBatch operation
 					* @param index - the index
@@ -1511,7 +1508,6 @@ public class DriverExecutor {
 	}
 
 	/*For Sync DataSource**/
-
 	/**
 	 * For database replication
 	 * */
@@ -1543,7 +1539,6 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
-
 									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
@@ -1628,7 +1623,6 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
-
 									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
@@ -1681,7 +1675,6 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
-
 									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
@@ -1734,7 +1727,6 @@ public class DriverExecutor {
 										de.getDataSourceName(), de.getOriginConnectionHashCode());
 								throw new SQLException(errorMsg) {
 									@Override
-
 									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result
@@ -1817,7 +1809,6 @@ public class DriverExecutor {
 								String errorMsg = "Connection is null.";
 								throw new SQLException(errorMsg) {
 									@Override
-
 									/*
 									* Performs the getErrorCode operation
 									* @return the getErrorCode result

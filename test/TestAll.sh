@@ -29,11 +29,14 @@ set -e
 #      Stdin is redirected to /dev/null so com.killcoding.jsplus.Main exits
 #      right after the -Task completes (otherwise it blocks on the
 #      interactive scanner, see Main.java scanner loop).
+#   4b) Run LoadTest.js (DB CRUD load test over the same testdb) and write
+#      test_reports/LoadTest-Report.html. Any load failure fails the run.
 #   5) Exit with the JVM's exit code (0 = all checks passed, 1 = failure),
 #      after stopping the H2 server started for this run.
 # Override via env (same convention as JsPlus-Tomcat):
 #      JsPlus_JavaDir_JsPlus-Core   - JDK directory under Java/ (default: default)
 #      JsPlus_JvmParams_JsPlus-Core - JVM params (default: -Xms256m -Xmx1024m -Xss256k)
+#      LOADTEST_ROUNDS / LOADTEST_TABLES - LoadTest.js tuning (default 100 / 5)
 #      SCRIPT_ENGINE (arg $1)       - default: graalvm.js
 # ------------------------------------------------------------------
 
@@ -53,6 +56,14 @@ LIB_HOME="${JS_PLUS_PATH}../LibHome/"
 # "Permission denied" (exit 126). Make every helper executable up front -
 # a no-op when the bit is already set.
 chmod +x "${JS_PLUS_PATH}bin/"*.sh "${BIN_PATH}"*.sh 2>/dev/null || true
+
+# ------------------------------------------------------------------
+# Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+# build/test script runs StopAll up front) so a stale H2 ghost, a locked
+# testdb file or a JVM pinning an old JAR cannot interfere with the db
+# init and the suite JVM below.
+# ------------------------------------------------------------------
+"${JS_PLUS_PATH}bin/StopAll.sh" || true
 
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
@@ -152,10 +163,29 @@ set -e
 echo "TestAll exit code: $RC"
 
 # ------------------------------------------------------------------
+# Step 3b: Run LoadTest.js against this JVM (DB CRUD load test, same H2
+# server and freshly initialized testdb as the suites above). Uses the
+# default runtime datasource (config/DataSource.properties) exactly like
+# test/LoadTest.sh; writes test_reports/LoadTest-Report.html. Any load
+# failure is merged into the overall exit code below.
+# ------------------------------------------------------------------
+export JSPLUS_TEST_EXIT=1
+set +e
+"$JAVA_BIN" $JvmParams -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -Task "${JS_PLUS_PATH}../test/LoadTest.js" < /dev/null
+RC_LOAD=$?
+set -e
+echo "LoadTest exit code: $RC_LOAD"
+if [ "$RC_LOAD" != "0" ]; then
+    RC="$RC_LOAD"
+fi
+
+# ------------------------------------------------------------------
 # Step 4: stop the H2 server started for this run (java ghost keyed by
 # script/StartH2.js) so TestAll leaves nothing behind. RC was captured
-# above. Deliberately not StopAll.sh: its AppRootDir path pattern could
-# match the VS Code Java Language Server's command line in this workspace.
+# above. Then, per the project convention, the run finishes with a full
+# StopAll sweep (AppRootDir path match) so NO JsPlus/H2 JVM survives this
+# run - any leftover JVM that escaped the precise recycle is killed here.
 # ------------------------------------------------------------------
 pkill -f 'script/StartH2.js' 2>/dev/null || true
+"${JS_PLUS_PATH}bin/StopAll.sh" || true
 exit "$RC"

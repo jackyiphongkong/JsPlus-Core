@@ -14,7 +14,7 @@ var File = Java.type("java.io.File");
 var Files = Java.type("java.nio.file.Files");
 var Paths = Java.type("java.nio.file.Paths");
 var ArrayList = Java.type("java.util.ArrayList");
-var JString = Java.type("com.killcoding.jsplus.JString");
+var JsString = Java.type("com.killcoding.jsplus.JsString");
 var ConfigProperties = Java.type("com.killcoding.tool.ConfigProperties");
 
 var basePath = System.getProperty("JS_PLUS_PATH");
@@ -273,7 +273,7 @@ try {
     // C17: load(File) end-to-end
     var tmpDir17 = Files.createTempDirectory("jsplus_cfg_").toString();
     var file17 = tmpDir17 + File.separator + "app.properties";
-    Files.write(Paths.get(file17), JString.valueOf("filekey=filevalue\n").getBytes("UTF-8"));
+    Files.write(Paths.get(file17), JsString.valueOf("filekey=filevalue\n").getBytes("UTF-8"));
     var cp17 = new ConfigProperties();
     cp17.load(new File(file17));
     var ok17 = ("" + cp17.getString("filekey")) === "filevalue";

@@ -108,7 +108,6 @@ public final class LoggerFactory {
 		    defaultConfig = new ConfigProperties();
 		    Runnable updatedRun = new Runnable() {
 			    @Override
-
 				/*
 				* Performs the run operation
 				* */
@@ -154,7 +153,7 @@ public final class LoggerFactory {
 	/**
 	 * Get logger
 	 * @return Logger
-	 * @param clazz
+	 * @param clazzName
 	 * */
 	public static Logger getLogger(String clazzName) {
 		return new Logger(clazzName);

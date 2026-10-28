@@ -28,6 +28,14 @@ JS_PLUS_PATH_ORIGIN="${BIN_PATH}../JsPlus/"
 export JS_PLUS_PATH="${JS_PLUS_PATH_ORIGIN//\\//}"
 LIB_HOME="${JS_PLUS_PATH}../LibHome/"
 
+# ------------------------------------------------------------------
+# Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+# build/test script runs StopAll up front) so a stale H2 ghost, a locked
+# testdb file or a JVM pinning an old JAR cannot skew the load metrics
+# below.
+# ------------------------------------------------------------------
+"${JS_PLUS_PATH}bin/StopAll.sh" || true
+
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
 if [ -z "$DEPEND_LIBS" ]; then
@@ -120,8 +128,8 @@ echo "LoadTest exit code: $RC"
 # ------------------------------------------------------------------
 # Step 4: stop the H2 server started for this run (java ghost keyed by
 # script/StartH2.js) so LoadTest leaves nothing behind. RC was captured
-# above. Deliberately not StopAll.sh: its AppRootDir path pattern could
-# match the VS Code Java Language Server's command line in this workspace.
+# above. StopAll.sh was already run up front as Step 0; this step only
+# recycles this run's H2 ghost precisely.
 # ------------------------------------------------------------------
 pkill -f 'script/StartH2.js' 2>/dev/null || true
 exit "$RC"

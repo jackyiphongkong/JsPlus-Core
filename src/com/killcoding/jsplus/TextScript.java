@@ -603,7 +603,6 @@ public class TextScript {
 
     /**
     * Performs the addParams operation
-    * @param String - the String
     * @param params - the params
     * @return the addParams result
     * */

@@ -43,6 +43,14 @@ LIB_HOME="${JS_PLUS_PATH}../LibHome/"
 # helper executable up front (a no-op when the bit is already set).
 chmod +x "${JS_PLUS_PATH}bin/"*.sh "${BIN_PATH}"*.sh 2>/dev/null || true
 
+# ------------------------------------------------------------------
+# Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+# build/test script runs StopAll up front) so a stale H2 ghost, a locked
+# testdb file or a JVM pinning an old JAR cannot interfere with the pool
+# cases below (they depend on a clean idle/using/abort state).
+# ------------------------------------------------------------------
+"${JS_PLUS_PATH}bin/StopAll.sh" || true
+
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
 if [ -z "$DEPEND_LIBS" ]; then

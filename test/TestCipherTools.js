@@ -35,11 +35,11 @@ var PLAIN = "JsPlus-Core 加密測試 hello 1234 !@#";
 
 // NOTE: GraalJS String has no getBytes(); interop converts java.lang.String
 // return values into JS primitives, so any String.valueOf(...).getBytes()
-// chain fails. JString wraps java.lang.String in a plain object so every
+// chain fails. JsString wraps java.lang.String in a plain object so every
 // String method (getBytes etc.) stays callable from JS.
-var JString = Java.type("com.killcoding.jsplus.JString");
-var toUtf8 = function (s) { return JString.valueOf(s).getBytes("UTF-8"); };
-var fromUtf8 = function (b) { return new JString(b, "UTF-8").asString(); };
+var JsString = Java.type("com.killcoding.jsplus.JsString");
+var toUtf8 = function (s) { return JsString.valueOf(s).getBytes("UTF-8"); };
+var fromUtf8 = function (b) { return new JsString(b, "UTF-8").asString(); };
 var bytesEqual = function (a, b) {
     if (a === null || b === null || a.length !== b.length) { return false; }
     for (var i = 0; i < a.length; i++) { if (a[i] !== b[i]) { return false; } }

@@ -154,7 +154,6 @@ public class ConfigProperties extends Properties {
 			executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 				@Override
-
 				/*
 				* Performs the run operation
 				* */
@@ -216,7 +215,6 @@ public class ConfigProperties extends Properties {
 		final ConfigProperties the = this;
 		final Runnable cpRun = new Runnable() {
 			@Override
-
 			/*
 			* Performs the run operation
 			* */
@@ -277,7 +275,6 @@ public class ConfigProperties extends Properties {
 	}
 
 	@Override
-
 	/*
 	* Performs the load operation
 	* @param inputStream - the inputStream
@@ -293,7 +290,6 @@ public class ConfigProperties extends Properties {
 	}
 
 	@Override
-
 	/*
 	* Performs the load operation
 	* @param reader - the reader

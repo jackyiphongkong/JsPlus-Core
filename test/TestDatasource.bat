@@ -38,6 +38,14 @@ set JS_PLUS_PATH_ORIGIN=%BIN_PATH%..\JsPlus\
 SET "JS_PLUS_PATH=%JS_PLUS_PATH_ORIGIN:\=/%"
 set LIB_HOME=%JS_PLUS_PATH%../LibHome/
 
+REM ------------------------------------------------------------------
+REM Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+REM build/test script runs StopAll up front) so a stale H2 ghost, a locked
+REM testdb file or a JVM pinning an old JAR cannot interfere with the pool
+REM cases below (they depend on a clean idle/using/abort state).
+REM ------------------------------------------------------------------
+call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
+
 set "DEPEND_LIBS="
 for /r "%JS_PLUS_PATH_ORIGIN%..\LibHome" %%j in (*.jar) do set "DEPEND_LIBS=!DEPEND_LIBS!;%%j"
 set "DEPEND_LIBS=!DEPEND_LIBS:~1!"

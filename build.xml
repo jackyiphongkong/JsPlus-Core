@@ -298,7 +298,33 @@
 		</jar>
 		<echo message="Packaged jsplus-core-${jr.version}.jar" />
 	</target>
-	<target name="build">
-		<ant target="package" />
+	<target name="build" depends="package,javadoc" />
+	<!-- ============================================================
+	     javadoc - generate the API site into docs/api after every build.
+	     Version-tagged window title; -Xdoclint:none keeps the build green
+	     even when a comment is not 100% javadoc-clean. Skip a build with
+	     -Djavadoc.skip=true when only the jar is needed.
+	     NOTE: ConsoleImpl.java carries a version placeholder that is
+	     swapped to the real version only during compile; javadoc reads the
+	     source, so the restored placeholder form is used - fine.
+	     ============================================================ -->
+	<target name="javadoc" depends="version-final" unless="javadoc.skip">
+		<delete dir="${jr.root}/docs/api" />
+		<mkdir dir="${jr.root}/docs/api" />
+		<javadoc destdir="${jr.root}/docs/api"
+			sourcepath="${jr.src}"
+			classpathref="classpath"
+			encoding="${jr.charset}"
+			charset="${jr.charset}"
+			docencoding="${jr.charset}"
+			windowtitle="JsPlus-Core ${jr.version} API"
+			use="true"
+			linksource="true"
+			failonerror="true">
+			<arg value="-Xdoclint:none"/>
+			<doctitle><![CDATA[<h1>JsPlus-Core ${jr.version}</h1>]]></doctitle>
+			<bottom><![CDATA[<i>JsPlus-Core ${jr.version} - KILLCODING.COM - MIT License</i>]]></bottom>
+		</javadoc>
+		<echo message="Generated javadoc to docs/api (JsPlus-Core ${jr.version})" />
 	</target>
 </project>
