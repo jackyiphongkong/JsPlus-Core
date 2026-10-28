@@ -79,27 +79,27 @@ public class CacheArray implements java.io.Serializable {
 	protected volatile Integer SIZE = -1;
 
 	/** Global count of items processed by the filter thread. sweepProcessed()
-	 * never resets this counter, so callers can still observe a monotonic
-	 * order (getProcessedTotal()) even though the local index (getIndex())
-	 * cycles back to 0 after each head sweep. */
+	* never resets this counter, so callers can still observe a monotonic
+	* order (getProcessedTotal()) even though the local index (getIndex())
+	* cycles back to 0 after each head sweep. */
 	private long processedTotal = 0;
 	protected transient volatile Object OBJECT = null;
 	protected volatile Integer BATCH_INDEX = -1;
     protected transient final List<Object> BATCH = new ArrayList<Object>();
 
 	/**
-	 * All cache keys list
-	 * */
+	* All cache keys list
+	* */
 	private transient final List<String> cacheKeys = new CopyOnWriteArrayList<String>();
 
 	/**
-	 * 'true' is completed
-	 * */
+	* 'true' is completed
+	* */
 	private volatile boolean completed = false;
 
 	/**
-	 * New a CacheArray object
-	 * */
+	* New a CacheArray object
+	* */
 	public CacheArray() {
 		super();
 		this.nullIsCompleted = true;
@@ -127,9 +127,9 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Shut down the shared worker pool. Idempotent: safe to call multiple
-	 * times; subsequent filter() calls lazily re-create the pool via initPool().
-	 * */
+	* Shut down the shared worker pool. Idempotent: safe to call multiple
+	* times; subsequent filter() calls lazily re-create the pool via initPool().
+	* */
 	public static synchronized void shutdownPool() {
 		if (arrayPool != null) {
 			arrayPool.shutdown();
@@ -148,7 +148,7 @@ public class CacheArray implements java.io.Serializable {
 	public CacheArrayFilter filter(final long timer,final Runnable executeRun,final Runnable completedRun,final Runnable terminatedRun) {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer){
-	                	/*
+        	/*
         	* Performs the execute operation
         	* @param index - the index
         	* @param object - the object
@@ -160,7 +160,7 @@ public class CacheArray implements java.io.Serializable {
 
         	    if(executeRun != null) executeRun.run();
         	}
-        	        	/*
+        	/*
         	* Performs the completed operation
         	* @param size - the size
         	* */
@@ -170,7 +170,7 @@ public class CacheArray implements java.io.Serializable {
 
                 if(completedRun != null) completedRun.run();
         	}
-        	        	/*
+        	/*
         	* Performs the terminated operation
         	* */
         	@Override
@@ -196,7 +196,7 @@ public class CacheArray implements java.io.Serializable {
 	public CacheArrayFilter filter(final long timer,final long loopTimer,final Runnable executeRun,final Runnable executeBatchRun,final Runnable completedRun,final Runnable terminatedRun) {
 	    CacheArray the = this;
 	    the.filter = new CacheArrayFilter(timer,loopTimer){
-	                	/*
+        	/*
         	* Performs the execute operation
         	* @param index - the index
         	* @param object - the object
@@ -207,7 +207,7 @@ public class CacheArray implements java.io.Serializable {
         	    if(executeRun != null) executeRun.run();
         	}
 
-        	        	/*
+        	/*
         	* Performs the executeBatch operation
         	* @param index - the index
         	* @param batch - the batch
@@ -218,7 +218,7 @@ public class CacheArray implements java.io.Serializable {
                 if(executeBatchRun != null) executeBatchRun.run();
         	}
 
-        	        	/*
+        	/*
         	* Performs the completed operation
         	* @param size - the size
         	* */
@@ -228,7 +228,7 @@ public class CacheArray implements java.io.Serializable {
                 if(completedRun != null) completedRun.run();
         	}
 
-        	        	/*
+        	/*
         	* Performs the terminated operation
         	* */
         	@Override
@@ -241,9 +241,9 @@ public class CacheArray implements java.io.Serializable {
 	    return the.filter;
 	}
 	/**
-	 * Need override the method to process logic handle
-	 * @param _filter - CacheArrayFilter
-	 * */
+	* Need override the method to process logic handle
+	* @param _filter - CacheArrayFilter
+	* */
 	public synchronized void filter(CacheArrayFilter _filter) {
 	    this.filter = _filter;
         int usagePool = setUsingPoolSize(+1);
@@ -252,7 +252,7 @@ public class CacheArray implements java.io.Serializable {
         }
 		final CacheArray the = this;
 		Runnable runnable = new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -375,26 +375,27 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Get all cache keys
-	 * @return List
-	 * */
+	* Get all cache keys
+	* @return List
+	* */
 	public synchronized List<String> getCacheKeys() {
 		return new ArrayList<String>(Collections.synchronizedList(cacheKeys));
 	}
 
 	/**
-	 * Get all cache size
-	 * @return int
-	 * */
+	* Get all cache size
+	* @return int
+	* */
 	public synchronized int size() {
 		return cacheKeys.size();
 	}
 
 	/**
-	 * Add object to the cache list
-	 * @return - return cacke key
-	 * @value - It is object value
-	 * */
+	* Add object to the cache list
+	* @param value - the value
+	* @return - return cacke key
+	* @value - It is object value
+	* */
 	public synchronized String add(Object value) {
 	    // Reject adds once the worker has completed - otherwise data appended
 	    // after completion would be swept away by the worker's final removeAll().
@@ -410,12 +411,14 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Add object to the cache list
-	 * @return - return cacke key
-	 * @value - It is object value
-	 * @sleepMs - It is object value
-	 * @throws InterruptedException
-	 * */
+	* Add object to the cache list
+	* @param value - the value
+	* @param sleepMs - the sleepMs
+	* @return - return cacke key
+	* @value - It is object value
+	* @sleepMs - It is object value
+	* @throws InterruptedException
+	* */
 	public synchronized String add(Object value,long sleepMs) throws InterruptedException {
 	    String key = add(value);
 
@@ -425,9 +428,9 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Add list to the cache list
-	 * @param list - It is object list value
-	 * */
+	* Add list to the cache list
+	* @param list - It is object list value
+	* */
 	public synchronized void addAll(List<?> list) {
 		for (Object value : list) {
 			add(value);
@@ -435,10 +438,10 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Remove cache list index object
-	 * @return - return removed cache key name
-	 * @param index - It is remove index cache
-	 * */
+	* Remove cache list index object
+	* @return - return removed cache key name
+	* @param index - It is remove index cache
+	* */
 	public synchronized String remove(int index) {
 		String key = cacheKeys.get(index);
 		StoredCache.remove(key);
@@ -447,8 +450,8 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Remove all cache list
-	 * */
+	* Remove all cache list
+	* */
 	public synchronized void removeAll() {
 		for (String key : cacheKeys) {
 			StoredCache.remove(key);
@@ -457,15 +460,15 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Reclaim 'count' items from the head of the cache after the filter
-	 * thread has persisted the batch. Thread-safe under concurrent add():
-	 * adds always append to the tail, this method only touches the head and
-	 * is synchronized, so new rows can never be swept away. The filter
-	 * thread must call this AFTER executeBatch (i.e. after the batch has
-	 * been persisted) and must keep its local index in sync.
-	 * @return - the number of items actually removed
-	 * @param count - number of processed head items to sweep
-	 * */
+	* Reclaim 'count' items from the head of the cache after the filter
+	* thread has persisted the batch. Thread-safe under concurrent add():
+	* adds always append to the tail, this method only touches the head and
+	* is synchronized, so new rows can never be swept away. The filter
+	* thread must call this AFTER executeBatch (i.e. after the batch has
+	* been persisted) and must keep its local index in sync.
+	* @return - the number of items actually removed
+	* @param count - number of processed head items to sweep
+	* */
 	public synchronized int sweepProcessed(int count) {
 		if (count <= 0 || cacheKeys.isEmpty()) {
 			return 0;
@@ -484,28 +487,28 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/**
-	 * Get cache value by index
-	 * @return - Cache value
-	 * @param index - Cache index
-	 * */
+	* Get cache value by index
+	* @return - Cache value
+	* @param index - Cache index
+	* */
 	public synchronized Object get(int index) {
 		String key = cacheKeys.get(index);
 		return StoredCache.get(key);
 	}
 
 	/**
-	 * Get cache key by index
-	 * @return - Cache key
-	 * @param index - Cache index
-	 * */
+	* Get cache key by index
+	* @return - Cache key
+	* @param index - Cache index
+	* */
 	public synchronized String getCacheKey(int index) {
 		return cacheKeys.get(index);
 	}
 
 	/**
-	 * Check complete status
-	 * @return - 'true' is completed
-	 * */
+	* Check complete status
+	* @return - 'true' is completed
+	* */
 	public synchronized Boolean isCompleted() {
 		return completed;
 	}
@@ -596,8 +599,8 @@ public class CacheArray implements java.io.Serializable {
 	}
 
 	/** Monotonic count of items processed by the filter thread (never reset
-	 * by sweepProcessed()); the counterpart of getIndex(), which is local to
-	 * the current sweep cycle. */
+	* by sweepProcessed()); the counterpart of getIndex(), which is local to
+	* the current sweep cycle. */
 	public synchronized long getProcessedTotal(){
 	    return processedTotal;
 	}

@@ -151,7 +151,7 @@ public class DiskFile extends BaseFile {
 		}
 		initDefaultPool();
 		splitPool.execute(new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -197,7 +197,7 @@ public class DiskFile extends BaseFile {
 		});
 	}
 
-		/*
+	/*
 	* Performs the copyTo operation
 	* @param toPath - the toPath
 	* */
@@ -209,7 +209,7 @@ public class DiskFile extends BaseFile {
 		Files.copy(originPath, destPath);
 	}
 
-		/*
+	/*
 	* Performs the moveTo operation
 	* @param toPath - the toPath
 	* */
@@ -231,7 +231,7 @@ public class DiskFile extends BaseFile {
 	* */
 	public RemoteFile writeToRemote(RemoteFile remoteFile) throws IOException {
 		return writeToRemote(remoteFile, new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -487,7 +487,7 @@ public class DiskFile extends BaseFile {
 	    }
 	}
 
-		/*
+	/*
 	* Performs the beforeDelete operation
 	* @param realDeleted - the realDeleted
 	* @return the beforeDelete result
@@ -497,7 +497,7 @@ public class DiskFile extends BaseFile {
 		return true;
 	}
 
-		/*
+	/*
 	* Performs the afterDelete operation
 	* @param realDeleted - the realDeleted
 	* */
@@ -506,7 +506,7 @@ public class DiskFile extends BaseFile {
 
 	}
 
-		/*
+	/*
 	* Performs the beforeMkdirs operation
 	* @return the beforeMkdirs result
 	* */
@@ -515,7 +515,7 @@ public class DiskFile extends BaseFile {
 		return true;
 	}
 
-		/*
+	/*
 	* Performs the afterMkdirs operation
 	* */
 	@Override
@@ -523,7 +523,7 @@ public class DiskFile extends BaseFile {
 
 	}
 
-		/*
+	/*
 	* Performs the beforeCreateLink operation
 	* @param target - the target
 	* @return the beforeCreateLink result
@@ -533,7 +533,7 @@ public class DiskFile extends BaseFile {
 		return true;
 	}
 
-		/*
+	/*
 	* Performs the afterCreateLink operation
 	* @param target - the target
 	* */
@@ -542,7 +542,7 @@ public class DiskFile extends BaseFile {
 
 	}
 
-		/*
+	/*
 	* Performs the beforeWrite operation
 	* @return the beforeWrite result
 	* */
@@ -551,7 +551,7 @@ public class DiskFile extends BaseFile {
 		return true;
 	}
 
-		/*
+	/*
 	* Performs the afterWrite operation
 	* */
 	@Override
@@ -559,7 +559,7 @@ public class DiskFile extends BaseFile {
 
 	}
 
-		/*
+	/*
 	* Performs the delete operation
 	* @return the delete result
 	* */
@@ -607,7 +607,7 @@ public class DiskFile extends BaseFile {
 		return false;
 	}
 
-		/*
+	/*
 	* Performs the isFile operation
 	* @return the isFile result
 	* */
@@ -616,7 +616,7 @@ public class DiskFile extends BaseFile {
 		return this.origin.isFile() && !isLink();
 	}
 
-		/*
+	/*
 	* Performs the isDirectory operation
 	* @return the isDirectory result
 	* */
@@ -625,7 +625,7 @@ public class DiskFile extends BaseFile {
 		return this.origin.isDirectory() && !isLink();
 	}
 
-		/*
+	/*
 	* Performs the isLink operation
 	* @return the isLink result
 	* */
@@ -634,7 +634,7 @@ public class DiskFile extends BaseFile {
 		return Files.isSymbolicLink(Paths.get(this.origin.toURI()));
 	}
 
-		/*
+	/*
 	* Performs the exists operation
 	* @return the exists result
 	* */
@@ -643,7 +643,7 @@ public class DiskFile extends BaseFile {
 		return this.origin.exists();
 	}
 
-		/*
+	/*
 	* Performs the mkdirs operation
 	* @return the mkdirs result
 	* */
@@ -662,7 +662,7 @@ public class DiskFile extends BaseFile {
 		return false;
 	}
 
-		/*
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @param append - the append
@@ -806,7 +806,7 @@ public class DiskFile extends BaseFile {
 		close();
 	}
 
-		/*
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @return the write result
@@ -816,7 +816,7 @@ public class DiskFile extends BaseFile {
 		return write(data, false);
 	}
 
-		/*
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @param append - the append
@@ -838,7 +838,7 @@ public class DiskFile extends BaseFile {
 		return write(data.getBytes(charset), append);
 	}
 
-		/*
+	/*
 	* Performs the write operation
 	* @param data - the data
 	* @return the write result
@@ -858,7 +858,7 @@ public class DiskFile extends BaseFile {
 		return write(data.getBytes(charset));
 	}
 
-		/*
+	/*
 	* Performs the createLink operation
 	* @param target - the target
 	* @return the createLink result
@@ -884,7 +884,7 @@ public class DiskFile extends BaseFile {
 		return false;
 	}
 
-		/*
+	/*
 	* Performs the readLink operation
 	* @return the readLink result
 	* */
@@ -894,7 +894,7 @@ public class DiskFile extends BaseFile {
 		return Files.readSymbolicLink(link).toString();
 	}
 
-		/*
+	/*
 	* Performs the readAllBytes operation
 	* @return the readAllBytes result
 	* */
@@ -920,7 +920,7 @@ public class DiskFile extends BaseFile {
 		return Files.readAllBytes(Paths.get(getPath()));
 	}
 
-		/*
+	/*
 	* Performs the readAllString operation
 	* @return the readAllString result
 	* */
@@ -954,7 +954,7 @@ public class DiskFile extends BaseFile {
 		}
 	}
 
-		/*
+	/*
 	* Performs the size operation
 	* @return the size result
 	* */
@@ -998,7 +998,7 @@ public class DiskFile extends BaseFile {
 		afterWrite();
 	}
 
-		/*
+	/*
 	* Performs the complete operation
 	* @return the complete result
 	* */
@@ -1027,7 +1027,7 @@ public class DiskFile extends BaseFile {
 		this.modifyTimeMs = fileLocalTimestamp.getTime();
 	}
 
-		/*
+	/*
 	* Performs the setModifyTime operation
 	* @param modifyTime - the modifyTime
 	* */
@@ -1050,7 +1050,7 @@ public class DiskFile extends BaseFile {
 		setModifyTime(fileLocalTimestamp);
 	}
 
-		/*
+	/*
 	* Performs the getModifyTime operation
 	* @return the getModifyTime result
 	* */
@@ -1131,7 +1131,7 @@ public class DiskFile extends BaseFile {
 		}
 
 		Runnable runnable = new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -1147,7 +1147,7 @@ public class DiskFile extends BaseFile {
 		splitPool.execute(runnable);
 
 		runnable = new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -1197,7 +1197,7 @@ public class DiskFile extends BaseFile {
 				completedCallback));
 
 		Runnable runnable = new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -1228,7 +1228,7 @@ public class DiskFile extends BaseFile {
 			final Runnable completedCallback) {
 		DiskFile the = this;
 		CacheArrayFilter filter = new CacheArrayFilter(CACHE_ARRAY_FILTER_TIMER) {
-						/*
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
@@ -1280,7 +1280,7 @@ public class DiskFile extends BaseFile {
 				}
 			}
 
-						/*
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -1459,7 +1459,7 @@ public class DiskFile extends BaseFile {
 			RemoteFile rf = null;
 			final CacheArrayFilter theFilter = this;
 
-						/*
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -1490,7 +1490,7 @@ public class DiskFile extends BaseFile {
 				}
 			}
 
-						/*
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o

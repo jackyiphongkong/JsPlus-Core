@@ -44,15 +44,15 @@ import com.killcoding.tool.CommonTools;
 import com.killcoding.tool.ConfigProperties;
 
 /**
- * RemoteFileSync - the sync / archive layer of the remote (database-backed) file engine.
- * Owns the full-sync schedulers (startFullAsync and its two background threads), the
- * sync-state queries (getSyncedOnHostnames / getDeletedOnHostnames / isSyncedOnHostname /
- * isDeletedOnHostname / getSourceHostname / getLast* status helpers), the disk-sync
- * executor (executeSyncRunnable / getSyncRunnable) and the archive / purge schedulers
- * (startArchiveForFileDeleted / startArchiveForDeleted / startArchiveForTimeout with their
- * scan-delete list helper). The public facade RemoteFile extends this class and exposes
- * only its public API; the implementation lives in the abstract parent RemoteFileBase.
- * */
+* RemoteFileSync - the sync / archive layer of the remote (database-backed) file engine.
+* Owns the full-sync schedulers (startFullAsync and its two background threads), the
+* sync-state queries (getSyncedOnHostnames / getDeletedOnHostnames / isSyncedOnHostname /
+* isDeletedOnHostname / getSourceHostname / getLast* status helpers), the disk-sync
+* executor (executeSyncRunnable / getSyncRunnable) and the archive / purge schedulers
+* (startArchiveForFileDeleted / startArchiveForDeleted / startArchiveForTimeout with their
+* scan-delete list helper). The public facade RemoteFile extends this class and exposes
+* only its public API; the implementation lives in the abstract parent RemoteFileBase.
+* */
 public abstract class RemoteFileSync extends RemoteFileBase {
 
 	/** @param path the remote path this file object operates on */
@@ -510,7 +510,6 @@ public abstract class RemoteFileSync extends RemoteFileBase {
 	/**
 	* Performs the getSyncRunnable operation
 	* @param filter - the filter
-	* @param String - the String
 	* @param item - the item
 	* @param rf - the rf
 	* @param df - the df

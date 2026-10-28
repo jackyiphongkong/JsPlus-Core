@@ -42,52 +42,55 @@ public class CacheArrayFilter {
 	protected boolean terminated = false;
 	protected boolean forceTerminated = false;
 
-    /**
-     * New a CacheArrayFilter Object
-     * @param timer - Timer,default is 10ms
-     * */
+	/**
+	* New a CacheArrayFilter Object
+	* @param timer - Timer,default is 10ms
+	* */
 	public CacheArrayFilter(Long timer) {
 		super();
 		this.timer = timer;
 	}
 
-    /**
-     * New a CacheArrayFilter Object
-     * @param timer - Timer,default is 10ms
-     * @param loopTimer - Loop Timer,default is 10ms
-     * */
+	/**
+	* New a CacheArrayFilter Object
+	* @param timer - Timer,default is 10ms
+	* @param loopTimer - Loop Timer,default is 10ms
+	* */
 	public CacheArrayFilter(Long timer,Long loopTimer) {
 		super();
 		this.timer = timer;
 		this.loopTimer = loopTimer;
 	}
 
-    /**
-     * Need override the method to use
-     * @param index - Index of cache list
-     * @param o - Cache value
-     * */
+	/**
+	* Need override the method to use
+	* @param index - Index of cache list
+	* @param o - Cache value
+	* */
 	public void execute(Integer index, Object o) {
 
 	}
 
-    /**
-     * Handle execute batch method
-     * */
+	/**
+	* Handle execute batch method
+	* @param batchIndex - the batchIndex
+	* @param batch - the batch
+	* */
 	public void executeBatch(Integer batchIndex,List<?> batch){
 
 	}
 
-    /**
-     * Handle completed method
-     * */
+	/**
+	* Handle completed method
+	* @param size - the size
+	* */
 	public void completed(Integer size) {
 
 	}
 
-    /**
-     * Handle terminated method
-     * */
+	/**
+	* Handle terminated method
+	* */
 	public void terminated() {
 
 	}

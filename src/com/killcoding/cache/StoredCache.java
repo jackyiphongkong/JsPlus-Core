@@ -62,8 +62,14 @@ public final class StoredCache {
 	public synchronized static void set(String name,Object value){
 	    if(api == null) setApi(new MemoryCache(true));
 
-		log.debug("Set Cache: {}",name);
-		api.set(name, value, Integer.MAX_VALUE);
+		if(value == null){
+			log.debug("Remove Cache: {}",name);
+			api.remove(name);
+		}else{
+			log.debug("Set Cache: {}",name);
+			api.set(name, value, Integer.MAX_VALUE);
+		}
+
 	}
 
 	/**

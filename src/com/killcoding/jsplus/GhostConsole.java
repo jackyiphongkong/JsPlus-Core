@@ -167,7 +167,7 @@ public class GhostConsole extends ScriptConsole {
     * */
     private Runnable getExecuteRun(){
         return new Runnable(){
-                        /*
+            /*
             * Performs the run operation
             * */
             @SuppressWarnings("unchecked")
@@ -216,7 +216,7 @@ public class GhostConsole extends ScriptConsole {
     private Runnable getCompletedRun(){
         final GhostConsole the = this;
         return new Runnable(){
-                        /*
+            /*
             * Performs the run operation
             * */
             @Override
@@ -244,7 +244,7 @@ public class GhostConsole extends ScriptConsole {
    * */
    private Runnable getDetectExecuteRun(){
         return new Runnable(){
-                        /*
+            /*
             * Performs the run operation
             * */
             @SuppressWarnings("unchecked")
@@ -294,7 +294,7 @@ public class GhostConsole extends ScriptConsole {
     private Runnable getDetectCompletedRun(){
         final GhostConsole the = this;
         return new Runnable(){
-                        /*
+            /*
             * Performs the run operation
             * */
             @Override

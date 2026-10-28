@@ -139,9 +139,9 @@ public final class DriverDataSource implements DataSource {
 	private long dynamicReloadConfigTime = System.currentTimeMillis();
 
 	/**
-	 * New a DriverDataSource object
-	 * Use env APP_DATASOURCE=/path/DataSource.properties
-	 * */
+	* New a DriverDataSource object
+	* Use env APP_DATASOURCE=/path/DataSource.properties
+	* */
 	public DriverDataSource() {
 		super();
 		this.appDataSource = CommonTools.getSystemProperties(DriverDataSource.class, "APP_DATASOURCE",
@@ -160,9 +160,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * New a DriverDataSource object
-	 * @param appDataSource - It is file object (e.g. /your_path/DataSource.properties)
-	 * */
+	* New a DriverDataSource object
+	* @param appDataSource - It is file object (e.g. /your_path/DataSource.properties)
+	* */
 	public DriverDataSource(File appDataSource) {
 		super();
 		this.appDataSource = appDataSource;
@@ -180,9 +180,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * New a DriverDataSource object
-	 * @param configPropertiesContent - It is properties context
-	 * */
+	* New a DriverDataSource object
+	* @param configPropertiesContent - It is properties context
+	* */
 	public DriverDataSource(String configPropertiesContent) throws IOException {
 		super();
 		initDs();
@@ -190,9 +190,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * New a DriverDataSource object
-	 * @param configProperties - It is ConfigProperties object
-	 * */
+	* New a DriverDataSource object
+	* @param configProperties - It is ConfigProperties object
+	* */
 	public DriverDataSource(ConfigProperties configProperties) throws IOException {
 		super();
 		initDs();
@@ -209,9 +209,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Set app datasource properties file path
-	 * @param appDataSourcePath - file path
-	 * */
+	* Set app datasource properties file path
+	* @param appDataSourcePath - file path
+	* */
 	public void setAppDataSourcePath(String appDataSourcePath) {
 		if (!CommonTools.isBlank(appDataSourcePath)) {
 			this.appDataSource = new File(appDataSourcePath);
@@ -220,48 +220,48 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get app datasource properties file path
-	 * */
+	* Get app datasource properties file path
+	* */
 	public String getAppDataSourcePath() {
 		return this.appDataSourcePath;
 	}
 
 	/**
-	 * Check is loaded config
-	 * @return boolean
-	 * */
+	* Check is loaded config
+	* @return boolean
+	* */
 	public boolean isLoadedConfig() {
 		return loadedConfig;
 	}
 
 	/**
-	 * Set enable status log
-	 * @param enableStatusLog - 'true' is enable write status log
-	 * */
+	* Set enable status log
+	* @param enableStatusLog - 'true' is enable write status log
+	* */
 	public void setEnableStatusLog(Boolean enableStatusLog) {
 		this.enableStatusLog = enableStatusLog == null ? false : enableStatusLog;
 	}
 
 	/**
-	 * Set enable full status log
-	 * @param enableFullStatusLog - 'true' is enable write status log when full connections
-	 * */
+	* Set enable full status log
+	* @param enableFullStatusLog - 'true' is enable write status log when full connections
+	* */
 	public void setEnableFullStatusLog(Boolean enableFullStatusLog) {
 		this.enableFullStatusLog = enableFullStatusLog == null ? true : enableFullStatusLog;
 	}
 
 	/**
-	 * Set status log archive days
-	 * @param  statusLogArchiveDays - Delete before x days log
-	 * */
+	* Set status log archive days
+	* @param  statusLogArchiveDays - Delete before x days log
+	* */
 	public void setStatusLogArchiveDays(Integer statusLogArchiveDays) {
 		this.statusLogArchiveDays = statusLogArchiveDays == null ? 30 : statusLogArchiveDays;
 	}
 
 	/**
-	 * Set status log target folder
-	 * @param _statusLogFolder - Target folder
-	 * */
+	* Set status log target folder
+	* @param _statusLogFolder - Target folder
+	* */
 	public void setStatusLogFolder(String _statusLogFolder) {
 		this.statusLogFolder = CommonTools.isBlank(_statusLogFolder) ? null : _statusLogFolder;
 		if (this.statusLogFolder == null) {
@@ -273,173 +273,173 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Set connection life cycle
-	 * @param lifeCycle - Unit is ms
-	 * */
+	* Set connection life cycle
+	* @param lifeCycle - Unit is ms
+	* */
 	public void setLifeCycle(Long lifeCycle) {
 		this.lifeCycle = (lifeCycle == null ? Long.MAX_VALUE : lifeCycle);
 	}
 
 	/**
-	 * Get connection life cycle
-	 * @return Long - Unit is ms
-	 * */
+	* Get connection life cycle
+	* @return Long - Unit is ms
+	* */
 	public Long getLifeCycle() {
 		return this.lifeCycle;
 	}
 
 	/**
-	 * Set refresh pool timer
-	 * @param refreshPoolTimer - Unit is ms
-	 * */
+	* Set refresh pool timer
+	* @param refreshPoolTimer - Unit is ms
+	* */
 	public void setRefreshPoolTimer(Long refreshPoolTimer) {
 		this.refreshPoolTimer = (refreshPoolTimer == null ? 1000L : refreshPoolTimer);
 	}
 
 	/**
-	 * Get refresh pool timer
-	 * @return Long - Unit is ms
-	 * */
+	* Get refresh pool timer
+	* @return Long - Unit is ms
+	* */
 	public Long getRefreshPoolTimer() {
 		return this.refreshPoolTimer;
 	}
 
 	/**
-	 * Set test valid timeout
-	 * @param testValidTimeout Unit is seconds,default is 5s
-	 * */
+	* Set test valid timeout
+	* @param testValidTimeout Unit is seconds,default is 5s
+	* */
 	public void setTestValidTimeout(Long testValidTimeout) {
 		this.testValidTimeout = (testValidTimeout == null ? 5L : testValidTimeout);
 	}
 
 	/**
-	 * Get test valid timeout
-	 * @return Long - Unit is seconds
-	 * */
+	* Get test valid timeout
+	* @return Long - Unit is seconds
+	* */
 	public Long getTestValidTimeout() {
 		return this.testValidTimeout;
 	}
 
 	/**
-	 * Set idle timeout
-	 * @param idleTimeout - Unit is seconds, default is 60s
-	 * */
+	* Set idle timeout
+	* @param idleTimeout - Unit is seconds, default is 60s
+	* */
 	public void setIdleTimeout(Long idleTimeout) {
 		this.idleTimeout = (idleTimeout == null ? 60L : idleTimeout);
 	}
 
 	/**
-	 * Get idle timeout
-	 * @return Long - Unit is seconds
-	 * */
+	* Get idle timeout
+	* @return Long - Unit is seconds
+	* */
 	public Long getIdleTimeout() {
 		return this.idleTimeout;
 	}
 
 	/**
-	 * Set execute timeout
-	 * Default is 0s
-	 * Disabled timeou if value is 0s
-	 * @param timeout - Unit is seconds,
-	 * */
+	* Set execute timeout
+	* Default is 0s
+	* Disabled timeou if value is 0s
+	* @param timeout - Unit is seconds,
+	* */
 	public void setTimeout(Long timeout) {
 		this.timeout = (timeout == null ? 0L : timeout);
 	}
 
 	/**
-	 * Get execute timeout
-	 * @return Long - Unit is seconds,
-	 * */
+	* Get execute timeout
+	* @return Long - Unit is seconds,
+	* */
 	public Long getTimeout() {
 		return this.timeout;
 	}
 
 	/**
-	 * Set execute transaction timeout
-	 * Default is 0s
-	 * Disabled timeou if value is 0s
-	 * @param transactionTimeout - Unit is seconds,
-	 * */
+	* Set execute transaction timeout
+	* Default is 0s
+	* Disabled timeou if value is 0s
+	* @param transactionTimeout - Unit is seconds,
+	* */
 	public void setTransactionTimeout(Long transactionTimeout) {
 		this.transactionTimeout = (transactionTimeout == null ? 0L : transactionTimeout);
 	}
 
 	/**
-	 * Get execute transaction timeout
-	 * @return Long - Unit is seconds,
-	 * */
+	* Get execute transaction timeout
+	* @return Long - Unit is seconds,
+	* */
 	public Long getTransactionTimeout() {
 		return this.transactionTimeout;
 	}
 
 	/**
-	 * Set max connection pool size
-	 * @param maxPoolSize
-	 * */
+	* Set max connection pool size
+	* @param maxPoolSize
+	* */
 	public void setMaxPoolSize(Integer maxPoolSize) {
 		this.maxPoolSize = (maxPoolSize == null ? Integer.MAX_VALUE : maxPoolSize);
 	}
 
 	/**
-	 * Get max connection pool size
-	 * @return Integer
-	 * */
+	* Get max connection pool size
+	* @return Integer
+	* */
 	public Integer getMaxPoolSize() {
 		return this.maxPoolSize;
 	}
 
 	/**
-	 * Set jdbc driver jar path
-	 * @param driverJar - Driver jar file or folder path
-	 * */
+	* Set jdbc driver jar path
+	* @param driverJar - Driver jar file or folder path
+	* */
 	public void setDriverJar(String driverJar) {
 		this.driverJar = driverJar;
 	}
 
 	/**
-	 * Get jdbc driver jar path
-	 * @return String
-	 * */
+	* Get jdbc driver jar path
+	* @return String
+	* */
 	public String getDriverJar() {
 		return this.driverJar;
 	}
 
 	/**
-	 * Set connection properties
-	 * @param connProps -  Sample: autoReconnection=true;key=value
-	 * */
+	* Set connection properties
+	* @param connProps -  Sample: autoReconnection=true;key=value
+	* */
 	public void setConnProps(String connProps) {
 		this.connProps = connProps;
 	}
 
 	/**
-	 * Get connection properties
-	 * @return connProps -  Sample: autoReconnection=true;key=value
-	 * */
+	* Get connection properties
+	* @return connProps -  Sample: autoReconnection=true;key=value
+	* */
 	public String getConnProps() {
 		return this.connProps;
 	}
 
 	/**
-	 * Set driver class name
-	 * @param driverClassName
-	 * */
+	* Set driver class name
+	* @param driverClassName
+	* */
 	public void setDriverClassName(String driverClassName) {
 		this.driverClassName = driverClassName;
 	}
 
 	/**
-	 * Get driver class name
-	 * @return String
-	 * */
+	* Get driver class name
+	* @return String
+	* */
 	public String getDriverClassName() {
 		return this.driverClassName;
 	}
 
 	/**
-	 * Set connection url
-	 * @param urlOrList - String or List
-	 * */
+	* Set connection url
+	* @param urlOrList - String or List
+	* */
 	@SuppressWarnings("unchecked")
 	public void setUrl(Object urlOrList) {
 		if (urlOrList instanceof String) {
@@ -455,73 +455,73 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get connection url
-	 * */
+	* Get connection url
+	* */
 	public String getUrl() {
 		return this.url;
 	}
 
 	/**
-	 * Set min connection pool size
-	 * @param minPoolSize
-	 * */
+	* Set min connection pool size
+	* @param minPoolSize
+	* */
 	public void setMinPoolSize(Integer minPoolSize) {
 		this.minPoolSize = (minPoolSize == null ? 0 : minPoolSize);
 	}
 
 	/**
-	 * Get min connection pool size
-	 * */
+	* Get min connection pool size
+	* */
 	public Integer getMinPoolSize() {
 		return this.minPoolSize;
 	}
 
 	/**
-	 * Set abort mode
-	 * @param abortMode - 'close' or 'abort', default is 'abort'
-	 * */
+	* Set abort mode
+	* @param abortMode - 'close' or 'abort', default is 'abort'
+	* */
 	public void setAbortMode(String abortMode) {
 		if (abortMode == null)
 			this.abortMode = "abort";
 	}
 
 	/**
-	 * Get abort mode
-	 * @return abortMode - 'close' or 'abort', default is 'abort'
-	 * */
+	* Get abort mode
+	* @return abortMode - 'close' or 'abort', default is 'abort'
+	* */
 	public String getAbortMode() {
 		return this.abortMode;
 	}
 
 	/**
-	 * Set thread name
-	 * @param name - It is thread name, default is 'DriverDataSource'
-	 * */
+	* Set thread name
+	* @param name - It is thread name, default is 'DriverDataSource'
+	* */
 	public void setName(String name) {
 		if (name != null)
 			this.name = name;
 	}
 
 	/**
-	 * Get thread name
-	 * @return String
-	 * */
+	* Get thread name
+	* @return String
+	* */
 	public String getName() {
 		return this.name;
 	}
 
 	/**
-	 * Set database username
-	 * @param username - Database username
-	 * */
+	* Set database username
+	* @param username - Database username
+	* */
 	public void setUsername(String username) {
 		this.username = username;
 	}
 
 	/**
-	 * Set database password
-	 * @param password - Database password
-	 * */
+	* Set database password
+	* @param password - Database password
+	* */
 	public void setPassword(String password) {
 		this.password = password;
 	}
@@ -536,17 +536,17 @@ public final class DriverDataSource implements DataSource {
 
 
 	/**
-	 * Get connection pool size
-	 * @return Integer
-	 * */
+	* Get connection pool size
+	* @return Integer
+	* */
 	public ConnectionPool getConnectionPool() {
 		return connectionPool;
 	}
 
 	/**
-	 * Abort timeout connection
-	 * Skip execute when 'timeout' is 0 or 'transactionTimeout' is 0
-	 * */
+	* Abort timeout connection
+	* Skip execute when 'timeout' is 0 or 'transactionTimeout' is 0
+	* */
 	private void abortTimeoutConnection() {
 		try {
 			if (timeout > 0 || transactionTimeout > 0) {
@@ -594,9 +594,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Abort life cycle connection
-	 * Skip execute when 'lifeCycle' is 0
-	 * */
+	* Abort life cycle connection
+	* Skip execute when 'lifeCycle' is 0
+	* */
 	private void abortLifeCycleEndedConnection() {
 		if (lifeCycle > 0) {
 			Date currentTime = new Date();
@@ -624,9 +624,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Abort idle timeout connection
-	 * Skip execute when 'idleTimeout' is 0
-	 * */
+	* Abort idle timeout connection
+	* Skip execute when 'idleTimeout' is 0
+	* */
 	private void abortIdleTimeoutConnection() {
 		if (idleTimeout > 0) {
 			Date currentTime = new Date();
@@ -659,9 +659,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Abort invalid connection
-	 * Skip execute when 'testValidTimeout' is 0
-	 * */
+	* Abort invalid connection
+	* Skip execute when 'testValidTimeout' is 0
+	* */
 	private void abortInvalidConnection() {
 		if (testValidTimeout > 0) {
 			try {
@@ -691,12 +691,12 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Create connection to pool
-	 * When,
-	 *   (loadPoolSize + usedPoolSize) &lt; maxPoolSize
-	 *   and
-	 *   loadPoolSize &lt; minPoolSize
-	 * */
+	* Create connection to pool
+	* When,
+	*   (loadPoolSize + usedPoolSize) &lt; maxPoolSize
+	*   and
+	*   loadPoolSize &lt; minPoolSize
+	* */
 	private synchronized void createConnectionToPool() {
 		final String threadName = String.format("%s-createConnectionToPool", this.name);
 
@@ -721,7 +721,7 @@ public final class DriverDataSource implements DataSource {
 			}
 			for (int i = 0; i < willCreateConnTotal; i++) {
 				Callable<Boolean> callable = new Callable<Boolean>() {
-										/*
+					/*
 					* Performs the call operation
 					* @return the call result
 					* */
@@ -755,9 +755,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Set internal config
-	 * @param _configProperties
-	 * */
+	* Set internal config
+	* @param _configProperties
+	* */
 	private synchronized void setInternalConfig(ConfigProperties _configProperties) {
 		this.configProperties = _configProperties;
 		if (this.configProperties.containsKey("EnableStatusLog"))
@@ -830,9 +830,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Set internal config
-	 * @param configPropertiesContent
-	 * */
+	* Set internal config
+	* @param configPropertiesContent
+	* */
 	private synchronized void setInternalConfig(String configPropertiesContent) throws IOException {
 		log.debug("setInternalConfig -> {}", configPropertiesContent);
 		ConfigProperties _configProperties = new ConfigProperties();
@@ -841,32 +841,32 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Set config
-	 * @param configPropertiesContent
-	 * */
+	* Set config
+	* @param configPropertiesContent
+	* */
 	public synchronized void setConfig(String configPropertiesContent) throws IOException {
 		setInternalConfig(configPropertiesContent);
 	}
 
 	/**
-	 * Set config
-	 * @param _configProperties
-	 * */
+	* Set config
+	* @param _configProperties
+	* */
 	public synchronized void setConfig(ConfigProperties _configProperties) throws IOException {
 		setInternalConfig(_configProperties);
 	}
 
 	/**
-	 * Reload config
-	 * When 'appDataSource' is file object
-	 * */
+	* Reload config
+	* When 'appDataSource' is file object
+	* */
 	private synchronized void reloadConfig() {
 	    try{
     	    DriverDataSource the = this;
     	    if (this.appDataSource != null) {
     	        configProperties = new ConfigProperties();
     	        Runnable updateRun = new Runnable(){
-    	                	            /*
+    	            /*
     	            * Performs the run operation
     	            * */
     	            @Override
@@ -888,8 +888,8 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 *  Archive log
-	 * */
+	*  Archive log
+	* */
 	private void archiveLog() {
 		if (statusLogFile != null && statusLogArchiveDays != null) {
 			File statusLogFileParent = statusLogFile.getParentFile();
@@ -906,8 +906,10 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Delete old archive log
-	 * */
+	* Delete old archive log
+	* @param directory - the directory
+	* @param fileOutArchiveDaysMs - the fileOutArchiveDaysMs
+	* */
 	private void deleteFilesOlderThan(File directory, long fileOutArchiveDaysMs) throws IOException {
 		if (directory.isDirectory()) {
 			File[] files = directory.listFiles();
@@ -931,8 +933,8 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Write connection status log
-	 * */
+	* Write connection status log
+	* */
 	private synchronized void statusLogOutput() {
 		File folder = statusLogFile.getParentFile();
 		if (folder.exists()) {
@@ -1018,7 +1020,7 @@ public final class DriverDataSource implements DataSource {
 		}
 
 		Comparator<Object[]> comp = new Comparator<Object[]>() {
-						/*
+			/*
 			* Performs the compare operation
 			* @param arg0 - the arg0
 			* @param arg1 - the arg1
@@ -1066,8 +1068,8 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Manage connection pool
-	 * */
+	* Manage connection pool
+	* */
 	private void manageConnectionPool() {
 		// Starts the single management thread exactly once. Double-checked
 		// locking keeps this off the borrow hot path after first init - the
@@ -1082,7 +1084,7 @@ public final class DriverDataSource implements DataSource {
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 
-								/*
+				/*
 				* Performs the run operation
 				* */
 				@Override
@@ -1128,7 +1130,7 @@ public final class DriverDataSource implements DataSource {
             executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 
-								/*
+				/*
 				* Performs the run operation
 				* */
 				@Override
@@ -1165,11 +1167,11 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get connection
-	 * @exception SQLException
-	 * @return Connection
-	 * */
-    @Override
+	* Get connection
+	* @exception SQLException
+	* @return Connection
+	* */
+	@Override
 	public Connection getConnection() throws SQLException {
 	    try{
     		manageConnectionPool();
@@ -1211,7 +1213,7 @@ public final class DriverDataSource implements DataSource {
 		String errorMsg = "Connection is null.";
 		log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 		throw new SQLException(errorMsg) {
-						/*
+			/*
 			* Performs the getErrorCode operation
 			* @return the getErrorCode result
 			* */
@@ -1232,7 +1234,7 @@ public final class DriverDataSource implements DataSource {
 			String errorMsg = String.format("Full connection pool,current size is %s.", openConnectionSize);
 			log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 			throw new SQLException(errorMsg) {
-								/*
+				/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
 				* */
@@ -1246,9 +1248,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get connection properties
-	 * @return Properties
-	 * */
+	* Get connection properties
+	* @return Properties
+	* */
 	private Properties getConnectionProperties() {
 		Properties props = new Properties();
 		props.setProperty("user", username);
@@ -1273,10 +1275,10 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get connection from driver
-	 * @exception SQLException
-	 * @return Connection
-	 * */
+	* Get connection from driver
+	* @exception SQLException
+	* @return Connection
+	* */
 	private Connection getConnectionFromDriver() throws SQLException {
 		Properties props = getConnectionProperties();
 		Connection conn = null;
@@ -1295,9 +1297,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Load connection to pool
-	 * @exception SQLException
-	 * */
+	* Load connection to pool
+	* @exception SQLException
+	* */
 	private synchronized void loadConnectionToPool() throws SQLException {
 		checkConnectionPoolSize();
 		log.debug("Opening(Pool)");
@@ -1308,20 +1310,20 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Close connection
-	 * @exception SQLException
-	 * @param conn - Connection object
-	 * */
+	* Close connection
+	* @exception SQLException
+	* @param conn - Connection object
+	* */
 	protected void closeConnection(Connection conn) throws SQLException {
 		if (conn != null)
 			closeConnection(conn.hashCode());
 	}
 
 	/**
-	 * Close connection
-	 * @exception SQLException
-	 * @param hashCode - Connection hash code
-	 * */
+	* Close connection
+	* @exception SQLException
+	* @param hashCode - Connection hash code
+	* */
 	protected void closeConnection(Integer hashCode) throws SQLException {
 		Connection conn = connectionPool.getConnectionMark().get(hashCode);
 		if (conn != null) {
@@ -1356,16 +1358,16 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Add count abort close failed for write status log
-	 * @param value - Change value
-	 * */
+	* Add count abort close failed for write status log
+	* @param value - Change value
+	* */
 	private synchronized void addCountAbortedCloseFailed(int value) {
 		countAbortedCloseFailed += value;
 	}
 
 	/**
-	 * Close all connections
-	 * */
+	* Close all connections
+	* */
 	public synchronized void abortAll() {
 		closed = true;
 		log.mark("Try Abort(On SystemExit,CLOSE-{}) connections.",name);
@@ -1388,8 +1390,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Loop close all connections
-	 * */
+	* Loop close all connections
+	* @param waitSeconds - the waitSeconds
+	* */
 	public synchronized void closeAll(int waitSeconds) {
 		closed = true;
 
@@ -1419,16 +1422,16 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Loop close all connections
-	 * */
+	* Loop close all connections
+	* */
 	public synchronized void closeAll() {
 		closeAll(10);
 	}
 
 	/**
-	 * Deregister JDBC Driver
-	 * For system exit
-	 * */
+	* Deregister JDBC Driver
+	* For system exit
+	* */
 	public synchronized static void deregisterDriver(){
 	    LoggerFactory.getLogger(DriverDataSource.class).mark("DeregisterDriver processing.");
 	    Enumeration<Driver> drivers = DriverManager.getDrivers();
@@ -1447,11 +1450,11 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Try get connection
-	 * Support multi url
-	 * @param driver - Driver
-	 * @param props - Connection properties ,var name is 'connProps'
-	 * */
+	* Try get connection
+	* Support multi url
+	* @param driver - Driver
+	* @param props - Connection properties ,var name is 'connProps'
+	* */
 	private Connection tryGetConnection(Driver driver, Properties props) {
 		Connection conn = null;
 		int urlLastIndex = urlList.size() - 1;
@@ -1521,9 +1524,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Abort connection by hash code
-	 * @param hashCode - Connection hash code
-	 * */
+	* Abort connection by hash code
+	* @param hashCode - Connection hash code
+	* */
 	protected void abort(Integer hashCode) {
 		log.debug("Abort Connection {}", hashCode);
 		Connection conn = connectionPool.getConnectionMark().get(hashCode);
@@ -1541,11 +1544,11 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Call abort connection
-	 * Please see 'abortMode' options (rollback,close,abort)
-	 * Default is 'abort'
-	 * @param conn - Connection
-	 * */
+	* Call abort connection
+	* Please see 'abortMode' options (rollback,close,abort)
+	* Default is 'abort'
+	* @param conn - Connection
+	* */
 	private void callAbortConn(Connection conn) {
 		try {
 			if (abortMode.equalsIgnoreCase("rollback")) {
@@ -1569,12 +1572,12 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Load jdbc driver jar
-	 * @param driverJar - It is jar file path or jar dir path
-	 * @param driver
-	 * @exception SQLException
-	 * @return Driver
-	 * */
+	* Load jdbc driver jar
+	* @param driverJar - It is jar file path or jar dir path
+	* @param driver
+	* @exception SQLException
+	* @return Driver
+	* */
 	private synchronized Driver loadJdbcDriver(String driverJar, String driver) throws SQLException {
 		try {
 
@@ -1583,7 +1586,7 @@ public final class DriverDataSource implements DataSource {
 				String errorMsg = "Driver jar is null.";
 				log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 				throw new SQLException(errorMsg) {
-										/*
+					/*
 					* Performs the getErrorCode operation
 					* @return the getErrorCode result
 					* */
@@ -1613,7 +1616,7 @@ public final class DriverDataSource implements DataSource {
 			log.warn(String.format("ERROR CODE: (%s) %s", errorCode, errorMsg));
 			throw new SQLException(e) {
 
-								/*
+				/*
 				* Performs the getErrorCode operation
 				* @return the getErrorCode result
 				* */
@@ -1627,28 +1630,28 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get owner thread name
-	 * For use sync DataSource
-	 * @return String
-	 * */
+	* Get owner thread name
+	* For use sync DataSource
+	* @return String
+	* */
 	public String getOwner() {
 		return owner;
 	}
 
 	/**
-	 * Get config properties
-	 * @return ConfigProperties
-	 * */
+	* Get config properties
+	* @return ConfigProperties
+	* */
 	public ConfigProperties getConfigProperties() {
 		return configProperties;
 	}
 
 	/**
-	 * Get sync data source list
-	 * @exception SQLException
-	 * @param owner - From master data source thread name
-	 * @return List&lt;DriverDataSource&gt;
-	 * */
+	* Get sync data source list
+	* @exception SQLException
+	* @param owner - From master data source thread name
+	* @return List&lt;DriverDataSource&gt;
+	* */
 	protected final synchronized List<DriverDataSource> getSyncDataSourceList(String owner) throws SQLException {
 		if (syncDriverDataSource == null) {
 			syncDriverDataSource = new ArrayList<DriverDataSource>();
@@ -1671,7 +1674,7 @@ public final class DriverDataSource implements DataSource {
 					int errorCode = 99905;
 					String errorMsg = String.format("SyncDatasource is null - %s .", syncDsProp);
 					throw new SQLException(errorMsg) {
-												/*
+						/*
 						* Performs the getErrorCode operation
 						* @return the getErrorCode result
 						* */
@@ -1688,10 +1691,10 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * For checksum master and sync data source connection url
-	 * Pause sync where same connection url
-	 * @return String
-	 * */
+	* For checksum master and sync data source connection url
+	* Pause sync where same connection url
+	* @return String
+	* */
 	public String getFingerprint() {
 		return CommonTools.md5(String.format("%s-%s", this.url, this.username));
 	}
@@ -1738,9 +1741,9 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	 * Get pool using
-	 * @return double
-	 * */
+	* Get pool using
+	* @return double
+	* */
 	public double getUsage() {
 		Map<Integer, Date> CONNECTION_USING_AT_MARK_SYNC = connectionPool.getConnectionUsingAtMark();
 		int usingSize = CONNECTION_USING_AT_MARK_SYNC.keySet().size();
@@ -1770,7 +1773,7 @@ public final class DriverDataSource implements DataSource {
 		return null;
 	}
 
-		/*
+	/*
 	* Performs the setLogWriter operation
 	* @param arg0 - the arg0
 	* */
@@ -1778,7 +1781,7 @@ public final class DriverDataSource implements DataSource {
 	public void setLogWriter(PrintWriter arg0) throws SQLException {
 	}
 
-		/*
+	/*
 	* Performs the getLogWriter operation
 	* @return the getLogWriter result
 	* */
@@ -1787,7 +1790,7 @@ public final class DriverDataSource implements DataSource {
 		return null;
 	}
 
-		/*
+	/*
 	* Performs the getLoginTimeout operation
 	* @return the getLoginTimeout result
 	* */
@@ -1796,7 +1799,7 @@ public final class DriverDataSource implements DataSource {
 		return 0;
 	}
 
-		/*
+	/*
 	* Performs the setLoginTimeout operation
 	* @param arg0 - the arg0
 	* */
@@ -1804,7 +1807,7 @@ public final class DriverDataSource implements DataSource {
 	public void setLoginTimeout(int arg0) throws SQLException {
 	}
 
-		/*
+	/*
 	* Performs the getConnection operation
 	* @param arg0 - the arg0
 	* @param arg1 - the arg1
@@ -1815,7 +1818,7 @@ public final class DriverDataSource implements DataSource {
 		return null;
 	}
 
-		/*
+	/*
 	* Performs the createConnectionBuilder operation
 	* @return the createConnectionBuilder result
 	* */

@@ -60,7 +60,7 @@ public class JsContext extends JsPlusContext {
         super(engineName);
     }
 
-		/*
+	/*
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
@@ -69,7 +69,7 @@ public class JsContext extends JsPlusContext {
 	    return bindings;
 	}
 
-	    /*
+    /*
     * Performs the getEngine operation
     * @return the getEngine result
     * */
@@ -78,7 +78,7 @@ public class JsContext extends JsPlusContext {
         return scriptEngineManager;
     }
 
-	    /*
+    /*
     * Performs the getContext operation
     * @return the getContext result
     * */
@@ -87,7 +87,7 @@ public class JsContext extends JsPlusContext {
         return context;
     }
 
-    	/*
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -96,7 +96,7 @@ public class JsContext extends JsPlusContext {
 	    bindings.remove(name);
 	}
 
-    	/*
+	/*
 	* Performs the put operation
 	* @param name - the name
 	* @param value - the value
@@ -106,7 +106,7 @@ public class JsContext extends JsPlusContext {
 	    bindings.put(name,value);
 	}
 
-		/*
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -116,7 +116,7 @@ public class JsContext extends JsPlusContext {
 	    return bindings.get(name);
 	}
 
-    	/*
+	/*
 	* Performs the initScriptEngineManager operation
 	* */
 	@Override
@@ -145,7 +145,7 @@ public class JsContext extends JsPlusContext {
 		}
 	}
 
-		/*
+	/*
 	* Performs the setAllowAllAccess operation
 	* @param allowAllAccess - the allowAllAccess
 	* */
@@ -155,7 +155,7 @@ public class JsContext extends JsPlusContext {
 	    disableAllowAllAccess();
 	}
 
-    	/*
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -165,7 +165,7 @@ public class JsContext extends JsPlusContext {
 		return eval(new File(scriptPath));
 	}
 
-    	/*
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -187,7 +187,7 @@ public class JsContext extends JsPlusContext {
 		return result;
 	}
 
-		/*
+	/*
 	* Performs the evalScript operation
 	* @param script - the script
 	* @return the evalScript result
@@ -200,7 +200,7 @@ public class JsContext extends JsPlusContext {
 		return result;
 	}
 
-        /*
+    /*
     * Performs the close operation
     * */
     @Override
@@ -210,7 +210,7 @@ public class JsContext extends JsPlusContext {
         context = null;
     }
 
-		/*
+	/*
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */

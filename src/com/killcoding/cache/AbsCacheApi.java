@@ -33,24 +33,24 @@ public abstract class AbsCacheApi {
     protected static Long TIMER = 100L;
 
     /**
-     * Force write cache
-     * */
+    * Force write cache
+    * */
     protected Boolean stored = false;
 
-    /**
-     * New an AbsCacheApi
-     * Need 'override' abstract method
-     * 'stored' is use default value (default is false)
-     * */
+	/**
+	* New an AbsCacheApi
+	* Need 'override' abstract method
+	* 'stored' is use default value (default is false)
+	* */
 	public AbsCacheApi() {
 		super();
 	}
 
 	/**
-	 * New an AbsCacheApi
-	 * Need 'override' abstract method
-	 * @param stored - true is force write
-	 * */
+	* New an AbsCacheApi
+	* Need 'override' abstract method
+	* @param stored - true is force write
+	* */
 	public AbsCacheApi(Boolean stored) {
 		super();
 		this.stored = stored;

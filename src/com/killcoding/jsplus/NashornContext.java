@@ -53,7 +53,7 @@ public class NashornContext extends JsPlusContext {
     private ClassLoader customClassLoader = null;
 
     private class SecurityClassFilter implements ClassFilter {
-                /*
+        /*
         * Performs the exposeToScripts operation
         * @param className - the className
         * @return the exposeToScripts result
@@ -75,7 +75,7 @@ public class NashornContext extends JsPlusContext {
         super(engineName);
     }
 
-        /*
+    /*
     * Performs the getBindings operation
     * @return the getBindings result
     * */
@@ -84,7 +84,7 @@ public class NashornContext extends JsPlusContext {
         return bindings;
     }
 
-        /*
+    /*
     * Performs the getEngine operation
     * @return the getEngine result
     * */
@@ -93,7 +93,7 @@ public class NashornContext extends JsPlusContext {
         return nashornFactory;
     }
 
-        /*
+    /*
     * Performs the getContext operation
     * @return the getContext result
     * */
@@ -102,7 +102,7 @@ public class NashornContext extends JsPlusContext {
         return context;
     }
 
-        /*
+    /*
     * Performs the remove operation
     * @param name - the name
     * */
@@ -113,7 +113,7 @@ public class NashornContext extends JsPlusContext {
         }
     }
 
-        /*
+    /*
     * Performs the put operation
     * @param name - the name
     * @param value - the value
@@ -125,7 +125,7 @@ public class NashornContext extends JsPlusContext {
         }
     }
 
-        /*
+    /*
     * Performs the get operation
     * @param name - the name
     * @return the get result
@@ -135,7 +135,7 @@ public class NashornContext extends JsPlusContext {
         return bindings != null ? bindings.get(name) : null;
     }
 
-        /*
+    /*
     * Performs the initScriptEngineManager operation
     * */
     @Override
@@ -183,7 +183,7 @@ public class NashornContext extends JsPlusContext {
         invocable = (Invocable) scriptEngine;
     }
 
-        /*
+    /*
     * Performs the setAllowAllAccess operation
     * @param allowAllAccess - the allowAllAccess
     * */
@@ -201,7 +201,7 @@ public class NashornContext extends JsPlusContext {
         }
     }
 
-        /*
+    /*
     * Performs the eval operation
     * @param scriptPath - the scriptPath
     * @return the eval result
@@ -211,7 +211,7 @@ public class NashornContext extends JsPlusContext {
         return eval(new File(scriptPath));
     }
 
-        /*
+    /*
     * Performs the eval operation
     * @param scriptPath - the scriptPath
     * @return the eval result
@@ -233,7 +233,7 @@ public class NashornContext extends JsPlusContext {
         return result;
     }
 
-        /*
+    /*
     * Performs the evalScript operation
     * @param script - the script
     * @return the evalScript result
@@ -246,7 +246,7 @@ public class NashornContext extends JsPlusContext {
         return result;
     }
 
-        /*
+    /*
     * Performs the close operation
     * */
     @Override
@@ -262,7 +262,7 @@ public class NashornContext extends JsPlusContext {
         customClassLoader = null;
     }
 
-        /*
+    /*
     * Performs the getEngineName operation
     * @return the getEngineName result
     * */

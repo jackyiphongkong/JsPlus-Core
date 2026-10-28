@@ -1829,3 +1829,46 @@ ${jr.diff.changes}- build: 自動版本遞增
 - found diffed: com/killcoding/tool/ResultMap.java (M)
 - build: 自動版本遞增
 
+
+## 6.1.122 (2026.10.28 15:00:40)
+- found diffed: com/killcoding/cache/AbsCacheApi.java (M)
+- found diffed: com/killcoding/cache/Cache.java (M)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/cache/CacheArrayFilter.java (M)
+- found diffed: com/killcoding/cache/DiskCache.java (M)
+- found diffed: com/killcoding/cache/MemoryCache.java (M)
+- found diffed: com/killcoding/cache/StoredCache.java (M)
+- found diffed: com/killcoding/datasource/CacheDriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/Clock.java (M)
+- found diffed: com/killcoding/datasource/ConnectionPool.java (M)
+- found diffed: com/killcoding/datasource/DriverConnection.java (M)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/datasource/IdentityCard.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/file/RemoteFileSync.java (M)
+- found diffed: com/killcoding/jsplus/GhostConsole.java (M)
+- found diffed: com/killcoding/jsplus/GraalVmContext.java (M)
+- found diffed: com/killcoding/jsplus/JsContext.java (M)
+- found diffed: com/killcoding/jsplus/NashornContext.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleJdbcBase.java (M)
+- found diffed: com/killcoding/log/AlertMessage.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/log/LoggerFactory.java (M)
+- found diffed: com/killcoding/tool/CodeEscape.java (M)
+- found diffed: com/killcoding/tool/CodeEscapeLevel.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- found diffed: com/killcoding/tool/ResultMap.java (M)
+- found diffed: com/killcoding/tool/XmlParser.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.123 (2026.10.28 16:38:23)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: 自動版本遞增
+

@@ -178,7 +178,6 @@ public class XmlParser {
     /**
     * Performs the processElement operation
     * @param element - the element
-    * @param String - the String
     * @param parentMap - the parentMap
     * */
     private void processElement(Element element, Map<String, Object> parentMap) {
@@ -216,7 +215,6 @@ public class XmlParser {
 
     /**
     * Performs the handleValue operation
-    * @param String - the String
     * @param map - the map
     * @param key - the key
     * @param value - the value
@@ -251,10 +249,8 @@ public class XmlParser {
 
     /**
     * Performs the handleMap operation
-    * @param String - the String
     * @param map - the map
     * @param key - the key
-    * @param String - the String
     * @param value - the value
     * @param element - the element
     * */

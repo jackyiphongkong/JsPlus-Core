@@ -95,7 +95,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
 
 	/** Default policy keeps the historic behaviour (System.exit). */
 	private static volatile ExitPolicy EXIT_POLICY = new ExitPolicy() {
-				/*
+		/*
 		* Performs the exit operation
 		* @param status - the status
 		* */
@@ -106,15 +106,16 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	};
 
 	/**
-	 * Override the process-exit behaviour (e.g. tests/embedded runners want a
-	 * callback instead of killing the JVM). Pass null to restore the default.
-	 * */
+	* Override the process-exit behaviour (e.g. tests/embedded runners want a
+	* callback instead of killing the JVM). Pass null to restore the default.
+	* @param policy - the policy
+	* */
 	public static void setExitPolicy(ExitPolicy policy) {
 		if (policy != null) {
 			EXIT_POLICY = policy;
 		} else {
 			EXIT_POLICY = new ExitPolicy() {
-								/*
+				/*
 				* Performs the exit operation
 				* @param status - the status
 				* */
@@ -225,7 +226,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
         	        final File appenvPropFile = _appenvPropFile;
             	    appenvCp = new ConfigProperties();
             	    Runnable updateRun = new Runnable(){
-            	                    	        /*
+            	        /*
             	        * Performs the run operation
             	        * */
             	        @Override
@@ -302,7 +303,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
     		}
 			exitExecute = java.util.concurrent.Executors.newFixedThreadPool(1);
 			exitExecute.execute(new Runnable() {
-								/*
+				/*
 				* Performs the run operation
 				* */
 				@Override

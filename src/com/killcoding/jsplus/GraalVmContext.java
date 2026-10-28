@@ -65,7 +65,7 @@ public class GraalVmContext extends JsPlusContext {
         this.engineName = useEngineName;
 	}
 
-		/*
+	/*
 	* Performs the getEngineName operation
 	* @return the getEngineName result
 	* */
@@ -74,7 +74,7 @@ public class GraalVmContext extends JsPlusContext {
 	    return engineName;
 	}
 
-		/*
+	/*
 	* Performs the initScriptEngineManager operation
 	* */
 	@Override
@@ -110,7 +110,7 @@ public class GraalVmContext extends JsPlusContext {
 		value.putMember("ScriptClassLoader", context.getClass().getClassLoader());
 	}
 
-		/*
+	/*
 	* Performs the getBindings operation
 	* @return the getBindings result
 	* */
@@ -119,7 +119,7 @@ public class GraalVmContext extends JsPlusContext {
 		return value;
 	}
 
-		/*
+	/*
 	* Performs the getEngine operation
 	* @return the getEngine result
 	* */
@@ -128,7 +128,7 @@ public class GraalVmContext extends JsPlusContext {
 		return engine;
 	}
 
-		/*
+	/*
 	* Performs the getContext operation
 	* @return the getContext result
 	* */
@@ -137,7 +137,7 @@ public class GraalVmContext extends JsPlusContext {
 		return context;
 	}
 
-		/*
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -146,7 +146,7 @@ public class GraalVmContext extends JsPlusContext {
 		value.removeMember(name);
 	}
 
-		/*
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -156,7 +156,7 @@ public class GraalVmContext extends JsPlusContext {
 		return value.getMember(name);
 	}
 
-		/*
+	/*
 	* Performs the put operation
 	* @param name - the name
 	* @param obj - the obj
@@ -166,7 +166,7 @@ public class GraalVmContext extends JsPlusContext {
 		value.putMember(name, obj);
 	}
 
-		/*
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -176,7 +176,7 @@ public class GraalVmContext extends JsPlusContext {
 		return eval(new File(scriptPath));
 	}
 
-		/*
+	/*
 	* Performs the eval operation
 	* @param scriptPath - the scriptPath
 	* @return the eval result
@@ -195,7 +195,7 @@ public class GraalVmContext extends JsPlusContext {
 	    return evalScript(script);
 	}
 
-		/*
+	/*
 	* Performs the evalScript operation
 	* @param script - the script
 	* @return the evalScript result
@@ -212,7 +212,7 @@ public class GraalVmContext extends JsPlusContext {
 		}
 	}
 
-		/*
+	/*
 	* Performs the close operation
 	* */
 	@Override

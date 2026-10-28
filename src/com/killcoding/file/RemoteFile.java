@@ -41,11 +41,11 @@ import java.io.ByteArrayOutputStream;
 import com.killcoding.cache.CacheArray;
 
 /**
- * RemoteFile - public facade of the remote (database-backed) file engine.
- * Public API surface: construction, existence/listing, shard read/write,
- * copy/move/link, delete/force-delete, completion and the async archive/sync
- * schedulers. The implementation lives in the abstract parent RemoteFileBase.
- * */
+* RemoteFile - public facade of the remote (database-backed) file engine.
+* Public API surface: construction, existence/listing, shard read/write,
+* copy/move/link, delete/force-delete, completion and the async archive/sync
+* schedulers. The implementation lives in the abstract parent RemoteFileBase.
+* */
 public class RemoteFile extends RemoteFileSync {
 
 

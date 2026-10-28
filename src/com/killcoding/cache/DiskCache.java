@@ -60,9 +60,9 @@ public class DiskCache extends AbsCacheApi {
 	private static boolean isStartRemoveExpiredThread = false;
 	private static ExecutorService executor = null;
 
-    /**
-     * New a DiskCache object
-     * */
+	/**
+	* New a DiskCache object
+	* */
 	public DiskCache() {
 		super();
 		this.stored = false;
@@ -80,9 +80,9 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	/**
-	 * New a DiskCache object
-	 * @param stored - 'true' is force write cache
-	 * */
+	* New a DiskCache object
+	* @param stored - 'true' is force write cache
+	* */
 	public DiskCache(Boolean stored) {
 		super();
 		this.stored = stored;
@@ -100,17 +100,17 @@ public class DiskCache extends AbsCacheApi {
 	}
 
 	/**
-	 * Shutdown cahee thread
-	 * */
+	* Shutdown cahee thread
+	* */
 	public synchronized void shutdown(){
 	    removeAll();
 	    if(executor != null)
 	        executor.shutdown();
 	}
 
-    /**
-     * Start remove expired thread
-     * */
+	/**
+	* Start remove expired thread
+	* */
 	private synchronized void startRemoveExpiredThread() {
 		// Double-checked guard: the unsynchronized caller may race here, so a
 		// second thread must not rebuild the executor / spawn a second remover.
@@ -118,7 +118,7 @@ public class DiskCache extends AbsCacheApi {
 	    isStartRemoveExpiredThread = true;
 		executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -153,7 +153,7 @@ public class DiskCache extends AbsCacheApi {
 		});
 	}
 
-		/*
+	/*
 	* Performs the included operation
 	* @param name - the name
 	* @return the included result
@@ -190,7 +190,7 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the removeAll operation
 	* */
 	@Override
@@ -201,7 +201,7 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -217,7 +217,7 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -242,7 +242,7 @@ public class DiskCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the set operation
 	* @param name - the name
 	* @param value - the value
@@ -250,7 +250,10 @@ public class DiskCache extends AbsCacheApi {
 	* */
 	@Override
 	synchronized void set(String name, Object value, int lifeSeconds) {
-	    if(value != null) {
+	    if(value == null){
+			log.debug("Remove Cache: {}",name);
+			remove(name);
+		} else {
 
     	    if(lifeSeconds < 0){
     	        log.debug("Skip use cache, key '{}' life is '{}s'",name,lifeSeconds);

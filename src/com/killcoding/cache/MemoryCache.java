@@ -56,25 +56,25 @@ public class MemoryCache extends AbsCacheApi {
 	private static boolean isStartRemoveExpiredThread = false;
 	private static ExecutorService executor = null;
 
-    /**
-    * New a MemoryCache object
-    * */
+	/**
+	* New a MemoryCache object
+	* */
 	public MemoryCache() {
 		super();
 	}
 
-    /**
-    * New a MemoryCache object
-    * @param stored - 'true' is force write cache
-    * */
+	/**
+	* New a MemoryCache object
+	* @param stored - 'true' is force write cache
+	* */
 	public MemoryCache(Boolean stored) {
 		super();
 		this.stored = stored;
 	}
 
-    /**
-     * Start remove expired thread
-     * */
+	/**
+	* Start remove expired thread
+	* */
 	private synchronized void startRemoveExpiredThread() {
 		// Double-checked guard: the unsynchronized caller may race here, so a
 		// second thread must not rebuild the executor / spawn a second remover.
@@ -82,7 +82,7 @@ public class MemoryCache extends AbsCacheApi {
 		isStartRemoveExpiredThread = true;
 		executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -117,7 +117,7 @@ public class MemoryCache extends AbsCacheApi {
 		});
 	}
 
-		/*
+	/*
 	* Performs the included operation
 	* @param name - the name
 	* @return the included result
@@ -154,7 +154,7 @@ public class MemoryCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the removeAll operation
 	* */
 	@Override
@@ -165,7 +165,7 @@ public class MemoryCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the remove operation
 	* @param name - the name
 	* */
@@ -177,7 +177,7 @@ public class MemoryCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the get operation
 	* @param name - the name
 	* @return the get result
@@ -197,7 +197,7 @@ public class MemoryCache extends AbsCacheApi {
 		}
 	}
 
-		/*
+	/*
 	* Performs the set operation
 	* @param name - the name
 	* @param value - the value
@@ -205,8 +205,10 @@ public class MemoryCache extends AbsCacheApi {
 	* */
 	@Override
 	synchronized void set(String name, Object value, int lifeSeconds) {
-	    if(value != null) {
-
+		if(value == null){
+			log.debug("Remove Cache: {}",name);
+			remove(name);
+		} else {
     	    if(lifeSeconds < 0){
     	        log.debug("Skip use cache, key '{}' life is '{}s'",name,lifeSeconds);
     	        return;

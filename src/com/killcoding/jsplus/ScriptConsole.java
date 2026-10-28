@@ -93,7 +93,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	private final Map<String,Map<String,Object>> scheduleMap = new HashMap<String,Map<String,Object>>();
 
 	/** ClassLoaders created by evalJavaSource / evalJavaFile - kept referenced so evaluated
-	 *  classes stay usable (and their temporary jars stay open) for the life of this console. */
+	*  classes stay usable (and their temporary jars stay open) for the life of this console. */
 	protected final List<ClassLoader> evalJavaClassLoaders = new ArrayList<ClassLoader>();
 
 	/**

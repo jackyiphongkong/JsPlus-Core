@@ -54,31 +54,31 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	public static long READ_TIMER = 10L;
 
 	/**
-	 * New a object CacheDriverExecutor
-	 * @param connection - it is jdbc connection
-	 * */
+	* New a object CacheDriverExecutor
+	* @param connection - it is jdbc connection
+	* */
 	public CacheDriverExecutor(Connection connection) {
 		super(connection);
 	}
 
 	/**
-	 * This is full table query function
-	 * @param sql - Query sql
-	 * @param params - Query params
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* This is full table query function
+	* @param sql - Query sql
+	* @param params - Query params
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void find(String sql, List<Object> params, final CacheArray rows) throws SQLException {
 		find(0, 0, sql, params, rows);
 	}
 
 	/**
-	 * This is full table query function
-	 * @param sql - Query sql
-	 * @param params - Query params
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* This is full table query function
+	* @param sql - Query sql
+	* @param params - Query params
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void find(String sql, Map<String, Object> params, final CacheArray rows)
 			throws SQLException {
 		String csql = converSql(sql);
@@ -87,36 +87,36 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * This is full table query function
-	 * @param sql - Query sql
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* This is full table query function
+	* @param sql - Query sql
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void find(String sql, final CacheArray rows) throws SQLException {
 		find(0, 0, sql, Arrays.asList(new Object[] {}), rows);
 	}
 
 	/**
-	 * This is limited rows query function
-	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* This is limited rows query function
+	* @param cursorStart - JDBC result Cursor start index
+	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
+	* @param sql - Query sql
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void find(int cursorStart, int maxRows, String sql, final CacheArray rows)
 			throws SQLException {
 		find(cursorStart, maxRows, sql, Arrays.asList(new Object[] {}), rows);
 	}
 
 	/**
-	 * This is limited rows query function (use Map param mode)
-	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* This is limited rows query function (use Map param mode)
+	* @param cursorStart - JDBC result Cursor start index
+	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
+	* @param sql - Query sql
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void find(int cursorStart, int maxRows, String sql, Map<String, Object> params,
 			final CacheArray rows) throws SQLException {
 		String csql = converSql(sql);
@@ -125,13 +125,13 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * This is limited rows query function (use List param mode)
-	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* This is limited rows query function (use List param mode)
+	* @param cursorStart - JDBC result Cursor start index
+	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
+	* @param sql - Query sql
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void find(int cursorStart, int maxRows, String sql, List<Object> params,
 			final CacheArray rows) throws SQLException {
 		long begin = System.currentTimeMillis();
@@ -256,27 +256,27 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc(and return result to CacheArray)
-	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* Execute stored proc(and return result to CacheArray)
+	* @param cursorStart - JDBC result Cursor start index
+	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
+	* @param sql - Query sql
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void callAndReturnList(int cursorStart, int maxRows, String sql, final CacheArray rows)
 			throws SQLException {
 		callAndReturnList(cursorStart, maxRows, sql, Arrays.asList(new Object[] {}), rows);
 	}
 
 	/**
-	 * Execute stored proc(and return result)
-	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql
-	 * @param params - Use Map param mode (use ':column_name' to mapping)
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* Execute stored proc(and return result)
+	* @param cursorStart - JDBC result Cursor start index
+	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
+	* @param sql - Query sql
+	* @param params - Use Map param mode (use ':column_name' to mapping)
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void callAndReturnList(int cursorStart, int maxRows, String sql, Map<String, Object> params,
 			final CacheArray rows) throws SQLException {
 		String csql = converSql(sql);
@@ -285,14 +285,14 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	}
 
 	/**
-	 * Execute stored proc(and return result)
-	 * @param cursorStart - JDBC result Cursor start index
-	 * @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
-	 * @param sql - Query sql  (use '?' to mapping)
-	 * @param params - Use List param mode
-	 * @param rows - CacheArray object
-	 * @exception SQLException - if query failed
-	 * */
+	* Execute stored proc(and return result)
+	* @param cursorStart - JDBC result Cursor start index
+	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
+	* @param sql - Query sql  (use '?' to mapping)
+	* @param params - Use List param mode
+	* @param rows - CacheArray object
+	* @exception SQLException - if query failed
+	* */
 	public void callAndReturnList(int cursorStart, int maxRows, String sql, List<Object> params,
 			final CacheArray rows) throws SQLException {
 

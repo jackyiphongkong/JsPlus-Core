@@ -1,5 +1,6 @@
 // ============================================================================
-// JsPlus-Core TestEvalJava - dynamic Java compile + temp jar + ClassLoader
+// JsPlus-Core TestEvalJava - dynamic Java compile (source string) + temp jar
+// + ClassLoader
 // ----------------------------------------------------------------------------
 // Run      : test/TestAll.bat (included as a suite) or standalone:
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
@@ -7,20 +8,16 @@
 //                     -Task <PROJECT_ROOT>/test/TestEvalJava.js < NUL
 // Output   : <PROJECT_ROOT>/test_reports/TestEvalJava-Report.html (TestBase
 //            format, same as the other suites)
-// Scope    : Console.evalJavaSource(String) / evalJavaFile(String|File) -
-//            dynamic compilation with the JDK system compiler, packaging into
-//            a temporary jar under <PROJECT_ROOT>/work/evaljava and loading
-//            through a dedicated URLClassLoader. Evaluated sources may use the
-//            default package or a declared package and may import framework
-//            classes (the dynamic classpath covers the whole LibHome).
+// Scope    : Console.evalJavaSource(String) - dynamic compilation with the JDK
+//            system compiler, packaging into a temporary jar under
+//            <PROJECT_ROOT>/work/evaljava and loading through a dedicated
+//            URLClassLoader. Evaluated sources may use the default package or
+//            a declared package and may import framework classes (the dynamic
+//            classpath covers the whole LibHome).
 // ============================================================================
 
 var System = Java.type("java.lang.System");
-var File = Java.type("java.io.File");
-var Files = Java.type("java.nio.file.Files");
-var StandardCharsets = Java.type("java.nio.charset.StandardCharsets");
 var StringType = Java.type("java.lang.String");
-var FileTools = Java.type("com.killcoding.tool.FileTools");
 
 var basePath = System.getProperty("JS_PLUS_PATH");
 try {
@@ -41,43 +38,48 @@ beginTest();
 print("=== JsPlus-Core EvalJava Test ===");
 print("JS_PLUS_PATH: " + basePath);
 
-var SRC_HELLO = [
-    "public class EvalHello {",
-    "    public String hello() {",
-    "        return \"hello-eval\";",
-    "    }",
-    "    public static String staticHello() {",
-    "        return \"static-hello\";",
-    "    }",
-    "}"
-].join("\n");
+var SRC_HELLO = `
+    public class EvalHello {
+        public String hello() {
+            return "hello-eval";
+        }
 
-var SRC_PACKAGED = [
-    "package com.killcoding.evaltest;",
-    "public class EvalPackaged {",
-    "    public String tag() {",
-    "        return \"packaged-ok\";",
-    "    }",
-    "}"
-].join("\n");
+        public static String staticHello() {
+            return "static-hello";
+        }
+    }`;
 
-var SRC_FRAMEWORK_REF = [
-    "import com.killcoding.tool.CommonTools;",
-    "public class EvalFrameworkRef {",
-    "    public String frameworkId() {",
-    "        return CommonTools.generateId(6);",
-    "    }",
-    "}"
-].join("\n");
+var SRC_PACKAGED = `
+    package com.killcoding.evaltest;
+    public class EvalPackaged {
+        public String tag() {
+            return "packaged-ok";
+        }
+    }`;
 
-var SRC_FROM_FILE = [
-    "package com.killcoding.evaltestfile;",
-    "public class EvalFromFile {",
-    "    public String fromFile() {",
-    "        return \"file-ok\";",
-    "    }",
-    "}"
-].join("\n");
+var SRC_FRAMEWORK_REF = `
+    import com.killcoding.tool.CommonTools;
+    public class EvalFrameworkRef {
+        public String frameworkId() {
+            return CommonTools.generateId(6);
+        }
+    }`;
+
+var SRC_BEAN = `
+    public class EvalBean {
+        private String name;
+        private int count;
+
+        public EvalBean(String name, int count) {
+            this.name = name;
+            this.count = count;
+        }
+
+        public String getName() { return name; }
+        public int getCount() { return count; }
+
+        public String summarize() { return name + "=" + count; }
+    }`;
 
 try {
     // C1: evalJavaSource - default package class, instance + static methods
@@ -122,101 +124,67 @@ try {
         command: "Console.evalJavaSource(source using CommonTools)"
     });
 
-    // C4: evalJavaFile(String) - compile a .java file on disk
-    var fileSrcDir = new File(basePath + "../work/evaljava-test-src/com/killcoding/evaltestfile");
-    fileSrcDir.mkdirs();
-    var fileSrc = new File(fileSrcDir, "EvalFromFile.java");
-    FileTools.write(fileSrc.getAbsolutePath(), SRC_FROM_FILE, false);
-    var clazz4 = Console.evalJavaFile(fileSrc.getAbsolutePath());
-    var inst4 = clazz4.newInstance();
+    // C4: evalJavaSource - constructor args + private field roundtrip
+    var clazz4 = Console.evalJavaSource(SRC_BEAN);
+    var inst4 = clazz4.getConstructor(StringType, Java.type("int")).newInstance("bean-x", 42);
+    var name4 = inst4.getName();
+    var count4 = inst4.getCount();
+    var summary4 = inst4.summarize();
     check({
         caseId: "C4",
-        name: "evalJavaFile(String) compiles + loads a .java file",
-        ok: clazz4.getName() === "com.killcoding.evaltestfile.EvalFromFile" && inst4.fromFile() === "file-ok",
-        detail: "class=" + clazz4.getName() + " fromFile=" + inst4.fromFile(),
-        objective: "a file path is read, compiled, jarred and loaded",
-        objectiveZh: "檔案路徑被讀取、編譯、打包並載入",
-        command: "Console.evalJavaFile(filePath)"
+        name: "evalJavaSource supports constructor args and private fields",
+        ok: name4 === "bean-x" && count4 === 42 && summary4 === "bean-x=42",
+        detail: "name=" + name4 + " count=" + count4 + " summarize=" + summary4,
+        objective: "non-trivial classes (constructor + state) compile and run from a source string",
+        objectiveZh: "較複雜類別（建構子 + 狀態）可從源碼字串編譯並運行",
+        command: "Console.evalJavaSource(source with constructor + fields)"
     });
 
-    // C5: evalJavaFile(File) - File overload behaves the same
-    var clazz5 = Console.evalJavaFile(fileSrc);
-    var inst5 = clazz5.newInstance();
-    check({
-        caseId: "C5",
-        name: "evalJavaFile(File) overload works",
-        ok: clazz5.getName() === "com.killcoding.evaltestfile.EvalFromFile" && inst5.fromFile() === "file-ok",
-        detail: "class=" + clazz5.getName() + " fromFile=" + inst5.fromFile(),
-        objective: "the File overload delegates to the same pipeline",
-        objectiveZh: "File 多載委派至同一條管線",
-        command: "Console.evalJavaFile(new File(filePath))"
-    });
-
-    // C6: evalJavaSource - malformed source surfaces the compiler diagnostics
-    var c6threw = false, c6msg = "";
+    // C5: evalJavaSource - malformed source surfaces the compiler diagnostics
+    var c5threw = false, c5msg = "";
     try {
         Console.evalJavaSource("public class BadEval { public void broken( { } }");
     } catch (e) {
-        c6threw = true;
-        c6msg = "" + e;
+        c5threw = true;
+        c5msg = "" + e;
     }
     check({
-        caseId: "C6",
+        caseId: "C5",
         name: "evalJavaSource rejects malformed source with diagnostics",
-        ok: c6threw && c6msg.indexOf("compilation failed") >= 0,
-        detail: c6msg.length > 0 ? c6msg.substring(0, 120) : "no exception thrown",
+        ok: c5threw && c5msg.indexOf("compilation failed") >= 0,
+        detail: c5msg.length > 0 ? c5msg.substring(0, 120) : "no exception thrown",
         objective: "compile errors raise an Exception carrying the javac diagnostics",
         objectiveZh: "編譯錯誤拋出帶有 javac 診斷訊息的 Exception",
         command: "Console.evalJavaSource(malformed source)"
     });
 
-    // C7: evalJavaSource / evalJavaFile - blank input is rejected
-    var c7threw = false, c7bThrew = false;
-    try { Console.evalJavaSource(""); } catch (e) { c7threw = true; }
-    try { Console.evalJavaFile("   "); } catch (e) { c7bThrew = true; }
+    // C6: evalJavaSource - blank source is rejected
+    var c6threw = false;
+    try { Console.evalJavaSource(""); } catch (e) { c6threw = true; }
     check({
-        caseId: "C7",
-        name: "blank source / blank file path are rejected",
-        ok: c7threw && c7bThrew,
-        detail: "sourceThrew=" + c7threw + " fileThrew=" + c7bThrew,
-        objective: "blank inputs fail fast with a clear Exception",
+        caseId: "C6",
+        name: "blank source is rejected",
+        ok: c6threw,
+        detail: "sourceThrew=" + c6threw,
+        objective: "blank input fails fast with a clear Exception",
         objectiveZh: "空白輸入快速失敗並給出明確 Exception",
-        command: "Console.evalJavaSource('') / Console.evalJavaFile('   ')"
+        command: "Console.evalJavaSource('')"
     });
 
-    // C8: each eval gets its own ClassLoader (distinct Class for the same source)
-    var clazz8a = Console.evalJavaSource(SRC_HELLO);
-    var clazz8b = Console.evalJavaSource(SRC_HELLO);
-    var inst8a = clazz8a.newInstance();
-    var inst8b = clazz8b.newInstance();
+    // C7: each eval gets its own ClassLoader (distinct Class for the same source)
+    var clazz7a = Console.evalJavaSource(SRC_HELLO);
+    var clazz7b = Console.evalJavaSource(SRC_HELLO);
+    var inst7a = clazz7a.newInstance();
+    var inst7b = clazz7b.newInstance();
     check({
-        caseId: "C8",
+        caseId: "C7",
         name: "each eval builds an independent ClassLoader",
-        ok: clazz8a !== clazz8b && inst8a.hello() === "hello-eval" && inst8b.hello() === "hello-eval",
-        detail: "classA=" + clazz8a + " classB=" + clazz8b,
+        ok: clazz7a !== clazz7b && inst7a.hello() === "hello-eval" && inst7b.hello() === "hello-eval",
+        detail: "classA=" + clazz7a + " classB=" + clazz7b,
         objective: "every call packages a fresh jar under a fresh URLClassLoader",
         objectiveZh: "每次呼叫都打包新 jar 並以新的 URLClassLoader 載入",
         command: "Console.evalJavaSource(SRC_HELLO) twice"
     });
-
-    // C9: evalJavaFile of a missing file is rejected
-    var c9threw = false;
-    try { Console.evalJavaFile(basePath + "../work/no-such-file.java"); } catch (e) { c9threw = true; }
-    check({
-        caseId: "C9",
-        name: "evalJavaFile rejects a missing file",
-        ok: c9threw,
-        detail: "missingFileThrew=" + c9threw,
-        objective: "a non-existent path fails fast instead of compiling nothing",
-        objectiveZh: "不存在的路徑快速失敗而非編譯空內容",
-        command: "Console.evalJavaFile(missing path)"
-    });
-
-    // Cleanup: remove the source file written for C4/C5
-    var testSrcRoot = new File(basePath + "../work/evaljava-test-src");
-    if (testSrcRoot.exists()) {
-        FileTools.deleteDirectory(testSrcRoot);
-    }
 
 } catch (e) {
     check({

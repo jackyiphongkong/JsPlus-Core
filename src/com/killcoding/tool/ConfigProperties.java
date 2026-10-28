@@ -153,7 +153,7 @@ public class ConfigProperties extends Properties {
 		if (executor == null) {
 			executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
-								/*
+				/*
 				* Performs the run operation
 				* */
 				@Override
@@ -214,7 +214,7 @@ public class ConfigProperties extends Properties {
 		this.load(file);
 		final ConfigProperties the = this;
 		final Runnable cpRun = new Runnable() {
-						/*
+			/*
 			* Performs the run operation
 			* */
 			@Override
@@ -274,7 +274,7 @@ public class ConfigProperties extends Properties {
 	    }
 	}
 
-		/*
+	/*
 	* Performs the load operation
 	* @param inputStream - the inputStream
 	* */
@@ -289,7 +289,7 @@ public class ConfigProperties extends Properties {
 		}
 	}
 
-		/*
+	/*
 	* Performs the load operation
 	* @param reader - the reader
 	* */
@@ -348,12 +348,6 @@ public class ConfigProperties extends Properties {
 		return this;
 	}
 
-	/** @deprecated misspelled legacy name; kept for compatibility - use {@link #putAndReturnSelf(String, Object)}. */
-	@Deprecated
-	public ConfigProperties putAndReturnSlef(String key, Object value) {
-		return putAndReturnSelf(key, value);
-	}
-
 	/**
 	* Performs the removeAndReturnSelf operation
 	* @param key - the key
@@ -362,12 +356,6 @@ public class ConfigProperties extends Properties {
 	public ConfigProperties removeAndReturnSelf(String key) {
 		this.remove(key);
 		return this;
-	}
-
-	/** @deprecated misspelled legacy name; kept for compatibility - use {@link #removeAndReturnSelf(String)}. */
-	@Deprecated
-	public ConfigProperties removeAndReturnSlef(String key) {
-		return removeAndReturnSelf(key);
 	}
 
 	/**
@@ -382,12 +370,6 @@ public class ConfigProperties extends Properties {
 			putAndReturnSelf(key, value);
 		}
 		return this;
-	}
-
-	/** @deprecated misspelled legacy name; kept for compatibility - use {@link #putAllAndReturnSelf(Map)}. */
-	@Deprecated
-	public ConfigProperties putAllAndReturnSlef(Map<String, Object> map) {
-		return putAllAndReturnSelf(map);
 	}
 
 	/**

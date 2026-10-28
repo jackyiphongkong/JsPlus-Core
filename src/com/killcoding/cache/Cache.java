@@ -33,34 +33,34 @@ import java.util.List;
 * */
 public final class Cache {
 
-    /**
-     * Default is use mode 'MemoryCache'
-     * */
+	/**
+	* Default is use mode 'MemoryCache'
+	* */
 	private static AbsCacheApi api = null;
 	private static final Logger log = LoggerFactory.getLogger(Cache.class);
 
-	/**
-	 * Set cache mode
-	 * @param _api - It is class 'MemoryCache' or 'DiskCache'
-	 * */
+    /**
+    * Set cache mode
+    * @param _api - It is class 'MemoryCache' or 'DiskCache'
+    * */
     public synchronized static void setApi(AbsCacheApi _api){
         api = _api;
     }
 
- 	/**
-	 * Set detect cache timer (Default is 100MS)
-	 * @param timer - It is detect cache timer
-	 * */
+    /**
+    * Set detect cache timer (Default is 100MS)
+    * @param timer - It is detect cache timer
+    * */
     public static void setTimer(long timer) {
         AbsCacheApi.TIMER = timer;
     }
 
-    /**
-     * Set a cache
-     * @param name - It is cache key name
-     * @param value - It is cache value
-     * @param life - It is life length seconds
-     * */
+	/**
+	* Set a cache
+	* @param name - It is cache key name
+	* @param value - It is cache value
+	* @param life - It is life length seconds
+	* */
 	public synchronized static void set(String name,Object value,int life){
 	    if(api == null) setApi(new MemoryCache());
 
@@ -70,11 +70,11 @@ public final class Cache {
 		}
 	}
 
-    /**
-     * Set a cache
-     * @param name - It is cache key name
-     * @param value - It is cache value
-     * */
+	/**
+	* Set a cache
+	* @param name - It is cache key name
+	* @param value - It is cache value
+	* */
 	public synchronized static void set(String name,Object value){
 	    if(api == null) setApi(new MemoryCache());
 
@@ -83,10 +83,10 @@ public final class Cache {
 	}
 
 	/**
-	 * Get a cache value
-	 * @return Object - It is cache value
-	 * @param name - It is cache key name
-	 * */
+	* Get a cache value
+	* @return Object - It is cache value
+	* @param name - It is cache key name
+	* */
 	public synchronized static Object get(String name){
 	    if(api == null) setApi(new MemoryCache());
 
@@ -95,10 +95,10 @@ public final class Cache {
 	}
 
 	/**
-	 * Check is included cache key
-	 * @return boolean - 'true' is included, 'false' is not included.
-	 * @param name - It is cache key name
-	 * */
+	* Check is included cache key
+	* @return boolean - 'true' is included, 'false' is not included.
+	* @param name - It is cache key name
+	* */
 	public synchronized static boolean included(String name){
 	    if(api == null) setApi(new MemoryCache());
 
@@ -109,9 +109,9 @@ public final class Cache {
 	}
 
 	/**
-	 * Remove a cache
-	 * @param name - It is cache key name
-	 * */
+	* Remove a cache
+	* @param name - It is cache key name
+	* */
 	public synchronized static void remove(String name){
 	    if(api == null) setApi(new MemoryCache());
 
@@ -120,17 +120,17 @@ public final class Cache {
 	}
 
 	/**
-	 * Remove all cache
-	 * */
+	* Remove all cache
+	* */
 	public synchronized static void removeAll(){
 		log.debug("Remove All Cache");
 		api.removeAll();
 	}
 
 	/**
-	 * Get all cache key name list
-	 * @return List&lt;String&gt; - It is key name list
-	 * */
+	* Get all cache key name list
+	* @return List&lt;String&gt; - It is key name list
+	* */
 	public synchronized static List<String> getNames(){
 		return api.getNames();
 	}

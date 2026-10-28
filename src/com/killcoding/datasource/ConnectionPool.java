@@ -40,8 +40,8 @@ import java.util.HashMap;
 public class ConnectionPool {
 
 	/**
-	 * Record all connection hash code
-	 * */
+	* Record all connection hash code
+	* */
 	private final Map<Long, Integer> CONNECTION_POOL = new ConcurrentHashMap<Long, Integer>();
 
 	private final Map<Integer, String> CONNECTION_THREAD_MARK = new ConcurrentHashMap<Integer, String>();
@@ -51,33 +51,33 @@ public class ConnectionPool {
 	private final Map<Integer, Date> CONNECTION_IDLE_BEGIN_MARK = new ConcurrentHashMap<Integer, Date>();
 
 	/**
-	 * Guard for the compound (check-then-act) operations on CONNECTION_POOL:
-	 * add / freed / remove / get. All backing maps are ConcurrentHashMap, so
-	 * single-map operations need no lock; only the multi-step ones (find an
-	 * entry, then remove it; test membership, then insert) are serialized on
-	 * this small guard instead of the whole object.
-	 * */
+	* Guard for the compound (check-then-act) operations on CONNECTION_POOL:
+	* add / freed / remove / get. All backing maps are ConcurrentHashMap, so
+	* single-map operations need no lock; only the multi-step ones (find an
+	* entry, then remove it; test membership, then insert) are serialized on
+	* this small guard instead of the whole object.
+	* */
 	private final Object poolLock = new Object();
 
 	/**
-	 * New a ConnectionPool object
-	 * */
+	* New a ConnectionPool object
+	* */
 	public ConnectionPool() {
 		super();
 	}
 
 	/**
-	 * List all connection hash code
-	 * @return Map - All connection hash code map
-	 * */
+	* List all connection hash code
+	* @return Map - All connection hash code map
+	* */
 	public Map<Long,Integer> map() {
 	   return new HashMap<Long,Integer>(CONNECTION_POOL);
 	}
 
 	/**
-	 * List all connection hash code
-	 * @return List - All connection hash code
-	 * */
+	* List all connection hash code
+	* @return List - All connection hash code
+	* */
 	public List<Integer> list() {
 	   List<Integer> list = new ArrayList<Integer>();
        List<Long> klist = CONNECTION_POOL.keySet()
@@ -91,9 +91,9 @@ public class ConnectionPool {
 	}
 
 	/**
-	 * Get connection pool size
-	 * @return int - All connection size
-	 * */
+	* Get connection pool size
+	* @return int - All connection size
+	* */
 	public int size() {
 		return CONNECTION_POOL.keySet().size();
 	}

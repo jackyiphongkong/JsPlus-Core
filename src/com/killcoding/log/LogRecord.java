@@ -73,7 +73,7 @@ public final class LogRecord {
 	private final static Queue<Map<String, Object>> LOG_RECORD_POOL = new ConcurrentLinkedQueue<Map<String, Object>>();
 
 	/** Shared daemon pool for database log flushing - created once, reused by
-	 * every log cycle. Never re-create per cycle (leaks a thread per second). */
+	* every log cycle. Never re-create per cycle (leaks a thread per second). */
 	private static final ExecutorService DB_WRITE_POOL = Executors.newFixedThreadPool(1, r -> {
 		Thread t = new Thread(r, "LogRecord-DB-Writer");
 		t.setDaemon(true);
@@ -100,9 +100,9 @@ public final class LogRecord {
 	private static ByteArrayOutputStream customOutput = null;
     private static PrintStream customPrint = null;
 
-    /**
-     * Get log time format
-     * */
+	/**
+	* Get log time format
+	* */
 	protected static SimpleDateFormat getLogTimeFormat() {
 		String defValue = "yyyyMMdd HH:mm:ss.SSS";
 		if (config == null) {
@@ -113,9 +113,9 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * Get log date format
-     * */
+	/**
+	* Get log date format
+	* */
 	protected static SimpleDateFormat getLogDateFormat() {
 		String defValue = "yyyyMMdd";
 		if (config == null) {
@@ -126,18 +126,18 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * Is started log thread
-     * @return boolean
-     * */
+	/**
+	* Is started log thread
+	* @return boolean
+	* */
 	protected static boolean isStarted() {
 		return started;
 	}
 
-    /**
-     * Set config
-     * @param _config
-     * */
+	/**
+	* Set config
+	* @param _config
+	* */
 	protected static synchronized void setConfig(ConfigProperties _config) {
 		config = _config;
 		String fileOutFolderConfig = config.getString("FileOutFolder", null);
@@ -158,25 +158,26 @@ public final class LogRecord {
 		hostname = CommonTools.getHostname();
 	}
 
-    /**
-     * Set log list
-     * @return List&lt;Map&lt;String, Object&gt;>
-     * */
+	/**
+	* Set log list
+	* @return List&lt;Map&lt;String, Object&gt;>
+	* */
 	@SuppressWarnings("unchecked")
 	protected static synchronized List<Map<String, Object>> list() {
 		return (List<Map<String, Object>>) process("LIST", null);
 	}
 
-    /**
-     * Get log list size
-     * */
+	/**
+	* Get log list size
+	* */
 	protected static synchronized int size() {
 		return (Integer) process("SIZE", null);
 	}
 
-    /**
-     * Add log record object
-     * */
+	/**
+	* Add log record object
+	* @param o - the o
+	* */
 	protected static synchronized void add(Map<String, Object> o) {
 		process("ADD", o);
 		if (o != null) {
@@ -189,16 +190,18 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * Remove log record object
-     * */
+	/**
+	* Remove log record object
+	* @param o - the o
+	* */
 	protected static synchronized void remove(Map<String, Object> o) {
 		process("REMOVE", o);
 	}
 
-    /**
-     * Push log record to alert message list;
-     * */
+	/**
+	* Push log record to alert message list;
+	* @param o - the o
+	* */
 	protected static void pushAlertMessage(Map<String, Object> o) {
 		if (alertMesage != null) {
 			alertMesage.push(o);
@@ -208,7 +211,6 @@ public final class LogRecord {
 	/**
 	* Performs the process operation
 	* @param action - the action
-	* @param String - the String
 	* @param o - the o
 	* @return the process result
 	* */
@@ -336,11 +338,11 @@ public final class LogRecord {
 	}
 
 	/**
-	 * Force-restore the JVM-wide stdout/stderr streams captured by
-	 * LogRecord (SystemOut=false mode). Host applications should call this on
-	 * shutdown or on fatal error paths so their console output is not
-	 * permanently swallowed after the engine redirects the streams.
-	 * */
+	* Force-restore the JVM-wide stdout/stderr streams captured by
+	* LogRecord (SystemOut=false mode). Host applications should call this on
+	* shutdown or on fatal error paths so their console output is not
+	* permanently swallowed after the engine redirects the streams.
+	* */
 	public static synchronized void restoreStdStreams() {
 		try {
 			if (customPrint != null) {
@@ -366,9 +368,10 @@ public final class LogRecord {
 	    return customPrint == null;
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param logBatch - the logBatch
+	* */
 	private static synchronized void writeLogBatch(Map<String, List<String>> logBatch) {
 		List<String> logDateRecord = new ArrayList<String>(logBatch.keySet());
 		for (String logDate : logDateRecord) {
@@ -465,9 +468,10 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param list - the list
+	* */
 	private static void writeLogBatchToDatabase(List<Map<String, Object>> list) {
 		try {
 			if (config.getBoolean("DatabaseOut", false)) {
@@ -543,9 +547,10 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param loadDatabaseOutDataSource - the loadDatabaseOutDataSource
+	* */
 	private static synchronized void initDataSource(String loadDatabaseOutDataSource) {
 		try {
 		    if(!appDataSourcePath.equals(loadDatabaseOutDataSource)){
@@ -564,9 +569,9 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * Archive Log
-     * */
+	/**
+	* Archive Log
+	* */
 	private static void archiveLog() {
 		Integer fileOutArchiveDays = config.getInteger("FileOutArchiveDays", 30);
 		Boolean fileOut = config.getBoolean("FileOut", false);
@@ -580,9 +585,11 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * Delete old log file
-     * */
+	/**
+	* Delete old log file
+	* @param directory - the directory
+	* @param fileOutArchiveDaysMs - the fileOutArchiveDaysMs
+	* */
 	private static void deleteFilesOlderThan(File directory, long fileOutArchiveDaysMs) throws IOException {
 		if (directory.isDirectory()) {
 			File[] files = directory.listFiles();
@@ -602,9 +609,11 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param sql - the sql
+	* @param params - the params
+	* */
 	public static Map<String, Object> first(String sql, Map<String, Object> params) throws Exception {
 		Logger.systemDebug(LogRecord.class, "Sql={}", sql);
 		Logger.systemDebug(LogRecord.class, "Params={}", params);
@@ -620,9 +629,11 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param sql - the sql
+	* @param params - the params
+	* */
 	private static int execute(String sql, Map<String, Object> params) throws Exception {
 		Logger.systemDebug(LogRecord.class, "Sql={}", sql);
 		Logger.systemDebug(LogRecord.class, "Params={}", params);
@@ -638,9 +649,11 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param sql - the sql
+	* @param recordsPart - the recordsPart
+	* */
 	private static synchronized int batchPart(String sql, List<Map<String, Object>> recordsPart) throws Exception {
 		CacheDriverExecutor driverExecutor = null;
 		try {
@@ -654,9 +667,11 @@ public final class LogRecord {
 		}
 	}
 
-    /**
-     * For write log to database
-     * */
+	/**
+	* For write log to database
+	* @param sql - the sql
+	* @param records - the records
+	* */
 	private static synchronized int batch(String sql, List<Map<String, Object>> records) throws Exception {
 		Logger.systemDebug(LogRecord.class, "Sql={}", sql);
 		Logger.systemDebug(LogRecord.class, "Batch Size={}", records.size());
@@ -671,16 +686,16 @@ public final class LogRecord {
 	}
 
 	/**
-	 * Get data source
-	 * @return DataSource
-	 * */
+	* Get data source
+	* @return DataSource
+	* */
 	public static DataSource getDataSource(){
 	    return dataSource;
 	}
 
-    /**
-     * Start write log thread
-     * */
+	/**
+	* Start write log thread
+	* */
 	protected static synchronized void start() {
 		if (!started) {
 			started = true;
@@ -701,7 +716,7 @@ public final class LogRecord {
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			executor.execute(new Runnable() {
 
-								/*
+				/*
 				* Performs the run operation
 				* */
 				@Override
@@ -717,7 +732,7 @@ public final class LogRecord {
 							writeLogBatch(logBatch);
 							if (config.getBoolean("DatabaseOut", false)) {
     							DB_WRITE_POOL.execute(new Runnable(){
-    							        							    /*
+    							    /*
     							    * Performs the run operation
     							    * */
     							    @Override

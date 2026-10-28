@@ -229,23 +229,23 @@ public final class CodeEscape {
 
 
     /**
-     * <p>
-     *   Perform a Java <strong>unescape</strong> operation on a <tt>String</tt> input.
-     * </p>
-     * <p>
-     *   No additional configuration arguments are required. Unescape operations
-     *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
-     * </p>
-     * <p>
-     *   This method is <strong>thread-safe</strong>.
-     * </p>
-     *
-     * @param text the <tt>String</tt> to be unescaped.
-     * @return The unescaped result <tt>String</tt>. As a memory-performance improvement, will return the exact
-     *         same object as the <tt>text</tt> input argument if no unescaping modifications were required (and
-     *         no additional <tt>String</tt> objects will be created during processing). Will
-     *         return <tt>null</tt> if input is <tt>null</tt>.
-     */
+    * <p>
+    *   Perform a Java <strong>unescape</strong> operation on a <tt>String</tt> input.
+    * </p>
+    * <p>
+    *   No additional configuration arguments are required. Unescape operations
+    *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
+    * </p>
+    * <p>
+    *   This method is <strong>thread-safe</strong>.
+    * </p>
+    *
+    * @param text the <tt>String</tt> to be unescaped.
+    * @return The unescaped result <tt>String</tt>. As a memory-performance improvement, will return the exact
+    *         same object as the <tt>text</tt> input argument if no unescaping modifications were required (and
+    *         no additional <tt>String</tt> objects will be created during processing). Will
+    *         return <tt>null</tt> if input is <tt>null</tt>.
+    */
     public static String unescapeJava(final String text) {
         if (text == null) {
             return null;
@@ -259,25 +259,25 @@ public final class CodeEscape {
 
 
     /**
-     * <p>
-     *   Perform a Java <strong>unescape</strong> operation on a <tt>String</tt> input, writing results
-     *   to a <tt>Writer</tt>.
-     * </p>
-     * <p>
-     *   No additional configuration arguments are required. Unescape operations
-     *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
-     * </p>
-     * <p>
-     *   This method is <strong>thread-safe</strong>.
-     * </p>
-     *
-     * @param text the <tt>String</tt> to be unescaped.
-     * @param writer the <tt>java.io.Writer</tt> to which the unescaped result will be written. Nothing will
-     *               be written at all to this writer if input is <tt>null</tt>.
-     * @throws IOException if an input/output exception occurs
-     *
-     * @since 1.1.2
-     */
+    * <p>
+    *   Perform a Java <strong>unescape</strong> operation on a <tt>String</tt> input, writing results
+    *   to a <tt>Writer</tt>.
+    * </p>
+    * <p>
+    *   No additional configuration arguments are required. Unescape operations
+    *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
+    * </p>
+    * <p>
+    *   This method is <strong>thread-safe</strong>.
+    * </p>
+    *
+    * @param text the <tt>String</tt> to be unescaped.
+    * @param writer the <tt>java.io.Writer</tt> to which the unescaped result will be written. Nothing will
+    *               be written at all to this writer if input is <tt>null</tt>.
+    * @throws IOException if an input/output exception occurs
+    *
+    * @since 1.1.2
+    */
     public static void unescapeJava(final String text, final Writer writer)
             throws IOException {
 
@@ -299,25 +299,25 @@ public final class CodeEscape {
 
 
     /**
-     * <p>
-     *   Perform a Java <strong>unescape</strong> operation on a <tt>Reader</tt> input, writing results
-     *   to a <tt>Writer</tt>.
-     * </p>
-     * <p>
-     *   No additional configuration arguments are required. Unescape operations
-     *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
-     * </p>
-     * <p>
-     *   This method is <strong>thread-safe</strong>.
-     * </p>
-     *
-     * @param reader the <tt>Reader</tt> reading the text to be unescaped.
-     * @param writer the <tt>java.io.Writer</tt> to which the unescaped result will be written. Nothing will
-     *               be written at all to this writer if input is <tt>null</tt>.
-     * @throws IOException if an input/output exception occurs
-     *
-     * @since 1.1.2
-     */
+    * <p>
+    *   Perform a Java <strong>unescape</strong> operation on a <tt>Reader</tt> input, writing results
+    *   to a <tt>Writer</tt>.
+    * </p>
+    * <p>
+    *   No additional configuration arguments are required. Unescape operations
+    *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
+    * </p>
+    * <p>
+    *   This method is <strong>thread-safe</strong>.
+    * </p>
+    *
+    * @param reader the <tt>Reader</tt> reading the text to be unescaped.
+    * @param writer the <tt>java.io.Writer</tt> to which the unescaped result will be written. Nothing will
+    *               be written at all to this writer if input is <tt>null</tt>.
+    * @throws IOException if an input/output exception occurs
+    *
+    * @since 1.1.2
+    */
     public static void unescapeJava(final Reader reader, final Writer writer)
             throws IOException {
 
@@ -331,24 +331,24 @@ public final class CodeEscape {
 
 
     /**
-     * <p>
-     *   Perform a Java <strong>unescape</strong> operation on a <tt>char[]</tt> input.
-     * </p>
-     * <p>
-     *   No additional configuration arguments are required. Unescape operations
-     *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
-     * </p>
-     * <p>
-     *   This method is <strong>thread-safe</strong>.
-     * </p>
-     *
-     * @param text the <tt>char[]</tt> to be unescaped.
-     * @param offset the position in <tt>text</tt> at which the unescape operation should start.
-     * @param len the number of characters in <tt>text</tt> that should be unescaped.
-     * @param writer the <tt>java.io.Writer</tt> to which the unescaped result will be written. Nothing will
-     *               be written at all to this writer if input is <tt>null</tt>.
-     * @throws IOException if an input/output exception occurs
-     */
+    * <p>
+    *   Perform a Java <strong>unescape</strong> operation on a <tt>char[]</tt> input.
+    * </p>
+    * <p>
+    *   No additional configuration arguments are required. Unescape operations
+    *   will always perform <em>complete</em> Java unescape of SECs, u-based and octal escapes.
+    * </p>
+    * <p>
+    *   This method is <strong>thread-safe</strong>.
+    * </p>
+    *
+    * @param text the <tt>char[]</tt> to be unescaped.
+    * @param offset the position in <tt>text</tt> at which the unescape operation should start.
+    * @param len the number of characters in <tt>text</tt> that should be unescaped.
+    * @param writer the <tt>java.io.Writer</tt> to which the unescaped result will be written. Nothing will
+    *               be written at all to this writer if input is <tt>null</tt>.
+    * @throws IOException if an input/output exception occurs
+    */
     public static void unescapeJava(final char[] text, final int offset, final int len, final Writer writer)
                                     throws IOException{
 
@@ -382,12 +382,12 @@ public final class CodeEscape {
 
 
     /*
-     * This is basically a very simplified, thread-unsafe version of StringReader that should
-     * perform better than the original StringReader by removing all synchronization structures.
-     *
-     * Note the only implemented methods are those that we know are really used from within the
-     * stream-based escape/unescape operations.
-     */
+    * This is basically a very simplified, thread-unsafe version of StringReader that should
+    * perform better than the original StringReader by removing all synchronization structures.
+    *
+    * Note the only implemented methods are those that we know are really used from within the
+    * stream-based escape/unescape operations.
+    */
     private static final class InternalStringReader extends Reader {
 
         private String str;
@@ -405,7 +405,7 @@ public final class CodeEscape {
             this.length = s.length();
         }
 
-                /*
+        /*
         * Performs the read operation
         * @return the read result
         * */
@@ -417,7 +417,7 @@ public final class CodeEscape {
             return this.str.charAt(this.next++);
         }
 
-                /*
+        /*
         * Performs the read operation
         * @param cbuf - the cbuf
         * @param off - the off
@@ -441,7 +441,7 @@ public final class CodeEscape {
             return n;
         }
 
-                /*
+        /*
         * Performs the close operation
         * */
         @Override

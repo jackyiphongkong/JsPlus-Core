@@ -71,8 +71,8 @@ public final class LoggerFactory {
 	}
 
 	/**
-	 * Use default config
-	 * */
+	* Use default config
+	* */
 	public static synchronized void defaultConfig() {
 		defaultConfig = new ConfigProperties();
 		try {
@@ -84,9 +84,9 @@ public final class LoggerFactory {
 	}
 
 	/**
-	 * Use target ConfigProperties
-	 * @param _defaultConfig
-	 * */
+	* Use target ConfigProperties
+	* @param _defaultConfig
+	* */
 	public static synchronized void config(ConfigProperties _defaultConfig) {
 		defaultConfig = _defaultConfig;
 		try {
@@ -99,15 +99,15 @@ public final class LoggerFactory {
 	}
 
 	/**
-	 * Use target Logger.properties file
-	 * @param loggerPropFile - It is file object
-	 * @throws IOException
-	 * */
+	* Use target Logger.properties file
+	* @param loggerPropFile - It is file object
+	* @throws IOException
+	* */
 	public static synchronized void config(File loggerPropFile) throws IOException {
 		if (!LOADED_CONFIG) {
 		    defaultConfig = new ConfigProperties();
 		    Runnable updatedRun = new Runnable() {
-			    				/*
+				/*
 				* Performs the run operation
 				* */
 				@Override
@@ -126,35 +126,35 @@ public final class LoggerFactory {
 	}
 
 	/**
-	 * Check is started
-	 * @return boolean
-	 * */
+	* Check is started
+	* @return boolean
+	* */
 	public static boolean isStarted() {
 		return LogRecord.isStarted();
 	}
 
 	/**
-	 * Check is loaded config
-	 * @return boolean
-	 * */
+	* Check is loaded config
+	* @return boolean
+	* */
 	public static boolean isLoadedConfig() {
 		return LOADED_CONFIG;
 	}
 
 	/**
-	 * Get logger
-	 * @return Logger
-	 * @param clazz
-	 * */
+	* Get logger
+	* @return Logger
+	* @param clazz
+	* */
 	public static Logger getLogger(Class<?> clazz) {
 		return getLogger(clazz.getName());
 	}
 
 	/**
-	 * Get logger
-	 * @return Logger
-	 * @param clazzName
-	 * */
+	* Get logger
+	* @return Logger
+	* @param clazzName
+	* */
 	public static Logger getLogger(String clazzName) {
 		return new Logger(clazzName);
 	}

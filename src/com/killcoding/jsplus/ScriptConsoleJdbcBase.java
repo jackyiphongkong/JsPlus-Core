@@ -485,7 +485,7 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 			final List<String> columns = new ArrayList<String>();
 			final StringBuffer header = new StringBuffer();
 
-						/*
+			/*
 			* Performs the executeBatch operation
 			* @param index - the index
 			* @param batch - the batch
@@ -559,7 +559,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			    }
 			}
 
-						/*
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
@@ -569,7 +569,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 
 			}
 
-						/*
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */
@@ -596,7 +596,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 				if(completedRun != null) completedRun.run();
 			}
 
-						/*
+			/*
 			* Performs the terminated operation
 			* */
 			@Override
@@ -848,7 +848,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			final List<String> columns = new ArrayList<String>();
 			String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
 
-						/*
+			/*
 			* Performs the execute operation
 			* @param index - the index
 			* @param o - the o
@@ -902,7 +902,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 				}
 			}
 
-						/*
+			/*
 			* Performs the completed operation
 			* @param size - the size
 			* */

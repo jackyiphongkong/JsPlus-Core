@@ -1758,7 +1758,6 @@ public final class Logger {
 	* Performs the log operation
 	* @param level - the level
 	* @param clazzName - the clazzName
-	* @param String - the String
 	* @param map - the map
 	* */
 	private static void log(String level, String clazzName, Map<String, Object> map) {
@@ -1850,7 +1849,6 @@ public final class Logger {
 	* Performs the log operation
 	* @param level - the level
 	* @param clazz - the clazz
-	* @param String - the String
 	* @param map - the map
 	* */
 	private static void log(String level, Class<?> clazz, Map<String, Object> map) {

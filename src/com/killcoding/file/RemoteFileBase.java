@@ -66,12 +66,12 @@ import com.killcoding.cache.Cache;
 import java.util.Date;
 
 /**
- * RemoteFileBase - implementation layer of the remote (database-backed) file engine.
- * Holds all shared state (static registry maps, identity-card/encryption keys, per-file
- * datasource/table/dsKey bindings) and the private/protected machinery (SQL access,
- * shard read/write engine, async archive/sync scheduling, encryption). The public
- * facade RemoteFile extends this class and exposes only its public API.
- * */
+* RemoteFileBase - implementation layer of the remote (database-backed) file engine.
+* Holds all shared state (static registry maps, identity-card/encryption keys, per-file
+* datasource/table/dsKey bindings) and the private/protected machinery (SQL access,
+* shard read/write engine, async archive/sync scheduling, encryption). The public
+* facade RemoteFile extends this class and exposes only its public API.
+* */
 public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 
 	/** @param path the remote path this file object operates on */
@@ -1122,10 +1122,12 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	}
 
 	/**
-	 * Boundedly wait for a CacheArray worker to finish (P0-10). On timeout the
-	 * merge degrades to the historic asynchronous behaviour with a warning -
-	 * never throws, so merge() semantics stay safe.
-	 * */
+	* Boundedly wait for a CacheArray worker to finish (P0-10). On timeout the
+	* merge degrades to the historic asynchronous behaviour with a warning -
+	* never throws, so merge() semantics stay safe.
+	* @param rows - the rows
+	* @param filter - the filter
+	* */
 	protected void waitForCacheArray(CacheArray rows, CacheArrayFilter filter) {
 		long deadline = System.currentTimeMillis() + MERGE_WAIT_TIMEOUT;
 		while (!rows.isCompleted() && !filter.isForceTerminated()) {
