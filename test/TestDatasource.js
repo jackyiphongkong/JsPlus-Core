@@ -753,6 +753,25 @@ function h2Listening() {
     }
 }
 
+// True while a JsPlus/H2 JVM keyed by script/StartH2.js is still running.
+// Used after h2Stop(): the port may already be free (socket closed) while
+// the old H2 JVM is still unwinding from SIGTERM; starting a fresh H2 in
+// that window fails to bind :3306 ("Address already in use") and leaves
+// the suite without a listener - the CI #46 refused flood right after C17.
+function h2ProcessAlive() {
+    if (isWin) {
+        return false; // Windows Stop-Process is synchronous; port check suffices
+    }
+    try {
+        var p = execAsync(["sh", "-c", "pgrep -f 'script/StartH2.js'"]);
+        var alive = p.waitFor() === 0; // pgrep exits 0 when a match exists
+        try { p.destroy(); } catch (e2) {}
+        return alive;
+    } catch (e) {
+        return true; // probe failed -> assume alive (wait longer, safer)
+    }
+}
+
 function h2Stop() {
     if (isWin) {
         // No inner double-quotes here: ProcessBuilder passes this as a single
@@ -768,7 +787,11 @@ function h2Start() {
     if (isWin) {
         return execAsync(["cmd", "/c", binDir + "BG_StartH2.bat", "graalvm.js"]);
     }
-    return execAsync(["sh", binDir + "BG_StartH2.sh", "graalvm.js"]);
+    // bash -c, matching TestDatasource.sh Step 1's bash invocation of the
+    // same script: a bare `sh BG_StartH2.sh` from ProcessBuilder (dash on
+    // Ubuntu) is a different execution path from the one proven stable on
+    // the CI runner at Step 1.
+    return execAsync(["bash", "-c", binDir + "BG_StartH2.sh graalvm.js"]);
 }
 
 var c17Ok = false;
@@ -788,11 +811,16 @@ try {
     s17.close();
     c17Detail.push("aliveBefore=" + aliveBefore + " hash=" + hash17);
 
-    // 2) stop H2 and wait for :3306 to release
+    // 2) stop H2 and wait for :3306 to release AND the old H2 JVM to be
+    //    gone (20s): a free port alone is not enough - the SIGTERM'd H2 can
+    //    still hold the bind while unwinding, and a fresh H2 started in that
+    //    window dies with "Address already in use" (CI run #46).
     h2Stop();
     var down = false;
-    for (var d = 0; d < 20; d++) {
-        if (!h2Listening()) { down = true; break; }
+    for (var d = 0; d < 40; d++) {
+        var portFree = !h2Listening();
+        var noProc = isWin || !h2ProcessAlive();
+        if (portFree && noProc) { down = true; break; }
         Thread.sleep(500);
     }
     c17Detail.push("h2Down=" + down);
@@ -807,11 +835,19 @@ try {
     }
     c17Detail.push("connBroken=" + broken);
 
-    // 4) restart H2 and wait for :3306 to listen again
+    // 4) restart H2 and wait for :3306 to listen again (60s, and require 2
+    //    consecutive stable probes: a one-shot match can catch a dying
+    //    socket - the CI #46 refused flood appeared right after this step)
     h2Start();
     var up = false;
-    for (var u = 0; u < 45; u++) {
-        if (h2Listening()) { up = true; break; }
+    var stable = 0;
+    for (var u = 0; u < 60; u++) {
+        if (h2Listening()) {
+            stable++;
+            if (stable >= 2) { up = true; break; }
+        } else {
+            stable = 0;
+        }
         Thread.sleep(1000);
     }
     c17Detail.push("h2UpAfter=" + up);
