@@ -277,11 +277,13 @@ fi
 # ------------------------------------------------------------------
 # Step 5: stop the H2 server started for this run (java ghost keyed by
 # script/StartH2.js) so TestAll leaves nothing behind. RC was captured
-# above. Then, per the project convention, the run finishes with a full
+# above. StopH2.sh only matches java/javaw processes keyed by StartH2
+# (never a wrapping sh/bash parent - more reliable than a raw pkill).
+# Then, per the project convention, the run finishes with a full
 # StopAll sweep (AppRootDir path match) so NO JsPlus/H2 JVM survives this
 # run - any leftover JVM that escaped the precise recycle is killed here.
 # ------------------------------------------------------------------
-pkill -f 'script/StartH2.js' 2>/dev/null || true
+"${JS_PLUS_PATH}bin/StopH2.sh" || true
 "${JS_PLUS_PATH}bin/StopAll.sh" || true
 
 # ------------------------------------------------------------------

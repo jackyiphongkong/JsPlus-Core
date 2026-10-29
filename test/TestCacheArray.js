@@ -278,7 +278,14 @@ try {
     var after14 = gca14.isTerminated();
     gca14.forceTerminate();   // let the worker exit and sweep remaining items
     var size14 = 0;
-    for (var w14 = 0; w14 < 200; w14++) {
+    // forceTerminate() only flags the filter: the worker must first wake from
+    // its current Thread.sleep(timer=5000ms), finish the batch + sweep, sleep
+    // the loopTimer(5000ms), then reach finally { removeAll() } - worst case
+    // ~10s plus CI scheduling jitter. The old 10s budget (200x50ms) could cut
+    // off exactly mid-sweep ("terminated false->true size=2" on 2026-10-29
+    // CI): the worker had swept 1 item and was still inside the loopTimer
+    // sleep when the wait expired. Wait 25s (500 x 50ms).
+    for (var w14 = 0; w14 < 500; w14++) {
         size14 = gca14.size();
         if (size14 === 0) { break; }
         Thread.sleep(50);

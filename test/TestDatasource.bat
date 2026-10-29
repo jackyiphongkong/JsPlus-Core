@@ -142,7 +142,14 @@ REM ------------------------------------------------------------------
 REM Step 3: stop the H2 server started for this run (java ghost keyed by
 REM script/StartH2.js) so TestDatasource leaves nothing behind.
 REM ------------------------------------------------------------------
-powershell -NoProfile -Command "$kw='script/StartH2.js'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
+REM Step 3: stop the H2 server started for this run (Stop-Process on
+REM java.exe/javaw.exe keyed by script/StartH2.js - only JVM processes,
+REM never a wrapping cmd/powershell parent). In the TestAll flow
+REM (TESTALL_RUN=1) the H2 is TestAll's shared server and its Step 4d
+REM owns the teardown, so this step is skipped.
+if not defined TESTALL_RUN (
+    powershell -NoProfile -Command "$kw='script/StartH2.js'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
+)
 exit /b %RC%
 
 endlocal

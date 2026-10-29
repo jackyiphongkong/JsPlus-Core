@@ -157,8 +157,13 @@ set -e
 echo "TestDatasource exit code: $RC"
 
 # ------------------------------------------------------------------
-# Step 3: stop the H2 server started for this run (java ghost keyed by
-# script/StartH2.js) so TestDatasource leaves nothing behind.
+# Step 3: stop the H2 server started for this run. Use the project's own
+# StopH2.sh (Stop.sh only matches java/javaw processes keyed by StartH2 -
+# it can never kill a wrapping sh/bash parent, unlike a raw pkill). In the
+# TestAll flow (TESTALL_RUN=1) the H2 is TestAll's shared server and its
+# Step 5 owns the teardown, so this step is skipped.
 # ------------------------------------------------------------------
-pkill -f 'script/StartH2.js' 2>/dev/null || true
+if [ -z "${TESTALL_RUN:-}" ]; then
+    "${JS_PLUS_PATH}bin/StopH2.sh" || true
+fi
 exit "$RC"
