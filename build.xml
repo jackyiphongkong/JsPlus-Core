@@ -298,7 +298,7 @@
 		</jar>
 		<echo message="Packaged jsplus-core-${jr.version}.jar" />
 	</target>
-	<target name="build" depends="package,javadoc" />
+	<target name="build" depends="package,javadoc,prune-artifacts" />
 	<!-- ============================================================
 	     javadoc - generate the API site into docs/latest/api, archive
 	     it as docs/apis/<version>.jar, and keep docs/latest/api as the
@@ -334,5 +334,34 @@
 			<fileset dir="${jr.root}/docs/latest/api" />
 		</jar>
 		<echo message="Generated docs/apis/${jr.version}.jar + docs/latest/api (JsPlus-Core ${jr.version})" />
+	</target>
+	<!-- ============================================================
+	     prune-artifacts - keep only the 10 newest versioned jars under
+	     docs/apis (javadoc archives) and docs/reports (test-report
+	     archives). Both dirs grow one jar per release/build, so older
+	     archives are pruned here on every build to keep the docs tree
+	     bounded. Implemented with a small build-tools Java utility
+	     (build-tools/PruneJars.java) instead of ant resource selectors,
+	     because the ant <first count="-N"> negative-count idiom is not
+	     portable across ant versions.
+	     ============================================================ -->
+	<target name="prune-uptodate">
+		<mkdir dir="${jr.root}/build-tools/classes" />
+		<uptodate property="prune.uptodate" targetfile="${jr.root}/build-tools/classes/PruneJars.class">
+			<srcfiles dir="${jr.root}/build-tools" includes="PruneJars.java" />
+		</uptodate>
+	</target>
+	<target name="prune-compile" depends="prune-uptodate" unless="prune.uptodate">
+		<javac srcdir="${jr.root}/build-tools" destdir="${jr.root}/build-tools/classes"
+			encoding="${jr.charset}" includeantruntime="false" />
+	</target>
+	<target name="prune-artifacts" depends="prune-compile">
+		<java classname="PruneJars" classpath="${jr.root}/build-tools/classes"
+			fork="true" failonerror="true">
+			<arg value="${jr.root}/docs/apis" />
+			<arg value="10" />
+			<arg value="${jr.root}/docs/reports" />
+			<arg value="10" />
+		</java>
 	</target>
 </project>
