@@ -223,11 +223,9 @@ fi
 # its own exit code is merged into the overall RC below.
 # ------------------------------------------------------------------
 # ------------------------------------------------------------------
-# Step 4c: DISABLED (2026-10-29) - TestDatasource suite skipped.
-# C18 multi-thread stress keeps timing out on slow CI runners (H2
-# Connection refused right after the C17 restart + pool expansion cost),
-# so the suite is disabled to keep the rest of TestAll green. Re-enable
-# by removing the "#" prefixes below once C18 is CI-friendly.
+# Re-enabled 2026-10-29: C18 is now CI-aware (CI=true -> 12x30 load,
+# 240s Future budget, relaxed Phase2/Phase3 timing windows), so the
+# suite can run on slow shared runners again without timing out.
 # ------------------------------------------------------------------
 echo "[TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)..."
 set +e
