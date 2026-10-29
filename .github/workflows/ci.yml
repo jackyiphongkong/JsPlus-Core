@@ -52,12 +52,19 @@ jobs:
         working-directory: test
 
       - name: Publish CI summary
+        if: always()
         run: |
           if [ -f docs/latest/report/TestAll-CI-Summary.md ]; then
             cat docs/latest/report/TestAll-CI-Summary.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # Upload artifacts even when TestAll fails (exit 1): without
+      # "if: always()" GitHub skips this step on failure and the
+      # test-reports zip (reports + logs + jars) is never produced, making
+      # CI failures hard to diagnose. warn (not error) so a partially
+      # missing file set still uploads what exists.
       - name: Upload build artifacts and test reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
@@ -67,4 +74,4 @@ jobs:
             LibHome/jsplus/default/*.jar
             docs/apis/*.jar
             docs/latest/api/
-          if-no-files-found: error
+          if-no-files-found: warn
