@@ -229,15 +229,15 @@ fi
 # so the suite is disabled to keep the rest of TestAll green. Re-enable
 # by removing the "#" prefixes below once C18 is CI-friendly.
 # ------------------------------------------------------------------
-# echo "[TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)..."
-# set +e
-# "${BIN_PATH}TestDatasource.sh" "$SCRIPT_ENGINE"
-# RC_DS=$?
-# set -e
-# echo "TestDatasource exit code: $RC_DS"
-# if [ "$RC_DS" != "0" ]; then
-#     RC="$RC_DS"
-# fi
+echo "[TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)..."
+set +e
+"${BIN_PATH}TestDatasource.sh" "$SCRIPT_ENGINE"
+RC_DS=$?
+set -e
+echo "TestDatasource exit code: $RC_DS"
+if [ "$RC_DS" != "0" ]; then
+    RC="$RC_DS"
+fi
 
 # ------------------------------------------------------------------
 # Step 4d: Merge the TestDatasource outcome into the TestAll report
