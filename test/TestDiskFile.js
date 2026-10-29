@@ -391,8 +391,15 @@ check({
 });
 
 // ---------------------------------------------------------------------------
-// C16: clock-modify-time variants - setModifyTimeFromClock / getModifyTime /
-//      getModifyTimeForClock agree within FS precision
+// C16: clock-modify-time variants - setModifyTimeFromClock /
+//      getModifyTimeForClock agree via the symmetric zone round-trip.
+// NOTE (timezone-independent): the FromClock setter accepts a CLOCK-zone
+// wall time, converts it to the LOCAL zone and stores it; getModifyTimeForClock
+// converts back, so the pair is a symmetric zone round-trip and must return
+// the input on ANY JVM/Clock zone combination. getModifyTime() (plain) is the
+// LOCAL view and legitimately differs from the input when local != Clock zone
+// (e.g. CI runners are UTC while the Clock returns GMT+8), so it is only
+// required to be readable, not equal to the input.
 // ---------------------------------------------------------------------------
 var p16 = ROOT + "c16_clock_time.txt";
 var df16 = new DiskFile(p16);
@@ -408,10 +415,10 @@ Logger.systemMark("TestDiskFile.js", "C16");
 check({
     caseId: "C16",
     name: "DiskFile clock modify time (setModifyTimeFromClock + getModifyTime/getModifyTimeForClock)",
-    ok: ts16plain !== null && ts16clock !== null && diff16a <= 2000 && diff16b <= 2000,
-    detail: "set=" + baseMs16 + " getModifyTime diff=" + diff16a + " getModifyTimeForClock diff=" + diff16b,
-    objective: "the FromClock setter persists; both plain and clock getters read it back within FS precision",
-    objectiveZh: "FromClock 設定落盤後，兩種讀取器（plain / ForClock）均在檔案系統精度內讀回",
+    ok: ts16plain !== null && ts16clock !== null && diff16b <= 2000,
+    detail: "set=" + baseMs16 + " plainDiff=" + diff16a + " clockRoundTripDiff=" + diff16b,
+    objective: "setModifyTimeFromClock persists; getModifyTimeForClock returns the input via the symmetric zone round-trip (timezone-independent); plain getModifyTime reads the local view",
+    objectiveZh: "setModifyTimeFromClock 落盤後 getModifyTimeForClock 經對稱時區往返讀回輸入（時區無關）；plain 讀取為本地視角",
     command: "df.setModifyTimeFromClock(ts); df.getModifyTime(); df.getModifyTimeForClock()"
 });
 
