@@ -337,13 +337,12 @@
 	</target>
 	<!-- ============================================================
 	     prune-artifacts - keep only the 10 newest versioned jars under
-	     docs/apis (javadoc archives) and docs/reports (test-report
-	     archives). Both dirs grow one jar per release/build, so older
-	     archives are pruned here on every build to keep the docs tree
-	     bounded. Implemented with a small build-tools Java utility
-	     (build-tools/PruneJars.java) instead of ant resource selectors,
-	     because the ant <first count="-N"> negative-count idiom is not
-	     portable across ant versions.
+	     docs/apis (javadoc archives). docs/reports (test-report
+	     archives) is owned by TestAll and pruned by TestAll itself, so
+	     ant only bounds its own output tree. Implemented with a small
+	     build-tools Java utility (build-tools/PruneJars.java) instead
+	     of ant resource selectors, because the ant <first count="-N">
+	     negative-count idiom is not portable across ant versions.
 	     ============================================================ -->
 	<target name="prune-uptodate">
 		<mkdir dir="${jr.root}/build-tools/classes" />
@@ -359,8 +358,6 @@
 		<java classname="PruneJars" classpath="${jr.root}/build-tools/classes"
 			fork="true" failonerror="true">
 			<arg value="${jr.root}/docs/apis" />
-			<arg value="10" />
-			<arg value="${jr.root}/docs/reports" />
 			<arg value="10" />
 		</java>
 	</target>
