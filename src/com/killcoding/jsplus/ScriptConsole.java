@@ -437,28 +437,29 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		}
 		found.sort(null); // stable compile order -> stable returned Class array order
 		String[] javaSources = new String[found.size()];
-		File newestFile = null;
-		String newestSource = null;
 		for (int i = 0; i < found.size(); i++) {
 			javaSources[i] = new String(Files.readAllBytes(new File(found.get(i)).toPath()), StandardCharsets.UTF_8);
-			File candidate = new File(found.get(i));
-			if (newestFile == null || candidate.lastModified() > newestFile.lastModified()) {
-				newestFile = candidate;
-				newestSource = javaSources[i];
-			}
 		}
-		// The eval key follows the most recently modified file: a fresh edit to it
-		// invalidates the content-addressed cache and forces a recompile.
-		return compileAndLoadJavaMulti(javaSources, CommonTools.md5(newestSource));
+		// The eval key covers ALL sources of the folder: any file edit invalidates
+		// the content-addressed cache and forces a recompile, and the key can never
+		// collide with a single-file evalJavaFile call (which keys by that file's
+		// own content MD5) - a collision would reuse a jar that lacks the folder's
+		// other classes and break the returned Class array.
+		StringBuilder joinedSources = new StringBuilder();
+		for (String javaSource : javaSources) {
+			joinedSources.append(javaSource);
+		}
+		return compileAndLoadJavaMulti(javaSources, CommonTools.md5(joinedSources.toString()));
 	}
 
 	/**
 	* Compiles a single Java source string with the JDK system compiler, packages the
 	* produced .class files into a content-addressed jar under <JS_PLUS_PATH>/.tmp/java/<evalKey>
 	* and loads that jar with a dedicated URLClassLoader. evalJavaSource keys the workspace by
-	* the source-content MD5; evalJavaFile by the file-content MD5 - identical content reuses
-	* the compiled jar while every call still gets a fresh ClassLoader (so the same source
-	* evaluated twice yields two distinct Class objects).
+	* the source-content MD5; evalJavaFile keys a single file by that file's content MD5 and a
+	* folder by the MD5 of ALL its sources (so the key can never collide with a single-file
+	* call). Identical content reuses the compiled jar while every call still gets a fresh
+	* ClassLoader (so the same source evaluated twice yields two distinct Class objects).
 	* @param javaSource - the Java source code to compile
 	* @param evalKey - content MD5 used as the eval workspace directory name
 	* @return the compiled and loaded Class

@@ -90,8 +90,7 @@ var SPECS = [
       sel2: function (n) { return "SELECT status FROM test_user WHERE id='u" + pad15(n) + "'"; },
       chk2: function () { return "disabled"; },
       del: function (n) { return "DELETE FROM test_user WHERE id='u" + pad15(n) + "'"; },
-      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_user WHERE id='u" + pad15(n) + "'"; },
-      cleanup: "DELETE FROM test_user WHERE username LIKE 'load_u%'" },
+      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_user WHERE id='u" + pad15(n) + "'"; } },
     { table: "test_product",  prefix: "p",
       insert: function (n) { return "INSERT INTO test_product (id, product_name, category, price, stock, created_at, updated_at, deleted) "
           + "VALUES ('p" + pad15(n) + "', 'load_p" + n + "', 'Load', 9.99, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)"; },
@@ -101,8 +100,7 @@ var SPECS = [
       sel2: function (n) { return "SELECT stock FROM test_product WHERE id='p" + pad15(n) + "'"; },
       chk2: function () { return "9"; },
       del: function (n) { return "DELETE FROM test_product WHERE id='p" + pad15(n) + "'"; },
-      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_product WHERE id='p" + pad15(n) + "'"; },
-      cleanup: "DELETE FROM test_product WHERE product_name LIKE 'load_p%'" },
+      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_product WHERE id='p" + pad15(n) + "'"; } },
     { table: "test_order",    prefix: "o",
       insert: function (n) { return "INSERT INTO test_order (id, order_no, user_id, product_id, quantity, amount, status, created_at, updated_at, deleted) "
           + "VALUES ('o" + pad15(n) + "', 'LOAD-ORD-" + n + "', 'u000000000000001', 'p000000000000001', 1, 5.00, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)"; },
@@ -112,8 +110,7 @@ var SPECS = [
       sel2: function (n) { return "SELECT status FROM test_order WHERE id='o" + pad15(n) + "'"; },
       chk2: function () { return "paid"; },
       del: function (n) { return "DELETE FROM test_order WHERE id='o" + pad15(n) + "'"; },
-      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_order WHERE id='o" + pad15(n) + "'"; },
-      cleanup: "DELETE FROM test_order WHERE order_no LIKE 'LOAD-ORD-%'" },
+      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_order WHERE id='o" + pad15(n) + "'"; } },
     { table: "test_log",      prefix: "l",
       insert: function (n) { return "INSERT INTO test_log (id, level, source, message, log_time, created_at, updated_at, deleted) "
           + "VALUES ('l" + pad15(n) + "', 'INFO', 'LoadTest.js', 'load msg " + n + "', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)"; },
@@ -123,8 +120,7 @@ var SPECS = [
       sel2: function (n) { return "SELECT level FROM test_log WHERE id='l" + pad15(n) + "'"; },
       chk2: function () { return "WARN"; },
       del: function (n) { return "DELETE FROM test_log WHERE id='l" + pad15(n) + "'"; },
-      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_log WHERE id='l" + pad15(n) + "'"; },
-      cleanup: "DELETE FROM test_log WHERE source='LoadTest.js'" },
+      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_log WHERE id='l" + pad15(n) + "'"; } },
     { table: "test_kv",       prefix: "k",
       insert: function (n) { return "INSERT INTO test_kv (id, kv_key, kv_value, remark, created_at, updated_at, deleted) "
           + "VALUES ('k" + pad15(n) + "', 'load_k" + n + "', 'v" + n + "', 'load', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE)"; },
@@ -134,8 +130,7 @@ var SPECS = [
       sel2: function (n) { return "SELECT kv_value FROM test_kv WHERE id='k" + pad15(n) + "'"; },
       chk2: function (n) { return "v" + n + "b"; },
       del: function (n) { return "DELETE FROM test_kv WHERE id='k" + pad15(n) + "'"; },
-      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_kv WHERE id='k" + pad15(n) + "'"; },
-      cleanup: "DELETE FROM test_kv WHERE kv_key LIKE 'load_k%'" }
+      sel0: function (n) { return "SELECT COUNT(*) AS CNT FROM test_kv WHERE id='k" + pad15(n) + "'"; } }
 ];
 
 // ----------------------------------------------------------------------------
@@ -232,8 +227,8 @@ if (loadErr.length === 0) {
             runPhase(tableStat, spec, n, "DELETE", spec.del, null);
             runPhase(tableStat, spec, n, "SELECT0", spec.sel0, function () { return 0; });
         }
-        // safety cleanup for any residue (idempotent)
-        try { cde.execute(spec.cleanup); } catch (e2) {}
+        // Data retained: the load rows are NOT cleaned after each table so the
+        // produced records stay inspectable after the run (manual check window).
         doneTables++;
         print("[LoadTest] " + spec.table + ": " + tableStat.ops + " ops, "
             + tableStat.pass + " pass, " + tableStat.fail + " fail");

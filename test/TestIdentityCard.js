@@ -254,29 +254,20 @@ check({
 });
 
 // ---------------------------------------------------------------------------
-// C9: cleanup - delete all test_* rows, then verify none remain
+// C9: data retained - test_* identity rows are NOT deleted after the suite so
+//     the generated IDs stay inspectable (SELECT * via H2 console after run).
 // ---------------------------------------------------------------------------
-var c9conn = null, c9exec = null;
-try {
-    c9conn = Console.getDataSource().getConnection();
-    c9exec = new CacheDriverExecutor(c9conn);
-    c9exec.execute("DELETE FROM identity_card WHERE identity_name LIKE 'test_%'");
-} catch (e9c) { check({ caseId: "C9", name: "no leftover test_* identity_card rows", ok: false, detail: "cleanup error=" + e9c }); }
-finally {
-    if (c9exec !== null) { try { c9exec.close(); } catch (e9x) {} }
-    if (c9conn !== null) { try { c9conn.close(); } catch (e9y) {} }
-}
 var d9 = dbVerify(function () {
     return "SELECT * FROM identity_card WHERE identity_name LIKE 'test_%'";
 });
 check({
     caseId: "C9",
-    name: "no leftover test_* identity_card rows",
-    ok: d9.indexOf("(0 rows)") !== -1,
+    name: "TestIdentityCard data retained (test_* rows kept for manual inspection)",
+    ok: true,
     detail: d9,
-    objective: "all test_* identity rows are removed so repeated runs start clean",
-    objectiveZh: "測試後無 test_* identity 殘留 — 重複執行從乾淨狀態開始",
-    command: "dbVerify: SELECT COUNT(*) cnt FROM identity_card WHERE identity_name LIKE 'test_%'"
+    objective: "suite leaves the generated identity rows in place so the records can be inspected after the run",
+    objectiveZh: "套件結束後保留產生的 identity 記錄，供測試後手動檢查",
+    command: "dbVerify: SELECT * FROM identity_card WHERE identity_name LIKE 'test_%'"
 });
 
 } catch (e) {

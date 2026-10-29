@@ -345,23 +345,18 @@ check({
 });
 
 // ---------------------------------------------------------------------------
-// C6: cleanup - clear the suite data (idempotent re-runs)
+// C6: data retained - the remote_file tables are NOT emptied after the suite
+//     so the written records / part rows stay inspectable after the run.
 // ---------------------------------------------------------------------------
-var connClean = Console.getDataSource().getConnection();
-var cdeClean = new CacheDriverExecutor(connClean);
-cdeClean.execute("DELETE FROM remote_file");
-cdeClean.execute("DELETE FROM remote_file_data_0");
-cdeClean.execute("DELETE FROM remote_file_data_1");
-cdeClean.close();
 var dbv3 = dbVerify(function () { return "select * from remote_file"; });
 check({
     caseId: "C6",
-    name: "RemoteFile suite cleanup (tables emptied)",
+    name: "RemoteFile suite data retained (remote_file rows kept for manual inspection)",
     ok: true,
-    detail: "remote_file/remote_file_data_0/remote_file_data_1 cleared" + dbv3,
-    objective: "cleanup leaves no remote file rows behind (idempotent re-runs)",
-    objectiveZh: "清理：三張表清空，套件可冪等重跑",
-    command: "DELETE FROM remote_file / remote_file_data_0 / remote_file_data_1"
+    detail: "remote_file/remote_file_data_0/remote_file_data_1 retained" + dbv3,
+    objective: "suite leaves the produced rows in place so the records can be inspected after the run",
+    objectiveZh: "套件結束後保留 remote_file 系列表的記錄，供測試後手動檢查",
+    command: "select * from remote_file / remote_file_data_0 / remote_file_data_1"
 });
 
 } catch (e) {

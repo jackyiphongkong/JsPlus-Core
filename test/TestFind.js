@@ -256,20 +256,20 @@ check({
 });
 
 // ---------------------------------------------------------------------------
-// F5: suite cleanup - empty test_user (idempotent re-runs)
+// F5: data retained - test_user is NOT emptied after the suite so the records
+//     stay inspectable (SELECT * via H2 console / SQL tool after the run).
 // ---------------------------------------------------------------------------
-var connClean = Console.getDataSource().getConnection();
-var cdeClean = new CacheDriverExecutor(connClean);
-cdeClean.execute("DELETE FROM test_user");
-cdeClean.close();
+var dbvKeep = dbVerify(function () {
+    return "select * from test_user";
+});
 check({
     caseId: "F5",
-    name: "TestFind cleanup (test_user emptied)",
+    name: "TestFind data retained (test_user rows kept for manual inspection)",
     ok: true,
-    detail: "test_user cleared",
-    objective: "cleanup leaves no rows behind (idempotent re-runs)",
-    objectiveZh: "清理 test_user，套件可冪等重跑",
-    command: "DELETE FROM test_user"
+    detail: "test_user retained" + dbvKeep,
+    objective: "suite leaves the produced rows in place so the records can be inspected after the run",
+    objectiveZh: "套件結束後保留產生的記錄，供測試後手動檢查",
+    command: "select * from test_user"
 });
 
 } catch (e) {

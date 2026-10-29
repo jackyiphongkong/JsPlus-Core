@@ -127,6 +127,11 @@ else
     echo "[TestAll] Initializing database (fallback.sql -> change.sql)..."
     mkdir -p "${JS_PLUS_PATH}../Database"
     "${JS_PLUS_PATH}bin/StartH2Console.sh" init testdb
+    # Step 2b: initialize the dedicated dbsync SOURCE/TARGET file databases
+    # (dbscript/fallback_sync.sql -> change_sync.sql). The dbsync suite
+    # (TestDBSync.js) syncs exclusively between these two file DBs and never
+    # touches the shared testdb.
+    "${JS_PLUS_PATH}bin/InitDBSyncDB.sh"
     echo "[TestAll] Starting H2 server (port 3306)..."
     "${JS_PLUS_PATH}bin/BG_StartH2.sh" "$SCRIPT_ENGINE"
 fi

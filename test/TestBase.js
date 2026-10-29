@@ -108,7 +108,10 @@ function check(params) {
         objective: (objective === null || objective === undefined) ? "" : ("" + objective),
         objectiveZh: (objectiveZh === null || objectiveZh === undefined) ? "" : ("" + objectiveZh),
         command: (command === null || command === undefined) ? "" : ("" + command),
-        dbv: dbvResult
+        dbv: dbvResult,
+        // Optional list of extra DB-verify tables ({label, result}); when
+        // present, writeReport renders these instead of the single dbv.
+        dbvList: (params.dbvList === null || params.dbvList === undefined) ? null : params.dbvList
     });
     dbvResult = null;
 }
@@ -220,32 +223,47 @@ function writeReport() {
         var objective = escapeHtml(results[i].objective);
         var objectiveZh = escapeHtml(results[i].objectiveZh);
         var command = escapeHtml(results[i].command);
-        // dbVerify outcome rendered the JsPlus-Tomcat way: a yellow-tinted
-        // nested table (row num + columns) under the detail cell.
-        var dbvHtml = "";
-        var dbv = results[i].dbv;
-        if (dbv !== null && dbv !== undefined) {
+        // DB-verify outcome rendered the JsPlus-Tomcat way: a yellow-tinted
+        // nested table (row num + columns) under the detail cell. A case may
+        // carry several labelled verify tables (dbvList, e.g. source + target
+        // of a sync test); otherwise the single dbv is rendered as before.
+        function renderDbv(label, dbv) {
+            var prefix = (label === null || label === undefined || ("" + label).length === 0)
+                ? "dbVerify" : ("" + label);
             var dbvSql = escapeHtml(dbv.sql);
             if (dbv.error !== undefined && dbv.error !== null && ("" + dbv.error).length > 0) {
-                dbvHtml = "<span class=\"dbv\">dbVerify: " + dbvSql
+                return "<span class=\"dbv\">" + prefix + ": " + dbvSql
                     + "<br>(query failed) " + escapeHtml(dbv.error) + "</span>";
-            } else if (dbv.rows.length === 0) {
-                dbvHtml = "<span class=\"dbv\">dbVerify: " + dbvSql + "<br>(0 rows)</span>";
-            } else {
-                dbvHtml = "<span class=\"dbv\">dbVerify: " + dbvSql
-                    + "<br><table class=\"dbv-table\"><tr><th>row num</th>";
-                for (var ci = 0; ci < dbv.columns.length; ci++) {
-                    dbvHtml += "<th>" + escapeHtml(dbv.columns[ci]) + "</th>";
+            }
+            if (dbv.rows.length === 0) {
+                return "<span class=\"dbv\">" + prefix + ": " + dbvSql + "<br>(0 rows)</span>";
+            }
+            var h = "<span class=\"dbv\">" + prefix + ": " + dbvSql
+                + "<br><table class=\"dbv-table\"><tr><th>row num</th>";
+            for (var ci = 0; ci < dbv.columns.length; ci++) {
+                h += "<th>" + escapeHtml(dbv.columns[ci]) + "</th>";
+            }
+            h += "</tr>";
+            for (var ri = 0; ri < dbv.rows.length; ri++) {
+                h += "<tr><td>" + (ri + 1) + "</td>";
+                for (var cj = 0; cj < dbv.columns.length; cj++) {
+                    h += "<td>" + escapeHtml(dbv.rows[ri][cj]) + "</td>";
                 }
-                dbvHtml += "</tr>";
-                for (var ri = 0; ri < dbv.rows.length; ri++) {
-                    dbvHtml += "<tr><td>" + (ri + 1) + "</td>";
-                    for (var cj = 0; cj < dbv.columns.length; cj++) {
-                        dbvHtml += "<td>" + escapeHtml(dbv.rows[ri][cj]) + "</td>";
-                    }
-                    dbvHtml += "</tr>";
-                }
-                dbvHtml += "</table></span>";
+                h += "</tr>";
+            }
+            h += "</table></span>";
+            return h;
+        }
+        var dbvHtml = "";
+        var dbvList = results[i].dbvList;
+        if (dbvList !== null && dbvList !== undefined && dbvList.length > 0) {
+            for (var bi = 0; bi < dbvList.length; bi++) {
+                dbvHtml += renderDbv(dbvList[bi].label, dbvList[bi].result);
+            }
+        } else {
+            var dbv = results[i].dbv;
+            if (dbv !== null && dbv !== undefined) {
+                dbvHtml = renderDbv("dbVerify", dbv);
             }
         }
         // Sequential, per-row case id: first row = C1, second = C2, ...

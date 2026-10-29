@@ -122,6 +122,15 @@ if errorlevel 1 (
     echo [TestAll] ERROR: Database initialization failed.
     exit /b 1
 )
+REM Step 2b: initialize the dedicated dbsync SOURCE/TARGET file databases
+REM (dbscript/fallback_sync.sql -> change_sync.sql). The dbsync suite
+REM (TestDBSync.js) syncs exclusively between these two file DBs and never
+REM touches the shared testdb.
+call "%JS_PLUS_PATH_ORIGIN%bin\InitDBSyncDB.bat"
+if errorlevel 1 (
+    echo [TestAll] ERROR: DBSync database initialization failed.
+    exit /b 1
+)
 echo [TestAll] Starting H2 server (port 3306)...
 call "%JS_PLUS_PATH_ORIGIN%bin\BG_StartH2.bat" %SCRIPT_ENGINE%
 

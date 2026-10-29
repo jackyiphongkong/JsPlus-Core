@@ -2066,3 +2066,217 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/tool/ConfigProperties.java (M)
 - build: automatic version bump
 
+
+## 6.1.138 (2026.10.28 22:12:38)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.139 (2026.10.28 22:18:59)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.140 (2026.10.28 22:26:05)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.142 (2026.10.28 22:56:50)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.143 (2026.10.28 23:13:08)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.144 (2026.10.29 06:28:21)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.146 (2026.10.29 07:15:55)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.147 (2026.10.29 10:13:53)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.148 (2026.10.29 10:21:01)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.149 (2026.10.29 10:27:17)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.150 (2026.10.29 10:44:38)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- build: automatic version bump
+
+
+## 6.1.151 (2026.10.29 11:41:32)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: automatic version bump
+
+
+## 6.1.153 (2026.10.29 12:21:38)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: automatic version bump
+
+
+## 6.1.154 (2026.10.29 12:30:13)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: automatic version bump
+
+
+## 6.1.155 (2026.10.29 12:33:28)
+- found diffed: com/killcoding/dbsync/Database.java (A)
+- found diffed: com/killcoding/dbsync/Deleter.java (A)
+- found diffed: com/killcoding/dbsync/Enter.java (A)
+- found diffed: com/killcoding/dbsync/FileUtils.java (A)
+- found diffed: com/killcoding/dbsync/Inserter.java (A)
+- found diffed: com/killcoding/dbsync/Remover.java (A)
+- found diffed: com/killcoding/dbsync/SkipCreateConnectionException.java (A)
+- found diffed: com/killcoding/dbsync/SqlStatement.java (A)
+- found diffed: com/killcoding/dbsync/Table.java (A)
+- found diffed: com/killcoding/dbsync/Updater.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsole.java (M)
+- build: automatic version bump
+
