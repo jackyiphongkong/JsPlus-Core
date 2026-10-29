@@ -204,6 +204,11 @@ REM already-running H2 (its :3306 check below skips the init/start step) and
 REM its own exit code is merged into the overall RC below.
 REM ------------------------------------------------------------------
 echo [TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)...
+REM TESTALL_RUN=1 tells TestDatasource.bat to REUSE the shared H2 server
+REM started in Step 1 instead of running its own StopAll sweep + H2 restart
+REM (its standalone self-heal would kill the stable H2 here - the CI #43/#44
+REM "Connection refused on :3306" failure mode).
+set "TESTALL_RUN=1"
 call "%BIN_PATH%TestDatasource.bat" %SCRIPT_ENGINE%
 set "RC_DS=%ERRORLEVEL%"
 echo TestDatasource exit code: %RC_DS%
