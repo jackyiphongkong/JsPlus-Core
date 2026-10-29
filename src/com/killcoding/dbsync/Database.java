@@ -91,10 +91,18 @@ public class Database {
 		dataSource = new DriverDataSource(new File(appDsFile));
 	}
 
+	/**
+	* Returns the instance configuration store backing this facade.
+	* @return the ConfigProperties instance
+	* */
 	public ConfigProperties getPorps() {
 		return this.porps;
 	}
 
+	/**
+	* Returns the key prefix of this facade ("Source"/"Target"/custom).
+	* @return the source-or-target label
+	* */
 	public String getSourceOrTarget() {
 		return this.sourceOrTarget;
 	}

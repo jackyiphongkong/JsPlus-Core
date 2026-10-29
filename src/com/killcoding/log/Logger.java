@@ -225,6 +225,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs at DEBUG level (no-op when the level is above DEBUG).
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public void debug(String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -327,6 +332,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs at INFO level.
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public void info(String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -429,6 +439,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs at WARN level.
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public void warn(String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -531,6 +546,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs at ERROR level.
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public void error(String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -594,6 +614,11 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a lifecycle/system MARK line (highest visibility, always written).
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public void mark(String message, Object... params) {
 		try {
 			String msg = (message + "").replaceAll("\\{\\}", "%s");
@@ -751,6 +776,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a MARK line for a caller class given by name.
+	* @param clazz - the caller class name
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemMark(String clazz, String message, Object... params) {
 		try {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -814,6 +845,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a MARK line for a caller class given as a Class object.
+	* @param clazz - the caller class
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemMark(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LogRecord.isSystemOut() || !LoggerFactory.isLoadedConfig()) {
@@ -971,6 +1008,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs an ERROR line for a caller class given by name.
+	* @param clazz - the caller class name
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemError(String clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -1017,6 +1060,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs an ERROR line for a caller class given as a Class object.
+	* @param clazz - the caller class
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemError(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_ERROR) {
@@ -1201,6 +1250,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a WARN line for a caller class given by name.
+	* @param clazz - the caller class name
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemWarn(String clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -1247,6 +1302,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a WARN line for a caller class given as a Class object.
+	* @param clazz - the caller class
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemWarn(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_WARN) {
@@ -1431,6 +1492,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs an INFO line for a caller class given by name.
+	* @param clazz - the caller class name
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemInfo(String clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1477,6 +1544,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs an INFO line for a caller class given as a Class object.
+	* @param clazz - the caller class
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemInfo(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_INFO) {
@@ -1661,6 +1734,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a DEBUG line for a caller class given by name.
+	* @param clazz - the caller class name
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemDebug(String clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {
@@ -1707,6 +1786,12 @@ public final class Logger {
 		}
 	}
 
+	/**
+	* Logs a DEBUG line for a caller class given as a Class object.
+	* @param clazz - the caller class
+	* @param message - the message, may contain {} placeholders
+	* @param params - placeholder arguments
+	* */
 	public static void systemDebug(Class<?> clazz, String message, Object... params) {
 		try {
 			if (LEVEL <= LEVEL_DEBUG) {

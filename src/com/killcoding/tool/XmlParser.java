@@ -74,6 +74,11 @@ public class XmlParser {
         return rootName;
     }
 
+	/**
+	* Reads a value by walking a dot-separated key path through the parsed map.
+	* @param keys - the key path segments
+	* @return the value found (String values are trimmed), or null
+	* */
     @SuppressWarnings("unchecked")
     public Object get(String... keys) {
         Object o = null;
@@ -101,6 +106,11 @@ public class XmlParser {
         return o;
     }
 
+	/**
+	* Reads a list value by walking a key path (a String is wrapped into a list).
+	* @param keys - the key path segments
+	* @return the value list, or null when nothing found
+	* */
     @SuppressWarnings("unchecked")
     public List<Object> getList(String... keys) {
         List<Object> list = new ArrayList<Object>();
@@ -147,11 +157,21 @@ public class XmlParser {
         return get(paths.trim().split("\\."));
     }
 
+	/**
+	* Reads a list value via a dot-separated path (see getList).
+	* @param paths - the dot-separated key path
+	* @return the value list, or null
+	* */
     public List<Object> pathList(String paths) {
         if (paths == null) return null;
         return getList(paths.trim().split("\\."));
     }
 
+	/**
+	* Parses an XML string into the nested Map structure held by this parser.
+	* @param xml - the XML document text
+	* @return the parsed root map
+	* */
     public Map<String, Object> xml2Map(String xml) throws Exception {
         Map<String, Object> map = new HashMap<>();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -281,6 +301,11 @@ public class XmlParser {
         }
     }
 
+	/**
+	* Extracts an element's attributes into a name -> value map.
+	* @param element - the DOM element
+	* @return the attribute map
+	* */
     public static Map<String, String> parseAttributes(Element element) {
         Map<String, String> atts = new HashMap<>();
         if (element.hasAttributes()) {
@@ -311,6 +336,10 @@ public class XmlParser {
         return text.toString();
     }
 
+	/**
+	* Returns the parsed root map of the last xml2Map call.
+	* @return the root map
+	* */
     public Map<String, Object> getRoot() {
         return root;
     }

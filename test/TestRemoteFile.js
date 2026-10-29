@@ -35,6 +35,7 @@
 //            EncryptEnable=true).
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 var File = Java.type("java.io.File");
@@ -112,6 +113,7 @@ var writeFails = 0;
 var dbv1 = dbVerify(function () {
     return "select * from remote_file where file_parent_path='/rftest' and file_part_index=0 and deleted=0";
 });
+Logger.systemMark("TestRemoteFile.js", "C1");
 check({
     caseId: "C1",
     name: "RemoteFile write+complete " + FILE_COUNT + " files",
@@ -131,6 +133,7 @@ var cW = rfW.complete();
 var dbvW = dbVerify(function () {
     return "select * from remote_file where file_name='single_write.txt' and deleted=0";
 });
+Logger.systemMark("TestRemoteFile.js", "C2");
 check({
     caseId: "C2",
     name: "RemoteFile write + complete (single file behaviour)",
@@ -156,6 +159,7 @@ var rbRdTxt = (rbRd === null || rbRd === undefined) ? "<null>" : new Str(rbRd, "
 var dbvR = dbVerify(function () {
     return "select * from remote_file where file_name='single_read.txt' and deleted=0";
 });
+Logger.systemMark("TestRemoteFile.js", "C3");
 check({
     caseId: "C3",
     name: "RemoteFile read (readAllBytes/readAllString round-trip)",
@@ -177,6 +181,7 @@ var delD = rfD.delete(false);
 var dbvD = dbVerify(function () {
     return "select * from remote_file where file_name='single_delete.txt'";
 });
+Logger.systemMark("TestRemoteFile.js", "C4");
 check({
     caseId: "C4",
     name: "RemoteFile delete(false) soft delete",
@@ -279,6 +284,7 @@ Thread.sleep(c5WaitMs);
 var dbv2 = dbVerify(function () {
     return "select count(*) file_count from remote_file where file_parent_path='/rftest' and file_part_index=0 and deleted=0";
 });
+Logger.systemMark("TestRemoteFile.js", "C5");
 check({
     caseId: "C5",
     name: "RemoteFile listAll via dedicated-console GCA + Console.callback",
@@ -332,6 +338,7 @@ var cntRows7 = cde7.find("select count(*) cnt from remote_file where file_name='
 var partCount7 = (cntRows7 !== null && cntRows7.size() > 0) ? Number(cntRows7.get(0).get("cnt")) : -1;
 cde7.close();
 var EXPECT_PARTS = 5; // ceil(5000 / 1024)
+Logger.systemMark("TestRemoteFile.js", "C7");
 check({
     caseId: "C7",
     name: "RemoteFile large-file auto split (5KB > FilePartSize=1kb, via writeToRemote)",
@@ -349,6 +356,7 @@ check({
 //     so the written records / part rows stay inspectable after the run.
 // ---------------------------------------------------------------------------
 var dbv3 = dbVerify(function () { return "select * from remote_file"; });
+Logger.systemMark("TestRemoteFile.js", "C6");
 check({
     caseId: "C6",
     name: "RemoteFile suite data retained (remote_file rows kept for manual inspection)",
@@ -360,6 +368,7 @@ check({
 });
 
 } catch (e) {
+    Logger.systemMark("TestRemoteFile.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestRemoteFile suite error",

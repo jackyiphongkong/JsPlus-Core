@@ -9,16 +9,32 @@
 //            format, same as the other suites)
 // Scope    : com.killcoding.datasource.Clock - the time facade used across
 //            JsPlus (getDate/getTime/getSqlTimestamp/getLocalDate/...).
-//            config/AppClock.properties is now provided (Enable=true,
-//            DataSource=config/DataSource.properties, no GetAppClockSql ->
-//            no app-clock table, local-time fallback in DefaultTimeZone).
-//            So Clock.getDataSource()/getConfigProperties() are loaded (C8/C9)
-//            and the clock still tracks the local system time (C7).
+//            config/Clock.properties is provided (Enable=true,
+//            DataSource=config/DataSource.properties, GapCachePeriod=60s,
+//            GetAppClockSql tracks the DB server time with an offset). The
+//            remote time is fetched once and its gap (local - remote) is
+//            cached via Cache.set with a life of GapCachePeriod, so hot-path
+//            calls never hit the DB again; an expired entry re-fetches once.
+//            C12-C14 prove the Cache-based gap cache: a +10s GetAppClockSql
+//            offset is tracked (C12), kept while the cache is fresh (C13) and
+//            re-calibrated after the cache expires (C14). Both
+//            "CURRENT_TIMESTAMP [+-] N SECOND" and
+//            "CURRENT_TIMESTAMP [+-] INTERVAL 'N' HOUR" SQL forms are
+//            recognised when deriving the expected offset.
 // ============================================================================
 
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 var Clock = Java.type("com.killcoding.datasource.Clock");
+var Cache = Java.type("com.killcoding.cache.Cache");
+var JsString = Java.type("com.killcoding.jsplus.JsString");
+var Logger = Java.type("com.killcoding.log.Logger");
+
+// Every case emits a Logger.systemMark("TestClock.js", "Cxx: ...") so the
+// app log records which js file and which case is executing.
+function caseMark(caseId, what) {
+    Logger.systemMark("TestClock.js", caseId + ": " + what);
+}
 
 var basePath = System.getProperty("JS_PLUS_PATH");
 try {
@@ -39,186 +55,212 @@ beginTest();
 print("=== JsPlus-Core Clock Test ===");
 print("JS_PLUS_PATH: " + basePath);
 
+var Paths = Java.type("java.nio.file.Paths");
+var Files = Java.type("java.nio.file.Files");
+var StandardCharsets = Java.type("java.nio.charset.StandardCharsets");
+var LocalDateTime = Java.type("java.time.LocalDateTime");
+var LocalDate = Java.type("java.time.LocalDate");
+var ZoneId = Java.type("java.time.ZoneId");
+var clockPropsPath = basePath + "config/Clock.properties";
+
+function readClockProps() {
+    // Wrap the raw bytes in a JsString (never auto-converted by GraalJS),
+    // so every String method stays callable from JS (getBytes, split, ...).
+    return new JsString(Files.readAllBytes(Paths.get(clockPropsPath)), StandardCharsets.UTF_8);
+}
+function writeClockProps(jsStr) {
+    Files.write(Paths.get(clockPropsPath), jsStr.getBytes(StandardCharsets.UTF_8));
+}
+function waitForSqlContains(marker, timeoutMs) {
+    var deadline = System.currentTimeMillis() + timeoutMs;
+    while (System.currentTimeMillis() < deadline) {
+        try {
+            var sql = Clock.getConfigProperties().getString("GetAppClockSql");
+            if (sql !== null && sql !== undefined && sql.indexOf(marker) >= 0) {
+                return true;
+            }
+        } catch (e) { }
+        Thread.sleep(200);
+    }
+    return false;
+}
+function extractGetAppClockSqlLine(jsStr) {
+    // JsString.split returns String[]; GraalJS converts each element to a
+    // JS primitive string, so plain JS indexOf works on the elements.
+    var lines = jsStr.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf("GetAppClockSql=") === 0) {
+            return lines[i];
+        }
+    }
+    return null;
+}
+function replaceLine(jsStr, key, newLine) {
+    var lines = jsStr.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf(key + "=") === 0) {
+            lines[i] = newLine;
+        }
+    }
+    return JsString.valueOf(lines.join("\n"));
+}
+function parseOffsetMs(sqlLine) {
+    // Uses java.util.regex (not JS regex) - the GraalVM JS regex engine
+    // (TRegex) is not registered in this embedding, so JS regex literals
+    // fail with "No language for id regex found".
+    var Pattern = Java.type("java.util.regex.Pattern");
+    if (sqlLine === null || sqlLine === undefined) return 0;
+    var javaSql = JsString.valueOf(sqlLine).asString();
+    // "CURRENT_TIMESTAMP [+-] INTERVAL 'N' HOUR/MINUTE/SECOND/DAY"
+    var m1 = Pattern.compile(
+        "CURRENT_TIMESTAMP\\s*([+-])\\s*INTERVAL\\s*'(\\d+)'\\s*(HOUR|MINUTE|SECOND|DAY)",
+        Pattern.CASE_INSENSITIVE).matcher(javaSql);
+    if (m1.find()) {
+        var mult = m1.group(3).toUpperCase() === "HOUR" ? 3600000
+            : m1.group(3).toUpperCase() === "MINUTE" ? 60000
+            : m1.group(3).toUpperCase() === "DAY" ? 86400000 : 1000;
+        var v = parseInt("" + m1.group(2), 10) * mult;
+        // group() returns a JS primitive string here (GraalJS converts it),
+        // so compare with === rather than Java equals.
+        return m1.group(1) === "-" ? -v : v;
+    }
+    // "CURRENT_TIMESTAMP [+-] N SECOND/MINUTE/HOUR/DAY"
+    var m2 = Pattern.compile(
+        "CURRENT_TIMESTAMP\\s*([+-])\\s*(\\d+)\\s*(SECOND|MINUTE|HOUR|DAY)",
+        Pattern.CASE_INSENSITIVE).matcher(javaSql);
+    if (m2.find()) {
+        var mult2 = m2.group(3).toUpperCase() === "HOUR" ? 3600000
+            : m2.group(3).toUpperCase() === "MINUTE" ? 60000
+            : m2.group(3).toUpperCase() === "DAY" ? 86400000 : 1000;
+        var v2 = parseInt("" + m2.group(2), 10) * mult2;
+        return m2.group(1) === "-" ? -v2 : v2;
+    }
+    return 0;
+}
+
+// ----------------------------------------------------------------------------
+// C1-C11: facade basics (same Clock instance -> one consistent snapshot)
+// ----------------------------------------------------------------------------
+caseMark("C1", "getDate()/getTime() consistency");
+var clock = new Clock();
+var now = System.currentTimeMillis();
+
+var d1 = clock.getDate();
+check({ caseId: "C1", name: "Clock.getDate() returns a Date", ok: d1 !== null, detail: "getDate()=" + d1 });
+check({ caseId: "C1", name: "getDate() consistent with getTime()", ok: Math.abs(d1.getTime() - clock.getTime()) < 5000,
+    detail: "getDate()=" + d1.getTime() + " getTime()=" + clock.getTime() });
+
+var ts2 = clock.getSqlTimestamp();
+caseMark("C2", "getSqlTimestamp()/getTime() consistency");
+check({ caseId: "C2", name: "Clock.getSqlTimestamp() returns a Timestamp", ok: ts2 !== null, detail: "getSqlTimestamp()=" + ts2 });
+check({ caseId: "C2", name: "getSqlTimestamp() consistent with getTime()", ok: Math.abs(ts2.getTime() - clock.getTime()) < 5000,
+    detail: "getSqlTimestamp()=" + ts2.getTime() + " getTime()=" + clock.getTime() });
+
+caseMark("C3", "getLocalDate() returns a LocalDate");
+var ld3 = clock.getLocalDate();
+check({ caseId: "C3", name: "Clock.getLocalDate() returns a LocalDate", ok: ld3 !== null, detail: "getLocalDate()=" + ld3 });
+
+caseMark("C4", "getCalendar()/getTime() consistency");
+var cal4 = clock.getCalendar();
+check({ caseId: "C4", name: "Clock.getCalendar() returns a Calendar", ok: cal4 !== null, detail: "getCalendar()=" + cal4 });
+check({ caseId: "C4", name: "getCalendar() consistent with getTime()", ok: Math.abs(cal4.getTimeInMillis() - clock.getTime()) < 5000,
+    detail: "getCalendar()=" + cal4.getTimeInMillis() + " getTime()=" + clock.getTime() });
+
+caseMark("C5", "getSqlDate() returns a java.sql.Date");
+var sd5 = clock.getSqlDate();
+check({ caseId: "C5", name: "Clock.getSqlDate() returns a java.sql.Date", ok: sd5 !== null, detail: "getSqlDate()=" + sd5 });
+
+caseMark("C6", "getSqlTime() returns a java.sql.Time");
+var st6 = clock.getSqlTime();
+check({ caseId: "C6", name: "Clock.getSqlTime() returns a java.sql.Time", ok: st6 !== null, detail: "getSqlTime()=" + st6 });
+
+caseMark("C7", "getLocalDateTime() returns a LocalDateTime");
+var ldt7 = clock.getLocalDateTime();
+check({ caseId: "C7", name: "Clock.getLocalDateTime() returns a LocalDateTime", ok: ldt7 !== null, detail: "getLocalDateTime()=" + ldt7 });
+
+caseMark("C8", "getDataSource() returns the configured DataSource");
+check({ caseId: "C8", name: "Clock.getDataSource() returns the configured DataSource",
+    ok: Clock.getDataSource() !== null, detail: "getDataSource()=" + Clock.getDataSource() });
+
+caseMark("C9", "getConfigProperties() returns the loaded properties");
+check({ caseId: "C9", name: "Clock.getConfigProperties() returns the loaded properties",
+    ok: Clock.getConfigProperties() !== null, detail: "getConfigProperties()=" + Clock.getConfigProperties() });
+
+caseMark("C10", "a new Clock instance agrees with the first");
+var c10 = new Clock();
+var diff10 = Math.abs(c10.getTime() - now);
+check({ caseId: "C10", name: "a new Clock instance agrees with the first within 15s",
+    ok: diff10 < 15000, detail: "first=" + now + " second=" + c10.getTime() + " diff=" + diff10 });
+
+caseMark("C11", "getLocalDate() matches getCalendar() zone conversion");
+var d11 = c10.getLocalDate();
+var cal11 = c10.getCalendar();
+var fromMillis = new java.util.Date(cal11.getTimeInMillis()).toInstant()
+    .atZone(cal11.getTimeZone().toZoneId()).toLocalDate();
+check({ caseId: "C11", name: "getLocalDate() matches getCalendar() zone conversion",
+    ok: d11 !== null && d11.equals(fromMillis), detail: "getLocalDate()=" + d11 + " converted=" + fromMillis });
+
+// ----------------------------------------------------------------------------
+// C12-C14: Cache-based gap cache (uses a +10s GetAppClockSql offset)
+// ----------------------------------------------------------------------------
+var txt = readClockProps();
+var origLine = extractGetAppClockSqlLine(txt);
+var PLUS10_LINE = "GetAppClockSql=SELECT (CURRENT_TIMESTAMP + 10 SECOND) AS app_systime_date, 'GMT+8' AS app_time_zone";
+var GAP_30S_LINE = "GapCachePeriod=30s";
+var cacheKey = "Clock.gap";
+
 try {
-    var clock = new Clock();
-    var now = System.currentTimeMillis();
+    // --- C12: after Cache.remove, the +10s offset must be tracked ---
+    caseMark("C12", "+10s GetAppClockSql offset tracked via gap cache");
+    var modified = replaceLine(replaceLine(txt, "GetAppClockSql", PLUS10_LINE), "GapCachePeriod", GAP_30S_LINE);
+    writeClockProps(modified);
+    Cache.remove(cacheKey);
+    var reloaded12 = waitForSqlContains("+ 10 SECOND", 6000);
+    var c12 = new Clock();
+    var d12 = c12.getTime() - System.currentTimeMillis();
+    check({ caseId: "C12", name: "+10s GetAppClockSql offset tracked via gap cache",
+        ok: reloaded12 && d12 > 7500 && d12 < 12500,
+        detail: "reloaded=" + reloaded12 + " diffMs=" + d12 });
 
-    // C1: getDate non-null
-    var d1 = null, e1 = "";
-    try { d1 = clock.getDate(); } catch (e) { e1 = "" + e; }
-    check({
-        caseId: "C1",
-        name: "Clock.getDate() non-null",
-        ok: d1 !== null && d1 !== undefined && e1.length === 0,
-        detail: e1.length > 0 ? e1 : ("" + d1),
-        objective: "Clock facade returns a date without a remote clock",
-        objectiveZh: "時鐘外觀無遠端時鐘時回傳日期",
-        command: "new Clock().getDate()"
-    });
+    // --- C12b: date-level view of the +10s offset - Clock.getLocalDateTime()
+    //          vs local LocalDateTime.now() must differ by ~10s, and the
+    //          LocalDate parts must be the same day (or 1 day apart when the
+    //          +10s straddles midnight). Uses the same C12 snapshot instance.
+    caseMark("C12b", "Clock LocalDateTime vs local differs by ~10s");
+    var ldtClock = c12.getLocalDateTime();
+    var ldtNow = LocalDateTime.now();
+    var ldtDiffSec = Math.abs(ldtClock.toEpochSecond(ZoneId.systemDefault())
+        - ldtNow.toEpochSecond(ZoneId.systemDefault()));
+    var dayDiff = Math.abs(ldtClock.toLocalDate().toEpochDay() - ldtNow.toLocalDate().toEpochDay());
+    check({ caseId: "C12b", name: "Clock LocalDateTime vs local differs by ~10s",
+        ok: ldtDiffSec >= 7 && ldtDiffSec <= 13 && dayDiff <= 1,
+        detail: "clock=" + ldtClock + " local=" + ldtNow + " diffSec=" + ldtDiffSec + " dayDiff=" + dayDiff });
 
-    // C2: getTime positive epoch millis
-    var t2 = 0, e2 = "";
-    try { t2 = clock.getTime(); } catch (e) { e2 = "" + e; }
-    check({
-        caseId: "C2",
-        name: "Clock.getTime() > 0",
-        ok: t2 > 0 && e2.length === 0,
-        detail: e2.length > 0 ? e2 : ("time=" + t2),
-        objective: "getTime() returns positive epoch millis",
-        objectiveZh: "getTime() 回傳正數紀元毫秒",
-        command: "clock.getTime()"
-    });
+    // --- C13: SQL restored, cache still fresh (30s life) -> +10s kept ---
+    caseMark("C13", "cache stays fresh after SQL restore (still +10s)");
+    var c13Txt = JsString.valueOf(modified.asString().replace(PLUS10_LINE, origLine));
+    writeClockProps(c13Txt);
+    var marker13 = origLine.indexOf("=") >= 0 ? origLine.substring(origLine.indexOf("=") + 1, origLine.indexOf("=") + 40) : origLine;
+    var restored13 = waitForSqlContains(marker13, 6000);
+    var c13 = new Clock();
+    var d13 = c13.getTime() - System.currentTimeMillis();
+    check({ caseId: "C13", name: "cache stays fresh after SQL restore (still +10s)",
+        ok: restored13 && d13 > 7500 && d13 < 12500,
+        detail: "restored=" + restored13 + " diffMs=" + d13 });
 
-    // C3: typed accessors non-null
-    var ts3 = null, sd3 = null, st3 = null, ld3 = null, ldt3 = null, cal3 = null, e3 = "";
-    try {
-        ts3 = clock.getSqlTimestamp(); sd3 = clock.getSqlDate(); st3 = clock.getSqlTime();
-        ld3 = clock.getLocalDate(); ldt3 = clock.getLocalDateTime(); cal3 = clock.getCalendar();
-    } catch (e) { e3 = "" + e; }
-    check({
-        caseId: "C3",
-        name: "typed accessors (sql/date/time/local/calendar) non-null",
-        ok: ts3 !== null && sd3 !== null && st3 !== null && ld3 !== null && ldt3 !== null && cal3 !== null && e3.length === 0,
-        detail: e3.length > 0 ? e3 : ("ts=" + ts3 + " localDate=" + ld3 + " localDateTime=" + ldt3),
-        objective: "all typed time accessors return usable values",
-        objectiveZh: "所有型別化時間存取器回傳可用值",
-        command: "clock.getSqlTimestamp/getSqlDate/getSqlTime/getLocalDate/getLocalDateTime/getCalendar"
-    });
-
-    // C4: date and millis views agree
-    var eq4 = false, e4 = "";
-    try { eq4 = (clock.getDate().getTime() === clock.getTime()); } catch (e) { e4 = "" + e; }
-    check({
-        caseId: "C4",
-        name: "getDate().getTime() equals getTime()",
-        ok: eq4 && e4.length === 0,
-        detail: e4.length > 0 ? e4 : ("date=" + clock.getDate().getTime() + " time=" + clock.getTime()),
-        objective: "date and millis views agree",
-        objectiveZh: "日期與毫秒視圖一致",
-        command: "clock.getDate().getTime() === clock.getTime()"
-    });
-
-    // C5: sql timestamp millis agree
-    var eq5 = false, e5 = "";
-    try { eq5 = (clock.getSqlTimestamp().getTime() === clock.getTime()); } catch (e) { e5 = "" + e; }
-    check({
-        caseId: "C5",
-        name: "getSqlTimestamp().getTime() equals getTime()",
-        ok: eq5 && e5.length === 0,
-        detail: e5.length > 0 ? e5 : ("sqlTs=" + clock.getSqlTimestamp().getTime() + " time=" + clock.getTime()),
-        objective: "SQL timestamp millis agree with getTime()",
-        objectiveZh: "SQL 時間戳毫秒與 getTime() 一致",
-        command: "clock.getSqlTimestamp().getTime() === clock.getTime()"
-    });
-
-    // C6: calendar millis agree
-    var eq6 = false, e6 = "";
-    try { eq6 = (clock.getCalendar().getTimeInMillis() === clock.getTime()); } catch (e) { e6 = "" + e; }
-    check({
-        caseId: "C6",
-        name: "getCalendar().getTimeInMillis() equals getTime()",
-        ok: eq6 && e6.length === 0,
-        detail: e6.length > 0 ? e6 : ("cal=" + clock.getCalendar().getTimeInMillis() + " time=" + clock.getTime()),
-        objective: "calendar millis agree with getTime()",
-        objectiveZh: "日曆毫秒與 getTime() 一致",
-        command: "clock.getCalendar().getTimeInMillis() === clock.getTime()"
-    });
-
-    // C7: fresh Clock instance - its first getTime() queries the DB clock
-    // exactly inside this measurement window, so on the same machine the
-    // gap is ~0ms (a cached instance would carry the C1-snapshot delta).
-    var clock7 = new Clock();
-    var now7a = System.currentTimeMillis();
-    var ctime7 = clock7.getTime();
-    var now7b = System.currentTimeMillis();
-    var gap7 = Math.min(Math.abs(ctime7 - now7a), Math.abs(ctime7 - now7b));
-    check({
-        caseId: "C7",
-        name: "clock within 10s of system time (fresh instance, same-machine ~0ms)",
-        ok: gap7 < 10000,
-        detail: "clock=" + ctime7 + " system=" + now7a + ".." + now7b + " gapMs=" + gap7,
-        objective: "GetAppClockSql tracks the DB server time; fresh instance measures the real gap (same machine -> ~0ms)",
-        objectiveZh: "GetAppClockSql 取 DB 時間；新實例測真實差距（同機 ~0ms）",
-        command: "new Clock().getTime() vs System.currentTimeMillis() (min edge gap)"
-    });
-
-    // C8: static getDataSource() - AppClock enabled -> loaded & connectable
-    var ds8 = null, e8 = "", conn8 = null, connOk8 = false;
-    try {
-        ds8 = Clock.getDataSource();
-        if (ds8 !== null) { conn8 = ds8.getConnection(); connOk8 = conn8 !== null; }
-    } catch (e) { e8 = "" + e; }
-    check({
-        caseId: "C8",
-        name: "Clock.getDataSource() usable with AppClock enabled",
-        ok: ds8 !== null && connOk8 && e8.length === 0,
-        detail: e8.length > 0 ? e8 : ("ds=" + ds8 + " connOk=" + connOk8),
-        objective: "config/AppClock.properties Enable=true -> Clock.getDataSource() loads the remote-clock datasource and connects",
-        objectiveZh: "AppClock Enable=true 時 Clock.getDataSource() 載入遠端時鐘資料源並可連接",
-        command: "Clock.getDataSource().getConnection()"
-    });
-
-    // C9: static getConfigProperties() - AppClock enabled -> loaded
-    var cfg9 = null, e9 = "", enable9 = false;
-    try {
-        cfg9 = Clock.getConfigProperties();
-        if (cfg9 !== null) { enable9 = cfg9.getBoolean("Enable", false); }
-    } catch (e) { e9 = "" + e; }
-    check({
-        caseId: "C9",
-        name: "Clock.getConfigProperties() loaded with Enable=true",
-        ok: cfg9 !== null && enable9 === true && e9.length === 0,
-        detail: e9.length > 0 ? e9 : ("cfg loaded, Enable=" + enable9),
-        objective: "config/AppClock.properties loaded by Clock -> getConfigProperties() non-null and Enable=true",
-        objectiveZh: "Clock 載入 AppClock.properties：getConfigProperties() 非空且 Enable=true",
-        command: "Clock.getConfigProperties().getBoolean('Enable', false)"
-    });
-
-    // C10: local date and local date-time share the same calendar day
-    var y10 = false, m10 = false, dd10 = false, e10 = "";
-    try {
-        var ld10 = clock.getLocalDate();
-        var ldt10 = clock.getLocalDateTime();
-        y10 = ld10.getYear() === ldt10.getYear();
-        m10 = ld10.getMonthValue() === ldt10.getMonthValue();
-        dd10 = ld10.getDayOfMonth() === ldt10.getDayOfMonth();
-    } catch (e) { e10 = "" + e; }
-    check({
-        caseId: "C10",
-        name: "getLocalDate() and getLocalDateTime() agree (y/m/d)",
-        ok: y10 && m10 && dd10 && e10.length === 0,
-        detail: e10.length > 0 ? e10 : ("localDate=" + clock.getLocalDate() + " localDateTime=" + clock.getLocalDateTime()),
-        objective: "local date and local date-time share the same calendar day",
-        objectiveZh: "本地日期與本地日期時間同日（年/月/日一致）",
-        command: "ld.getYear()===ldt.getYear() && ld.getMonthValue()===ldt.getMonthValue() && ld.getDayOfMonth()===ldt.getDayOfMonth()"
-    });
-
-    // C11: sql date/time millis agree with getTime()
-    var eq11 = false, e11 = "";
-    try {
-        eq11 = (clock.getSqlDate().getTime() === clock.getTime())
-            && (clock.getSqlTime().getTime() === clock.getTime());
-    } catch (e) { e11 = "" + e; }
-    check({
-        caseId: "C11",
-        name: "getSqlDate()/getSqlTime() millis agree with getTime()",
-        ok: eq11 && e11.length === 0,
-        detail: e11.length > 0 ? e11 : ("sqlDate=" + clock.getSqlDate().getTime() + " sqlTime=" + clock.getSqlTime().getTime() + " time=" + clock.getTime()),
-        objective: "sql date/time millis agree with getTime()",
-        objectiveZh: "SQL 日期/時間毫秒與 getTime() 一致",
-        command: "clock.getSqlDate().getTime() === clock.getTime() && clock.getSqlTime().getTime() === clock.getTime()"
-    });
-
-} catch (e) {
-    check({
-        caseId: "C-ERR",
-        name: "TestClock suite error",
-        ok: false,
-        detail: "" + e
-    });
+    // --- C14: cache entry dropped (simulates expiry; real expiry is driven
+    //          by the Cache life, 30s here) -> re-fetches and re-calibrates ---
+    caseMark("C14", "cache miss re-calibrates to the original SQL offset");
+    var origOffsetMs = parseOffsetMs(origLine);
+    Cache.remove(cacheKey);
+    var c14 = new Clock();
+    var d14 = c14.getTime() - System.currentTimeMillis();
+    check({ caseId: "C14", name: "cache miss re-calibrates to the original SQL offset",
+        ok: Math.abs(d14 - origOffsetMs) <= 5000,
+        detail: "expected=" + origOffsetMs + " diffMs=" + d14 });
+} finally {
+    writeClockProps(txt);
+    Cache.remove(cacheKey);
 }
 
 writeReport();
-
-// NOTE: This suite NEVER calls System.exit() - same convention as the other
-// suites: TestAll.js decides the JVM exit (JSPLUS_TEST_EXIT=1).

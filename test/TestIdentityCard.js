@@ -16,6 +16,7 @@
 //            DDL) and clears its own test rows before and after each case.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var IdentityCard = Java.type("com.killcoding.datasource.IdentityCard");
 
@@ -75,6 +76,7 @@ try {
         + "deleted_at TIMESTAMP(6), deleted TINYINT, PRIMARY KEY (id))");
     bootExecutor.execute("DELETE FROM identity_card WHERE identity_name LIKE 'test_%'");
 } catch (eBoot) {
+    Logger.systemMark("TestIdentityCard.js", "C0");
     check({ caseId: "C0", name: "identity_card table bootstrap", ok: false, detail: "error=" + eBoot });
 } finally {
     if (bootExecutor !== null) { try { bootExecutor.close(); } catch (eBootC) {} }
@@ -92,6 +94,7 @@ try {
     ds1 = IdentityCard.getDataSource();
     if (ds1 !== null) { conn1 = ds1.getConnection(); connOk1 = conn1 !== null; }
 } catch (e) { e1 = "" + e; }
+Logger.systemMark("TestIdentityCard.js", "C1");
 check({
     caseId: "C1",
     name: "IdentityCard config + datasource usable",
@@ -116,6 +119,7 @@ try {
         if (ids2.get(j2) - ids2.get(j2 - 1) !== 1) { mono2 = false; }
     }
 } catch (e) { e2 = "" + e; }
+Logger.systemMark("TestIdentityCard.js", "C2");
 check({
     caseId: "C2",
     name: "generateId() returns a strictly increasing Long sequence",
@@ -136,6 +140,7 @@ try {
     str3 = ic3.generateId(6);
     ok3 = str3 !== null && str3.length === 6 && isDigits(str3);
 } catch (e) { e3 = "" + e; }
+Logger.systemMark("TestIdentityCard.js", "C3");
 check({
     caseId: "C3",
     name: "generateId(6) returns a zero-padded 6-digit string",
@@ -156,6 +161,7 @@ try {
     str4 = ic4.generateId(8, "UID");
     ok4 = str4 !== null && str4.length === 8 && str4.indexOf("UID") === 0 && isDigits(str4.substring(3));
 } catch (e) { e4 = "" + e; }
+Logger.systemMark("TestIdentityCard.js", "C4");
 check({
     caseId: "C4",
     name: "generateId(8, 'UID') returns a prefixed 8-char string",
@@ -177,6 +183,7 @@ try {
     ok5 = str5 !== null && str5.length === 16 && str5.indexOf("ORD-") === 0
         && isDigits(str5.substring(4, 11)) && str5.charAt(11) === "-" && isAlnum(str5.substring(12));
 } catch (e) { e5 = "" + e; }
+Logger.systemMark("TestIdentityCard.js", "C5");
 check({
     caseId: "C5",
     name: "generateId(16, 'ORD', '-', 4) builds prefix/delimiter/suffix id",
@@ -203,6 +210,7 @@ try {
     for (var m6 = 0; m6 < all6.size(); m6++) { if (!seen6.add(all6.get(m6))) { uniq6 = false; } }
     for (var n6 = 1; n6 < all6.size(); n6++) { if (all6.get(n6) <= all6.get(n6 - 1)) { sorted6 = false; } }
 } catch (e) { e6 = "" + e; }
+Logger.systemMark("TestIdentityCard.js", "C6");
 check({
     caseId: "C6",
     name: "two instances on one identity name stay unique and monotonic",
@@ -220,6 +228,7 @@ check({
 var d7 = dbVerify(function () {
     return "SELECT * FROM identity_card WHERE identity_name = 'test_multi_idc' AND deleted = 0";
 });
+Logger.systemMark("TestIdentityCard.js", "C7");
 check({
     caseId: "C7",
     name: "identity_card row persisted with stepped value",
@@ -243,6 +252,7 @@ try {
     if (e.getErrorCode && typeof e.getErrorCode === "function") { err8 = e.getErrorCode(); }
     else { err8 = -1; }
 }
+Logger.systemMark("TestIdentityCard.js", "C8");
 check({
     caseId: "C8",
     name: "generateId(0) rejects length < 1 with error code 99801",
@@ -260,6 +270,7 @@ check({
 var d9 = dbVerify(function () {
     return "SELECT * FROM identity_card WHERE identity_name LIKE 'test_%'";
 });
+Logger.systemMark("TestIdentityCard.js", "C9");
 check({
     caseId: "C9",
     name: "TestIdentityCard data retained (test_* rows kept for manual inspection)",
@@ -271,6 +282,7 @@ check({
 });
 
 } catch (e) {
+    Logger.systemMark("TestIdentityCard.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestIdentityCard suite error",

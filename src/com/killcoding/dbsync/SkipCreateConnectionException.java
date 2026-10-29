@@ -31,6 +31,10 @@ public class SkipCreateConnectionException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	* Creates a skip signal with a reason message.
+	* @param msg - the reason for skipping the connection
+	* */
 	public SkipCreateConnectionException(String msg){
 		super(msg);
 	}

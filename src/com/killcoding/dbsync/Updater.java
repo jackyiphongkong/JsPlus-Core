@@ -28,7 +28,6 @@ import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +45,10 @@ public class Updater extends SqlStatement {
 
 	private final static Logger log = LoggerFactory.getLogger(Updater.class);
 
+	/**
+	* Creates an Updater worker bound to a source table.
+	* @param table - the source Table facade this worker reads from
+	* */
 	public Updater(Table table) {
 		super(table);
 	}
@@ -127,6 +130,13 @@ public class Updater extends SqlStatement {
 		table.writeToTableLog("UPDATE-BATCH",begin,end, rows);
 	}
 
+	/**
+	* One update round: matches the source window rows against the target compare
+	* batch and updates the matched rows on the target.
+	* @param begin - the lower window bound
+	* @param end - the upper window bound
+	* @param targetTable - the target Table facade
+	* */
 	@Override
 	protected synchronized void executeTask(Date begin, Date end, Table targetTable) throws Exception {
 		List<Map<String, Object>> taskBatchList = getTaskBatchList(begin, end);

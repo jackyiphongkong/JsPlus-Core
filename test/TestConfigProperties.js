@@ -8,6 +8,7 @@
 //            getEnv) and property-set comparison.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var StringReader = Java.type("java.io.StringReader");
 var File = Java.type("java.io.File");
@@ -45,6 +46,7 @@ try {
     // C1: load(Reader) + getString
     var cp1 = new ConfigProperties();
     cp1.load(new StringReader(SIMPLE_PROP));
+    Logger.systemMark("TestConfigProperties.js", "C1");
     check({
         caseId: "C1",
         name: "load(Reader) + getString()",
@@ -56,6 +58,7 @@ try {
     });
 
     // C2: getBoolean
+    Logger.systemMark("TestConfigProperties.js", "C2");
     check({
         caseId: "C2",
         name: "getBoolean() parses true/false",
@@ -72,6 +75,7 @@ try {
         && ("" + cp1.getShort("small")) === "7"
         && Math.abs(cp1.getFloat("ratio") - 3.14) < 0.0001
         && ("" + cp1.getDouble("ratio")) === "3.14";
+    Logger.systemMark("TestConfigProperties.js", "C3");
     check({
         caseId: "C3",
         name: "getInteger/getLong/getShort/getFloat/getDouble",
@@ -86,6 +90,7 @@ try {
 
     // C4: getSeconds + parseTimeToSec
     var sec4 = cp1.getSeconds("timeout");
+    Logger.systemMark("TestConfigProperties.js", "C4");
     check({
         caseId: "C4",
         name: "getSeconds() parses '5s' -> 5; parseTimeToSec('2m') -> 120",
@@ -99,6 +104,7 @@ try {
     // C5: getMilliSeconds + parseTimeToMs
     var ms5 = cp1.getMilliSeconds("refresh");
     var ms5b = ConfigProperties.parseTimeToMs("2s", -1);
+    Logger.systemMark("TestConfigProperties.js", "C5");
     check({
         caseId: "C5",
         name: "getMilliSeconds() parses '1s' -> 1000; parseTimeToMs('2s') -> 2000",
@@ -112,6 +118,7 @@ try {
     // C6: getFileSize + parseFileSize
     var fs6 = cp1.getFileSize("maxsize", -1);
     var fs6b = ConfigProperties.parseFileSize("1mb", -1);
+    Logger.systemMark("TestConfigProperties.js", "C6");
     check({
         caseId: "C6",
         name: "getFileSize() parses '2gb' -> 2*1024^3; '1mb' -> 1048576",
@@ -126,6 +133,7 @@ try {
     var arr7 = cp1.getArray("items");
     var ok7 = arr7 !== null && arr7.size() === 3
         && ("" + arr7.get(0)) === "a" && ("" + arr7.get(2)) === "c";
+    Logger.systemMark("TestConfigProperties.js", "C7");
     check({
         caseId: "C7",
         name: "getArray() collects items[0..2] into a List",
@@ -140,6 +148,7 @@ try {
     var map8 = cp1.getMap("ds");
     var ok8 = map8 !== null && ("" + map8.get("name")) === "core"
         && ("" + map8.get("max")) === "100";
+    Logger.systemMark("TestConfigProperties.js", "C8");
     check({
         caseId: "C8",
         name: "getMap() collects 'ds.*' entries",
@@ -154,6 +163,7 @@ try {
     var cp9 = cp1.getConfigProperties("ds");
     var ok9 = cp9 !== null && ("" + cp9.getString("name")) === "core"
         && ("" + cp9.getString("max")) === "100";
+    Logger.systemMark("TestConfigProperties.js", "C9");
     check({
         caseId: "C9",
         name: "getConfigProperties() returns a ConfigProperties section",
@@ -167,6 +177,7 @@ try {
     // C10: putAndReturnSelf() fluent put + getString
     var cp10 = new ConfigProperties();
     cp10.putAndReturnSelf("k1", "v1").putAndReturnSelf("k2", "v2");
+    Logger.systemMark("TestConfigProperties.js", "C10");
     check({
         caseId: "C10",
         name: "putAndReturnSelf() chains puts",
@@ -183,6 +194,7 @@ try {
     cp11.putAndReturnSelf("b", null);
     cp11.putAndReturnSelf("c", "3");
     cp11.removeAllNullValues();
+    Logger.systemMark("TestConfigProperties.js", "C11");
     check({
         caseId: "C11",
         name: "removeAllNullValues() drops null-valued keys",
@@ -195,6 +207,7 @@ try {
 
     // C12: getString default-value variant
     var cp12 = new ConfigProperties();
+    Logger.systemMark("TestConfigProperties.js", "C12");
     check({
         caseId: "C12",
         name: "getString(key, defaultValue) fallback",
@@ -211,6 +224,7 @@ try {
     //      fall back to replaceNullChar
     var parsed13 = ConfigProperties.parseContent("path=${user.home}/app");
     var parsed13b = ConfigProperties.parseContent("x=${no_such_prop_zzz}", "?");
+    Logger.systemMark("TestConfigProperties.js", "C13");
     check({
         caseId: "C13",
         name: "parseContent() expands ${user.home}; unknown key -> replaceNullChar",
@@ -228,6 +242,7 @@ try {
     // C14: getEnv() expands an origin value with environment variables
     var origin14 = "user.home=" + System.getProperty("user.home");
     var env14 = ConfigProperties.getEnv(origin14);
+    Logger.systemMark("TestConfigProperties.js", "C14");
     check({
         caseId: "C14",
         name: "getEnv() expands ${user.home} from system properties",
@@ -241,6 +256,7 @@ try {
 
     // C15: parseDateTime parses a datetime string (pattern yyyy.MM.dd)
     var dt15 = ConfigProperties.parseDateTime("2026.10.24 12:00:00", null);
+    Logger.systemMark("TestConfigProperties.js", "C15");
     check({
         caseId: "C15",
         name: "parseDateTime() parses 'yyyy.MM.dd HH:mm:ss'",
@@ -258,6 +274,7 @@ try {
     cp16b.load(new StringReader("x=1\ny=2\n"));
     var cp16c = new ConfigProperties();
     cp16c.load(new StringReader("x=9\ny=2\n"));
+    Logger.systemMark("TestConfigProperties.js", "C16");
     check({
         caseId: "C16",
         name: "compareProperties() equality and difference (after load)",
@@ -283,6 +300,7 @@ try {
         if (fs17 !== null) { for (var i17 = 0; i17 < fs17.length; i17++) { fs17[i17].delete(); } }
         d17.delete();
     } catch (e) {}
+    Logger.systemMark("TestConfigProperties.js", "C17");
     check({
         caseId: "C17",
         name: "load(File) reads a properties file",
@@ -294,6 +312,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestConfigProperties.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestConfigProperties suite error",

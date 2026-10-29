@@ -31,6 +31,12 @@ set -e
 #      interactive scanner, see Main.java scanner loop).
 #   4b) Run LoadTest.js (DB CRUD load test over the same testdb) and write
 #      docs/latest/report/LoadTest-Report.html. Any load failure fails the run.
+#   4c) Run TestDatasource.sh LAST (after every H2-dependent step): its C17
+#      case stops and restarts the H2 server (pool disconnect/resume proof)
+#      and the restarted H2 is not guaranteed to stay alive, so the suite
+#      must never run before suites that need :3306 up (e.g. TestClock's
+#      background time-refresh cases). Contained here, right before the
+#      StopH2/StopAll sweep below.
 #   5) Exit with the JVM's exit code (0 = all checks passed, 1 = failure),
 #      after stopping the H2 server started for this run.
 # Override via env (same convention as JsPlus-Tomcat):
@@ -162,7 +168,7 @@ echo "[TestAll] H2 ready."
 # ------------------------------------------------------------------
 export JSPLUS_TEST_EXIT=1
 set +e
-"$JAVA_BIN" $JvmParams -DAPP_REMOTE_FILE="${JS_PLUS_PATH}config/RemoteFile.properties" -DAPP_CLOCK="${JS_PLUS_PATH}config/AppClock.properties" -DAPP_IDENTITY_CARD="${JS_PLUS_PATH}config/IdentityCard.properties" -DAPP_DATASOURCE="${JS_PLUS_PATH}config/TestDatasource.properties" -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -Task "${JS_PLUS_PATH}../test/TestAll.js" < /dev/null
+"$JAVA_BIN" $JvmParams -DAPP_REMOTE_FILE="${JS_PLUS_PATH}config/RemoteFile.properties" -DAPP_CLOCK="${JS_PLUS_PATH}config/Clock.properties" -DAPP_IDENTITY_CARD="${JS_PLUS_PATH}config/IdentityCard.properties" -DAPP_DATASOURCE="${JS_PLUS_PATH}config/TestDatasource.properties" -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -Task "${JS_PLUS_PATH}../test/TestAll.js" < /dev/null
 RC=$?
 set -e
 echo "TestAll exit code: $RC"
@@ -185,7 +191,28 @@ if [ "$RC_LOAD" != "0" ]; then
 fi
 
 # ------------------------------------------------------------------
-# Step 4: stop the H2 server started for this run (java ghost keyed by
+# Step 4c: TestDatasource pool suite runs LAST (after every suite that
+# depends on a live H2). Its C17 case deliberately stops and restarts the
+# H2 server to prove the pool's disconnect/resume behaviour; the restarted
+# H2 is not guaranteed to stay alive, so the suite must NOT run before
+# TestClock's background-refresh cases (they need :3306 up). Running it
+# here, right before the StopH2/StopAll sweep, keeps the restarted-server
+# instability contained to this suite only. TestDatasource.sh reuses the
+# already-running H2 (its :3306 check below skips the init/start step) and
+# its own exit code is merged into the overall RC below.
+# ------------------------------------------------------------------
+echo "[TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)..."
+set +e
+"${BIN_PATH}TestDatasource.sh" "$SCRIPT_ENGINE"
+RC_DS=$?
+set -e
+echo "TestDatasource exit code: $RC_DS"
+if [ "$RC_DS" != "0" ]; then
+    RC="$RC_DS"
+fi
+
+# ------------------------------------------------------------------
+# Step 5: stop the H2 server started for this run (java ghost keyed by
 # script/StartH2.js) so TestAll leaves nothing behind. RC was captured
 # above. Then, per the project convention, the run finishes with a full
 # StopAll sweep (AppRootDir path match) so NO JsPlus/H2 JVM survives this
@@ -195,7 +222,7 @@ pkill -f 'script/StartH2.js' 2>/dev/null || true
 "${JS_PLUS_PATH}bin/StopAll.sh" || true
 
 # ------------------------------------------------------------------
-# Step 4b: Archive the test reports under the same docs layout as the
+# Step 5b: Archive the test reports under the same docs layout as the
 # javadoc site: docs/reports/<version>.jar (one jar per run) plus
 # docs/latest/report/ as the browsable newest reports. Version is taken
 # from the core jar name. A failure to archive is only a WARN and never

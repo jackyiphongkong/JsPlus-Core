@@ -16,6 +16,7 @@
 //            and deep 3-level path navigation.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var HashMap = Java.type("java.util.HashMap");
 var XmlParser = Java.type("com.killcoding.tool.XmlParser");
@@ -62,6 +63,7 @@ try {
     try { parser = new XmlParser(SAMPLE_XML); } catch (e) { e1 = "" + e; }
 
     // C1: constructor parse + root element name
+    Logger.systemMark("TestXmlParser.js", "C1");
     check({
         caseId: "C1",
         name: "XmlParser constructor parses and exposes root element name",
@@ -75,6 +77,7 @@ try {
     // C2: getRoot() non-null and holds a parsed leaf
     var root2 = null, e2 = "";
     try { root2 = parser.getRoot(); } catch (e) { e2 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C2");
     check({
         caseId: "C2",
         name: "getRoot() returns the root Map with parsed content",
@@ -90,6 +93,7 @@ try {
     try { v3 = "" + parser.get("status"); } catch (e) { e3 = "" + e; }
     var v3n = "", e3n = "";
     try { v3n = "" + parser.get("note"); } catch (e) { e3n = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C3");
     check({
         caseId: "C3",
         name: "get() returns leaf text trimmed",
@@ -103,6 +107,7 @@ try {
     // C4: repeated elements merge into a List
     var users4 = null, e4 = "";
     try { users4 = parser.get("user"); } catch (e) { e4 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C4");
     check({
         caseId: "C4",
         name: "repeated <user> elements merge into a List of Maps",
@@ -121,6 +126,7 @@ try {
         age5 = "" + first5.get("age");
         roleList5 = first5.get("role");
     } catch (e) { e5 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C5");
     check({
         caseId: "C5",
         name: "list item exposes its own fields (nested repeated role -> List)",
@@ -137,6 +143,7 @@ try {
         attrs6 = parser.get("@user");
         id6 = "" + attrs6.get(0).get("id");
     } catch (e) { e6 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C6");
     check({
         caseId: "C6",
         name: "element attributes captured as '@name' Map (merged for repeats)",
@@ -150,6 +157,7 @@ try {
     // C7: attribute-less element -> empty attribute Map
     var sAttrs7 = null, e7 = "";
     try { sAttrs7 = parser.get("@status"); } catch (e) { e7 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C7");
     check({
         caseId: "C7",
         name: "attribute-less element yields an empty attribute Map",
@@ -163,6 +171,7 @@ try {
     // C8: empty element -> null value (blank() handling)
     var empty8 = null, e8 = "", emptyNull8 = false;
     try { empty8 = parser.get("empty"); emptyNull8 = (empty8 === null || empty8 === undefined); } catch (e) { e8 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C8");
     check({
         caseId: "C8",
         name: "empty element maps to null (blank text)",
@@ -176,6 +185,7 @@ try {
     // C9: path() dot-notation equals get()
     var p9 = "", e9 = "";
     try { p9 = "" + parser.path("status"); } catch (e) { e9 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C9");
     check({
         caseId: "C9",
         name: "path() resolves dot-notation to the same leaf as get()",
@@ -189,6 +199,7 @@ try {
     // C10: pathList() returns a List
     var pl10 = null, e10 = "";
     try { pl10 = parser.pathList("user"); } catch (e) { e10 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C10");
     check({
         caseId: "C10",
         name: "pathList() returns the merged List",
@@ -207,6 +218,7 @@ try {
         parser.put("extra", extra);
         putOk11 = ("" + parser.get("extra", "k")) === "v";
     } catch (e) { e11 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C11");
     check({
         caseId: "C11",
         name: "put() injects a sub-Map readable via get()",
@@ -230,6 +242,7 @@ try {
         var deepParser = new XmlParser(DEEP_XML);
         deep12 = "" + deepParser.get("level1", "level2", "leaf");
     } catch (e) { e12 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C12");
     check({
         caseId: "C12",
         name: "multi-key get() walks a 3-level nested tree",
@@ -244,6 +257,7 @@ try {
     // (the 'toMap' semantics: any XML string -> nested Map<String,Object>).
     var map13 = null, e13 = "";
     try { map13 = parser.xml2Map(SAMPLE_XML); } catch (e) { e13 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C13");
     check({
         caseId: "C13",
         name: "xml2Map() parses an XML string directly into a Map",
@@ -257,6 +271,7 @@ try {
     // C14: malformed XML is rejected at construction
     var bad14 = null, e14 = "";
     try { bad14 = new XmlParser("<not-closed><a></a>"); } catch (e) { e14 = "" + e; }
+    Logger.systemMark("TestXmlParser.js", "C14");
     check({
         caseId: "C14",
         name: "malformed XML is rejected at construction",
@@ -268,6 +283,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestXmlParser.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestXmlParser suite error",

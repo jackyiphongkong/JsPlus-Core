@@ -1844,6 +1844,10 @@ public class DiskFile extends BaseFile {
 		QUEUE_PATH_MAPPING.remove(path);
 	}
 
+	/**
+	* Returns the queue-path map (path -> queue usage count) shared by disk files.
+	* @return the synchronised path mapping
+	* */
 	public static synchronized Map<String, Long> getQueuePathMapping() {
 		return Collections.synchronizedMap(QUEUE_PATH_MAPPING);
 	}

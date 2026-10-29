@@ -6,6 +6,7 @@
 //            All cases run in a unique temp directory cleaned up afterwards.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var File = Java.type("java.io.File");
 var Files = Java.type("java.nio.file.Files");
@@ -39,6 +40,7 @@ try {
     var f1 = p("c1.txt");
     FileTools.write(f1, "hello filetools", false);
     var t1 = FileTools.text(f1);
+    Logger.systemMark("TestFileTools.js", "C1");
     check({
         caseId: "C1",
         name: "write(String path, msg, false) + text(String path)",
@@ -54,6 +56,7 @@ try {
     FileTools.write(f2, "part1", false);
     FileTools.write(f2, "-part2", true);
     var t2 = FileTools.text(f2);
+    Logger.systemMark("TestFileTools.js", "C2");
     check({
         caseId: "C2",
         name: "write(append=true) appends content",
@@ -69,6 +72,7 @@ try {
     FileTools.write(f3, "old-content", false);
     FileTools.write(f3, "new-content", false);
     var t3 = FileTools.text(f3);
+    Logger.systemMark("TestFileTools.js", "C3");
     check({
         caseId: "C3",
         name: "write(append=false) overwrites the file",
@@ -84,6 +88,7 @@ try {
     FileTools.write(f4, "file-overload", false);
     var t4 = FileTools.text(f4);
     var s4 = FileTools.size(f4);
+    Logger.systemMark("TestFileTools.js", "C4");
     check({
         caseId: "C4",
         name: "File overloads write/text/size",
@@ -96,6 +101,7 @@ try {
 
     // C5: size() of a missing file returns 0 (no exception)
     var s5 = FileTools.size(p("missing.txt"));
+    Logger.systemMark("TestFileTools.js", "C5");
     check({
         caseId: "C5",
         name: "size() of a missing file returns 0",
@@ -113,6 +119,7 @@ try {
     } catch (e6) {
         threw6 = true;
     }
+    Logger.systemMark("TestFileTools.js", "C6");
     check({
         caseId: "C6",
         name: "text() of a missing file throws",
@@ -132,6 +139,7 @@ try {
     FileTools.write(dir7 + File.separator + "a.txt", "a", false);
     FileTools.write(sub7.getAbsolutePath() + File.separator + "b.txt", "b", false);
     var deleted7 = FileTools.deleteDirectory(d7);
+    Logger.systemMark("TestFileTools.js", "C7");
     check({
         caseId: "C7",
         name: "deleteDirectory() removes a nested tree",
@@ -150,6 +158,7 @@ try {
     } catch (e8) {
         threw8 = true;
     }
+    Logger.systemMark("TestFileTools.js", "C8");
     check({
         caseId: "C8",
         name: "deleteDirectory() on a missing dir returns false",
@@ -164,6 +173,7 @@ try {
     var f9 = p("c9.txt");
     FileTools.write(f9, "中文內容 roundtrip", false);
     var t9 = FileTools.text(f9);
+    Logger.systemMark("TestFileTools.js", "C9");
     check({
         caseId: "C9",
         name: "UTF-8 non-ASCII content roundtrip",
@@ -179,6 +189,7 @@ try {
     FileTools.write(f10, "1234567890", false);
     var s10str = FileTools.size(f10);
     var s10file = FileTools.size(new File(f10));
+    Logger.systemMark("TestFileTools.js", "C10");
     check({
         caseId: "C10",
         name: "size(String) and size(File) agree",
@@ -190,6 +201,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestFileTools.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestFileTools suite error",

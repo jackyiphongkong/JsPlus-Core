@@ -17,6 +17,7 @@
 //            classpath covers the whole LibHome).
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var StringType = Java.type("java.lang.String");
 
@@ -88,6 +89,7 @@ try {
     var inst1 = clazz1.newInstance();
     var msg1 = inst1.hello();
     var staticMsg1 = clazz1.getMethod("staticHello").invoke(null);
+    Logger.systemMark("TestEvalJava.js", "C1");
     check({
         caseId: "C1",
         name: "evalJavaSource compiles + loads a default-package class",
@@ -101,6 +103,7 @@ try {
     // C2: evalJavaSource - declared package resolves the qualified class name
     var clazz2 = Console.evalJavaSource(SRC_PACKAGED);
     var inst2 = clazz2.newInstance();
+    Logger.systemMark("TestEvalJava.js", "C2");
     check({
         caseId: "C2",
         name: "evalJavaSource honours a declared package",
@@ -115,6 +118,7 @@ try {
     var clazz3 = Console.evalJavaSource(SRC_FRAMEWORK_REF);
     var inst3 = clazz3.newInstance();
     var id3 = inst3.frameworkId();
+    Logger.systemMark("TestEvalJava.js", "C3");
     check({
         caseId: "C3",
         name: "evalJavaSource classpath covers the framework (LibHome)",
@@ -131,6 +135,7 @@ try {
     var name4 = inst4.getName();
     var count4 = inst4.getCount();
     var summary4 = inst4.summarize();
+    Logger.systemMark("TestEvalJava.js", "C4");
     check({
         caseId: "C4",
         name: "evalJavaSource supports constructor args and private fields",
@@ -149,6 +154,7 @@ try {
         c5threw = true;
         c5msg = "" + e;
     }
+    Logger.systemMark("TestEvalJava.js", "C5");
     check({
         caseId: "C5",
         name: "evalJavaSource rejects malformed source with diagnostics",
@@ -162,6 +168,7 @@ try {
     // C6: evalJavaSource - blank source is rejected
     var c6threw = false;
     try { Console.evalJavaSource(""); } catch (e) { c6threw = true; }
+    Logger.systemMark("TestEvalJava.js", "C6");
     check({
         caseId: "C6",
         name: "blank source is rejected",
@@ -177,6 +184,7 @@ try {
     var clazz7b = Console.evalJavaSource(SRC_HELLO);
     var inst7a = clazz7a.newInstance();
     var inst7b = clazz7b.newInstance();
+    Logger.systemMark("TestEvalJava.js", "C7");
     check({
         caseId: "C7",
         name: "each eval builds an independent ClassLoader",
@@ -205,6 +213,7 @@ try {
     var who8a = inst8a.who();
     var who8b = inst8b.who();
     var cross8 = inst8b.callFirst();
+    Logger.systemMark("TestEvalJava.js", "C8");
     check({
         caseId: "C8",
         name: "evalJavaSource accepts an array of complete classes (multi-class compile)",
@@ -239,6 +248,7 @@ try {
     var who9a = inst9a.who();
     var who9b = inst9b.who();
     var cross9 = inst9b.callFirst();
+    Logger.systemMark("TestEvalJava.js", "C9");
     check({
         caseId: "C9",
         name: "evalJavaFile compiles a whole folder of classes",
@@ -256,6 +266,7 @@ try {
     // C10: evalJavaFile(single .java file) keeps the single-file behaviour (array of length 1)
     var singleClazz10 = Console.evalJavaFile(folderDir + "FolderFirst.java");
     var inst10 = singleClazz10[0].newInstance();
+    Logger.systemMark("TestEvalJava.js", "C10");
     check({
         caseId: "C10",
         name: "evalJavaFile single-file path returns an array of length 1",
@@ -281,6 +292,7 @@ try {
     var nestedClazz = loaderN.loadClass("EvalNested$Helper");
     var nestedInst = nestedClazz.newInstance();
     var outerMsgN = clazzN.newInstance().outer();
+    Logger.systemMark("TestEvalJava.js", "C11");
     check({
         caseId: "C11",
         name: "ClassLoader.loadClass loads classes inside the eval jar",
@@ -306,6 +318,7 @@ try {
     var inst12a = classes12[0].newInstance();
     var inst12b = classes12[1].newInstance();
     var cross12 = inst12b.callAlpha();
+    Logger.systemMark("TestEvalJava.js", "C12");
     check({
         caseId: "C12",
         name: "evalJavaFile recurses into sub-folders (multi-directory compile)",
@@ -321,6 +334,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestEvalJava.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestEvalJava suite error",

@@ -23,6 +23,7 @@
 //            manually in the main console.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 var ArrayList = Java.type("java.util.ArrayList");
@@ -57,6 +58,7 @@ var GCA = Console.getGlobalCacheArray(5000, 5000);
 
 try {
     // C1: the engine GCA is a CacheArray with nullIsCompleted=false
+    Logger.systemMark("TestCacheArray.js", "C1");
     check({
         caseId: "C1",
         name: "Console.getGlobalCacheArray() returns CacheArray(nullIsCompleted=false)",
@@ -68,6 +70,7 @@ try {
     });
 
     // C2: the engine attached a filter with the requested timers
+    Logger.systemMark("TestCacheArray.js", "C2");
     check({
         caseId: "C2",
         name: "GCA filter attached with timer=loopTimer=5000",
@@ -82,6 +85,7 @@ try {
 
     // C3: add() returns a 16-char key and grows size
     var k3 = GCA.add("value-one");
+    Logger.systemMark("TestCacheArray.js", "C3");
     check({
         caseId: "C3",
         name: "add() returns a non-null key and size grows",
@@ -94,6 +98,7 @@ try {
 
     // C4: get(index) retrieves the stored value
     var v4 = GCA.get(0);
+    Logger.systemMark("TestCacheArray.js", "C4");
     check({
         caseId: "C4",
         name: "get(0) retrieves the stored value",
@@ -106,6 +111,7 @@ try {
 
     // C5: getCacheKey(index) matches the key returned by add()
     var k5 = GCA.getCacheKey(0);
+    Logger.systemMark("TestCacheArray.js", "C5");
     check({
         caseId: "C5",
         name: "getCacheKey(0) matches the add() key",
@@ -121,6 +127,7 @@ try {
     more.add("a"); more.add("b"); more.add("c");
     var before6 = GCA.size();
     GCA.addAll(more);
+    Logger.systemMark("TestCacheArray.js", "C6");
     check({
         caseId: "C6",
         name: "addAll() appends the whole list",
@@ -136,6 +143,7 @@ try {
     var t7a = System.currentTimeMillis();
     try { k7 = GCA.add("sleepy", 20); } catch (e) { k7 = null; }
     var t7b = System.currentTimeMillis();
+    Logger.systemMark("TestCacheArray.js", "C7");
     check({
         caseId: "C7",
         name: "add(value, sleepMs) returns a key and sleeps",
@@ -149,6 +157,7 @@ try {
     // C8: remove(index) returns the removed key and shrinks size
     var before8 = GCA.size();
     var r8 = GCA.remove(0);
+    Logger.systemMark("TestCacheArray.js", "C8");
     check({
         caseId: "C8",
         name: "remove(0) removes the head item",
@@ -172,6 +181,7 @@ try {
     gca9.add("s1"); gca9.add("s2"); gca9.add("s3"); gca9.add("s4"); gca9.add("s5");
     var swept9 = gca9.sweepProcessed(2);
     var head9 = gca9.get(0);
+    Logger.systemMark("TestCacheArray.js", "C9");
     check({
         caseId: "C9",
         name: "sweepProcessed(2) reclaims the first 2 of 5",
@@ -194,6 +204,7 @@ try {
     var gca10 = syncConsole10.getContext().get("GCA_NUL");
     var k10null = gca10.add(null);
     var k10val = gca10.add("x");
+    Logger.systemMark("TestCacheArray.js", "C10");
     check({
         caseId: "C10",
         name: "nullIsCompleted=false rejects null but accepts values",
@@ -214,6 +225,7 @@ try {
     CacheArray.shutdownPool();        // restore: initPool only applies on a null pool
     CacheArray.initPool(max11);
     var usage11 = CacheArray.getUsage();
+    Logger.systemMark("TestCacheArray.js", "C11");
     check({
         caseId: "C11",
         name: "shutdownPool()+initPool(5) applies the pool size",
@@ -227,6 +239,7 @@ try {
     // C12: counters before consumption - INDEX/OBJECT/SIZE/BATCH defaults
     //      (plain read of a fresh instance, no filter worker involved)
     var ca12 = new CacheArray();
+    Logger.systemMark("TestCacheArray.js", "C12");
     check({
         caseId: "C12",
         name: "fresh instance counter defaults (-1/null/empty)",
@@ -241,6 +254,7 @@ try {
 
     // C13: isTerminated without a filter is true (plain read)
     var ca13 = new CacheArray();
+    Logger.systemMark("TestCacheArray.js", "C13");
     check({
         caseId: "C13",
         name: "isTerminated() is true when no filter is attached",
@@ -269,6 +283,7 @@ try {
         if (size14 === 0) { break; }
         Thread.sleep(50);
     }
+    Logger.systemMark("TestCacheArray.js", "C14");
     check({
         caseId: "C14",
         name: "terminate() flags the filter; forceTerminate() sweeps all",
@@ -280,6 +295,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestCacheArray.js", "C-ERR-1");
     check({
         caseId: "C-ERR-1",
         name: "TestCacheArray sync-API section error",
@@ -333,6 +349,7 @@ try {
     var size15 = gcaFast.size();
     var ok15 = consumedTotal === 3 && errors.size() === 0
         && processedTotal15 >= 3 && size15 === 0;
+    Logger.systemMark("TestCacheArray.js", "C15");
     check({
         caseId: "C15",
         name: "fast GCA + Console.callback consumes all fed rows (TestFind pattern)",
@@ -345,6 +362,7 @@ try {
     });
     gcaFast.forceTerminate();
 } catch (e) {
+    Logger.systemMark("TestCacheArray.js", "C-ERR-2");
     check({
         caseId: "C-ERR-2",
         name: "TestCacheArray callback section error",

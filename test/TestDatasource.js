@@ -35,6 +35,7 @@
 //            pool configuration instead of the production DataSource.properties.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var basePath = System.getProperty("JS_PLUS_PATH");
 try {
@@ -314,6 +315,7 @@ if (c5Ok) {
         c8Detail.push("ERROR: " + e);
     }
 }
+Logger.systemMark("TestDatasource.js", "C8");
 check({
     name: "Pool borrow reaches TestDatasource.properties MaxPoolSize and rejects overflow",
     caseId: "C8",
@@ -392,6 +394,7 @@ if (c5Ok) {
         c9Detail.push("ERROR: " + e);
     }
 }
+Logger.systemMark("TestDatasource.js", "C9");
 check({
     name: "TestDatasource.properties pool tuning params applied to DriverDataSource",
     caseId: "C9",
@@ -434,6 +437,7 @@ if (c5Ok) {
         c10Detail.push("ERROR: " + e);
     }
 }
+Logger.systemMark("TestDatasource.js", "C10");
 check({
     name: "IdleTimeout reclaims idle pooled connections (converges to MinPoolSize)",
     caseId: "C10",
@@ -469,6 +473,7 @@ if (c5Ok) {
         c11Detail.push("ERROR: " + e);
     }
 }
+Logger.systemMark("TestDatasource.js", "C11");
 check({
     name: "Timeout aborts borrowed (using) connections (autoCommit=true)",
     caseId: "C11",
@@ -503,6 +508,7 @@ if (c5Ok) {
         c12Detail.push("ERROR: " + e);
     }
 }
+Logger.systemMark("TestDatasource.js", "C12");
 check({
     name: "TransactionTimeout aborts in-transaction connections (autoCommit=false)",
     caseId: "C12",
@@ -539,6 +545,7 @@ if (c5Ok) {
         c13Detail.push("ERROR: " + e);
     }
 }
+Logger.systemMark("TestDatasource.js", "C13");
 check({
     name: "LifeCycle reclaims connections older than the configured lifetime",
     caseId: "C13",
@@ -598,6 +605,7 @@ try {
     c14Err = "" + e;
     c14Detail.push("ERROR: " + e);
 }
+Logger.systemMark("TestDatasource.js", "C14");
 check({
     name: "getConnection retries on an empty pool (auto reload)",
     caseId: "C14",
@@ -657,6 +665,7 @@ try {
     c15Err = "" + e;
     c15Detail.push("ERROR: " + e);
 }
+Logger.systemMark("TestDatasource.js", "C15");
 check({
     name: "Pool self-heals to MinPoolSize after connections are aborted",
     caseId: "C15",
@@ -700,6 +709,7 @@ try {
     c16Err = "" + e;
     c16Detail.push("ERROR: " + e);
 }
+Logger.systemMark("TestDatasource.js", "C16");
 check({
     name: "Repeated aborts never break the pool (self-heal x3)",
     caseId: "C16",
@@ -829,6 +839,7 @@ try {
     c17Err = "" + e;
     c17Detail.push("ERROR: " + e);
 }
+Logger.systemMark("TestDatasource.js", "C17");
 check({
     name: "H2 stop/restart - connections disconnect then resume (auto conn)",
     caseId: "C17",

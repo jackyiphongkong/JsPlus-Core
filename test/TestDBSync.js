@@ -14,6 +14,7 @@
 //            infinite background threads that would hang the suite runner.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 
 var basePath = System.getProperty("JS_PLUS_PATH");
@@ -195,7 +196,7 @@ cp.setProperty("Table.GetTables.List", "dbsync_test_a,dbsync_test_b,dbsync_sync_
 cp.setProperty("Table.PrimaryKey", "id");
 cp.setProperty("Table.Inserter.Key", "created_at");
 cp.setProperty("Table.Inserter.Period", "5000");
-cp.setProperty("Table.Inserter.Batch", "100");
+cp.setProperty("Table.Inserter.Window", "100");
 cp.setProperty("Table.Inserter.Enable", "true");
 cp.setProperty("Table.Timer", "200ms");
 var enter = new EnterType();
@@ -206,6 +207,7 @@ try {
     var dataSourceCfg = enter.getPorps().getString("Source.Database.DataSource");
     var schemaCfg = enter.getPorps().getString("Source.Database.Schema");
     var keyCfg = enter.getPorps().getString("Table.Inserter.Key");
+    Logger.systemMark("TestDBSync.js", "C1");
     check({
         caseId: "C1",
         name: "Enter.configure accepts a JS-built ConfigProperties",
@@ -223,6 +225,7 @@ try {
     // the Table path in C4 (open() is protected, not callable from JS).
     var dbSource = new DatabaseType("Source", enter.getPorps());
     var usageNow = dbSource.getUsage();
+    Logger.systemMark("TestDBSync.js", "C2");
     check({
         caseId: "C2",
         name: "Database(Source) builds from the JS-configured datasource",
@@ -238,6 +241,7 @@ try {
     var tableName = tblA !== null ? tblA.getQuoteName() : "(null)";
     var usage = dbSource.getUsage();
     var allowed = dbSource.allowedUseConnection();
+    Logger.systemMark("TestDBSync.js", "C3");
     check({
         caseId: "C3",
         name: "getTable + usage guard honour the JS config (quote disabled)",
@@ -266,6 +270,7 @@ try {
         return "SELECT * FROM dbsync_test_a";
     });
     var dbvOk = dbv.indexOf("dbsync-one") >= 0 && dbv.indexOf("dbsync-two") >= 0;
+    Logger.systemMark("TestDBSync.js", "C4");
     check({
         caseId: "C4",
         name: "Table.execute/find round-trip via CacheDriverExecutor",
@@ -286,6 +291,7 @@ try {
     var dbQuote = new DatabaseType("QuoteSrc", enter.getPorps());
     var quotedKey = dbQuote.getTable("dbsync_test_a").quote("id");
     var quotedName = dbQuote.getTable("dbsync_test_a").getQuoteName();
+    Logger.systemMark("TestDBSync.js", "C5");
     check({
         caseId: "C5",
         name: "Quote.Enable=true wraps identifiers (quote/getQuoteName)",
@@ -298,6 +304,7 @@ try {
 
     // C6: Target database resolves to its own independent H2 FILE database
     var dbTarget = new DatabaseType("Target", enter.getPorps());
+    Logger.systemMark("TestDBSync.js", "C6");
     check({
         caseId: "C6",
         name: "Database(Target) resolves to the independent DBSyncTarget database",
@@ -326,6 +333,7 @@ try {
     });
     var dbvTOk = dbvT.indexOf("target-row") >= 0 && dbvT.indexOf("100") >= 0;
     dbvResult = dbvTargetResult;
+    Logger.systemMark("TestDBSync.js", "C7");
     check({
         caseId: "C7",
         name: "Target table CRUD round-trip on the independent file database",
@@ -351,6 +359,7 @@ try {
     var dbInstB = new DatabaseType("Source", cpInstB);
     var instNameA = dbInstA.getTable("dbsync_test_a").getQuoteName();
     var instNameB = dbInstB.getTable("dbsync_test_a").getQuoteName();
+    Logger.systemMark("TestDBSync.js", "C8");
     check({
         caseId: "C8",
         name: "Instance-level ConfigProperties (non-static) stays independent",
@@ -389,6 +398,13 @@ try {
     cpSync.setProperty("Table.PrimaryKey", "id");
     cpSync.setProperty("Table.Inserter.Key", "created_at");
     cpSync.setProperty("Table.Inserter.Enable", "true");
+    // C9-C11 only exercise the inserter replication path; dbsync_sync_a has
+    // no updated_at / deleted_at / deleted columns, so the updater/deleter/
+    // remover workers (default true) would fail every round with
+    // "Column ... not found" and spam the app log. Disable them explicitly.
+    cpSync.setProperty("Table.Updater.Enable", "false");
+    cpSync.setProperty("Table.Deleter.Enable", "false");
+    cpSync.setProperty("Table.Remover.Enable", "false");
     cpSync.setProperty("Table.Timer", "200ms");
 
     var dbSyncS = new DatabaseType("Source", cpSync);
@@ -424,6 +440,7 @@ try {
     var syncOk = syncedCount === sourceCount
         && dbvSync.indexOf("sync-1") >= 0
         && dbvSyncT.indexOf("sync-3") >= 0;
+    Logger.systemMark("TestDBSync.js", "C9");
     check({
         caseId: "C9",
         name: "Real source->target sync pushes dbsync_sync_a rows into the Target database",
@@ -455,6 +472,7 @@ try {
     var dbvStopT = dbVerifyTarget(function () {
         return "SELECT * FROM dbsync_sync_a ORDER BY id";
     });
+    Logger.systemMark("TestDBSync.js", "C10");
     check({
         caseId: "C10",
         name: "stopSync() stops the worker (no further rows pushed)",
@@ -493,6 +511,7 @@ try {
     var restartOk = restartCount === 5
         && dbvRestart.indexOf("sync-4") >= 0
         && dbvRestartT.indexOf("sync-5") >= 0;
+    Logger.systemMark("TestDBSync.js", "C11");
     check({
         caseId: "C11",
         name: "start -> stop -> restart cycle works (worker can be started again)",
@@ -574,6 +593,7 @@ try {
         && entAfterStopCount === 3
         && dbvEnt.indexOf("ent-1") >= 0
         && dbvEntT.indexOf("ent-3") >= 0;
+    Logger.systemMark("TestDBSync.js", "C12");
     check({
         caseId: "C12",
         name: "Enter.start(configFile) one-key entry + Enter.stop()",
@@ -607,11 +627,11 @@ try {
         cp.setProperty("Table.GetTables.List", tblName);
         cp.setProperty("Table.PrimaryKey", "id");
         cp.setProperty("Table.Inserter.Key", "created_at");
-        cp.setProperty("Table.Inserter.Batch", "60000");
+        cp.setProperty("Table.Inserter.Window", "60000");
         cp.setProperty("Table.Updater.Key", "updated_at");
-        cp.setProperty("Table.Updater.Batch", "60000");
+        cp.setProperty("Table.Updater.Window", "60000");
         cp.setProperty("Table.Deleter.Key", "deleted_at");
-        cp.setProperty("Table.Deleter.Batch", "60000");
+        cp.setProperty("Table.Deleter.Window", "60000");
         cp.setProperty("Table.Deleter.DeletedKey", "deleted");
         cp.setProperty("Table.Inserter.Enable", opts.inserter ? "true" : "false");
         cp.setProperty("Table.Updater.Enable", opts.updater ? "true" : "false");
@@ -669,6 +689,7 @@ try {
     var loadIOk = loadICount === LOAD_I
         && dbvLoadI.indexOf("li-1") >= 0
         && dbvLoadIT.indexOf("li-500") >= 0;
+    Logger.systemMark("TestDBSync.js", "C13");
     check({
         caseId: "C13",
         name: "Bulk insert: 500 rows pushed by the inserter worker",
@@ -714,6 +735,7 @@ try {
     var loadUOk = loadUBase === LOAD_U && loadUUpd === 200
         && dbvLoadU.indexOf("upd-200") >= 0
         && dbvLoadUT.indexOf("upd-200") >= 0;
+    Logger.systemMark("TestDBSync.js", "C14");
     check({
         caseId: "C14",
         name: "Bulk update: 200 of 300 rows overwritten on the target by the updater worker",
@@ -758,6 +780,7 @@ try {
     var loadDOk = loadDBase === LOAD_D && loadDDel === 200
         && dbvLoadD.indexOf("ld-200") >= 0
         && dbvLoadDT.indexOf("ld-200") >= 0;
+    Logger.systemMark("TestDBSync.js", "C15");
     check({
         caseId: "C15",
         name: "Bulk soft-delete: 200 of 300 rows marked deleted on the target by the deleter worker",
@@ -801,6 +824,7 @@ try {
         return "SELECT * FROM dbsync_load_r ORDER BY id";
     });
     var loadROk = loadRRemain === 50 && loadRSoftLeft === 0;
+    Logger.systemMark("TestDBSync.js", "C16");
     check({
         caseId: "C16",
         name: "Bulk remove: 50 expired soft-deleted rows physically cleaned from the SOURCE by the remover worker",
@@ -873,6 +897,7 @@ try {
     var revOk = revSourceCount === 5 && revTargetCount === 5
         && dbvRevS.indexOf("rev-4") >= 0
         && dbvRevT.indexOf("rev-1") >= 0;
+    Logger.systemMark("TestDBSync.js", "C17");
     check({
         caseId: "C17",
         name: "Reverse=true bidirectional sync merges both sides (each side gains the other's rows)",
@@ -890,6 +915,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestDBSync.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestDBSync suite error",

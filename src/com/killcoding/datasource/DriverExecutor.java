@@ -84,7 +84,7 @@ public class DriverExecutor {
 	public final static String COLUMN_NAME_CASE_UPPER = "UPPER";
 	public final static String COLUMN_NAME_CASE_LOWER = "LOWER";
 	public final static String COLUMN_NAME_CASE_ORIGINAL = "ORIGINAL";
-	public static String COLUMN_NAME_CASE_MODE = COLUMN_NAME_CASE_ORIGINAL;
+	public static String COLUMN_NAME_CASE_MODE = COLUMN_NAME_CASE_LOWER;
 
 	protected boolean closed = true;
 	protected Connection connection = null;
@@ -240,7 +240,6 @@ public class DriverExecutor {
 		DatabaseMetaData meta = connection.getMetaData();
 		ResultSet tables = meta.getTables(null, null, "%", new String[] { "TABLE" });
 		while (tables.next()) {
-			String catalog = tables.getString("TABLE_CAT");
 			String schema = tables.getString("TABLE_SCHEM");
 			String tableName = tables.getString("TABLE_NAME");
 			Map<String, Object> t = new ResultMap<String, Object>();
@@ -264,7 +263,6 @@ public class DriverExecutor {
 		while (tables.next()) {
 			String schema = tables.getString("TABLE_SCHEM");
 			if (schema != null && schema.equalsIgnoreCase(_schema)) {
-				String catalog = tables.getString("TABLE_CAT");
 				String tableName = tables.getString("TABLE_NAME");
 				Map<String, Object> t = new ResultMap<String, Object>();
 				t.put("TABLE_SCHEMA", schema);
@@ -681,6 +679,7 @@ public class DriverExecutor {
 	* @param cursorStart - JDBC result Cursor start index
 	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	* @param sql - Query sql, condition use format ':column_name'
+	* @param params - Query params (Map mode: :name placeholders are converted)
 	* @exception SQLException
 	* @return List&lt;Map&lt;String, Object&gt;>
 	* */
@@ -1255,12 +1254,13 @@ public class DriverExecutor {
 
 	/**
 	* Write sql log
-	* @return boolean
-	* @param connection
-	* @param type
-	* @param seq
-	* @param sql
-	* @param params
+	* @param deHashCode - hash code of the originating DriverExecutor instance
+	* @param connection - the connection the statement ran on
+	* @param type - statement type label (e.g. SELECT/UPDATE)
+	* @param seq - execution sequence number
+	* @param sql - the sql statement
+	* @param params - statement parameters
+	* @return true when the log record was written
 	* */
 	protected synchronized static boolean writeSqlLog(int deHashCode,Connection connection, String type, long seq, String sql,
 			Object params) {
@@ -1294,7 +1294,7 @@ public class DriverExecutor {
 			if (sqlLogCacheArray == null) {
 
 				sqlLogCacheArray = new CacheArray();
-				long sqlLogFilterTimer = configProperties.getLong("SqlLogTimer", 1000L);
+				long sqlLogFilterTimer = configProperties.getMilliSeconds("SqlLogTimer", 1000L);
 				sqlLogCacheArray.filter(new CacheArrayFilter(0L,sqlLogFilterTimer) {
 					/*
 					* Performs the executeBatch operation
@@ -1399,6 +1399,12 @@ public class DriverExecutor {
 
 	/**
 	* Backup log file
+	* @param logFolder - the log folder
+	* @param logFile - the active log file being rotated
+	* @param logFileNamePrefix - file-name prefix used for the backup
+	* @param logIndex - rotation index (older backups are deleted beyond the max)
+	* @param header - header text written into the new active file
+	* @param msg - message text written into the new active file
 	* */
 	private synchronized static void backupLog(File logFolder, File logFile, String logFileNamePrefix, int logIndex, String header,
 			String msg) {
@@ -1521,7 +1527,13 @@ public class DriverExecutor {
 
 	/*For Sync DataSource**/
 	/**
-	* For database replication
+	* For database replication - executes the statement on the master connection
+	* and returns whether the execution succeeded (thrown when connCheck requires).
+	* @param masterConn - the master connection to execute on
+	* @param seq - execution sequence number
+	* @param sql - the sql statement
+	* @param params - statement parameters
+	* @param returnResult - when true the boolean result is returned to the caller
 	* */
 	protected static void callAndReturnBooleanSync(Connection masterConn, long seq, String sql, List<Object> params,
 			boolean returnResult) throws SQLException {
@@ -1573,7 +1585,13 @@ public class DriverExecutor {
 	}
 
 	/**
-	* For database replication
+	* For database replication - executes the statement on the master connection
+	* and hands the result rows back through the driver executor callbacks.
+	* @param masterConn - the master connection to execute on
+	* @param cursorStart - JDBC result cursor start index
+	* @param maxRows - JDBC result max rows
+	* @param sql - the sql statement
+	* @param params - statement parameters
 	* */
 	protected static void callAndReturnListSync(Connection masterConn, int cursorStart, int maxRows, String sql,
 			List<Object> params) throws SQLException {
@@ -1605,7 +1623,13 @@ public class DriverExecutor {
 	}
 
 	/**
-	* For database replication
+	* For database replication - executes the statement on the master connection
+	* and returns the affected row count.
+	* @param masterConn - the master connection to execute on
+	* @param seq - execution sequence number
+	* @param sql - the sql statement
+	* @param params - statement parameters
+	* @param returnRows - when true the affected row count is returned to the caller
 	* */
 	protected static void callAndReturnRowsSync(Connection masterConn, long seq, String sql, List<Object> params,
 			Object returnRows) throws SQLException {
@@ -1657,7 +1681,13 @@ public class DriverExecutor {
 	}
 
 	/**
-	* For database replication
+	* For database replication - executes a batch of record lists on the master
+	* connection and returns the total affected row count.
+	* @param masterConn - the master connection to execute on
+	* @param seq - execution sequence number
+	* @param sql - the sql statement
+	* @param records - batch rows (each list is one parameter set)
+	* @param returnRows - when true the affected row count is returned to the caller
 	* */
 	protected static void executeBatchListSync(Connection masterConn, long seq, String sql, List<List<Object>> records,
 			int returnRows) throws SQLException {
@@ -1803,7 +1833,7 @@ public class DriverExecutor {
 							ConfigProperties ddscp = dds.getConfigProperties();
 							long connCheckMs = 10000L;
 							if (ddscp != null) {
-								connCheckMs = ddscp.getLong("SyncConnectionCheckTime", 10000L);
+								connCheckMs = ddscp.getMilliSeconds("SyncConnectionCheckTime", 10000L);
 							}
 							boolean isSkipConn = syncConnErrorTime > 0
 									&& (System.currentTimeMillis() - syncConnErrorTime) <= connCheckMs;

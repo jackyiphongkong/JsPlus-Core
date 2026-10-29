@@ -1337,6 +1337,10 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	    scheduleMap.clear();
 	}
 
+	/**
+	* Returns a copy of the scheduled-task registry (name -> task config).
+	* @return the schedule map
+	* */
 	public Map<String,Map<String,Object>> getScheduleMap() {
 	    return new HashMap<String, Map<String,Object>>(scheduleMap);
 	}

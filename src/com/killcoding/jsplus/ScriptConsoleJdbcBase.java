@@ -68,6 +68,12 @@ import java.time.LocalTime;
 * */
 public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 
+	/**
+	* Describes a table's columns (schema.tableName, schema optional).
+	* @param schema - the schema (nullable, uses tableName alone when null)
+	* @param tableName - the table name
+	* @return the column description rows
+	* */
 	public List<Map<String, Object>> desc(String schema, String tableName) throws Exception {
 		String schemaTableName = null;
 		if (CommonTools.isBlank(schema)) {
@@ -78,10 +84,19 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 		return getCacheDriverExecutor(true).desc(schemaTableName);
 	}
 
+	/**
+	* Lists all tables of the default schema.
+	* @return the table rows
+	* */
 	public List<Map<String, Object>> showTables() throws Exception {
 		return showTables((String)null);
 	}
 
+	/**
+	* Lists all tables of the given schema (null = default schema).
+	* @param schema - the schema (nullable)
+	* @return the table rows
+	* */
 	public List<Map<String, Object>> showTables(String schema) throws Exception {
 		if (schema == null) {
 			return getCacheDriverExecutor(true).getAllTables();
@@ -90,11 +105,21 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 		}
 	}
 
+	/**
+	* Returns the column-name -> JDBC-type map of a table.
+	* @param tableName - the table name
+	* @return the column type map
+	* */
 	public Map<String, Object> showColumnTypes(String tableName) throws Exception {
 		return getCacheDriverExecutor(true).getColumnTypes(tableName);
 
 	}
 
+	/**
+	* Returns the column-name -> Java-class map of a table.
+	* @param tableName - the table name
+	* @return the column class map
+	* */
 	public Map<String, Object> showColumnClasses(String tableName) throws Exception {
 		return getCacheDriverExecutor(true).getColumnClasses(tableName);
 	}
@@ -471,7 +496,7 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 	* */
 	public CacheArrayFilter getCacheArrayFilterForExport(boolean showTaskLog, String file,Runnable completedRun,Runnable terminatedRun) {
 		Integer exportMaxFileSize = consoleVariables.getInteger("ExportMaxFileSize", DEFAULT_ExportMaxFileSize);
-		Long exportTimer = consoleVariables.getLong("ExportTimer", DEFAULT_ExportTimer);
+		Long exportTimer = consoleVariables.getMilliSeconds("ExportTimer", DEFAULT_ExportTimer);
 		String exportSplit = consoleVariables.getString("ExportSplit", DEFAULT_ExportSplit);
 		final java.util.Date beginTime = new java.util.Date();
 

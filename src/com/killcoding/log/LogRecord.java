@@ -156,7 +156,7 @@ public final class LogRecord {
 	}
 
 	/**
-	* Set log list
+	* Returns the current log-record list of this instance.
 	* @return List&lt;Map&lt;String, Object&gt;>
 	* */
 	@SuppressWarnings("unchecked")
@@ -478,7 +478,7 @@ public final class LogRecord {
 					firstRefreshConfig = true;
 				}
 				long ms = new Date().getTime() - LAST_REFRESH_CONFIG_TIME.getTime();
-				Long databaseOutRerefreshConfigTimer = config.getMilliSeconds("DatabaseOutRerefreshConfigTimer",
+				Long databaseOutRefreshConfigTimer = config.getMilliSeconds("DatabaseOutRefreshConfigTimer",
 						60 * 1000L);
 				String databaseOutDataSource = config.getString("DatabaseOutDataSource", "");
 				String databaseOutArchiveExecute = config.getString("DatabaseOutArchiveExecute", null);
@@ -490,7 +490,7 @@ public final class LogRecord {
 				initDataSource(databaseOutDataSource);
 
 				if (dataSource != null && databaseOutConfigFrom != null
-						&& (ms >= databaseOutRerefreshConfigTimer || firstRefreshConfig)) {
+						&& (ms >= databaseOutRefreshConfigTimer || firstRefreshConfig)) {
 					firstRefreshConfig = false;
 					Map<String, Object> paramMap = new HashMap<String, Object>();
 					paramMap.put("hostname", hostname);

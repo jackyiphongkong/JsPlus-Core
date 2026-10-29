@@ -16,6 +16,7 @@
 //            instance methods (getBytes / substring / replace / split / ...).
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var JsString = Java.type("com.killcoding.jsplus.JsString");
 
@@ -41,6 +42,7 @@ print("JS_PLUS_PATH: " + basePath);
 try {
     // C1: valueOf(Object) wraps and toString()/asString() unwrap the real String
     var s1 = JsString.valueOf("JsPlus-Core 加密");
+    Logger.systemMark("TestJsString.js", "C1");
     check({
         caseId: "C1",
         name: "valueOf(Object) wraps; toString()/asString() unwrap",
@@ -55,6 +57,7 @@ try {
     var s2 = JsString.valueOf(42).asString();
     var s2b = JsString.valueOf(3.14).asString();
     var s2c = JsString.valueOf(true).asString();
+    Logger.systemMark("TestJsString.js", "C2");
     check({
         caseId: "C2",
         name: "valueOf numeric/boolean overloads",
@@ -70,6 +73,7 @@ try {
     // callers use JsString.wrap(null) - a single-Object-overload factory).
     var s3 = new JsString("hello");
     var s3b = JsString.wrap(null);
+    Logger.systemMark("TestJsString.js", "C3");
     check({
         caseId: "C3",
         name: "JsString(String) constructor; wrap(null) normalises to empty",
@@ -84,6 +88,7 @@ try {
     var s4 = "JsPlus-Core 加密";
     var bytes4 = JsString.valueOf(s4).getBytes("UTF-8");
     var back4 = new JsString(bytes4, "UTF-8").asString();
+    Logger.systemMark("TestJsString.js", "C4");
     check({
         caseId: "C4",
         name: "getBytes('UTF-8') + byte[] constructor round-trip",
@@ -97,6 +102,7 @@ try {
     // C5: length / isEmpty / charAt
     var s5 = JsString.valueOf("abc");
     var ch5 = s5.charAt(0);
+    Logger.systemMark("TestJsString.js", "C5");
     check({
         caseId: "C5",
         name: "length / isEmpty / charAt",
@@ -111,6 +117,7 @@ try {
     // All comparison helpers now accept a raw JS string directly (String
     // overloads were added to JsString for JS interop) as well as JsString.
     var s6 = JsString.valueOf("Hello");
+    Logger.systemMark("TestJsString.js", "C6");
     check({
         caseId: "C6",
         name: "equals / equalsIgnoreCase / compareTo accept raw JS strings",
@@ -127,6 +134,7 @@ try {
 
     // C7: indexOf / lastIndexOf / contains / startsWith / endsWith
     var s7 = JsString.valueOf("JsPlus-Core engine");
+    Logger.systemMark("TestJsString.js", "C7");
     check({
         caseId: "C7",
         name: "search methods (indexOf/lastIndexOf/contains/startsWith/endsWith)",
@@ -139,6 +147,7 @@ try {
 
     // C8: substring / subSequence slices
     var s8 = JsString.valueOf("hello world");
+    Logger.systemMark("TestJsString.js", "C8");
     check({
         caseId: "C8",
         name: "substring / subSequence slices",
@@ -152,6 +161,7 @@ try {
     // C9: replace / replaceAll / replaceFirst
     var s9 = JsString.valueOf("a-b-c");
     var s9b = JsString.valueOf("cat 1, cat 2");
+    Logger.systemMark("TestJsString.js", "C9");
     check({
         caseId: "C9",
         name: "replace / replaceAll / replaceFirst",
@@ -166,6 +176,7 @@ try {
 
     // C10: case conversion + trim/strip family
     var s10 = JsString.valueOf("  AbC  ");
+    Logger.systemMark("TestJsString.js", "C10");
     check({
         caseId: "C10",
         name: "toLowerCase/toUpperCase/trim/strip",
@@ -184,6 +195,7 @@ try {
     // C11: split / toCharArray / hashCode / intern
     var s11 = JsString.valueOf("a,b,c");
     var parts11 = s11.split(",");
+    Logger.systemMark("TestJsString.js", "C11");
     check({
         caseId: "C11",
         name: "split / toCharArray / hashCode / intern",
@@ -199,6 +211,7 @@ try {
     var s12 = JsString.format("v=%d", 5);
     var s12b = JsString.join("-", "a", "b", "c");
     var s12c = JsString.copyValueOf(["x", "y", "z"]);
+    Logger.systemMark("TestJsString.js", "C12");
     check({
         caseId: "C12",
         name: "format / join / copyValueOf / matches",
@@ -212,6 +225,7 @@ try {
 
     // C13: chained fluent calls stay JsString until asString()
     var s13 = JsString.valueOf("  hello-world  ").trim().replace("-", "_").toUpperCase();
+    Logger.systemMark("TestJsString.js", "C13");
     check({
         caseId: "C13",
         name: "fluent chaining (trim -> replace -> toUpperCase)",
@@ -223,6 +237,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestJsString.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestJsString suite error",

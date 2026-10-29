@@ -46,6 +46,10 @@ public class Deleter extends SqlStatement {
 
 	private final static Logger log = LoggerFactory.getLogger(Deleter.class);
 
+	/**
+	* Creates a Deleter worker bound to a source table.
+	* @param table - the source Table facade this worker reads from
+	* */
 	public Deleter(Table table) {
 		super(table);
 	}
@@ -128,6 +132,13 @@ public class Deleter extends SqlStatement {
 		table.writeToTableLog("DELETE-BATCH",begin,end, rows);
 	}
 
+	/**
+	* One delete round: matches the source window rows against the target compare
+	* batch and physically deletes the matched rows from the target.
+	* @param begin - the lower window bound
+	* @param end - the upper window bound
+	* @param targetTable - the target Table facade
+	* */
 	@Override
 	protected synchronized void executeTask(Date begin, Date end, Table targetTable) throws Exception{
 		List<Map<String, Object>> taskBatchList = getTaskBatchList(begin, end);

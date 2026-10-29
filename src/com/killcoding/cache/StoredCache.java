@@ -116,6 +116,10 @@ public final class StoredCache {
 		api.removeAll();
 	}
 
+	/**
+	* Returns the names of all entries held in the stored cache.
+	* @return the entry names
+	* */
 	public synchronized static List<String> getNames(){
 	    if(api == null) setApi(new MemoryCache(true));
 

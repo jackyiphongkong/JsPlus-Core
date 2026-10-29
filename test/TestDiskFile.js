@@ -20,6 +20,7 @@
 //            the end). No database is required - pure disk file test.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var File = Java.type("java.io.File");
 var Timestamp = Java.type("java.sql.Timestamp");
@@ -79,6 +80,7 @@ var p1 = ROOT + "c1_hello.txt";
 var df1 = new DiskFile(p1);
 var w1 = df1.write("Hello DiskFile, 你好，JsPlus-Core！", UTF8);
 var r1 = df1.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C1");
 check({
     caseId: "C1",
     name: "DiskFile string write/read round-trip (UTF-8)",
@@ -97,6 +99,7 @@ var df2 = new DiskFile(p2);
 df2.write("line1\n", UTF8);
 df2.write("line2\n", UTF8, true);
 var r2 = df2.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C2");
 check({
     caseId: "C2",
     name: "DiskFile append write (write data, charset, append)",
@@ -121,6 +124,7 @@ if (eq3) {
         if (rb3[i3] !== bin[i3]) { eq3 = false; break; }
     }
 }
+Logger.systemMark("TestDiskFile.js", "C3");
 check({
     caseId: "C3",
     name: "DiskFile byte[] write/readAllBytes round-trip",
@@ -140,6 +144,7 @@ df4.write("12345", UTF8);
 var metaOk = df4.exists() === true && df4.isFile() === true
     && df4.isDirectory() === false && df4.size() === 5;
 var delOk = df4.delete() === true && df4.exists() === false;
+Logger.systemMark("TestDiskFile.js", "C4");
 check({
     caseId: "C4",
     name: "DiskFile metadata (exists/isFile/isDirectory/size) + delete",
@@ -158,6 +163,7 @@ var dirA = new DiskFile(DIR_A + "nested/deep/");
 var mkOk = dirA.mkdirs();
 var dirCheck = dirA.isDirectory() === true && dirA.exists() === true;
 var originPath = dirA.getOrigin().getPath();
+Logger.systemMark("TestDiskFile.js", "C5");
 check({
     caseId: "C5",
     name: "DiskFile mkdirs (nested) + directory detection + getOrigin",
@@ -179,6 +185,7 @@ new DiskFile(DIR_B).mkdirs();
 df6a.copyTo(p6b);
 var df6b = new DiskFile(p6b);
 var r6b = df6b.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C6");
 check({
     caseId: "C6",
     name: "DiskFile copyTo (to new path)",
@@ -199,6 +206,7 @@ df7a.write("move me", UTF8);
 df7a.moveTo(p7b);
 var df7b = new DiskFile(p7b);
 var r7b = df7b.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C7");
 check({
     caseId: "C7",
     name: "DiskFile moveTo (source removed)",
@@ -217,6 +225,7 @@ var df8 = new DiskFile(p8);
 df8.write("ready", UTF8);
 var cpOk = df8.complete();
 var r8 = df8.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C8");
 check({
     caseId: "C8",
     name: "DiskFile complete() marker",
@@ -238,6 +247,7 @@ var tsIn = new Timestamp(baseMs);
 df9.setModifyTime(tsIn);
 var tsOut = df9.getModifyTime();
 var diffMs = Math.abs((tsOut === null ? -1 : tsOut.getTime()) - baseMs);
+Logger.systemMark("TestDiskFile.js", "C9");
 check({
     caseId: "C9",
     name: "DiskFile setModifyTime/getModifyTime round-trip",
@@ -258,6 +268,7 @@ df10.manualWrite("manual part one");
 df10.manualWrite(" + part two");
 df10.manualClose();
 var r10 = df10.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C10");
 check({
     caseId: "C10",
     name: "DiskFile manual stream (manualOpen/manualWrite/manualClose)",
@@ -276,6 +287,7 @@ var df11 = new DiskFile(p11);
 df11.write("p", UTF8);
 var parents = df11.getParents();
 var parentsStr = (parents === null || parents === undefined) ? "null" : String(parents.size());
+Logger.systemMark("TestDiskFile.js", "C11");
 check({
     caseId: "C11",
     name: "DiskFile path info (getPath/getParent/getParents)",
@@ -299,10 +311,17 @@ var p12 = ROOT + "c12_target.txt";
 var p12l = ROOT + "c12_link.txt";
 var df12t = new DiskFile(p12);
 df12t.write("link target", UTF8);
+// DiskFile.createLink(target) turns THIS path into a symlink pointing at
+// target. So the link file is the receiver (p12l) and the target file is
+// the argument (p12). Remove any leftover link from a previous run first,
+// otherwise createSymbolicLink fails with FileAlreadyExists (the workspace
+// is kept for manual inspection, so re-runs must be idempotent).
+try { deleteTree(fileOf(p12l)); } catch (e3) {}
 var linkOk = false;
 var linkDetail = "";
 try {
-    var created = df12t.createLink(p12l);
+    var df12l = new DiskFile(p12l);
+    var created = df12l.createLink(p12);
     var lf = new DiskFile(p12l);
     var isL = lf.isLink();
     var rL = lf.readAllString(UTF8);
@@ -313,6 +332,7 @@ try {
     linkDetail = "SKIPPED on this OS/permission: " + e;
     linkOk = true; // OS capability, not a product defect
 }
+Logger.systemMark("TestDiskFile.js", "C12");
 check({
     caseId: "C12",
     name: "DiskFile symlink createLink/readLink/isLink",
@@ -340,6 +360,7 @@ if (eq14) {
         if (rb14[i14] !== expect14[i14]) { eq14 = false; break; }
     }
 }
+Logger.systemMark("TestDiskFile.js", "C14");
 check({
     caseId: "C14",
     name: "DiskFile byte[] append (write(byte[], append=true))",
@@ -358,6 +379,7 @@ var df15 = new DiskFile(p15);
 df15.write("default charset read, 中文一致", UTF8);
 var r15a = df15.readAllString();
 var r15b = df15.readAllString(UTF8);
+Logger.systemMark("TestDiskFile.js", "C15");
 check({
     caseId: "C15",
     name: "DiskFile readAllString() default charset == UTF-8 variant",
@@ -382,6 +404,7 @@ var ts16plain = df16.getModifyTime();
 var ts16clock = df16.getModifyTimeForClock();
 var diff16a = (ts16plain === null ? -1 : Math.abs(ts16plain.getTime() - baseMs16));
 var diff16b = (ts16clock === null ? -1 : Math.abs(ts16clock.getTime() - baseMs16));
+Logger.systemMark("TestDiskFile.js", "C16");
 check({
     caseId: "C16",
     name: "DiskFile clock modify time (setModifyTimeFromClock + getModifyTime/getModifyTimeForClock)",
@@ -401,6 +424,7 @@ var before17 = df17.beforeWrite();
 var wrote17 = df17.write("hook target", UTF8);
 var after17ok = true;
 try { df17.afterWrite(); } catch (e17) { after17ok = false; }
+Logger.systemMark("TestDiskFile.js", "C17");
 check({
     caseId: "C17",
     name: "DiskFile lifecycle hooks (beforeWrite/afterWrite)",
@@ -419,6 +443,7 @@ var df18 = new DiskFile(p18);
 df18.write("parent file", UTF8);
 var pf18 = df18.getParentFile();
 var pf18Path = (pf18 === null || pf18 === undefined) ? "null" : String(pf18.getPath());
+Logger.systemMark("TestDiskFile.js", "C18");
 check({
     caseId: "C18",
     name: "DiskFile getParentFile (java.io.File parent)",
@@ -434,6 +459,7 @@ check({
 // ---------------------------------------------------------------------------
 cleanupWorkspace();
 var rootGone = !(new File(ROOT).exists());
+Logger.systemMark("TestDiskFile.js", "C13");
 check({
     caseId: "C13",
     name: "test workspace cleanup",
@@ -446,6 +472,7 @@ check({
 
 } catch (e) {
     cleanupWorkspace();
+    Logger.systemMark("TestDiskFile.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestDiskFile suite error",

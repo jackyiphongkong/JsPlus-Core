@@ -10,6 +10,7 @@
 //            charAt, never regex literals.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var CodeEscape = Java.type("com.killcoding.tool.CodeEscape");
 var EscapeTools = Java.type("com.killcoding.tool.EscapeTools");
@@ -37,6 +38,7 @@ print("JS_PLUS_PATH: " + basePath);
 try {
     // C1: Level-1 keeps ASCII letters/digits and common punctuation
     var s1 = CodeEscape.escapeJavaMinimal("abcXYZ123._- ");
+    Logger.systemMark("TestEscapeTools.js", "C1");
     check({
         caseId: "C1",
         name: "escapeJavaMinimal() keeps ASCII letters/digits/punct",
@@ -49,6 +51,7 @@ try {
 
     // C2: Level-1 escapes newline and tab
     var s2 = CodeEscape.escapeJavaMinimal("a\nb\tc");
+    Logger.systemMark("TestEscapeTools.js", "C2");
     check({
         caseId: "C2",
         name: "escapeJavaMinimal() escapes \\n and \\t",
@@ -61,6 +64,7 @@ try {
 
     // C3: Level-1 escapes quote and backslash
     var s3 = CodeEscape.escapeJavaMinimal('a"b\\c');
+    Logger.systemMark("TestEscapeTools.js", "C3");
     check({
         caseId: "C3",
         name: "escapeJavaMinimal() escapes quote and backslash",
@@ -74,6 +78,7 @@ try {
     // C4: Level-2 escapes non-ASCII (Chinese) to \\uXXXX
     var s4 = CodeEscape.escapeJava("中文");
     var ok4 = s4.indexOf("\\u") === 0 && s4.indexOf("\\") === 0;
+    Logger.systemMark("TestEscapeTools.js", "C4");
     check({
         caseId: "C4",
         name: "escapeJava() escapes non-ASCII to \\uXXXX",
@@ -86,6 +91,7 @@ try {
 
     // C5: Level-1 leaves non-ASCII untouched (only SEC escapes)
     var s5 = CodeEscape.escapeJavaMinimal("中文a");
+    Logger.systemMark("TestEscapeTools.js", "C5");
     check({
         caseId: "C5",
         name: "escapeJavaMinimal() leaves non-ASCII untouched",
@@ -98,6 +104,7 @@ try {
 
     // C6: unescapeJava reverses SEC escapes
     var s6 = CodeEscape.unescapeJava("a\\nb\\tc");
+    Logger.systemMark("TestEscapeTools.js", "C6");
     check({
         caseId: "C6",
         name: "unescapeJava() reverses \\n and \\t",
@@ -110,6 +117,7 @@ try {
 
     // C7: unescapeJava reverses \\uXXXX escapes
     var s7 = CodeEscape.unescapeJava("\\u4E2D\\u6587");
+    Logger.systemMark("TestEscapeTools.js", "C7");
     check({
         caseId: "C7",
         name: "unescapeJava() reverses \\uXXXX to 中文",
@@ -124,6 +132,7 @@ try {
     var plain8 = "a\nb\tc\"d\\e";
     var esc8 = CodeEscape.escapeJavaMinimal(plain8);
     var back8 = CodeEscape.unescapeJava(esc8);
+    Logger.systemMark("TestEscapeTools.js", "C8");
     check({
         caseId: "C8",
         name: "level-1 escape/unescape roundtrip",
@@ -138,6 +147,7 @@ try {
     var plain9 = "中文 mixing 123 \n and \"quotes\"";
     var esc9 = CodeEscape.escapeJava(plain9);
     var back9 = CodeEscape.unescapeJava(esc9);
+    Logger.systemMark("TestEscapeTools.js", "C9");
     check({
         caseId: "C9",
         name: "level-2 escape/unescape roundtrip with non-ASCII",
@@ -150,6 +160,7 @@ try {
 
     // C10: octal escape unescape (\\101 -> 'A')
     var s10 = CodeEscape.unescapeJava("\\101");
+    Logger.systemMark("TestEscapeTools.js", "C10");
     check({
         caseId: "C10",
         name: "unescapeJava() decodes octal \\101 -> A",
@@ -164,6 +175,7 @@ try {
     var csv11 = CodeEscape.escapeToSingleLineForCsv("a,b\nc\td");
     var ok11 = csv11.indexOf("\\u002C") >= 0 && csv11.indexOf("\\n") >= 0
         && csv11.indexOf("\\t") >= 0;
+    Logger.systemMark("TestEscapeTools.js", "C11");
     check({
         caseId: "C11",
         name: "escapeToSingleLineForCsv() escapes CSV-breaking chars",
@@ -176,6 +188,7 @@ try {
 
     // C12: escapeToSingleLineForCsv(null) -> "null"
     var csv12 = CodeEscape.escapeToSingleLineForCsv(null);
+    Logger.systemMark("TestEscapeTools.js", "C12");
     check({
         caseId: "C12",
         name: "escapeToSingleLineForCsv(null) returns 'null'",
@@ -190,6 +203,7 @@ try {
     var esc13 = EscapeTools.escape("a\nb", CodeEscapeLevel.LEVEL_1_BASIC_ESCAPE_SET);
     var back13 = EscapeTools.unescape(esc13);
     var csv13 = EscapeTools.escapeToSingleLineForCsv("x,y");
+    Logger.systemMark("TestEscapeTools.js", "C13");
     check({
         caseId: "C13",
         name: "EscapeTools facade escape/unescape/csv",
@@ -205,6 +219,7 @@ try {
     var null14a = CodeEscape.escapeJava(null);
     var null14b = CodeEscape.escapeJavaMinimal(null);
     var null14c = CodeEscape.unescapeJava(null);
+    Logger.systemMark("TestEscapeTools.js", "C14");
     check({
         caseId: "C14",
         name: "null input returns null (escape/minimal/unescape)",
@@ -218,6 +233,7 @@ try {
     // C15: empty string handling
     var esc15 = CodeEscape.escapeJavaMinimal("");
     var back15 = CodeEscape.unescapeJava(esc15);
+    Logger.systemMark("TestEscapeTools.js", "C15");
     check({
         caseId: "C15",
         name: "empty string roundtrips as empty",
@@ -231,6 +247,7 @@ try {
     // C16: CodeEscapeLevel constants expose the expected levels
     var lv1 = CodeEscapeLevel.LEVEL_1_BASIC_ESCAPE_SET.getEscapeLevel();
     var lv2 = CodeEscapeLevel.LEVEL_2_ALL_NON_ASCII_PLUS_BASIC_ESCAPE_SET.getEscapeLevel();
+    Logger.systemMark("TestEscapeTools.js", "C16");
     check({
         caseId: "C16",
         name: "CodeEscapeLevel levels are 1 and 2",
@@ -242,6 +259,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestEscapeTools.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestEscapeTools suite error",

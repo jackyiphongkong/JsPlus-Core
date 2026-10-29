@@ -114,6 +114,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	* @param cursorStart - JDBC result Cursor start index
 	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	* @param sql - Query sql
+	* @param params - Query params (Map mode: :name placeholders are converted)
 	* @param rows - CacheArray object
 	* @exception SQLException - if query failed
 	* */
@@ -129,6 +130,7 @@ public final class CacheDriverExecutor extends DriverExecutor {
 	* @param cursorStart - JDBC result Cursor start index
 	* @param maxRows - JDBC result max rows (JDBC limited rows 50,000,000)
 	* @param sql - Query sql
+	* @param params - Query params (List mode: '?' placeholders)
 	* @param rows - CacheArray object
 	* @exception SQLException - if query failed
 	* */

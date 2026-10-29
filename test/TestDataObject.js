@@ -8,6 +8,7 @@
 //            nested structure roundtrip.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var File = Java.type("java.io.File");
 var Files = Java.type("java.nio.file.Files");
@@ -51,6 +52,7 @@ try {
     var d1 = new DataObject(path1);
     d1.setObject(m1);
     var back1 = d1.getData();
+    Logger.systemMark("TestDataObject.js", "C1");
     check({
         caseId: "C1",
         name: "DataObject(path) roundtrip with default AES key",
@@ -68,6 +70,7 @@ try {
     var d2 = new DataObject("0123456789abcdef0123456789abcdef", path2);
     d2.setObject("hello-custom-key");
     var back2 = d2.getData();
+    Logger.systemMark("TestDataObject.js", "C2");
     check({
         caseId: "C2",
         name: "DataObject(aesKey, path) roundtrip with a custom key",
@@ -83,6 +86,7 @@ try {
     var d3 = new DataObject("", path3);
     d3.setObject("plain-mode");
     var back3 = d3.getData();
+    Logger.systemMark("TestDataObject.js", "C3");
     check({
         caseId: "C3",
         name: "blank aesKey disables encryption but roundtrip works",
@@ -99,6 +103,7 @@ try {
     d4.setObject("persisted");
     var exists4 = Files.exists(Paths.get(path4));
     var size4 = Files.size(Paths.get(path4));
+    Logger.systemMark("TestDataObject.js", "C4");
     check({
         caseId: "C4",
         name: "setObject() writes the encrypted file to disk",
@@ -118,6 +123,7 @@ try {
     } catch (e5) {
         threw5 = true;
     }
+    Logger.systemMark("TestDataObject.js", "C5");
     check({
         caseId: "C5",
         name: "getData() on a missing file throws",
@@ -141,6 +147,7 @@ try {
     if (back6 !== null && back6.size() === 2) {
         ok6 = ("" + back6.get(0).get("tag")) === "a" && ("" + back6.get(1).get("tag")) === "b";
     }
+    Logger.systemMark("TestDataObject.js", "C6");
     check({
         caseId: "C6",
         name: "nested List<Map> roundtrip",
@@ -157,6 +164,7 @@ try {
     d7.setObject("first");
     d7.setObject("second");
     var back7 = d7.getData();
+    Logger.systemMark("TestDataObject.js", "C7");
     check({
         caseId: "C7",
         name: "re-setObject() overwrites the previous value",
@@ -168,6 +176,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestDataObject.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestDataObject suite error",

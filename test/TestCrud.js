@@ -25,6 +25,7 @@
 //            dbVerify confirms the server database state after each phase.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var basePath = System.getProperty("JS_PLUS_PATH");
 try {
@@ -155,6 +156,7 @@ if (loadErr.length === 0) {
         c1Detail = "" + e;
     }
 }
+Logger.systemMark("TestCrud.js", "C1");
 check({
     name: "dbscript/change.sql applied - 6 tables exist",
     ok: c1Ok && loadErr.length === 0,
@@ -253,6 +255,7 @@ var CRUD_SPECS = [
 // TestAll.bat/.sh initializes.
 // ----------------------------------------------------------------------------
 function perTableCreateCase(caseId, table, spec) {
+    Logger.systemMark("TestCrud.js", "" + caseId);
     var ok = false;
     var detail = [];
     var err = "";
@@ -287,6 +290,7 @@ function perTableCreateCase(caseId, table, spec) {
 }
 
 function perTableReadCase(caseId, table, spec) {
+    Logger.systemMark("TestCrud.js", "" + caseId);
     var ok = false;
     var detail = [];
     var err = "";
@@ -320,6 +324,7 @@ function perTableReadCase(caseId, table, spec) {
 }
 
 function perTableUpdateCase(caseId, table, spec) {
+    Logger.systemMark("TestCrud.js", "" + caseId);
     var ok = false;
     var detail = [];
     var err = "";
@@ -354,6 +359,7 @@ function perTableUpdateCase(caseId, table, spec) {
 }
 
 function perTableDeleteCase(caseId, table, spec) {
+    Logger.systemMark("TestCrud.js", "" + caseId);
     var ok = false;
     var detail = [];
     var err = "";
@@ -444,6 +450,7 @@ try {
     c6DbvText = "(query failed) " + e;
 }
 var c6DbvOk = dbvResult !== null && dbvResult.rows.length === 0;
+Logger.systemMark("TestCrud.js", "C6");
 check({
     name: "Soft-delete semantics (deleted flag + deleted_at)",
     ok: c6Ok && c6DbvOk && c6Err.length === 0,
@@ -479,6 +486,7 @@ try {
     c7Err = "" + e;
     c7Detail = "EXCEPTION: " + e;
 }
+Logger.systemMark("TestCrud.js", "C7");
 check({
     name: "dbVerify: testdb on :3306 serves the 6 initialized tables",
     ok: c7Ok && c7Err.length === 0,

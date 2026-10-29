@@ -12,6 +12,7 @@
 //            findSubDirs, getJarPath, loadJars and getSystemProperties.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var ArrayList = Java.type("java.util.ArrayList");
 var CommonTools = Java.type("com.killcoding.tool.CommonTools");
@@ -37,6 +38,7 @@ print("JS_PLUS_PATH: " + basePath);
 
 try {
     // C1: isBlank(null) -> true
+    Logger.systemMark("TestCommonTools.js", "C1");
     check({
         caseId: "C1",
         name: "isBlank(null) is true",
@@ -48,6 +50,7 @@ try {
     });
 
     // C2: isBlank("") -> true
+    Logger.systemMark("TestCommonTools.js", "C2");
     check({
         caseId: "C2",
         name: "isBlank('') is true",
@@ -59,6 +62,7 @@ try {
     });
 
     // C3: isBlank("   ") -> true (whitespace trimmed)
+    Logger.systemMark("TestCommonTools.js", "C3");
     check({
         caseId: "C3",
         name: "isBlank(whitespace) is true",
@@ -70,6 +74,7 @@ try {
     });
 
     // C4: isBlank("x") -> false
+    Logger.systemMark("TestCommonTools.js", "C4");
     check({
         caseId: "C4",
         name: "isBlank(non-empty) is false",
@@ -92,6 +97,7 @@ try {
             charsetOk5 = false;
         }
     }
+    Logger.systemMark("TestCommonTools.js", "C5");
     check({
         caseId: "C5",
         name: "generateId(8) returns an 8-char [0-9a-z] id",
@@ -104,6 +110,7 @@ try {
 
     // C6: generateId(0) -> empty string
     var id6 = CommonTools.generateId(0);
+    Logger.systemMark("TestCommonTools.js", "C6");
     check({
         caseId: "C6",
         name: "generateId(0) returns an empty string",
@@ -117,6 +124,7 @@ try {
     // C7: generateId is random (two consecutive ids differ)
     var id7a = CommonTools.generateId(16);
     var id7b = CommonTools.generateId(16);
+    Logger.systemMark("TestCommonTools.js", "C7");
     check({
         caseId: "C7",
         name: "generateId(16) ids differ between calls (randomness)",
@@ -129,6 +137,7 @@ try {
 
     // C8: md5("") matches the well-known empty-string digest (uppercase hex)
     var md58 = CommonTools.md5("");
+    Logger.systemMark("TestCommonTools.js", "C8");
     check({
         caseId: "C8",
         name: "md5('') returns D41D8CD98F00B204E9800998ECF8427E",
@@ -149,6 +158,7 @@ try {
             hexOk9 = false;
         }
     }
+    Logger.systemMark("TestCommonTools.js", "C9");
     check({
         caseId: "C9",
         name: "md5 is deterministic, 32 uppercase hex chars",
@@ -162,6 +172,7 @@ try {
     // C10: getHostname() non-null / non-empty
     var host10 = "";
     try { host10 = CommonTools.getHostname(); } catch (e) { host10 = "" + e; }
+    Logger.systemMark("TestCommonTools.js", "C10");
     check({
         caseId: "C10",
         name: "getHostname() returns a non-empty hostname",
@@ -178,6 +189,7 @@ try {
     var groups11 = CommonTools.averageAssign(src11, 3);
     var total11 = 0;
     for (var g11 = 0; g11 < groups11.size(); g11++) { total11 += groups11.get(g11).size(); }
+    Logger.systemMark("TestCommonTools.js", "C11");
     check({
         caseId: "C11",
         name: "averageAssign(10 items, limit 3) -> 4 balanced groups, 10 total",
@@ -190,6 +202,7 @@ try {
 
     // C12: averageAssign(empty) -> empty list
     var groups12 = CommonTools.averageAssign(new ArrayList(), 3);
+    Logger.systemMark("TestCommonTools.js", "C12");
     check({
         caseId: "C12",
         name: "averageAssign(empty list) returns an empty list",
@@ -202,6 +215,7 @@ try {
 
     // C13: findFiles(dir, ext) - config folder contains .properties files
     var files13 = CommonTools.findFiles(basePath + "config", ".properties");
+    Logger.systemMark("TestCommonTools.js", "C13");
     check({
         caseId: "C13",
         name: "findFiles(config, '.properties') finds property files",
@@ -214,6 +228,7 @@ try {
 
     // C14: findSubDirs() on LibHome finds at least one subdirectory
     var dirs14 = CommonTools.findSubDirs(basePath + "../LibHome");
+    Logger.systemMark("TestCommonTools.js", "C14");
     check({
         caseId: "C14",
         name: "findSubDirs(LibHome) finds subdirectories",
@@ -226,6 +241,7 @@ try {
 
     // C15: getJarPath(CommonTools.class) - non-null jar directory
     var jarPath15 = CommonTools.getJarPath(CommonTools.class);
+    Logger.systemMark("TestCommonTools.js", "C15");
     check({
         caseId: "C15",
         name: "getJarPath() resolves the jar directory",
@@ -245,6 +261,7 @@ try {
             classFound16 = true;
         }
     } catch (e) { e16 = "" + e; }
+    Logger.systemMark("TestCommonTools.js", "C16");
     check({
         caseId: "C16",
         name: "loadJars() builds a working URLClassLoader",
@@ -258,6 +275,7 @@ try {
     // C17: getSystemProperties(clazz, envKey, propFileName) locates Logger.properties
     var propsFile17 = null;
     try { propsFile17 = CommonTools.getSystemProperties(CommonTools.class, "JS_PLUS_LOGGER_PROPS", "Logger.properties"); } catch (e) { propsFile17 = null; }
+    Logger.systemMark("TestCommonTools.js", "C17");
     check({
         caseId: "C17",
         name: "getSystemProperties() locates Logger.properties via JS_PLUS_PATH",
@@ -269,6 +287,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestCommonTools.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestCommonTools suite error",

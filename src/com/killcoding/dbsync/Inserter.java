@@ -44,6 +44,10 @@ public class Inserter extends SqlStatement {
 
 	private final static Logger log = LoggerFactory.getLogger(Inserter.class);
 
+	/**
+	* Creates an Inserter worker bound to a source table.
+	* @param table - the source Table facade this worker reads from
+	* */
 	public Inserter(Table table) {
 		super(table);
 	}
@@ -110,6 +114,13 @@ public class Inserter extends SqlStatement {
 		table.writeToTableLog("INSERT-BATCH",begin,end, rows);
 	}
 
+	/**
+	* One insert round: matches the source window rows against the target compare
+	* batch and inserts the missing rows into the target.
+	* @param begin - the lower window bound
+	* @param end - the upper window bound
+	* @param targetTable - the target Table facade
+	* */
 	@Override
 	protected synchronized void executeTask(Date begin, Date end, Table targetTable) throws Exception {
 		List<Map<String, Object>> taskBatchList = getTaskBatchList(begin, end);

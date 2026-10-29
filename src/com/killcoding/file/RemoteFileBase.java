@@ -78,7 +78,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	/** @param origin the origin File backing this remote file object */
 	protected RemoteFileBase(File origin) { super(origin); }
 
-	/** Overload of BaseFile.isDebug(RemoteFile) for this implementation layer. */
+	/**
+	* Whether the given remote file instance runs in debug mode.
+	* @param remoteFile - the remote file instance to probe
+	* @return true when debug is enabled
+	* */
 	protected static boolean isDebug(RemoteFileBase remoteFile) {
 		boolean debug = false;
 		if (remoteFile != null) {
@@ -677,6 +681,10 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return getCompletedRecord() != null;
 	}
 
+	/**
+	* Fetches the completed marker record for this remote file (null when not completed).
+	* @return the completed record, or null
+	* */
 	public Map<String, Object> getCompletedRecord() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_COMPLETED);
 		Map<String, Object> dataRecord = new HashMap<String, Object>();
@@ -710,6 +718,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return record;
 	}
 
+	/**
+	* Fetches one remote-file record by its primary key id.
+	* @param id - the record id
+	* @return the record, or null when not found
+	* */
 	public Map<String, Object> getRecordById(Object id) throws IOException {
 		String sql = formatSql(SQL_SELECT_GET_RECORD_BY_ID);
 		Map<String, Object> dataRecord = new HashMap<String, Object>();
@@ -738,6 +751,10 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	}
 
 
+	/**
+	* Fetches the most recently updated record for this remote file (null when none).
+	* @return the last-update record, or null
+	* */
 	public Map<String, Object> getLastUpdateRecord() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_LAST_UPDATE);
 		Map<String, Object> dataRecord = new HashMap<String, Object>();
@@ -887,6 +904,10 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return -1;
 	}
 
+	/**
+	* Fetches the first file-part record of this remote file (from the cache).
+	* @return the first file-part record, or null
+	* */
 	protected Map<String, Object> getFirstFilePart() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_FIRST_FILE);
 		Map<String, Object> dataRecord = new HashMap<String, Object>();
@@ -920,6 +941,10 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return record;
 	}
 
+	/**
+	* Fetches the first file-part record bypassing the cache (fresh read).
+	* @return the first file-part record, or null
+	* */
 	protected Map<String, Object> getFirstFilePartRefresh() throws IOException {
 		String sql = formatSql(SQL_SELECT_FOR_FIRST_FILE);
 		Map<String, Object> dataRecord = new HashMap<String, Object>();
@@ -2357,14 +2382,29 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		return 0L;
 	}
 
+	/**
+	* Lists every remote-file record of this file object.
+	* @return the record list
+	* */
 	public List<Map<String, Object>> list() throws IOException {
 		return list(getPath(), "%");
 	}
 
+	/**
+	* Lists the remote-file records whose file name matches the given LIKE pattern.
+	* @param likeFileName - file-name LIKE pattern (e.g. "%.txt")
+	* @return the matching record list
+	* */
 	public List<Map<String, Object>> list(String likeFileName) throws IOException {
 		return list(getPath(), likeFileName);
 	}
 
+	/**
+	* Lists the remote-file records matching folder and file-name LIKE patterns.
+	* @param likeFolderName - folder-name LIKE pattern
+	* @param likeFileName - file-name LIKE pattern
+	* @return the matching record list
+	* */
 	public List<Map<String, Object>> list(String likeFolderName, String likeFileName) throws IOException {
 		CacheDriverExecutor executor = null;
 		Connection conn = null;
@@ -2831,6 +2871,10 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 		QUEUE_PATH_MAPPING.remove(path);
 	}
 
+	/**
+	* Returns the queue-path map (path -> queue usage count) shared by remote files.
+	* @return the synchronised path mapping
+	* */
 	public static synchronized Map<String, Long> getQueuePathMapping() {
 		return Collections.synchronizedMap(QUEUE_PATH_MAPPING);
 	}

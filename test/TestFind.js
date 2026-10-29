@@ -31,6 +31,7 @@
 //            by fallback.sql; this suite cleans its own rows for idempotency).
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 var Str = Java.type("java.lang.String");
@@ -180,6 +181,7 @@ Thread.sleep(500);
 // F1: find() fed the GCA and the callback consumed rows
 // ---------------------------------------------------------------------------
 var total = GCA.getProcessedTotal();
+Logger.systemMark("TestFind.js", "F1");
 check({
     caseId: "F1",
     name: "cde.find feeds GCA and Console.callback consumes rows",
@@ -211,6 +213,7 @@ var malformedTxt = "";
 for (var mi = 0; mi < malformedList.size(); mi++) {
     malformedTxt += " [" + String(malformedList.get(mi)) + "]";
 }
+Logger.systemMark("TestFind.js", "F2");
 check({
     caseId: "F2",
     name: "fed rows carry expected content (username/email/age round-trip)",
@@ -229,6 +232,7 @@ check({
 var t1 = GCA.getProcessedTotal();
 Thread.sleep(1000);
 var t2 = GCA.getProcessedTotal();
+Logger.systemMark("TestFind.js", "F3");
 check({
     caseId: "F3",
     name: "processedTotal advances while producers keep feeding",
@@ -245,6 +249,7 @@ check({
 var dbv = dbVerify(function () {
     return "select * from test_user";
 });
+Logger.systemMark("TestFind.js", "F4");
 check({
     caseId: "F4",
     name: "test_user persisted rows visible via select *",
@@ -262,6 +267,7 @@ check({
 var dbvKeep = dbVerify(function () {
     return "select * from test_user";
 });
+Logger.systemMark("TestFind.js", "F5");
 check({
     caseId: "F5",
     name: "TestFind data retained (test_user rows kept for manual inspection)",
@@ -273,6 +279,7 @@ check({
 });
 
 } catch (e) {
+    Logger.systemMark("TestFind.js", "F-ERR");
     check({
         caseId: "F-ERR",
         name: "TestFind suite error",

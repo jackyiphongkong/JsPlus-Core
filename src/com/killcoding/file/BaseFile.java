@@ -335,6 +335,10 @@ public abstract class BaseFile {
         return replacePath(parent);
 	}
 
+	/**
+	* Returns every ancestor path of this file, from the parent up to the root.
+	* @return the parent path list (outermost first)
+	* */
 	public List<String> getParents() {
 	    List<String> parents = new ArrayList<String>();
 	    String path = getPath();

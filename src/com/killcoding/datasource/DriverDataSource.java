@@ -1475,7 +1475,7 @@ public final class DriverDataSource implements DataSource {
 				ConfigProperties cp = getConfigProperties();
 				long connCheckMs = 10000L;
 				if (cp != null) {
-					connCheckMs = cp.getLong("TryGetConnectionCheckTime", 10000L);
+					connCheckMs = cp.getMilliSeconds("TryGetConnectionCheckTime", 10000L);
 				}
 				boolean isSkipConn = connErrorTime > 0 && (System.currentTimeMillis() - connErrorTime) <= connCheckMs;
 				if (isSkipConn) {

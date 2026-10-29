@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import com.killcoding.log.LoggerFactory;
 
 import java.util.Date;
 import java.sql.Connection;
@@ -192,18 +191,22 @@ public class ConnectionPool {
 
 	/**
 	* Performs the get operation
-	* @return the get result
+	* @return the get result (null when the pool is empty)
 	* */
 	private Integer get() {
 	    synchronized (poolLock) {
-		    try{
-	    	    Integer hashCode =  list().get(0);
-	    	    remove(hashCode);
-	    	    return hashCode;
-		    }catch(Exception e){
-		        LoggerFactory.getLogger(ConnectionPool.class).error(e.getMessage(),e);
-		        return null;
-		    }
+	        List<Integer> list = list();
+	        if (list.isEmpty()) {
+	            // Pool is empty: return null instead of raising an
+	            // IndexOutOfBoundsException on list().get(0). This is a normal
+	            // state (e.g. database down or creation still in flight); the
+	            // caller (DriverDataSource.getConnection) turns a null into the
+	            // designed SQLException error path (error code 99904).
+	            return null;
+	        }
+	        Integer hashCode = list.get(0);
+	        remove(hashCode);
+	        return hashCode;
 	    }
 	}
 
@@ -215,6 +218,10 @@ public class ConnectionPool {
 		return CONNECTION_OPENED_AT_MARK.keySet().size();
 	}
 
+	/**
+	* Returns a copy of the opened-at marks (connection hash -> opened time).
+	* @return the opened-at mark map
+	* */
 	public Map<Integer, Date> getConnectionOpenedAtMark(){
 	    return new HashMap<Integer, Date>(CONNECTION_OPENED_AT_MARK);
 	}
@@ -238,6 +245,10 @@ public class ConnectionPool {
 	     return CONNECTION_OPENED_AT_MARK.put(hashCode,date);
 	}
 
+	/**
+	* Returns a copy of the using-at marks (connection hash -> borrow time).
+	* @return the using-at mark map
+	* */
 	public Map<Integer, Date> getConnectionUsingAtMark(){
 	    return new HashMap<Integer, Date>(CONNECTION_USING_AT_MARK);
 	}
@@ -261,6 +272,10 @@ public class ConnectionPool {
 	     return CONNECTION_USING_AT_MARK.put(hashCode,date);
 	}
 
+	/**
+	* Returns the live connection map (hash -> pooled connection).
+	* @return the connection mark map
+	* */
 	protected Map<Integer, Connection> getConnectionMark(){
 	    return CONNECTION_MARK;
 	}
@@ -302,6 +317,10 @@ public class ConnectionPool {
 	     return CONNECTION_MARK.put(hashCode,conn);
 	}
 
+	/**
+	* Returns a copy of the idle-begin marks (connection hash -> idle start time).
+	* @return the idle-begin mark map
+	* */
 	public Map<Integer, Date> getConnectionIdleBeginMark(){
 	    return new HashMap<Integer,Date>(CONNECTION_IDLE_BEGIN_MARK);
 	}
@@ -325,6 +344,10 @@ public class ConnectionPool {
 	     return CONNECTION_IDLE_BEGIN_MARK.put(hashCode,date);
 	}
 
+	/**
+	* Returns the thread marks (connection hash -> thread name that holds it).
+	* @return the thread mark map
+	* */
 	public Map<Integer, String> getConnectionThreadMark(){
 	    return new HashMap<Integer, String>(CONNECTION_THREAD_MARK);
 	}

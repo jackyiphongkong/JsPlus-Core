@@ -25,9 +25,9 @@ THE SOFTWARE.
 package com.killcoding.dbsync;
 
 import com.killcoding.datasource.Clock;
+import com.killcoding.file.DiskFile;
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
-import java.io.File;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class SqlStatement {
 	protected String primaryKey;
 	protected String key;
 	protected Long period = 0L;
-	protected Long batch = 0L;
+	protected Long window = 0L;
 	protected Long ignoredPeriod = 0L;
 
 	protected boolean enable = false;
@@ -63,6 +63,10 @@ public class SqlStatement {
 	protected ExecutorService executor = null;
 	protected volatile boolean stopped = false;
 
+	/**
+	* Binds a statement worker to its owning source table.
+	* @param table - the source Table facade
+	* */
 	public SqlStatement(Table table) {
 		super();
 		this.table = table;
@@ -130,7 +134,7 @@ public class SqlStatement {
 				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 				String dateStr = sf.format(now);
 				String logPath = String.format("%s/Heartbeat.log", table.tableLogFolder);
-				FileUtils.write(new File(logPath), dateStr,false);
+				new DiskFile(logPath).write(dateStr,false);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -151,6 +155,9 @@ public class SqlStatement {
 		batchTaskTime = new Clock().getTime() - ignoredPeriod;
 		final Table sourceTable = this.table;
 		final Runnable runnable = new Runnable() {
+			/**
+			* Worker loop: repeatedly executes sync rounds until stop() is called.
+			* */
 			@Override
 			public void run() {
 				Date begin = null;
@@ -183,7 +190,7 @@ public class SqlStatement {
 						    String beginStr = (begin == null ? "0" : sf.format(begin));
 						    Thread.currentThread().setName(String.format("%s-%s-%s",targetTable.name,ctName,beginStr));
 	
-							long endTime = begin.getTime() + batch;
+							long endTime = begin.getTime() + window;
 							if (endTime < batchTaskTime) {
 								end = new Date(endTime);
 								executeTask(begin, end, targetTable);
@@ -230,50 +237,98 @@ public class SqlStatement {
 		}
 	}
 
+	/**
+	* Sets the primary key column name used by this sync statement.
+	* @param primaryKey - the primary key column
+	* */
 	public void setPrimaryKey(String primaryKey) {
 		this.primaryKey = primaryKey;
 	}
 
+	/**
+	* Returns the primary key column name used by this sync statement.
+	* @return the primary key column
+	* */
 	public String getPrimaryKey() {
 		return this.primaryKey;
 	}
 
+	/**
+	* Sets the incremental (time) key column name used by this sync statement.
+	* @param key - the incremental key column
+	* */
 	public void setKey(String key) {
 		this.key = key;
 	}
 
+	/**
+	* Returns the incremental (time) key column name used by this sync statement.
+	* @return the incremental key column
+	* */
 	public String getKey() {
 		return this.key;
 	}
 
+	/**
+	* Sets the scan window size (the time span each worker round walks back).
+	* @param period - the scan window in milliseconds
+	* */
 	public void setPeriod(Long period) {
 		this.period = period;
 	}
 
+	/**
+	* Returns the scan window size in milliseconds.
+	* @return the scan window
+	* */
 	public Long getPeriod() {
 		return this.period;
 	}
 
-	public void setBatch(Long batch) {
-		this.batch = batch;
+	/**
+	* Sets the batch window size (the time span processed per executeTask call).
+	* @param window - the batch window in milliseconds
+	* */
+	public void setWindow(Long window) {
+		this.window = window;
 	}
 
-	public Long getBatch() {
-		return this.batch;
+	/**
+	* Returns the batch window size in milliseconds.
+	* @return the batch window
+	* */
+	public Long getWindow() {
+		return this.window;
 	}
 
+	/**
+	* Sets whether this sync statement is enabled.
+	* @param enable - true to enable the worker
+	* */
 	public void setEnable(boolean enable) {
 		this.enable = enable;
 	}
 
+	/**
+	* Returns whether this sync statement is enabled.
+	* @return true when enabled
+	* */
 	public boolean isEnable() {
 		return this.enable;
 	}
-	
+
+	/**
+	* Sets the ignored trailing window (records newer than this are not synced).
+	* @param ignoredPeriod - the ignored window in milliseconds
+	* */
 	public void setIgnoredPeriod(Long ignoredPeriod) {
 		this.ignoredPeriod = ignoredPeriod;
 	}
 
+	/**
+	* Returns the ignored trailing window in milliseconds.
+	* @return the ignored window
+	* */
 	public Long getIgnoredPeriod() {
 		return this.ignoredPeriod;
 	}

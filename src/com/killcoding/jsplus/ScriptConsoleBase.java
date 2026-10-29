@@ -123,7 +123,10 @@ public class ScriptConsoleBase implements ConsoleImpl {
 		}
 	}
 
-	/** Single exit point for every "quit console" path (P2-4). */
+	/**
+	* Single exit point for every "quit console" path.
+	* @param status - the JVM exit code
+	* */
 	protected static void exitConsole(int status) {
 		EXIT_POLICY.exit(status);
 	}
@@ -1135,6 +1138,11 @@ public class ScriptConsoleBase implements ConsoleImpl {
 		return command.matches(".*("+commandCancel+"){1,}[\s]*$");
 	}
 
+	/**
+	* Parses command-line arguments into a name -> value map ("-name value" pairs).
+	* @param args - the raw arguments
+	* @return the parsed map (null when args is null)
+	* */
 	public static Map<String, Object> parseArgs(String[] args) {
 
 		if (args == null)
@@ -1544,6 +1552,10 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	    return "";
 	}
 
+	/**
+	* Returns the registry of connected consoles (connection id -> console).
+	* @return the consoles map
+	* */
 	public Map<Integer,ScriptConsole> getConsoles(){
 	    return CONNECT_CONSOLES;
 	}

@@ -31,11 +31,9 @@ import java.net.InetAddress;
 import com.killcoding.log.Logger;
 import java.net.URL;
 
-
 import java.io.File;
 import com.killcoding.log.LoggerFactory;
 import java.net.URLClassLoader;
-
 
 import java.security.MessageDigest;
 import com.killcoding.file.BaseFile;
@@ -46,125 +44,152 @@ import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.io.IOException;
 
-
 /**
-* Common static utility methods: hostname cache (volatile HOSTNAME), external-jar loading, blank /
-* null checks and miscellaneous helpers shared across the killcoding packages.
-* */
+ * Common static utility methods: hostname cache (volatile HOSTNAME),
+ * external-jar loading, blank /
+ * null checks and miscellaneous helpers shared across the killcoding packages.
+ */
 public final class CommonTools {
 
-    private static volatile String HOSTNAME = null;
-
+	private static volatile String HOSTNAME = null;
 
 	/**
-	* Performs the loadJars operation
-	* @param libDirs - the libDirs
-	* @return the loadJars result
-	* */
+	 * Performs the loadJars operation
+	 * 
+	 * @param libDirs - the libDirs
+	 * @return the loadJars result
+	 */
 	public static URLClassLoader loadJars(String libDirs) throws Exception {
-        return loadJars(libDirs,ClassLoader.getSystemClassLoader());
+		return loadJars(libDirs, ClassLoader.getSystemClassLoader());
 	}
 
 	/**
-	* Performs the loadJars operation
-	* @param libDirs - the libDirs
-	* @return the loadJars result
-	* */
+	 * Performs the loadJars operation
+	 * 
+	 * @param libDirs - the libDirs
+	 * @return the loadJars result
+	 */
 	public static URLClassLoader loadJars(String[] libDirs) throws Exception {
-        return loadJars(libDirs,ClassLoader.getSystemClassLoader());
+		return loadJars(libDirs, ClassLoader.getSystemClassLoader());
 	}
 
 	/**
-	* Performs the loadJars operation
-	* @param libDirs - the libDirs
-	* @param classLoader - the classLoader
-	* @return the loadJars result
-	* */
-	public static URLClassLoader loadJars(String[] libDirs,ClassLoader classLoader) throws Exception {
-	    return loadJars(String.join(";",libDirs),classLoader);
+	 * Performs the loadJars operation
+	 * 
+	 * @param libDirs     - the libDirs
+	 * @param classLoader - the classLoader
+	 * @return the loadJars result
+	 */
+	public static URLClassLoader loadJars(String[] libDirs, ClassLoader classLoader) throws Exception {
+		return loadJars(String.join(";", libDirs), classLoader);
 	}
 
 	/**
-	* Performs the loadJars operation
-	* @param libDirs - the libDirs
-	* @param classLoader - the classLoader
-	* @return the loadJars result
-	* */
-	public static URLClassLoader loadJars(String libDirs,ClassLoader classLoader) throws Exception {
+	 * Performs the loadJars operation
+	 * 
+	 * @param libDirs     - the libDirs
+	 * @param classLoader - the classLoader
+	 * @return the loadJars result
+	 */
+	public static URLClassLoader loadJars(String libDirs, ClassLoader classLoader) throws Exception {
 		if (libDirs == null)
 			return null;
 
 		List<URL> urlList = new ArrayList<URL>();
 		List<String> libDirArr = Arrays.asList(libDirs.split(";"));
-		for(String libDir : libDirArr){
-    		File jars = new File(libDir);
-    		if(!jars.exists())
-    		    continue;
+		for (String libDir : libDirArr) {
+			File jars = new File(libDir);
+			if (!jars.exists())
+				continue;
 
-    		if(jars.isDirectory()){
-        		List<String> list = findFiles(jars.getAbsolutePath(),".jar");
-        		for(String jarPath : list){
-        		    urlList.add(new File(jarPath).toURI().toURL());
-        		}
-    		}
-    		if(jars.isFile()){
-    		   boolean isJar = jars.getName().toLowerCase().endsWith(".jar");
+			if (jars.isDirectory()) {
+				List<String> list = findFiles(jars.getAbsolutePath(), ".jar");
+				for (String jarPath : list) {
+					urlList.add(new File(jarPath).toURI().toURL());
+				}
+			}
+			if (jars.isFile()) {
+				boolean isJar = jars.getName().toLowerCase().endsWith(".jar");
 
-    		   if(isJar) urlList.add(jars.toURI().toURL());
-    		}
+				if (isJar)
+					urlList.add(jars.toURI().toURL());
+			}
 		}
 
-		URL[] urls = urlList.toArray(new URL[]{});
+		URL[] urls = urlList.toArray(new URL[] {});
 
-		URLClassLoader cl = new URLClassLoader(urls,classLoader);
+		URLClassLoader cl = new URLClassLoader(urls, classLoader);
 		return cl;
 	}
 
-    public static List<String> findFiles(String dir,String ext) throws IOException {
+	/**
+	 * Recursively finds files under a directory with the given extension.
+	 * 
+	 * @param dir - the root directory
+	 * @param ext - the file extension filter (e.g. "java")
+	 * @return the absolute paths of the matching files
+	 */
+	public static List<String> findFiles(String dir, String ext) throws IOException {
 
-        if(!new File(dir).exists()) return new ArrayList<String>();
+		if (!new File(dir).exists())
+			return new ArrayList<String>();
 
-        List<Path> paths = Files.walk(Paths.get(dir))
-                .filter(Files::isRegularFile)
-                .filter(path -> path.toString().toLowerCase().endsWith(ext))
-                .collect(Collectors.toList());
+		List<Path> paths = Files.walk(Paths.get(dir))
+				.filter(Files::isRegularFile)
+				.filter(path -> path.toString().toLowerCase().endsWith(ext))
+				.collect(Collectors.toList());
 
-        return paths.stream()
-                      .map(path -> path.toAbsolutePath().toString())
-                      .collect(Collectors.toList());
-    }
-
-    public static List<String> findFiles(String dir) throws IOException {
-
-        if(!new File(dir).exists()) return new ArrayList<String>();
-
-        List<Path> paths = Files.walk(Paths.get(dir))
-                .filter(Files::isRegularFile)
-                .collect(Collectors.toList());
-
-        return paths.stream()
-                      .map(path -> path.toAbsolutePath().toString())
-                      .collect(Collectors.toList());
-    }
-
-    public static List<String> findSubDirs(String dir) throws IOException {
-
-        if(!new File(dir).exists()) return new ArrayList<String>();
-
-        List<Path> paths = Files.walk(Paths.get(dir))
-                .filter(Files::isDirectory)
-                .collect(Collectors.toList());
-
-        return paths.stream()
-                      .map(path -> path.toAbsolutePath().toString())
-                      .collect(Collectors.toList());
-    }
+		return paths.stream()
+				.map(path -> path.toAbsolutePath().toString())
+				.collect(Collectors.toList());
+	}
 
 	/**
-	* Performs the getJarPath operation
-	* @param clazz - the clazz
-	* @return the getJarPath result
-	* */
+	 * Recursively finds every file under a directory.
+	 * 
+	 * @param dir - the root directory
+	 * @return the absolute paths of all files
+	 */
+	public static List<String> findFiles(String dir) throws IOException {
+
+		if (!new File(dir).exists())
+			return new ArrayList<String>();
+
+		List<Path> paths = Files.walk(Paths.get(dir))
+				.filter(Files::isRegularFile)
+				.collect(Collectors.toList());
+
+		return paths.stream()
+				.map(path -> path.toAbsolutePath().toString())
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Recursively finds every sub-directory under a directory.
+	 * 
+	 * @param dir - the root directory
+	 * @return the absolute paths of the sub-directories
+	 */
+	public static List<String> findSubDirs(String dir) throws IOException {
+
+		if (!new File(dir).exists())
+			return new ArrayList<String>();
+
+		List<Path> paths = Files.walk(Paths.get(dir))
+				.filter(Files::isDirectory)
+				.collect(Collectors.toList());
+
+		return paths.stream()
+				.map(path -> path.toAbsolutePath().toString())
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Performs the getJarPath operation
+	 * 
+	 * @param clazz - the clazz
+	 * @return the getJarPath result
+	 */
 	public static String getJarPath(Class<?> clazz) {
 		try {
 			return new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())
@@ -176,10 +201,11 @@ public final class CommonTools {
 	}
 
 	/**
-	* Performs the isBlank operation
-	* @param o - the o
-	* @return the isBlank result
-	* */
+	 * Performs the isBlank operation
+	 * 
+	 * @param o - the o
+	 * @return the isBlank result
+	 */
 	public static boolean isBlank(Object o) {
 		if (o == null)
 			return true;
@@ -191,127 +217,91 @@ public final class CommonTools {
 	}
 
 	/**
-	* Performs the getSystemProperties operation
-	* @param clazz - the clazz
-	* @param envKey - the envKey
-	* @param propFileName - the propFileName
-	* @return the getSystemProperties result
-	* */
+	 * Performs the getSystemProperties operation
+	 * 
+	 * @param clazz        - the clazz
+	 * @param envKey       - the envKey
+	 * @param propFileName - the propFileName
+	 * @return the getSystemProperties result
+	 */
 	public static File getSystemProperties(Class<?> clazz, String envKey, String propFileName) {
 		try {
-			File envFile = null;
-
-			String envFilePath = System.getenv(envKey) == null ? System.getProperty(envKey) : System.getenv(envKey);
-			if (envFilePath != null) {
-				envFile = new File(envFilePath);
-				if(!envFile.exists()){
-				    Logger.systemDebug(CommonTools.class,"Missing %s",envFilePath);
-				}
-			}
-
-			if (envFile != null && envFile.exists()) {
-			    Logger.systemDebug(CommonTools.class,"Found %s",envFile.getPath());
-				return envFile;
-			}
-
-			String jarPath = new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().getPath();
-			File jarConfigFile = new File(String.format("%s/%s", jarPath, propFileName));
-
-			if(!jarConfigFile.exists()) {
-			    jarConfigFile = new File(String.format("%s/config/%s", jarPath, propFileName));
-			}
-
-			if (jarConfigFile.exists()) {
-                Logger.systemDebug(CommonTools.class,"Found %s",jarConfigFile.getPath());
-				return jarConfigFile;
-			}
-
-			String jarParentPath = new File(jarPath).getParentFile()
-					.getPath();
-
-			File jarParentConfigFile = new File(String.format("%s/%s", jarParentPath, propFileName));
-
-			if(!jarParentConfigFile.exists()) {
-			    jarParentConfigFile = new File(String.format("%s/config/%s", jarParentPath, propFileName));
-			}
-
-            if (jarParentConfigFile.exists()) {
-                Logger.systemDebug(CommonTools.class,"Found %s",jarParentConfigFile.getPath());
-				return jarParentConfigFile;
-			}
-
-			URL classPathFileUrl = clazz.getResource(String.format("/%s", propFileName));
-			if (classPathFileUrl != null) {
-			    Logger.systemDebug(CommonTools.class,"Found %s",classPathFileUrl.getPath());
-				return new File(classPathFileUrl.toURI());
-			}
-
-            classPathFileUrl = clazz.getResource(String.format("/config/%s", propFileName));
-			if (classPathFileUrl != null) {
-			    Logger.systemDebug(CommonTools.class,"Found %s",classPathFileUrl.getPath());
-				return new File(classPathFileUrl.toURI());
-			}
-			try{
-    			classPathFileUrl = clazz.getResource("/");
-    			if (classPathFileUrl != null) {
-    			    String classParentPath = new File(classPathFileUrl.toURI()).getParent();
-    			    if(classParentPath != null){
-        			    File classParentConfigFile = new File(String.format("%s/%s", classParentPath, propFileName));
-
-        			    if(!classParentConfigFile.exists()) {
-        			        classParentConfigFile = new File(String.format("%s/config/%s", classParentPath, propFileName));
-        			    }
-
-        			    if(!classParentConfigFile.exists()) {
-        			        Logger.systemDebug(CommonTools.class,"Found %s",classParentConfigFile.getPath());
-        			        return classParentConfigFile;
-        			    }
-    			    }
-    			}
-				String configPath = System.getenv("JS_PLUS_PATH") + "/config/" + propFileName;
-				File configFile = new File(configPath);
-				if (configFile.exists()) {
-					Logger.systemDebug(CommonTools.class,"Found %s",configFile.getPath());
+			File configFile = null;
+			String configPath = null;
+			try {
+				configPath = System.getenv(envKey) == null ? System.getProperty(envKey) : System.getenv(envKey);
+				if (configPath != null) {
+					configFile = new File(configPath);
+					if (!configFile.exists()) {
+						Logger.systemError(CommonTools.class, "Missing {}", configFile);
+					}
 					return configFile;
 				}
-			}catch(Exception e){
-			    Logger.systemDebug(CommonTools.class,"Missing class path.");
-			    Logger.systemDebug(CommonTools.class, e.getMessage(),e);
+
+				String jsPlusPath = System.getenv("JS_PLUS_PATH");
+				if(jsPlusPath != null){
+					configPath = jsPlusPath + "/config/" + propFileName;
+					configFile = new File(configPath);
+					if (!configFile.exists()) {
+						Logger.systemDebug(CommonTools.class, "Missing {}", configFile);
+					}
+					return configFile;	
+				}
+				
+				configPath = new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())
+						.getParentFile().getPath();
+				configFile = new File(String.format("%s/%s", configPath, propFileName));
+				if (configFile.exists()) {
+					return configFile;
+				}else{
+					Logger.systemDebug(CommonTools.class, "Missing {}", configFile);
+				}
+				configFile = new File(String.format("%s/config/%s", configPath, propFileName));
+				if (!configFile.exists()) {
+					Logger.systemDebug(CommonTools.class, "Missing {}", configFile);
+				}
+				return configFile;
+			} catch (Exception e) {
+				Logger.systemDebug(CommonTools.class, "Missing class path.");
+				Logger.systemDebug(CommonTools.class, e.getMessage(), e);
 			}
 		} catch (Exception e) {
-            Logger.systemError(CommonTools.class, e);
+			Logger.systemError(CommonTools.class, e);
 		}
-		Logger.systemError(CommonTools.class,"Missing %s",propFileName);
+		Logger.systemError(CommonTools.class, "Missing {}", propFileName);
 		return null;
 	}
 
 	/**
-	* Performs the getHostname operation
-	* @return the getHostname result
-	* */
+	 * Performs the getHostname operation
+	 * 
+	 * @return the getHostname result
+	 */
 	public synchronized static String getHostname() {
 
-	    if(HOSTNAME != null) return HOSTNAME;
+		if (HOSTNAME != null)
+			return HOSTNAME;
 
-	    HOSTNAME = System.getenv("HOSTNAME");
-        if(HOSTNAME == null){
-    		try {
-    			InetAddress addr = InetAddress.getLocalHost();
-    			HOSTNAME = addr.getHostName();
-    			System.setProperty("HOSTNAME",HOSTNAME);
-    			System.setProperty("hostname",HOSTNAME);
-    		} catch (Exception e) {
-    			Logger.systemError(CommonTools.class, e);
-    		}
-        }
+		HOSTNAME = System.getenv("HOSTNAME");
+		if (HOSTNAME == null) {
+			try {
+				InetAddress addr = InetAddress.getLocalHost();
+				HOSTNAME = addr.getHostName();
+				System.setProperty("HOSTNAME", HOSTNAME);
+				System.setProperty("hostname", HOSTNAME);
+			} catch (Exception e) {
+				Logger.systemError(CommonTools.class, e);
+			}
+		}
 		return HOSTNAME;
 	}
 
 	/**
-	* Performs the generateId operation
-	* @param len - the len
-	* @return the generateId result
-	* */
+	 * Performs the generateId operation
+	 * 
+	 * @param len - the len
+	 * @return the generateId result
+	 */
 	public static String generateId(int len) {
 		final Character[] CHARS = new Character[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c',
 				'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
@@ -324,6 +314,13 @@ public final class CommonTools {
 		return id.toString();
 	}
 
+	/**
+	 * Splits a list into roughly equal-sized chunks of at most the given limit.
+	 * 
+	 * @param source - the source list
+	 * @param limit  - the maximum chunk size
+	 * @return the partitioned list
+	 */
 	public static <T> List<List<T>> averageAssign(List<T> source, int limit) {
 		if (null == source || source.isEmpty()) {
 			return Collections.emptyList();
@@ -348,10 +345,11 @@ public final class CommonTools {
 	}
 
 	/**
-	* Performs the md5 operation
-	* @param text - the text
-	* @return the md5 result
-	* */
+	 * Performs the md5 operation
+	 * 
+	 * @param text - the text
+	 * @return the md5 result
+	 */
 	public static String md5(String text) {
 		char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 				'A', 'B', 'C', 'D', 'E', 'F' };
@@ -371,7 +369,7 @@ public final class CommonTools {
 			}
 			return new String(str);
 		} catch (Exception e) {
-		    LoggerFactory.getLogger(CommonTools.class).error(e.getMessage(),e);
+			LoggerFactory.getLogger(CommonTools.class).error(e.getMessage(), e);
 			return null;
 		}
 

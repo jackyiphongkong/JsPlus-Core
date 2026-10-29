@@ -15,6 +15,7 @@
 //            removes, negative life skips caching.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 
@@ -47,6 +48,7 @@ try {
     // C1: set(name, value) + get roundtrip (2-arg = never expire)
     Cache.set("tc-key1", "cache-v1");
     var v1 = Cache.get("tc-key1");
+    Logger.systemMark("TestCache.js", "C1");
     check({
         caseId: "C1",
         name: "Cache.set(name,value) + get roundtrip",
@@ -60,6 +62,7 @@ try {
     // C2: set(name, value, 0) - 3-arg overload keeps life=0 = never expire (bug B fix)
     Cache.set("tc-key2", "cache-v2", 0);
     var v2 = Cache.get("tc-key2");
+    Logger.systemMark("TestCache.js", "C2");
     check({
         caseId: "C2",
         name: "Cache.set(name,value,0) means never expire",
@@ -73,6 +76,7 @@ try {
     // C3: included true -> false
     var in1 = Cache.included("tc-key1");
     var in2 = Cache.included("tc-no-such-key");
+    Logger.systemMark("TestCache.js", "C3");
     check({
         caseId: "C3",
         name: "Cache.included detects presence",
@@ -88,6 +92,7 @@ try {
     var v4a = Cache.get("tc-key4");
     Thread.sleep(1300);
     var v4b = Cache.get("tc-key4");
+    Logger.systemMark("TestCache.js", "C4");
     check({
         caseId: "C4",
         name: "Cache.set(name,value,1) expires after ~1s",
@@ -101,6 +106,7 @@ try {
     // C5: large life (> 24.8 days) must NOT overflow int math into immediate expiry (bug A fix)
     Cache.set("tc-key5", "cache-v5", 31536000); // 365 days
     var v5 = Cache.get("tc-key5");
+    Logger.systemMark("TestCache.js", "C5");
     check({
         caseId: "C5",
         name: "Cache.set with 365-day life does not expire immediately",
@@ -114,6 +120,7 @@ try {
     // C6: negative life skips caching
     Cache.set("tc-key6", "cache-v6", -1);
     var v6 = Cache.get("tc-key6");
+    Logger.systemMark("TestCache.js", "C6");
     check({
         caseId: "C6",
         name: "Cache.set with negative life skips caching",
@@ -129,6 +136,7 @@ try {
     Cache.set("tc-key7", null);
     var v7 = Cache.get("tc-key7");
     var in7 = Cache.included("tc-key7");
+    Logger.systemMark("TestCache.js", "C7");
     check({
         caseId: "C7",
         name: "Cache.set(name, null) removes the entry",
@@ -144,6 +152,7 @@ try {
     Cache.remove("tc-key8");
     var v8 = Cache.get("tc-key8");
     var in8 = Cache.included("tc-key8");
+    Logger.systemMark("TestCache.js", "C8");
     check({
         caseId: "C8",
         name: "Cache.remove deletes the entry",
@@ -161,6 +170,7 @@ try {
     for (var ni = 0; ni < names.size(); ni++) {
         if (names.get(ni) === "tc-key9") { has9 = true; }
     }
+    Logger.systemMark("TestCache.js", "C9");
     check({
         caseId: "C9",
         name: "Cache.getNames returns the stored keys",
@@ -175,6 +185,7 @@ try {
     Cache.removeAll();
     var v10 = Cache.get("tc-key9");
     var names10 = Cache.getNames();
+    Logger.systemMark("TestCache.js", "C10");
     check({
         caseId: "C10",
         name: "Cache.removeAll clears every entry",
@@ -191,6 +202,7 @@ try {
     var sv1 = StoredCache.get("sc-key1");
     StoredCache.remove("sc-key1");
     var sv2 = StoredCache.get("sc-key1");
+    Logger.systemMark("TestCache.js", "C11");
     check({
         caseId: "C11",
         name: "StoredCache.set/get/remove roundtrip",
@@ -205,6 +217,7 @@ try {
     Cache.removeAll();
 
 } catch (e) {
+    Logger.systemMark("TestCache.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestCache suite error",

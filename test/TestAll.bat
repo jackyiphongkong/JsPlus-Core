@@ -26,6 +26,12 @@ REM      right after the -Task completes (otherwise it blocks on the
 REM      interactive scanner, see Main.java scanner loop).
 REM   3b) Run LoadTest.js (DB CRUD load test over the same testdb) and write
 REM      docs/latest/report/LoadTest-Report.html. Any load failure fails the run.
+REM   3c) Run TestDatasource.bat LAST (after every H2-dependent step): its C17
+REM      case stops and restarts the H2 server (pool disconnect/resume proof)
+REM      and the restarted H2 is not guaranteed to stay alive, so the suite
+REM      must never run before suites that need :3306 up (e.g. TestClock's
+REM      background time-refresh cases). Contained here, right before the
+REM      StopH2/StopAll sweep below.
 REM   4) Exit with the JVM's exit code (0 = all checks passed, 1 = failure).
 REM Override via env (same convention as JsPlus-Tomcat):
 REM      JsPlus_JavaDir_JsPlus-Core   - JDK directory under Java\ (default: default)
@@ -159,7 +165,7 @@ REM Main scanner gets EOF right after the -Task finishes and the JVM exits
 REM cleanly (Main.java).
 REM ------------------------------------------------------------------
 set JSPLUS_TEST_EXIT=1
-%JAVA_BIN% %JvmParams% -DAPP_REMOTE_FILE="%JS_PLUS_PATH_ORIGIN%config\RemoteFile.properties" -DAPP_CLOCK="%JS_PLUS_PATH_ORIGIN%config\AppClock.properties" -DAPP_IDENTITY_CARD="%JS_PLUS_PATH_ORIGIN%config\IdentityCard.properties" -DAPP_DATASOURCE="%JS_PLUS_PATH_ORIGIN%config\TestDatasource.properties" -cp "%DEPEND_LIBS%" com.killcoding.jsplus.Main -ScriptEngine "%SCRIPT_ENGINE%" -Env script -WriteHistory false -Task "%JS_PLUS_PATH%../test/TestAll.js" < NUL
+%JAVA_BIN% %JvmParams% -DAPP_REMOTE_FILE="%JS_PLUS_PATH_ORIGIN%config\RemoteFile.properties" -DAPP_CLOCK="%JS_PLUS_PATH_ORIGIN%config\Clock.properties" -DAPP_IDENTITY_CARD="%JS_PLUS_PATH_ORIGIN%config\IdentityCard.properties" -DAPP_DATASOURCE="%JS_PLUS_PATH_ORIGIN%config\TestDatasource.properties" -cp "%DEPEND_LIBS%" com.killcoding.jsplus.Main -ScriptEngine "%SCRIPT_ENGINE%" -Env script -WriteHistory false -Task "%JS_PLUS_PATH%../test/TestAll.js" < NUL
 set "RC=%ERRORLEVEL%"
 echo TestAll exit code: %RC%
 
@@ -175,6 +181,24 @@ set JSPLUS_TEST_EXIT=1
 set "RC_LOAD=%ERRORLEVEL%"
 echo LoadTest exit code: %RC_LOAD%
 if not "%RC_LOAD%"=="0" set "RC=%RC_LOAD%"
+
+REM ------------------------------------------------------------------
+REM Step 3c: TestDatasource pool suite runs LAST (after every suite that
+REM depends on a live H2). Its C17 case deliberately stops and restarts the
+REM H2 server to prove the pool's disconnect/resume behaviour; the restarted
+REM H2 is not guaranteed to stay alive, so the suite must NOT run before
+REM TestClock's background-refresh cases (they need :3306 up). Running it
+REM here, right before the StopH2/StopAll sweep, keeps the restarted-server
+REM instability contained to this suite only. TestDatasource.bat reuses the
+REM already-running H2 (its :3306 check below skips the init/start step) and
+REM its own exit code is merged into the overall RC below.
+REM ------------------------------------------------------------------
+echo [TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)...
+call "%BIN_PATH%TestDatasource.bat" %SCRIPT_ENGINE%
+set "RC_DS=%ERRORLEVEL%"
+echo TestDatasource exit code: %RC_DS%
+if not "%RC_DS%"=="0" set "RC=%RC_DS%"
+
 REM Step 4: stop the H2 server started for this run (java ghost keyed by
 REM script/StartH2.js) so TestAll leaves nothing behind. RC was captured
 REM above. Then, per the project convention, the run finishes with a full

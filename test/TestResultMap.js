@@ -7,6 +7,7 @@
 //            setValue/toString, clone() independence and null handling.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var HashMap = Java.type("java.util.HashMap");
 var ResultMap = Java.type("com.killcoding.tool.ResultMap");
@@ -35,6 +36,7 @@ try {
     var rm1 = new ResultMap();
     rm1.put("name", "jsplus");
     rm1.put("version", "6.1");
+    Logger.systemMark("TestResultMap.js", "C1");
     check({
         caseId: "C1",
         name: "put()/get()/size() basic contract",
@@ -58,6 +60,7 @@ try {
         var e2 = it2.next();
         keys2 = keys2 + String(e2.getKey());
     }
+    Logger.systemMark("TestResultMap.js", "C2");
     check({
         caseId: "C2",
         name: "entrySet() iterates in insertion order",
@@ -74,6 +77,7 @@ try {
     var it3 = rm3.entrySet().iterator();
     var e3 = it3.next();
     var old3 = e3.setValue("y");
+    Logger.systemMark("TestResultMap.js", "C3");
     check({
         caseId: "C3",
         name: "Entry.getValue()/setValue() contract",
@@ -93,6 +97,7 @@ try {
     var e4b = rm4b.entrySet().iterator().next();
     var eq4 = e4a.equals(e4b);
     var hc4 = e4a.hashCode() === e4b.hashCode();
+    Logger.systemMark("TestResultMap.js", "C4");
     check({
         caseId: "C4",
         name: "Entry.equals/hashCode reflect key+value",
@@ -108,6 +113,7 @@ try {
     rm5.put("a", "1");
     rm5.put("b", "2");
     var old5 = rm5.remove("a");
+    Logger.systemMark("TestResultMap.js", "C5");
     check({
         caseId: "C5",
         name: "remove(key) drops the entry",
@@ -124,6 +130,7 @@ try {
     rm6.put("a", "1");
     rm6.put("b", "2");
     rm6.clear();
+    Logger.systemMark("TestResultMap.js", "C6");
     check({
         caseId: "C6",
         name: "clear() empties the map",
@@ -139,6 +146,7 @@ try {
     src7.put("x", "1");
     src7.put("y", "2");
     var rm7 = new ResultMap(src7);
+    Logger.systemMark("TestResultMap.js", "C7");
     check({
         caseId: "C7",
         name: "ResultMap(Map) copy constructor",
@@ -152,6 +160,7 @@ try {
     // C8: capacity constructor accepts an initial capacity
     var rm8 = new ResultMap(16);
     rm8.put("a", "1");
+    Logger.systemMark("TestResultMap.js", "C8");
     check({
         caseId: "C8",
         name: "ResultMap(int capacity) works",
@@ -168,6 +177,7 @@ try {
     var clone9 = rm9.clone();
     clone9.put("b", "2");
     var independent9 = (rm9.size() === 1 && clone9.size() === 2);
+    Logger.systemMark("TestResultMap.js", "C9");
     check({
         caseId: "C9",
         name: "clone() is an independent copy",
@@ -183,6 +193,7 @@ try {
     rm10.put("k", "v");
     var e10 = rm10.entrySet().iterator().next();
     var s10 = e10.toString();
+    Logger.systemMark("TestResultMap.js", "C10");
     check({
         caseId: "C10",
         name: "Entry.toString() renders key=value",
@@ -197,6 +208,7 @@ try {
     var rm11 = new ResultMap();
     rm11.put("k", "first");
     var old11 = rm11.put("k", "second");
+    Logger.systemMark("TestResultMap.js", "C11");
     check({
         caseId: "C11",
         name: "put() on an existing key overwrites and returns the old value",
@@ -212,6 +224,7 @@ try {
     var rm12 = new ResultMap();
     rm12.put(null, "nulKey");
     rm12.put("nulVal", null);
+    Logger.systemMark("TestResultMap.js", "C12");
     check({
         caseId: "C12",
         name: "null key and null value are accepted",
@@ -225,6 +238,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestResultMap.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestResultMap suite error",

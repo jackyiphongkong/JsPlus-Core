@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.killcoding.dbsync;
 
 import com.killcoding.datasource.CacheDriverExecutor;
+import com.killcoding.file.DiskFile;
 import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
 import com.killcoding.tool.CommonTools;
@@ -80,13 +81,13 @@ public class Table {
 	protected Integer batch = 0;
 
 	protected Long inserterPeriod = 0L;
-	protected Long inserterBatch = 0L;
+	protected Long inserterWindow = 0L;
 
 	protected Long updaterPeriod = 0L;
-	protected Long updaterBatch = 0L;
+	protected Long updaterWindow = 0L;
 
 	protected Long deleterPeriod = 0L;
-	protected Long deleterBatch = 0L;
+	protected Long deleterWindow = 0L;
 
 	protected Long before = 0L;
 	protected Long removerTimer = 0L;
@@ -95,7 +96,11 @@ public class Table {
 	
 	private static long defaultPeriod = 24*3600*1000L;
 	private static long defaultBatch = 3600*1000L;
-
+	/**
+	* Creates a Table facade for database-wide operations (table-list resolution,
+	* no table name bound yet).
+	* @param database - the owning database facade
+	* */
 	protected Table(Database database) {
 		super();
 		this.database = database;
@@ -103,6 +108,11 @@ public class Table {
 		init();
 	}
 
+	/**
+	* Creates a Table facade bound to a named table.
+	* @param database - the owning database facade
+	* @param name - the physical table name
+	* */
 	public Table(Database database, String name) {
 		super();
 		this.database = database;
@@ -134,13 +144,13 @@ public class Table {
 		removerKey = porps.getString("Table.Remover.Key","deleted_at");
 
 		inserterPeriod = porps.getMilliSeconds("Table.Inserter.Period",defaultPeriod);
-		inserterBatch = porps.getMilliSeconds("Table.Inserter.Batch",defaultBatch);
+		inserterWindow = porps.getMilliSeconds("Table.Inserter.Window",defaultBatch);
 
 		updaterPeriod = porps.getMilliSeconds("Table.Updater.Period",defaultPeriod);
-		updaterBatch = porps.getMilliSeconds("Table.Updater.Batch",defaultBatch);
+		updaterWindow = porps.getMilliSeconds("Table.Updater.Window",defaultBatch);
 		
 		deleterPeriod = porps.getMilliSeconds("Table.Deleter.Period",defaultPeriod);
-		deleterBatch = porps.getMilliSeconds("Table.Deleter.Batch",defaultBatch);
+		deleterWindow = porps.getMilliSeconds("Table.Deleter.Window",defaultBatch);
 
 		before = porps.getMilliSeconds("Table.Remover.Before",defaultPeriod);
 		removerTimer = porps.getMilliSeconds("Table.Remover.Timer",10000L);
@@ -155,19 +165,19 @@ public class Table {
 		inserter.setPrimaryKey(primaryKey);
 		inserter.setKey(inserterKey);
 		inserter.setPeriod(inserterPeriod);
-		inserter.setBatch(inserterBatch);
+		inserter.setWindow(inserterWindow);
 		inserter.setIgnoredPeriod(ignoredPeriod);
 
 		updater.setPrimaryKey(primaryKey);
 		updater.setKey(updaterKey);
 		updater.setPeriod(updaterPeriod);
-		updater.setBatch(updaterBatch);
+		updater.setWindow(updaterWindow);
 		updater.setIgnoredPeriod(ignoredPeriod);
 
 		deleter.setPrimaryKey(primaryKey);
 		deleter.setKey(deleterKey);
 		deleter.setPeriod(deleterPeriod);
-		deleter.setBatch(deleterBatch);
+		deleter.setWindow(deleterWindow);
 		deleter.setIgnoredPeriod(ignoredPeriod);
 
 		remover.setPrimaryKey(primaryKey);
@@ -296,6 +306,13 @@ public class Table {
 	    }
 	}
 
+	/**
+	* Executes a batch insert/update with multiple record rows, splitting the
+	* records into Table.Batch-sized chunks.
+	* @param sql - the batch statement (with '?' placeholders)
+	* @param records - each inner list is one parameter set
+	* @return the total affected row count
+	* */
 	protected synchronized int batch(String sql, List<List<Object>> records) throws Exception {
 	    int rows = 0;
 		List<List<List<Object>>> recordsParts = averageAssign(records, batch);
@@ -387,7 +404,7 @@ public class Table {
 				sf = new SimpleDateFormat("HH:mm:ss.SSS");
 				String logAt = sf.format(now);
 				String msg = String.format("%s,%s,%s,%s,%s%s", logAt, action, beginStr, endStr, size, System.lineSeparator());
-				FileUtils.write(new File(logPath), msg, true);
+				new DiskFile(logPath).write(msg, true);
 				archiveLog(new File(logFolderPath));
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

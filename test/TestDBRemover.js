@@ -12,6 +12,7 @@
 //            worker, and reports which side loses the expired row.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 
 var basePath = System.getProperty("JS_PLUS_PATH");
@@ -114,6 +115,7 @@ try {
     var sourceLost = (beforeS === 2 && afterSCount === 1);
     var targetLost = (beforeT === 2 && afterTCount === 1);
     // The javadoc contract says target; the code executes on this.table (source).
+    Logger.systemMark("TestDBRemover.js", "R1");
     check({
         caseId: "R1",
         name: "Remover evidence - which database loses the expired soft-deleted row",
@@ -128,6 +130,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestDBRemover.js", "R-ERR");
     check({
         caseId: "R-ERR",
         name: "TestDBRemover suite error",

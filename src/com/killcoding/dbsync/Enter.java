@@ -65,6 +65,10 @@ public class Enter {
 
 	protected List<Database> started = new ArrayList<Database>();
 
+	/**
+	* Initialises the engine root path from the JS_PLUS_PATH system property
+	* (falls back to the jar location) and resets the instance config store.
+	* */
 	public void init() {
 		ENTER_PORPS = new ConfigProperties();
 		try {

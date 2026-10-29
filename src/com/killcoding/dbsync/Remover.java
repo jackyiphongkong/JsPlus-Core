@@ -61,6 +61,11 @@ public class Remover extends SqlStatement {
 	private Long timer = DEFAULT_TIMER;
 	private Long before = DEFAULT_BEFORE;
 
+	/**
+	* Creates a Remover worker bound to a source table. The cleanup window
+	* (timer/before) is read from the shared Table config with sane defaults.
+	* @param table - the source Table facade this worker cleans up
+	* */
 	public Remover(Table table) {
 		super(table);
 		// Read the removable-window defaults from the shared Table config so a
@@ -101,11 +106,21 @@ public class Remover extends SqlStatement {
 		table.remover.executeBatch();
 	}
 	
+	/**
+	* Starts the remover loop worker. Unlike the other workers the remover only
+	* needs the source table (the target is unused here): it probes for expired
+	* soft-deleted source rows and physically deletes them.
+	* @param targetTable - the target Table facade (unused by the remover)
+	* */
 	@Override
 	protected void syncTo(final Table targetTable) {
 	    final String ctName = this.getClass().getSimpleName();
 	    final Table sourceTable = this.table;
 		final Runnable runnable = new Runnable() {
+			/**
+			* Remover loop: repeatedly probes for expired soft-deleted rows until
+			* stop() is called.
+			* */
 			@Override
 			public void run() {
 				while (!stopped) {

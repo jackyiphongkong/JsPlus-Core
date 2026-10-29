@@ -6,6 +6,7 @@
 //            CipherTools AES/DES/3DES/RSA encrypt-decrypt roundtrips.
 // ============================================================================
 
+var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var Arrays = Java.type("java.util.Arrays");
 var Base64Tools = Java.type("com.killcoding.tool.Base64Tools");
@@ -54,6 +55,7 @@ try {
     var dec1 = Base64Tools.decode(enc1);
     var ok1 = enc1 !== null && enc1.length > 0
         && fromUtf8(dec1) === PLAIN;
+    Logger.systemMark("TestCipherTools.js", "C1");
     check({
         caseId: "C1",
         name: "Base64 encode(byte[])/decode(char[]) roundtrip",
@@ -67,6 +69,7 @@ try {
     // C2: encodeString/decodeString String roundtrip
     var s2 = Base64Tools.encodeString(PLAIN);
     var back2 = Base64Tools.decodeString(s2);
+    Logger.systemMark("TestCipherTools.js", "C2");
     check({
         caseId: "C2",
         name: "encodeString()/decodeString() String roundtrip",
@@ -81,6 +84,7 @@ try {
     var longText3 = "line1\nline2\nline3 with unicode 中文";
     var enc3 = Base64Tools.encodeLines(toUtf8(longText3));
     var dec3 = Base64Tools.decodeLines(enc3);
+    Logger.systemMark("TestCipherTools.js", "C3");
     check({
         caseId: "C3",
         name: "encodeLines()/decodeLines() multiline roundtrip",
@@ -94,6 +98,7 @@ try {
     // C4: decode(String) overload accepts a String
     var enc4 = Base64Tools.encodeString(PLAIN);   // String helper returns a String
     var dec4 = Base64Tools.decode(enc4);          // decode(String) overload -> byte[]
+    Logger.systemMark("TestCipherTools.js", "C4");
     check({
         caseId: "C4",
         name: "decode(String) overload accepts a String",
@@ -109,6 +114,7 @@ try {
     var aesKey5 = "my-aes-test-key-000";
     var enc5 = CipherTools.AESEncrypt(aesKey5, toUtf8(PLAIN));
     var dec5 = CipherTools.AESDecrypt(aesKey5, enc5);
+    Logger.systemMark("TestCipherTools.js", "C5");
     check({
         caseId: "C5",
         name: "AESEncrypt()/AESDecrypt() roundtrip (ECB/PKCS5)",
@@ -121,6 +127,7 @@ try {
 
     // C6: generateAESKey returns exactly 16 bytes
     var key6 = CipherTools.generateAESKey("any-seed-text");
+    Logger.systemMark("TestCipherTools.js", "C6");
     check({
         caseId: "C6",
         name: "generateAESKey() returns 16 bytes",
@@ -134,6 +141,7 @@ try {
     // C7: AES with different keys produces different ciphertext
     var enc7a = CipherTools.AESEncrypt("key-AAAAAAAA", toUtf8(PLAIN));
     var enc7b = CipherTools.AESEncrypt("key-BBBBBBBB", toUtf8(PLAIN));
+    Logger.systemMark("TestCipherTools.js", "C7");
     check({
         caseId: "C7",
         name: "different AES keys yield different ciphertext",
@@ -150,6 +158,7 @@ try {
     var desIv8 = "87654321";    // 8-byte IV
     var enc8 = CipherTools.DESEncrypt(desKey8, desIv8, toUtf8(PLAIN));
     var dec8 = CipherTools.DESDecrypt(desKey8, desIv8, enc8);
+    Logger.systemMark("TestCipherTools.js", "C8");
     check({
         caseId: "C8",
         name: "DESEncrypt()/DESDecrypt() roundtrip (CBC/PKCS5)",
@@ -165,6 +174,7 @@ try {
     var des3Iv9 = "87654321";                    // 8-byte IV
     var enc9 = CipherTools._3DESEncrypt(des3Key9, des3Iv9, toUtf8(PLAIN));
     var dec9 = CipherTools._3DESDecrypt(des3Key9, des3Iv9, enc9);
+    Logger.systemMark("TestCipherTools.js", "C9");
     check({
         caseId: "C9",
         name: "_3DESEncrypt()/_3DESDecrypt() roundtrip (CBC/PKCS5)",
@@ -185,6 +195,7 @@ try {
     var shortPlain10 = "RSA-short-text";
     var enc10 = CipherTools.RSAEncrypt(pubKey10, toUtf8(shortPlain10));
     var dec10 = CipherTools.RSADecrypt(privKey10, enc10);
+    Logger.systemMark("TestCipherTools.js", "C10");
     check({
         caseId: "C10",
         name: "RSA keygen + public encrypt / private decrypt roundtrip",
@@ -201,6 +212,7 @@ try {
     // C11: RSA keys derived from the same seed are identical
     var priv11a = CipherTools.RSAPrivateKeyGen(seed10);
     var priv11b = CipherTools.RSAPrivateKeyGen(seed10);
+    Logger.systemMark("TestCipherTools.js", "C11");
     check({
         caseId: "C11",
         name: "same RSA seed produces the same key",
@@ -212,6 +224,7 @@ try {
     });
 
 } catch (e) {
+    Logger.systemMark("TestCipherTools.js", "C-ERR");
     check({
         caseId: "C-ERR",
         name: "TestCipherTools suite error",
