@@ -42,7 +42,7 @@ JvmParams="$(printenv "$JvmParamsName" || true)"
 echo "$JvmParamsName"
 
 if [ -z "$JvmParams" ]; then
-    JvmParams="-Xms1024m -Xmx1024m -Xss256k"
+    JvmParams="-Xms128m -Xmx2048m -Xss256k"
     echo "WARN: Missing ${JvmParamsName} then using default params"
 else
     echo "Using System Env JVM Params"
