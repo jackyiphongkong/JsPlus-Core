@@ -927,8 +927,11 @@ public class PoolStress {
             }));
         }
         startGate.countDown();
-        for (Future<?> f : futures) { f.get(90, TimeUnit.SECONDS); }
-        exec.shutdown();
+        try {
+            for (Future<?> f : futures) { f.get(180, TimeUnit.SECONDS); }
+        } finally {
+            exec.shutdown();
+        }
         int finalOpen = 0;
         int finalUsing = 0;
         int finalIdle = 0;

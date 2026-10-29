@@ -99,6 +99,19 @@ if [ ! -f "$JAVA_BIN" ]; then
     fi
 fi
 
+# Same fallback for the jar tool (used when archiving the test report jar):
+# CI checkouts do not ship Java/<JAVA_DIR>, so the bundled jar.exe/binary is
+# not present and we must fall back to the system JDK's jar, exactly like
+# JAVA_BIN above.
+JAR_BIN="${JS_PLUS_PATH}../Java/${JAVA_DIR}/bin/jar"
+if [ ! -f "$JAR_BIN" ]; then
+    if [ -n "$JAVA_HOME" ]; then
+        JAR_BIN="$JAVA_HOME/bin/jar"
+    else
+        JAR_BIN="jar"
+    fi
+fi
+
 JvmParamsName="JsPlus_JvmParams_${AppName}"
 JvmParams="$(printenv "$JvmParamsName" || true)"
 
@@ -266,8 +279,27 @@ else
     echo "[TestAll] Archiving test reports as docs/reports/${CORE_VERSION}.jar (docs/latest/report)..."
     mkdir -p "${JS_PLUS_PATH_ORIGIN}../docs/reports" "${JS_PLUS_PATH_ORIGIN}../docs/latest/report"
     rm -f "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar"
-    "${JS_PLUS_PATH_ORIGIN}../Java/${JAVA_DIR}/bin/jar" cf "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar" -C "${JS_PLUS_PATH_ORIGIN}../docs/latest/report" . || {
+    "${JAR_BIN}" cf "${JS_PLUS_PATH_ORIGIN}../docs/reports/${CORE_VERSION}.jar" -C "${JS_PLUS_PATH_ORIGIN}../docs/latest/report" . || {
         echo "WARN: Failed to pack test report jar (jar missing?), continuing."
     }
+    # Keep only the 10 newest report jars - the reports archive is owned by
+    # TestAll (ant only prunes its own docs/apis tree), so this suite bounds
+    # it here, right after the new jar is packed.
+    python3 - "${JS_PLUS_PATH_ORIGIN}../docs/reports" <<'PYEOF' || echo "WARN: Failed to prune docs/reports"
+import os, sys
+d = sys.argv[1]
+try:
+    jars = sorted([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.jar')],
+                  key=lambda p: os.path.getmtime(p), reverse=True)
+except OSError:
+    sys.exit(0)
+for p in jars[10:]:
+    try:
+        os.remove(p)
+    except OSError as e:
+        print("WARN: could not delete %s: %s" % (p, e))
+if len(jars) > 10:
+    print("[TestAll] Pruned docs/reports to newest 10 (%d jars kept)" % len(jars[:10]))
+PYEOF
 fi
 exit "$RC"

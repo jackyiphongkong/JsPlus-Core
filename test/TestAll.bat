@@ -239,7 +239,6 @@ if not defined CORE_VERSION (
 ) else (
     echo [TestAll] Archiving test reports as docs/reports/%CORE_VERSION%.jar ^(docs/latest/report^)...
     if not exist "%JS_PLUS_PATH_ORIGIN%..\docs\reports" mkdir "%JS_PLUS_PATH_ORIGIN%..\docs\reports"
-    if not exist "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports" mkdir "%JS_PLUS_PATH_ORIGIN%..\docs\latest\reports"
     if exist "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" del "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar"
     "%JS_PLUS_PATH_ORIGIN%..\Java\%JAVA_DIR%\bin\jar.exe" cf "%JS_PLUS_PATH_ORIGIN%..\docs\reports\%CORE_VERSION%.jar" -C "%JS_PLUS_PATH_ORIGIN%..\docs/latest/report" .
     if errorlevel 1 (
@@ -247,6 +246,10 @@ if not defined CORE_VERSION (
     ) else (
         echo [TestAll] Packed docs/reports/%CORE_VERSION%.jar
     )
+    REM Keep only the 10 newest report jars - the reports archive is owned
+    REM by TestAll (ant only prunes its own docs/apis tree), so this suite
+    REM bounds it here, right after the new jar is packed.
+    powershell -NoProfile -Command "$d='%JS_PLUS_PATH_ORIGIN%..\docs\reports'; $jars=@(Get-ChildItem -LiteralPath $d -Filter *.jar | Sort-Object LastWriteTime); if($jars.Count -gt 10){ $jars | Select-Object -First ($jars.Count-10) | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }; Write-Output ('[TestAll] Pruned docs/reports to newest 10 (' + (Get-ChildItem -LiteralPath $d -Filter *.jar).Count + ' jars kept)') }"
 )
 exit /b %RC%
 
