@@ -850,6 +850,241 @@ check({
     command: "getConnection -> kill StartH2.js -> conn.isValid broken -> BG_StartH2 -> poll SELECT 1 ok"
 });
 
+// ----------------------------------------------------------------------------
+// C18: ConnectionPool 極限測試 - 多線程併發 borrow/close 下驗證 usage 計數。
+// 用 evalJavaSource 動態編譯一個 Java 壓力類（多線程無法在 JS 單執行緒內模擬），
+// 20 個線程 × 50 輪同時向池借/還連接，監控：
+//   - maxOpenObserved 是否超過 MaxPoolSize（無超池建連）
+//   - 全部線程完成後 finalUsing==0（無洩漏：每條借出都被歸還/銷毀）
+//   - finalOpen == finalIdle + finalUsing（usage 計數自洽，open=idle+using）
+//   - exceptions 允許（99903/99904 是池滿/空池的正常拒絕，不算缺陷）
+// ----------------------------------------------------------------------------
+var SRC_POOL_STRESS = `
+import com.killcoding.datasource.ConnectionPool;
+import com.killcoding.datasource.DriverDataSource;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class PoolStress {
+    public String stress(DriverDataSource ds, ConnectionPool pool, int threads, int roundsPerThread) throws Exception {
+        final int maxPool = ds.getMaxPoolSize();
+        final int minPool = ds.getMinPoolSize();
+        final AtomicInteger borrowed = new AtomicInteger();
+        final AtomicInteger closed = new AtomicInteger();
+        final AtomicInteger nullGets = new AtomicInteger();
+        final AtomicInteger exceptions = new AtomicInteger();
+        final AtomicInteger maxOpen = new AtomicInteger();
+        final AtomicInteger maxUsing = new AtomicInteger();
+        final AtomicInteger maxIdle = new AtomicInteger();
+        final AtomicInteger maxOpenedMark = new AtomicInteger();
+        final AtomicInteger maxIdleMark = new AtomicInteger();
+        final AtomicInteger maxThreadMark = new AtomicInteger();
+        final CountDownLatch startGate = new CountDownLatch(1);
+        final ExecutorService exec = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<Future<?>>();
+        String begin = snapshot(pool, minPool, maxPool);
+        for (int t = 0; t < threads; t++) {
+            futures.add(exec.submit(new Runnable() {
+                public void run() {
+                    try { startGate.await(); } catch (InterruptedException ie) { }
+                    for (int r = 0; r < roundsPerThread; r++) {
+                        Connection conn = null;
+                        try {
+                            conn = ds.getConnection();
+                            if (conn == null) { nullGets.incrementAndGet(); continue; }
+                            borrowed.incrementAndGet();
+                            int open = pool.getOpenConnectionSize();
+                            int using = pool.getConnectionUsingAtMark().size();
+                            int idle = pool.size();
+                            int openedMark = pool.getConnectionOpenedAtMark().size();
+                            int idleMark = pool.getConnectionIdleBeginMark().size();
+                            int threadMark = pool.getConnectionThreadMark().size();
+                            if (open > maxOpen.get()) { maxOpen.set(open); }
+                            if (using > maxUsing.get()) { maxUsing.set(using); }
+                            if (idle > maxIdle.get()) { maxIdle.set(idle); }
+                            if (openedMark > maxOpenedMark.get()) { maxOpenedMark.set(openedMark); }
+                            if (idleMark > maxIdleMark.get()) { maxIdleMark.set(idleMark); }
+                            if (threadMark > maxThreadMark.get()) { maxThreadMark.set(threadMark); }
+                            conn.getAutoCommit();
+                            conn.close();
+                            closed.incrementAndGet();
+                        } catch (Exception e) {
+                            exceptions.incrementAndGet();
+                        } finally {
+                            if (conn != null) {
+                                try { conn.close(); } catch (Exception e2) { }
+                            }
+                        }
+                    }
+                }
+            }));
+        }
+        startGate.countDown();
+        for (Future<?> f : futures) { f.get(90, TimeUnit.SECONDS); }
+        exec.shutdown();
+        int finalOpen = 0;
+        int finalUsing = 0;
+        int finalIdle = 0;
+        boolean consistent = false;
+        for (int s = 0; s < 4; s++) {
+            Thread.sleep(1200);
+            finalOpen = pool.getOpenConnectionSize();
+            finalUsing = pool.getConnectionUsingAtMark().size();
+            finalIdle = pool.size();
+            if (finalOpen == finalIdle + finalUsing) { consistent = true; break; }
+        }
+        String finalSnap = snapshot(pool, minPool, maxPool);
+        String phase2 = holdAndCheck(ds, pool, maxPool);
+        String phase3 = timeoutAndCheck(ds, pool);
+        return "threads=" + threads + " rounds=" + roundsPerThread
+            + " borrowed=" + borrowed.get() + " closed=" + closed.get()
+            + " nullGets=" + nullGets.get() + " exceptions=" + exceptions.get()
+            + " maxOpenObserved=" + maxOpen.get() + " maxUsingObserved=" + maxUsing.get()
+            + " maxIdleObserved=" + maxIdle.get()
+            + " maxOpenedMarkObserved=" + maxOpenedMark.get()
+            + " maxIdleMarkObserved=" + maxIdleMark.get()
+            + " maxThreadMarkObserved=" + maxThreadMark.get()
+            + " finalOpen=" + finalOpen + " finalUsing=" + finalUsing + " finalIdle=" + finalIdle
+            + " maxPool=" + maxPool + " consistent=" + consistent
+            + " begin=" + begin + " final=" + finalSnap
+            + " " + phase2 + " " + phase3;
+    }
+
+    // Phase 2: hold 80% of the pool to prove the using counter is live
+    // (borrow -> stay -> snapshot using == held -> return all).
+    private String holdAndCheck(DriverDataSource ds, ConnectionPool pool, int maxPool) throws Exception {
+        int hold = Math.max(1, (int) (maxPool * 0.8));
+        List<Connection> held = new ArrayList<Connection>();
+        int got = 0;
+        for (int i = 0; i < hold; i++) {
+            try {
+                Connection c = ds.getConnection();
+                if (c == null) { break; }
+                held.add(c);
+                got++;
+            } catch (Exception e) { break; }
+        }
+        Thread.sleep(300);
+        int using = pool.getConnectionUsingAtMark().size();
+        int idle = pool.size();
+        int open = pool.getOpenConnectionSize();
+        boolean usingOk = (got > 0) && (using == got) && (open == idle + using);
+        for (Connection c : held) {
+            try { c.close(); } catch (Exception e) { }
+        }
+        Thread.sleep(500);
+        int usingAfter = pool.getConnectionUsingAtMark().size();
+        return "held=" + got + " usingDuring=" + using + " idleDuring=" + idle
+            + " openDuring=" + open + " usingOk=" + usingOk
+            + " usingAfterClose=" + usingAfter;
+    }
+
+    // Phase 3: hold one borrowed connection past Timeout and prove the pool
+    // worker aborts it (the using counter drops back to the pre-borrow level).
+    private String timeoutAndCheck(DriverDataSource ds, ConnectionPool pool) throws Exception {
+        int usingBefore = pool.getConnectionUsingAtMark().size();
+        Connection c = null;
+        try { c = ds.getConnection(); } catch (Exception e) { }
+        if (c == null) { return "timeoutConn=null timeoutAborted=false"; }
+        int usingAfterBorrow = pool.getConnectionUsingAtMark().size();
+        boolean inUsing = usingAfterBorrow == usingBefore + 1;
+        Long to = ds.getTimeout();
+        int timeoutSec = (to == null || to <= 0) ? 8 : to.intValue();
+        Thread.sleep((timeoutSec + 3) * 1000L);
+        int usingAfterHold = pool.getConnectionUsingAtMark().size();
+        boolean aborted = usingAfterHold == usingBefore;
+        try { c.close(); } catch (Exception e) { }
+        return "timeoutConn=borrowed inUsingAtBorrow=" + inUsing
+            + " usingBefore=" + usingBefore + " usingAfterBorrow=" + usingAfterBorrow
+            + " timeoutSec=" + timeoutSec + " usingAfterHold=" + usingAfterHold
+            + " timeoutAborted=" + aborted;
+    }
+
+    private String snapshot(ConnectionPool pool, int minPool, int maxPool) {
+        int idle = pool.size();
+        int open = pool.getOpenConnectionSize();
+        int using = pool.getConnectionUsingAtMark().size();
+        int openedMark = pool.getConnectionOpenedAtMark().size();
+        int idleMark = pool.getConnectionIdleBeginMark().size();
+        int threadMark = pool.getConnectionThreadMark().size();
+        return "[idle:" + idle + ",open:" + open + ",using:" + using
+            + ",openedMark:" + openedMark + ",idleMark:" + idleMark
+            + ",threadMark:" + threadMark + ",minPool:" + minPool + ",maxPool:" + maxPool
+            + ",inv:" + (open == idle + using) + "]";
+    }
+}`;
+var stressErr = "";
+var stressResult = "";
+var c18Loaded = false;
+try {
+    var loader18 = Console.evalJavaSource(SRC_POOL_STRESS);
+    var PoolStressType = loader18.loadClass("PoolStress");
+    var inst18 = new PoolStressType();
+    var ds18 = Console.getDataSource();
+    var pool18 = ds18.getConnectionPool();
+    c18Loaded = true;
+    stressResult = inst18.stress(ds18, pool18, 20, 50);
+} catch (e) {
+    stressErr = "" + e;
+}
+// parse "key=value key=value ..." without JS regex (no TRegex in this embed)
+function parseKv(s, key) {
+    var parts = s.split(" ");
+    for (var i = 0; i < parts.length; i++) {
+        var kv = parts[i].split("=");
+        if (kv.length === 2 && kv[0] === key) return kv[1];
+    }
+    return null;
+}
+var pBorrowed = parseInt(parseKv(stressResult, "borrowed"), 10);
+var pMaxOpen = parseInt(parseKv(stressResult, "maxOpenObserved"), 10);
+var pMaxUsing = parseInt(parseKv(stressResult, "maxUsingObserved"), 10);
+var pFinalOpen = parseInt(parseKv(stressResult, "finalOpen"), 10);
+var pFinalUsing = parseInt(parseKv(stressResult, "finalUsing"), 10);
+var pFinalIdle = parseInt(parseKv(stressResult, "finalIdle"), 10);
+var pMaxPool = parseInt(parseKv(stressResult, "maxPool"), 10);
+var pConsistent = parseKv(stressResult, "consistent") === "true";
+var pNullGets = parseInt(parseKv(stressResult, "nullGets"), 10);
+var pExceptions = parseInt(parseKv(stressResult, "exceptions"), 10);
+var beginPool = parseKv(stressResult, "begin");
+var finalPool = parseKv(stressResult, "final");
+var pHeld = parseInt(parseKv(stressResult, "held"), 10);
+var pUsingDuring = parseInt(parseKv(stressResult, "usingDuring"), 10);
+var pUsingOk = parseKv(stressResult, "usingOk") === "true";
+var pUsingAfterClose = parseInt(parseKv(stressResult, "usingAfterClose"), 10);
+var pTimeoutAborted = parseKv(stressResult, "timeoutAborted") === "true";
+var c18Ok = c18Loaded && stressErr.length === 0
+    && pBorrowed > 0
+    && pMaxOpen <= pMaxPool
+    && pMaxUsing <= pMaxPool
+    && pFinalOpen <= pMaxPool
+    && pFinalUsing === 0
+    && pConsistent
+    && pUsingOk
+    && pHeld > 0
+    && pUsingDuring > 0
+    && pUsingAfterClose === 0
+    && pTimeoutAborted;
+Logger.systemMark("TestDatasource.js", "C18");
+check({
+    name: "ConnectionPool extreme multi-thread stress - usage counters stay consistent",
+    caseId: "C18",
+    ok: c18Ok,
+    detail: "loaderLoaded=" + c18Loaded
+        + (stressErr.length > 0 ? " ERROR=" + stressErr
+            : " " + stressResult + " beginPool=" + beginPool + " finalPool=" + finalPool),
+    objective: "Phase1 20 threads x 50 rounds borrow/close (open <= MaxPoolSize, no using leak, open == idle + using); Phase2 hold 80% of the pool and verify using == held; Phase3 hold past Timeout and verify the worker aborts the connection",
+    objectiveZh: "階段1：20 線程 × 50 輪併發借還（open 不超 MaxPoolSize、無 using 洩漏、計數自洽）；階段2：持有 80% 池容量驗證 using 有數值；階段3：持有超過 Timeout 驗證被池 worker 中止",
+    command: "evalJavaSource(PoolStress) -> PoolStress.stress(ds, pool, 20, 50) (3 phases)"
+});
+
 writeReport();
 writeMd();
 

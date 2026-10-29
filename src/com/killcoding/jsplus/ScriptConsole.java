@@ -358,12 +358,13 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 
 	/**
 	* Dynamically compiles the given Java source code into a temporary jar and loads the compiled
-	* class into a dedicated ClassLoader. The returned Class can be instantiated from JS (e.g.
-	* clazz.newInstance()) when the console was built with allowAllAccess enabled.
+	* class into a dedicated ClassLoader. The returned ClassLoader can be used from JS to load and
+	* instantiate the compiled classes (e.g. loader.loadClass("Hello").newInstance()) when the
+	* console was built with allowAllAccess enabled.
 	* @param javaSource - the Java source code to compile (may carry a package declaration)
-	* @return the compiled and loaded Class
+	* @return the dedicated ClassLoader that loaded the compiled jar
 	* */
-	public Class<?> evalJavaSource(String javaSource) throws Exception {
+	public ClassLoader evalJavaSource(String javaSource) throws Exception {
 		if (CommonTools.isBlank(javaSource)) {
 			throw new Exception("evalJavaSource: blank Java source code.");
 		}
@@ -374,13 +375,14 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	* Array / list form of evalJavaSource - compiles a JS array of Java source segments
 	* where each element is a complete class source (may carry its own package/import).
 	* All segments are compiled in a single javac task, so the classes can reference each
-	* other, and the produced jar is loaded with one dedicated URLClassLoader. Returns the
-	* compiled classes in the same order as the input array. Content addressing uses the
-	* MD5 of all joined sources, so identical segment sets reuse the compiled jar.
+	* other, and the produced jar is loaded with one dedicated URLClassLoader. Returns that
+	* ClassLoader; the classes are loaded lazily via loader.loadClass(qualifiedName).
+	* Content addressing uses the MD5 of all joined sources, so identical segment sets
+	* reuse the compiled jar while every call still gets a fresh ClassLoader.
 	* @param javaSources - Java source code segments, one complete class per element
-	* @return the compiled and loaded Classes, in input order
+	* @return the dedicated ClassLoader that loaded the compiled jar
 	* */
-	public Class<?>[] evalJavaSource(String[] javaSources) throws Exception {
+	public ClassLoader evalJavaSource(String[] javaSources) throws Exception {
 		if (javaSources == null || javaSources.length == 0) {
 			throw new Exception("evalJavaSource(String[]): blank Java source array.");
 		}
@@ -401,9 +403,9 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	* javac task, so the folder classes can reference each other. Content addressing uses
 	* the MD5 of the joined sources, so identical content reuses the compiled jar.
 	* @param javaFilePath - the path of a .java file or a folder containing .java files
-	* @return the compiled and loaded Classes (single file -> array of length 1)
+	* @return the dedicated ClassLoader that loaded the compiled jar
 	* */
-	public Class<?>[] evalJavaFile(String javaFilePath) throws Exception {
+	public ClassLoader evalJavaFile(String javaFilePath) throws Exception {
 		if (CommonTools.isBlank(javaFilePath)) {
 			throw new Exception("evalJavaFile: blank Java file path.");
 		}
@@ -412,15 +414,14 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 
 	/**
 	* Folder / file form of evalJavaFile - see the String overload. A folder is scanned
-	* recursively; the file list is sorted by path so the compile order (and the returned
-	* Class array order) stays stable across runs regardless of OS traversal order. The
-	* eval workspace key is the MD5 of the most recently modified .java file - a fresh
-	* edit to the newest file invalidates the cached jar and recompiles; untouched
-	* folders keep their cached jar.
+	* recursively; the file list is sorted by path so the compile order stays stable across
+	* runs regardless of OS traversal order. The eval workspace key is the MD5 of the most
+	* recently modified .java file - a fresh edit to the newest file invalidates the cached
+	* jar and recompiles; untouched folders keep their cached jar.
 	* @param javaFile - a .java file or a folder containing .java files
-	* @return the compiled and loaded Classes (single file -> array of length 1)
+	* @return the dedicated ClassLoader that loaded the compiled jar
 	* */
-	public Class<?>[] evalJavaFile(File javaFile) throws Exception {
+	public ClassLoader evalJavaFile(File javaFile) throws Exception {
 		if (javaFile == null || !javaFile.exists()) {
 			throw new Exception("evalJavaFile: Java file or folder not found: " + javaFile);
 		}
@@ -462,10 +463,10 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	* ClassLoader (so the same source evaluated twice yields two distinct Class objects).
 	* @param javaSource - the Java source code to compile
 	* @param evalKey - content MD5 used as the eval workspace directory name
-	* @return the compiled and loaded Class
+	* @return the dedicated ClassLoader that loaded the compiled jar
 	* */
-	private Class<?> compileAndLoadJava(String javaSource, String evalKey) throws Exception {
-		return compileAndLoadJavaMulti(new String[]{javaSource}, evalKey)[0];
+	private ClassLoader compileAndLoadJava(String javaSource, String evalKey) throws Exception {
+		return compileAndLoadJavaMulti(new String[]{javaSource}, evalKey);
 	}
 
 	/**
@@ -476,9 +477,9 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	* of array order.
 	* @param javaSources - Java source code segments, one complete class per element
 	* @param evalKey - content MD5 of all joined sources, used as the eval workspace directory name
-	* @return the compiled and loaded Classes, in input order
+	* @return the dedicated ClassLoader that loaded the compiled jar
 	* */
-	private Class<?>[] compileAndLoadJavaMulti(String[] javaSources, String evalKey) throws Exception {
+	private ClassLoader compileAndLoadJavaMulti(String[] javaSources, String evalKey) throws Exception {
 		// 1) Resolve the package and the class name for every source segment.
 		List<String[]> resolved = new ArrayList<String[]>(); // {packageName, className, qualifiedName}
 		for (String javaSource : javaSources) {
@@ -586,7 +587,8 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		}
 
 		// 6) Load the jar with a dedicated URLClassLoader and keep the loader referenced so the
-		//    evaluated classes stay usable for the life of this console.
+		//    evaluated classes stay usable for the life of this console. Load each class once to
+		//    verify the jar is intact; callers use the returned loader's loadClass() afterwards.
 		URLClassLoader classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, getClass().getClassLoader());
 		evalJavaClassLoaders.add(classLoader);
 		Class<?>[] loadedClasses = new Class<?>[resolved.size()];
@@ -594,7 +596,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 			loadedClasses[i] = Class.forName(resolved.get(i)[2], true, classLoader);
 		}
 		log.info("evalJavaSource: compiled and loaded " + loadedClasses.length + " class(es) -> " + jarFile.getAbsolutePath());
-		return loadedClasses;
+		return classLoader;
 	}
 
 	/**

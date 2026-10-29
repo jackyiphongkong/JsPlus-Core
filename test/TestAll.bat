@@ -199,6 +199,23 @@ set "RC_DS=%ERRORLEVEL%"
 echo TestDatasource exit code: %RC_DS%
 if not "%RC_DS%"=="0" set "RC=%RC_DS%"
 
+REM ------------------------------------------------------------------
+REM Step 3d: Merge the TestDatasource outcome into the TestAll report.
+REM TestDatasource runs in its OWN JVM AFTER TestAll.js, so its result
+REM (suite summary + per-case table) is appended here - the TestAll report
+REM must reflect the full run, not just the suites TestAll.js ran itself.
+REM ------------------------------------------------------------------
+set "REPORT_DIR=%JS_PLUS_PATH_ORIGIN%..\docs\latest\report"
+if exist "%REPORT_DIR%\TestDatasource-Report.md" (
+    echo [TestAll] Merging TestDatasource result into TestAll report...
+    echo.>> "%REPORT_DIR%\TestAll-Report.md"
+    echo ## TestDatasource>> "%REPORT_DIR%\TestAll-Report.md"
+    echo.>> "%REPORT_DIR%\TestAll-Report.md"
+    type "%REPORT_DIR%\TestDatasource-Report.md">> "%REPORT_DIR%\TestAll-Report.md"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$d='%REPORT_DIR%'; $m=Get-Content -LiteralPath (Join-Path $d 'TestDatasource-Report.md') -Raw -Encoding UTF8; $h=Get-Content -LiteralPath (Join-Path $d 'TestDatasource-Report.html') -Raw -Encoding UTF8; $sum=[regex]::Match($m,'\*\*(\d+) passed / (\d+) failed\*\*'); $sp=$sum.Groups[1].Value; $sf=$sum.Groups[2].Value; $cls= if($sf -eq '0'){'summary-pass'}else{'summary-fail'}; $tbl=[regex]::Match($h,'(?s)<table.*?</table>').Value; if($tbl){ $p=Join-Path $d 'TestAll-Report.html'; $o=Get-Content -LiteralPath $p -Raw -Encoding UTF8; $block=[Environment]::NewLine+'<h2>TestDatasource</h2>'+[Environment]::NewLine+'<div class='+$cls+'>'+$sp+' passed / '+$sf+' failed</div>'+[Environment]::NewLine+$tbl+[Environment]::NewLine+'<p><a href=''TestDatasource-Report.html''>Full TestDatasource report</a></p>'; $o=$o -replace '</table>',('</table>'+$block); Set-Content -LiteralPath $p -Value $o -Encoding UTF8 }"
+    if errorlevel 1 echo WARN: Failed to merge TestDatasource into TestAll-Report.html
+)
+
 REM Step 4: stop the H2 server started for this run (java ghost keyed by
 REM script/StartH2.js) so TestAll leaves nothing behind. RC was captured
 REM above. Then, per the project convention, the run finishes with a full

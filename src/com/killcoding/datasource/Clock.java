@@ -22,14 +22,11 @@ package com.killcoding.datasource;
 
 import java.util.Calendar;
 import java.util.TimeZone;
-import java.util.Date;
 import java.sql.Timestamp;
 import java.io.File;
 import com.killcoding.tool.CommonTools;
 import com.killcoding.tool.ConfigProperties;
 
-
-import java.sql.Time;
 import java.sql.Connection;
 import java.sql.SQLException;
 import com.killcoding.log.Logger;
@@ -38,7 +35,6 @@ import java.util.Map;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.temporal.TemporalField;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import com.killcoding.cache.Cache;
@@ -221,7 +217,7 @@ public final class Clock {
 				return remoteCalendar;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				Cache.set(GAP_CACHE_KEY,Cache.get(GAP_CACHE_KEY_HOLD));			
+				Cache.set(GAP_CACHE_KEY, Cache.get(GAP_CACHE_KEY_HOLD), gapCacheLifeSeconds());	
 				return null;
 			} finally {
 				try {

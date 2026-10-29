@@ -195,8 +195,8 @@ cp.setProperty("QuoteSrc.Database.Quote.Format", "\"%s\"");
 cp.setProperty("Table.GetTables.List", "dbsync_test_a,dbsync_test_b,dbsync_sync_a");
 cp.setProperty("Table.PrimaryKey", "id");
 cp.setProperty("Table.Inserter.Key", "created_at");
-cp.setProperty("Table.Inserter.Period", "5000");
-cp.setProperty("Table.Inserter.Window", "100");
+cp.setProperty("Table.Inserter.Period", "5s");
+cp.setProperty("Table.Inserter.Window", "100ms");
 cp.setProperty("Table.Inserter.Enable", "true");
 cp.setProperty("Table.Timer", "200ms");
 var enter = new EnterType();
@@ -627,11 +627,11 @@ try {
         cp.setProperty("Table.GetTables.List", tblName);
         cp.setProperty("Table.PrimaryKey", "id");
         cp.setProperty("Table.Inserter.Key", "created_at");
-        cp.setProperty("Table.Inserter.Window", "60000");
+        cp.setProperty("Table.Inserter.Window", "60s");
         cp.setProperty("Table.Updater.Key", "updated_at");
-        cp.setProperty("Table.Updater.Window", "60000");
+        cp.setProperty("Table.Updater.Window", "60s");
         cp.setProperty("Table.Deleter.Key", "deleted_at");
-        cp.setProperty("Table.Deleter.Window", "60000");
+        cp.setProperty("Table.Deleter.Window", "60s");
         cp.setProperty("Table.Deleter.DeletedKey", "deleted");
         cp.setProperty("Table.Inserter.Enable", opts.inserter ? "true" : "false");
         cp.setProperty("Table.Updater.Enable", opts.updater ? "true" : "false");
@@ -639,7 +639,7 @@ try {
         cp.setProperty("Table.Remover.Enable", opts.remover ? "true" : "false");
         cp.setProperty("Table.Remover.Key", "deleted_at");
         cp.setProperty("Table.Remover.Timer", "200ms");
-        cp.setProperty("Table.Remover.Before", opts.beforeDays ? opts.beforeDays : "60000");
+        cp.setProperty("Table.Remover.Before", opts.beforeDays ? opts.beforeDays : "60s");
         cp.setProperty("Table.Timer", "200ms");
         return cp;
     }

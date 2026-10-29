@@ -212,6 +212,36 @@ if [ "$RC_DS" != "0" ]; then
 fi
 
 # ------------------------------------------------------------------
+# Step 4d: Merge the TestDatasource outcome into the TestAll report
+# (TestDatasource runs in its own JVM AFTER TestAll.js, so its summary
+# and per-case table are appended here - the TestAll report must reflect
+# the full run, not just the suites TestAll.js ran itself).
+# ------------------------------------------------------------------
+REPORT_DIR="${JS_PLUS_PATH}../docs/latest/report"
+if [ -f "$REPORT_DIR/TestDatasource-Report.md" ]; then
+    echo "[TestAll] Merging TestDatasource result into TestAll report..."
+    echo "" >> "$REPORT_DIR/TestAll-Report.md"
+    echo "## TestDatasource" >> "$REPORT_DIR/TestAll-Report.md"
+    echo "" >> "$REPORT_DIR/TestAll-Report.md"
+    cat "$REPORT_DIR/TestDatasource-Report.md" >> "$REPORT_DIR/TestAll-Report.md"
+    python3 - "$REPORT_DIR" <<'PYEOF' || echo "WARN: Failed to merge TestDatasource into TestAll-Report.html"
+import re, sys
+d = sys.argv[1]
+m = open(d + "/TestDatasource-Report.md", encoding="utf-8").read()
+h = open(d + "/TestDatasource-Report.html", encoding="utf-8").read()
+sum_m = re.search(r"\*\*(\d+) passed / (\d+) failed\*\*", m)
+sp, sf = (sum_m.group(1), sum_m.group(2)) if sum_m else ("?", "?")
+cls = "summary-pass" if sf == "0" else "summary-fail"
+tbl = re.search(r"<table.*?</table>", h, re.S)
+if tbl:
+    p = d + "/TestAll-Report.html"
+    o = open(p, encoding="utf-8").read()
+    block = "\n<h2>TestDatasource</h2>\n<div class='" + cls + "'>" + sp + " passed / " + sf + " failed</div>\n" + tbl.group(0) + "\n<p><a href='TestDatasource-Report.html'>Full TestDatasource report</a></p>\n"
+    open(p, "w", encoding="utf-8").write(o.replace("</table>", "</table>" + block, 1))
+PYEOF
+fi
+
+# ------------------------------------------------------------------
 # Step 5: stop the H2 server started for this run (java ghost keyed by
 # script/StartH2.js) so TestAll leaves nothing behind. RC was captured
 # above. Then, per the project convention, the run finishes with a full
