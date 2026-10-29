@@ -43,8 +43,14 @@ REM Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
 REM build/test script runs StopAll up front) so a stale H2 ghost, a locked
 REM testdb file or a JVM pinning an old JAR cannot interfere with the pool
 REM cases below (they depend on a clean idle/using/abort state).
+REM NOTE: In the TestAll flow (TESTALL_RUN=1) this is SKIPPED on purpose -
+REM TestAll.bat started the shared H2 server and Step 3c is designed to
+REM REUSE it (see TestAll.bat Step 3c comment). Running StopAll here kills
+REM that stable H2 and forces this script to restart one from scratch -
+REM the CI #43/#44 "Connection refused on :3306" failure mode. Standalone
+REM runs keep the full StopAll sweep.
 REM ------------------------------------------------------------------
-call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
+if not defined TESTALL_RUN call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
 
 set "DEPEND_LIBS="
 for /r "%JS_PLUS_PATH_ORIGIN%..\LibHome" %%j in (*.jar) do set "DEPEND_LIBS=!DEPEND_LIBS!;%%j"
