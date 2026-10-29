@@ -767,22 +767,22 @@ function h2Listening() {
 
 // True while a JsPlus/H2 JVM keyed by script/StartH2.js is still running.
 // Used after h2Stop(): the port may already be free (socket closed) while
-// the old H2 JVM is still unwinding from SIGTERM; starting a fresh H2 in
-// that window fails to bind :3306 ("Address already in use") and leaves
-// the suite without a listener.
-// NOTE the bracket trick: 'script/[S]tartH2.js' matches a REAL command line
-// containing script/StartH2.js but does NOT match the literal probe command
-// itself (which contains 'script/[S]tartH2.js') - without it, pgrep/pkill
-// would match and kill their own wrapping `sh -c` process before the H2
-// JVM is ever signalled (run #47: h2Down=false, C17 failed while H2 stayed
-// up the whole time and C18 passed).
+// the old H2 JVM is still unwinding; starting a fresh H2 in that window
+// fails to bind :3306 ("Address already in use") and leaves the suite
+// without a listener.
+// Matcher mirrors Stop.sh: only java/javaw processes whose command line
+// contains 'StartH2' (ps + grep -E 'java|javaw' + grep -F 'StartH2'). The
+// probe process itself is NOT a java process, so it can never match - no
+// bracket trick needed (the old raw pkill matched its own wrapping `sh -c`
+// and killed the parent before the H2 JVM was signalled - run #47:
+// h2Down=false, C17 failed while H2 stayed up and C18 passed).
 function h2ProcessAlive() {
     if (isWin) {
         return false; // Windows Stop-Process is synchronous; port check suffices
     }
     try {
-        var p = execAsync(["sh", "-c", "pgrep -f 'script/[S]tartH2.js'"]);
-        var alive = p.waitFor() === 0; // pgrep exits 0 when a match exists
+        var p = execAsync(["sh", "-c", "ps -eo args | grep -E 'java|javaw' | grep -F 'StartH2' | grep -v grep"]);
+        var alive = p.waitFor() === 0; // last grep exits 0 when a match exists
         try { p.destroy(); } catch (e2) {}
         return alive;
     } catch (e) {
@@ -797,13 +797,12 @@ function h2Stop() {
         return execAsync(["powershell", "-NoProfile", "-Command",
             "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -or $_.Name -eq 'javaw.exe' } | Where-Object { $_.CommandLine -like '*StartH2.js*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"]);
     }
-    // Two-phase kill, bracket-tricked matcher: SIGTERM first (graceful),
-    // then SIGKILL after 3s (an H2 JVM stuck in its shutdown hook must not
-    // keep :3306 bound - that was run #46's "restarted H2 never comes up").
-    return execAsync(["sh", "-c",
-        "pkill -f 'script/[S]tartH2.js' || true; " +
-        "sleep 3; " +
-        "pkill -9 -f 'script/[S]tartH2.js' || true"]);
+    // Use the project's own StopH2.sh instead of a raw pkill: Stop.sh only
+    // matches java/javaw processes keyed by StartH2, so it can NEVER kill
+    // the wrapping `sh -c`/bash parent (the run #47 pkill self-match trap).
+    // Stop.sh sends SIGKILL (-9), freeing :3306 immediately; the h2Down
+    // poll (20s) below then confirms port + process are both gone.
+    return execAsync(["bash", "-c", basePath + "bin/StopH2.sh"]);
 }
 
 function h2Start() {
