@@ -36,6 +36,7 @@
 // ============================================================================
 
 var Logger = Java.type("com.killcoding.log.Logger");
+var LoggerFactory = Java.type("com.killcoding.log.LoggerFactory");
 var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 var File = Java.type("java.io.File");
@@ -209,6 +210,7 @@ callbackConsole.getContext().put("RF_contents", RF_contents);
 callbackConsole.getContext().put("RF_errors", RF_errors);
 callbackConsole.getContext().put("Runnable", Runnable);
 callbackConsole.getContext().put("RemoteFile", RemoteFile);
+callbackConsole.getContext().put("log", LoggerFactory.getLogger('Callback'));
 callbackConsole.evalScript(`(function(){
     var RF_GCA = Console.getGlobalCacheArray(0,1);
     RF_GCA.setNulIsCompleted(false);
@@ -222,11 +224,11 @@ callbackConsole.evalScript(`(function(){
                     var rf = new RemoteFile(o.file_parent_path + '/' + o.file_name);
                     var content = rf.readAllString();
                     rf.delete();
-                    print("Total: " + RF_GCA.getProcessedTotal());
-                    print("Remove: " + rf.getPath());
+                    log.info("Total: " + RF_GCA.getProcessedTotal());
+                    log.info("Remove: " + rf.getPath());
                 } catch (e) {
                     // RF_errors.add('' + e);
-                    print(e);
+                    log.info(e.message,e);
                 }
             }   
         }
