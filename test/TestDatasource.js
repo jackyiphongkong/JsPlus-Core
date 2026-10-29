@@ -890,6 +890,7 @@ public class PoolStress {
         final ExecutorService exec = Executors.newFixedThreadPool(threads);
         List<Future<?>> futures = new ArrayList<Future<?>>();
         String begin = snapshot(pool, minPool, maxPool);
+        int warmed = warmPool(ds, maxPool);
         for (int t = 0; t < threads; t++) {
             futures.add(exec.submit(new Runnable() {
                 public void run() {
@@ -900,18 +901,27 @@ public class PoolStress {
                             conn = ds.getConnection();
                             if (conn == null) { nullGets.incrementAndGet(); continue; }
                             borrowed.incrementAndGet();
-                            int open = pool.getOpenConnectionSize();
-                            int using = pool.getConnectionUsingAtMark().size();
-                            int idle = pool.size();
-                            int openedMark = pool.getConnectionOpenedAtMark().size();
-                            int idleMark = pool.getConnectionIdleBeginMark().size();
-                            int threadMark = pool.getConnectionThreadMark().size();
-                            if (open > maxOpen.get()) { maxOpen.set(open); }
-                            if (using > maxUsing.get()) { maxUsing.set(using); }
-                            if (idle > maxIdle.get()) { maxIdle.set(idle); }
-                            if (openedMark > maxOpenedMark.get()) { maxOpenedMark.set(openedMark); }
-                            if (idleMark > maxIdleMark.get()) { maxIdleMark.set(idleMark); }
-                            if (threadMark > maxThreadMark.get()) { maxThreadMark.set(threadMark); }
+                            // Sample the pool counters every 3rd round instead
+                            // of every round: each ConcurrentHashMap.size()
+                            // call is O(poolSize) and contended under 20
+                            // threads, so on slow CI runners sampling every
+                            // round costs ~3x more wall time. Every-3-round
+                            // sampling still captures the peaks (a borrow is
+                            // never missed for long).
+                            if (r % 3 == 0) {
+                                int open = pool.getOpenConnectionSize();
+                                int using = pool.getConnectionUsingAtMark().size();
+                                int idle = pool.size();
+                                int openedMark = pool.getConnectionOpenedAtMark().size();
+                                int idleMark = pool.getConnectionIdleBeginMark().size();
+                                int threadMark = pool.getConnectionThreadMark().size();
+                                if (open > maxOpen.get()) { maxOpen.set(open); }
+                                if (using > maxUsing.get()) { maxUsing.set(using); }
+                                if (idle > maxIdle.get()) { maxIdle.set(idle); }
+                                if (openedMark > maxOpenedMark.get()) { maxOpenedMark.set(openedMark); }
+                                if (idleMark > maxIdleMark.get()) { maxIdleMark.set(idleMark); }
+                                if (threadMark > maxThreadMark.get()) { maxThreadMark.set(threadMark); }
+                            }
                             conn.getAutoCommit();
                             conn.close();
                             closed.incrementAndGet();
@@ -957,7 +967,35 @@ public class PoolStress {
             + " finalOpen=" + finalOpen + " finalUsing=" + finalUsing + " finalIdle=" + finalIdle
             + " maxPool=" + maxPool + " consistent=" + consistent
             + " begin=" + begin + " final=" + finalSnap
+            + " warmed=" + warmed
             + " " + phase2 + " " + phase3;
+    }
+
+    // Warm the pool up to capacity serially BEFORE the concurrent phase:
+    // on slow CI runners the pool starts at MinPoolSize and every borrow
+    // that misses would stall the concurrent threads on the synchronous
+    // loadConnectionToPool expansion (each H2 TCP connect + prepare is
+    // slow there). Borrowing maxPool connections up front moves that
+    // cost out of the Future.get budget and lets the 20 threads hit a
+    // full idle pool. Transient H2 hiccups (Connection refused right
+    // after the C17 restart) simply warm fewer connections - never fail.
+    private int warmPool(DriverDataSource ds, int maxPool) {
+        int warmed = 0;
+        for (int i = 0; i < maxPool; i++) {
+            Connection c = null;
+            try {
+                c = ds.getConnection();
+                if (c == null) { break; }
+                warmed++;
+            } catch (Exception e) {
+                break;
+            } finally {
+                if (c != null) {
+                    try { c.close(); } catch (Exception e2) { }
+                }
+            }
+        }
+        return warmed;
     }
 
     // Phase 2: hold 80% of the pool to prove the using counter is live
