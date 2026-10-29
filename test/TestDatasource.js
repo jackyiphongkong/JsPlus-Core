@@ -757,13 +757,19 @@ function h2Listening() {
 // Used after h2Stop(): the port may already be free (socket closed) while
 // the old H2 JVM is still unwinding from SIGTERM; starting a fresh H2 in
 // that window fails to bind :3306 ("Address already in use") and leaves
-// the suite without a listener - the CI #46 refused flood right after C17.
+// the suite without a listener.
+// NOTE the bracket trick: 'script/[S]tartH2.js' matches a REAL command line
+// containing script/StartH2.js but does NOT match the literal probe command
+// itself (which contains 'script/[S]tartH2.js') - without it, pgrep/pkill
+// would match and kill their own wrapping `sh -c` process before the H2
+// JVM is ever signalled (run #47: h2Down=false, C17 failed while H2 stayed
+// up the whole time and C18 passed).
 function h2ProcessAlive() {
     if (isWin) {
         return false; // Windows Stop-Process is synchronous; port check suffices
     }
     try {
-        var p = execAsync(["sh", "-c", "pgrep -f 'script/StartH2.js'"]);
+        var p = execAsync(["sh", "-c", "pgrep -f 'script/[S]tartH2.js'"]);
         var alive = p.waitFor() === 0; // pgrep exits 0 when a match exists
         try { p.destroy(); } catch (e2) {}
         return alive;
@@ -779,7 +785,13 @@ function h2Stop() {
         return execAsync(["powershell", "-NoProfile", "-Command",
             "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'java.exe' -or $_.Name -eq 'javaw.exe' } | Where-Object { $_.CommandLine -like '*StartH2.js*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"]);
     }
-    return execAsync(["sh", "-c", "pkill -f 'script/StartH2.js' || true"]);
+    // Two-phase kill, bracket-tricked matcher: SIGTERM first (graceful),
+    // then SIGKILL after 3s (an H2 JVM stuck in its shutdown hook must not
+    // keep :3306 bound - that was run #46's "restarted H2 never comes up").
+    return execAsync(["sh", "-c",
+        "pkill -f 'script/[S]tartH2.js' || true; " +
+        "sleep 3; " +
+        "pkill -9 -f 'script/[S]tartH2.js' || true"]);
 }
 
 function h2Start() {
