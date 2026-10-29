@@ -71,6 +71,14 @@ chmod +x "${JS_PLUS_PATH}bin/"*.sh "${BIN_PATH}"*.sh 2>/dev/null || true
 # ------------------------------------------------------------------
 "${JS_PLUS_PATH}bin/StopAll.sh" || true
 
+# Step 0b: remove JsPlus/.tmp (evalJavaSource/evalJavaFile scratch:
+# compiled temp classes / MD5 source dirs) so every test run starts
+# with a clean temp tree and stale MD5 dirs cannot leak between runs.
+if [ -d "${JS_PLUS_PATH_ORIGIN}.tmp" ]; then
+    rm -rf "${JS_PLUS_PATH_ORIGIN}.tmp"
+    echo "[TestAll] Removed JsPlus/.tmp"
+fi
+
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
 if [ -z "$DEPEND_LIBS" ]; then
