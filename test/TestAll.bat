@@ -59,6 +59,16 @@ REM init and the suite JVM below.
 REM ------------------------------------------------------------------
 call "%JS_PLUS_PATH_ORIGIN%bin\StopAll.bat"
 
+REM ------------------------------------------------------------------
+REM Step 0b: remove JsPlus\.tmp (evalJavaSource/evalJavaFile scratch:
+REM compiled temp classes / MD5 source dirs) so every test run starts
+REM with a clean temp tree and stale MD5 dirs cannot leak between runs.
+REM ------------------------------------------------------------------
+if exist "%JS_PLUS_PATH_ORIGIN%.tmp" (
+    rmdir /s /q "%JS_PLUS_PATH_ORIGIN%.tmp"
+    echo [TestAll] Removed JsPlus\.tmp
+)
+
 set "DEPEND_LIBS="
 for /r "%JS_PLUS_PATH_ORIGIN%..\LibHome" %%j in (*.jar) do set "DEPEND_LIBS=!DEPEND_LIBS!;%%j"
 set "DEPEND_LIBS=!DEPEND_LIBS:~1!"
