@@ -8,7 +8,7 @@ on:
 
 jobs:
   automated-tests:
-    name: Automated Tests (TestAll)
+    name: Automated Tests (TestDatasource)
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -42,20 +42,22 @@ jobs:
           fi
           echo "Verified JAR: $JAR (matches version.properties ${MAJOR}.${MINOR}.${PATCH})"
 
-      - name: Run TestAll.sh
+      - name: Run TestDatasource.sh
         run: |
-          # Restore executable bits lost by the Git checkout (mode 644) on
-          # every helper script under JsPlus/bin, then run the suite entry.
-          # working-directory is test/, so ../JsPlus points at <repo>/JsPlus.
-          chmod +x TestAll.sh ../JsPlus/bin/*.sh
-          ./TestAll.sh
+          # Debug isolation (2026-10-29): CI runs ONLY the TestDatasource
+          # pool suite for now. Its standalone flow (StopAll sweep -> own H2
+          # start on :3306 -> TestDatasource.js) verifies the suite's own H2
+          # lifecycle on a clean runner, without the TestAll.sh shared-H2
+          # handover that has been failing on :3306 (runs #43/#44/#45).
+          chmod +x TestDatasource.sh ../JsPlus/bin/*.sh
+          ./TestDatasource.sh graalvm.js
         working-directory: test
 
       - name: Publish CI summary
         if: always()
         run: |
-          if [ -f docs/latest/report/TestAll-CI-Summary.md ]; then
-            cat docs/latest/report/TestAll-CI-Summary.md >> "$GITHUB_STEP_SUMMARY"
+          if [ -f docs/latest/report/TestDatasource-Report.md ]; then
+            head -n 40 docs/latest/report/TestDatasource-Report.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
       # Upload artifacts even when TestAll fails (exit 1): without
