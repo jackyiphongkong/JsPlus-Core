@@ -48,8 +48,16 @@ chmod +x "${JS_PLUS_PATH}bin/"*.sh "${BIN_PATH}"*.sh 2>/dev/null || true
 # build/test script runs StopAll up front) so a stale H2 ghost, a locked
 # testdb file or a JVM pinning an old JAR cannot interfere with the pool
 # cases below (they depend on a clean idle/using/abort state).
+# NOTE: In the TestAll flow (TESTALL_RUN=1) this is SKIPPED on purpose -
+# TestAll.sh started the shared H2 server and Step 4c is designed to
+# REUSE it (see TestAll.sh Step 4c comment). Running StopAll here kills
+# that stable H2 and forces this script to restart one from scratch on a
+# shared CI runner - the exact #43/#44 "Connection refused on :3306"
+# failure mode. Standalone runs keep the full StopAll sweep.
 # ------------------------------------------------------------------
-"${JS_PLUS_PATH}bin/StopAll.sh" || true
+if [ -z "${TESTALL_RUN:-}" ]; then
+    "${JS_PLUS_PATH}bin/StopAll.sh" || true
+fi
 
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
@@ -91,22 +99,23 @@ echo "Using \"$JvmParams\""
 
 # ------------------------------------------------------------------
 # Step 1: H2 server on :3306 via BG_StartH2 (skipped when already listening).
+# The TCP probe beats a bare netstat match: a dying socket can still
+# report LISTEN for a moment (CI runners recycle processes slowly), and
+# "reusing" it would hand the suite a refused connection (runs #43/#44).
+# Only when :3306 is NOT actually serving do we (re)build + start H2.
 # ------------------------------------------------------------------
-# StopAll (Step 0) may leave the previous H2 socket in the process of
-# closing - on CI runners a dying ghost can still match the netstat
-# LISTEN check for a moment, which would wrongly skip the restart and
-# make the suite below hit "Connection refused" on :3306. Wait until
-# :3306 is either fully released (then we start our own H2 below) or
-# demonstrably stable for 15s (a genuinely live H2 is reused as-is).
-for _ in $(seq 1 15); do
-    if ! netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
-        break
-    fi
-    sleep 1
-done
-if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1 \
+    && (echo > /dev/tcp/127.0.0.1/3306) 2>/dev/null; then
     echo "[TestDatasource] H2 already listening on :3306."
 else
+    # A leftover socket from StopAll (standalone runs) may still be
+    # closing; wait until :3306 is fully released before starting ours.
+    for _ in $(seq 1 15); do
+        if ! netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
     # (Re)initialize the test database via the EMBEDDED local-file URL
     # (StartH2Console init testdb, sa auto-created, change.sql adds
     # sample_user), then start the TCP server on top of it.
