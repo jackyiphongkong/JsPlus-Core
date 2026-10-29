@@ -229,7 +229,11 @@ fi
 # ------------------------------------------------------------------
 echo "[TestAll] Running TestDatasource suite (last, H2 lifecycle-sensitive)..."
 set +e
-"${BIN_PATH}TestDatasource.sh" "$SCRIPT_ENGINE"
+# TESTALL_RUN=1 tells TestDatasource.sh to REUSE the shared H2 server
+# started in Step 1 instead of running its own StopAll sweep + H2 restart
+# (its standalone self-heal would kill the stable H2 here - the #43/#44
+# CI "Connection refused on :3306" failure mode).
+TESTALL_RUN=1 "${BIN_PATH}TestDatasource.sh" "$SCRIPT_ENGINE"
 RC_DS=$?
 set -e
 echo "TestDatasource exit code: $RC_DS"
