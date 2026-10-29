@@ -92,6 +92,18 @@ echo "Using \"$JvmParams\""
 # ------------------------------------------------------------------
 # Step 1: H2 server on :3306 via BG_StartH2 (skipped when already listening).
 # ------------------------------------------------------------------
+# StopAll (Step 0) may leave the previous H2 socket in the process of
+# closing - on CI runners a dying ghost can still match the netstat
+# LISTEN check for a moment, which would wrongly skip the restart and
+# make the suite below hit "Connection refused" on :3306. Wait until
+# :3306 is either fully released (then we start our own H2 below) or
+# demonstrably stable for 15s (a genuinely live H2 is reused as-is).
+for _ in $(seq 1 15); do
+    if ! netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+        break
+    fi
+    sleep 1
+done
 if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
     echo "[TestDatasource] H2 already listening on :3306."
 else
@@ -108,7 +120,10 @@ fi
 echo "[TestDatasource] Waiting for H2 :3306..."
 H2_READY=""
 for _ in $(seq 1 45); do
-    if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+    # netstat alone can match a closing socket; require an actual TCP
+    # connect so the suite never starts against a half-dead listener.
+    if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1 \
+        && (echo > /dev/tcp/127.0.0.1/3306) 2>/dev/null; then
         H2_READY=1
         break
     fi
