@@ -1,72 +1,72 @@
 # JsPlus-Core
 
-**嵌入式腳本控制台引擎**——把 GraalVM JavaScript 執行環境內嵌進任何 Java 應用，並提供服務端能力庫：池化資料源、多層快取、檔案抽象、DB 同步、加密/解析/工具集。無 Web 容器依賴（不依賴 Tomcat/Servlet）；引擎本體不持有常駐 H2 進程——H2 資料庫伺服器由 `JsPlus\script\StartH2.js` 按需啟動（測試/運行時經 `StartH2.bat` 拉起、`StopH2.bat` 關閉）。
+**Embedded Script Console Engine** — embeds a GraalVM JavaScript runtime into any Java application, with a server-side capability library: pooled datasource, multi-layer cache, file abstraction, DB sync, cipher/parse/toolkit. No web-container dependency (no Tomcat/Servlet); the engine itself does not host a resident H2 process — the H2 database server is started on demand by `JsPlus\script\StartH2.js` (tests/runtime start it via `StartH2.bat` and stop it via `StopH2.bat`).
 
 ```
-Java 應用 ──► ScriptConsole（嵌入 GraalVM JS 引擎）
+Java Application ──► ScriptConsole (embeds GraalVM JS engine)
               │
-              ├── 執行 JS（eval / evalScript / evalJavaSource 動態編譯）
-              ├── 資料源（DriverDataSource 池化 + CacheDriverExecutor）
-              ├── 快取（Cache 靜態 API + CacheArray 異步過濾管道）
-              ├── 檔案（DiskFile 本地 / RemoteFile 資料庫映射）
-              ├── DB 同步（dbsync 管道：Insert/Update/Delete/Select）
-              └── 工具（CommonTools / ConfigProperties / XmlParser / CipherTools …）
+              ├── Script execution (eval / evalScript / evalJavaSource dynamic compilation)
+              ├── Datasource (DriverDataSource pooling + CacheDriverExecutor)
+              ├── Cache (Cache static API + CacheArray async filter pipeline)
+              ├── File (DiskFile local / RemoteFile DB-mapped)
+              ├── DB sync (dbsync pipeline: Insert/Update/Delete/Select)
+              └── Toolkit (CommonTools / ConfigProperties / XmlParser / CipherTools …)
 ```
 
-## 1. 包架構（src · 61 個 Java 類）
+## 1. Package layout (src · 61 Java classes)
 
-| 包 | 核心類 | 職責 |
+| Package | Core classes | Responsibility |
 | --- | --- | --- |
-| `com.killcoding.jsplus` | ScriptConsole、ScriptConsoleBase、ConsoleImpl、JsPlusContext、GraalVmContext、NashornContext、JsString、Main、GhostConsole、CmdConsole、JdbcConsole | **Console 引擎核心**：腳本執行、多 console 隔離、引擎橋接（GraalJS/Nashorn）、對象橋、動態編譯、命令執行 |
-| `com.killcoding.datasource` | DriverDataSource、ConnectionPool、DriverConnection、DriverExecutor、CacheDriverExecutor、Clock、IdentityCard | **池化資料源與 JDBC**：連接池生命周期、同步執行器、快取陣列饋送 |
-| `com.killcoding.cache` | Cache、CacheArray、CacheArrayFilter、MemoryCache、DiskCache、StoredCache、AbsCacheApi、DataObject | **多層快取**：靜態鍵值 API + 異步過濾管道（producer/consumer） |
-| `com.killcoding.file` | DiskFile、RemoteFile、RemoteFileBase、RemoteFileSync、BaseFile、FilePart、RemoteFileSQL | **檔案抽象**：本地檔案操作、資料庫映射檔案（分片/同步） |
-| `com.killcoding.dbsync` | Database、Table、Inserter、Updater、Deleter、Remover、Enter、SqlStatement | **資料同步管道**：跨庫/跨表增量同步 |
-| `com.killcoding.tool` | CommonTools、ConfigProperties、ResultMap、XmlParser、CipherTools、EscapeTools、Base64Tools、FileTools、CodeEscape* | **通用工具**：配置/解析/加密/轉義/文件 |
-| `com.killcoding.log` | Logger、LoggerFactory、AlertMessage、LogRecord | **日誌**：非同步寫入、警報訊息 |
+| `com.killcoding.jsplus` | ScriptConsole, ScriptConsoleBase, ConsoleImpl, JsPlusContext, GraalVmContext, NashornContext, JsString, Main, GhostConsole, CmdConsole, JdbcConsole | **Console engine core**: script execution, multi-console isolation, engine bridging (GraalJS/Nashorn), object bridge, dynamic compilation, command execution |
+| `com.killcoding.datasource` | DriverDataSource, ConnectionPool, DriverConnection, DriverExecutor, CacheDriverExecutor, Clock, IdentityCard | **Pooled datasource & JDBC**: connection pool lifecycle, sync executor, cache-array feeding |
+| `com.killcoding.cache` | Cache, CacheArray, CacheArrayFilter, MemoryCache, DiskCache, StoredCache, AbsCacheApi, DataObject | **Multi-layer cache**: static key-value API + async filter pipeline (producer/consumer) |
+| `com.killcoding.file` | DiskFile, RemoteFile, RemoteFileBase, RemoteFileSync, BaseFile, FilePart, RemoteFileSQL | **File abstraction**: local file operations, DB-mapped files (chunking/sync) |
+| `com.killcoding.dbsync` | Database, Table, Inserter, Updater, Deleter, Remover, Enter, SqlStatement | **Data sync pipeline**: cross-db/cross-table incremental sync |
+| `com.killcoding.tool` | CommonTools, ConfigProperties, ResultMap, XmlParser, CipherTools, EscapeTools, Base64Tools, FileTools, CodeEscape* | **General toolkit**: config/parse/cipher/escape/file |
+| `com.killcoding.log` | Logger, LoggerFactory, AlertMessage, LogRecord | **Logging**: async write, alert messages |
 
-## 2. Console API（核心入口）
+## 2. Console API (core entry)
 
-`ScriptConsole` 是唯一入口，可實例化任意多個（各自獨立引擎上下文）：
+`ScriptConsole` is the single entry point; any number of instances can be created (each with its own isolated engine context):
 
-### 執行與求值
-| API | 說明 |
+### Execution & evaluation
+| API | Description |
 | --- | --- |
-| `evalScript(String)` | 執行原始 JS 字符串，返回結果 |
-| `eval(String/File)` | 執行腳本文件（路徑或 File） |
-| `eval(Runnable)` | 在控制台線程執行 Java 回調 |
-| `evalJavaSource(String / String[])` → `ClassLoader` | **動態編譯 Java 源碼**並載入類（內容定址 jar 緩存於 `JsPlus/.tmp/java`） |
-| `evalJavaFile(String / File)` → `ClassLoader` | 動態編譯 Java 文件 |
-| `execute(String)` / `executeBatch(String)` | 執行 JsPlus 命令 / 批處理文件 |
-| `executeViaGhost / executeViaCmd / executeViaScript` | 經 Ghost 控制台 / 系統命令 / 腳本執行 |
+| `evalScript(String)` | Executes a raw JS string and returns the result |
+| `eval(String/File)` | Executes a script file (path or File) |
+| `eval(Runnable)` | Executes a Java callback on the console thread |
+| `evalJavaSource(String / String[])` → `ClassLoader` | **Dynamically compiles Java source** and loads the classes (content-addressed jar cached in `JsPlus/.tmp/java`) |
+| `evalJavaFile(String / File)` → `ClassLoader` | Dynamically compiles a Java file |
+| `execute(String)` / `executeBatch(String)` | Executes JsPlus commands / batch files |
+| `executeViaGhost / executeViaCmd / executeViaScript` | Executes via the Ghost console / system command / script |
 
-### 回調（callback）
-| API | 說明 |
+### Callbacks
+| API | Description |
 | --- | --- |
-| `callback(Runnable, boolean callbackSync)` | 註冊回調（異步 / 同步執行） |
-| `callbackBatch(Runnable, boolean)` | 批量回調 |
-| 搭配 `Java.extend(Runnable)` | JS 側把函數包裝為 Java Runnable 代理（GraalJS 線程隔離的橋樑） |
+| `callback(Runnable, boolean callbackSync)` | Registers a callback (async/sync execution) |
+| `callbackBatch(Runnable, boolean)` | Batch callbacks |
+| With `Java.extend(Runnable)` | Wraps a JS function as a Java Runnable proxy (bridge for GraalJS thread isolation) |
 
-### 上下文與對象橋
-| API | 說明 |
+### Context & object bridge
+| API | Description |
 | --- | --- |
-| `getContext()` → `JsPlusContext` | 引擎上下文（`put/get/remove` 名值橋、`evalScript`、`getEngine/getBindings`、`close`） |
-| `newBuilder()` / `newBuilder(engine, allowAllAccess)` | **創建獨立控制台**（隔離上下文，並行執行） |
-| `initScriptEngineManager(boolean allowAllAccess)` | 初始化引擎（可放寬安全訪問） |
-| `closeContext()` | 釋放上下文 |
+| `getContext()` → `JsPlusContext` | Engine context (`put/get/remove` name-value bridge, `evalScript`, `getEngine/getBindings`, `close`) |
+| `newBuilder()` / `newBuilder(engine, allowAllAccess)` | **Creates an isolated console** (isolated context, parallel execution) |
+| `initScriptEngineManager(boolean allowAllAccess)` | Initializes the engine (may relax security access) |
+| `closeContext()` | Releases the context |
 
-### 全局快取陣列
-| API | 說明 |
+### Global cache array
+| API | Description |
 | --- | --- |
-| `getGlobalCacheArray(long timer, long loopTimer)` | 獲取全局快取陣列（filter worker 定時消費） |
-| `initGlobalCacheArray(long, long)` | 初始化全局快取陣列 |
+| `getGlobalCacheArray(long timer, long loopTimer)` | Gets the global cache array (filter worker consumes on a timer) |
+| `initGlobalCacheArray(long, long)` | Initializes the global cache array |
 
-### 排程與任務
-| API | 說明 |
+### Scheduling & tasks
+| API | Description |
 | --- | --- |
-| `addSchedule(name, cronRules, Runnable)` / `clearSchedule` / `getScheduleMap` | cron 排程 |
-| `setTask(String)` / `taskExecute()` | 一次性任務模式 |
-| `version(List)` / `help(List)` | 版本 / 命令幫助 |
+| `addSchedule(name, cronRules, Runnable)` / `clearSchedule` / `getScheduleMap` | cron scheduling |
+| `setTask(String)` / `taskExecute()` | One-shot task mode |
+| `version(List)` / `help(List)` | Version / command help |
 
 ### GhostConsole — cross-process command queue
 
@@ -86,108 +86,108 @@ Queue-table schema (`dbscript/change.sql`, created with `CREATE TABLE IF NOT EXI
 
 > Runtime rule: `ghost_remote_command` belongs to the runtime (GhostConsole); tests/init never DROP or recreate it (`IF NOT EXISTS` keeps it idempotent) — otherwise a running ghost hits "table not found" mid-run.
 
-## 3. 資料層機制（com.killcoding.datasource）
+## 3. Data layer mechanics (com.killcoding.datasource)
 
-### DriverDataSource 連接池（參數語義）
-| 參數 | 語義 |
+### DriverDataSource connection pool (parameter semantics)
+| Parameter | Semantics |
 | --- | --- |
-| `MinPoolSize` / `MaxPoolSize` | 池上下限；超過 `MaxPoolSize` 的借出被拒絕（overflow 拋異常） |
-| `TestValidTimeout` | 借出前有效性檢測超時 |
-| `RefreshPoolTimer` | 池刷新週期（驗證/回收空閒連接） |
-| `IdleTimeout` | 空閒超時回收（收斂至 `MinPoolSize`，最後 1 個空閒連接受保護） |
-| `Timeout` | 已借出連接（autoCommit=true）超時中斷回收 |
-| `TransactionTimeout` | 事務中連接（autoCommit=false）超時中斷 |
-| `LifeCycle` | 連接總壽命回收（不受 MinPoolSize 保護） |
+| `MinPoolSize` / `MaxPoolSize` | Pool lower/upper bounds; borrows beyond `MaxPoolSize` are rejected (overflow throws) |
+| `TestValidTimeout` | Validity-check timeout before borrow |
+| `RefreshPoolTimer` | Pool refresh cycle (validates/reclaims idle connections) |
+| `IdleTimeout` | Idle timeout reclamation (converges to `MinPoolSize`; the last idle connection is protected) |
+| `Timeout` | Interrupts borrowed connections (autoCommit=true) on timeout |
+| `TransactionTimeout` | Interrupts in-transaction connections (autoCommit=false) |
+| `LifeCycle` | Reclaims connections past total lifetime (not protected by MinPoolSize) |
 
-池自癒：連接被中斷後 worker 自動回補至 `MinPoolSize`；空池借出自動重載。
+Pool self-healing: after a connection is interrupted the worker automatically replenishes up to `MinPoolSize`; borrowing from an empty pool auto-reloads.
 
-### CacheDriverExecutor（JDBC 執行器）
-- `execute(sql, params)` / `first(sql, params)` / `find(sql, params)` — 同步 JDBC
-- `find(sql, params, CacheArray)` — **逐行饋送**進全局快取陣列（流式消費，不整集物化）
+### CacheDriverExecutor (JDBC executor)
+- `execute(sql, params)` / `first(sql, params)` / `find(sql, params)` — synchronous JDBC
+- `find(sql, params, CacheArray)` — **row-by-row feeding** into the global cache array (streaming consumption, no full materialization)
 
 ### Clock / IdentityCard
-- `Clock` — 時間 API（Date/SQL 時間戳/日曆，可配置 `Clock.properties`）
-- `IdentityCard` — 身份證資料源映射
+- `Clock` — time API (Date/SQL timestamp/calendar, configurable via `Clock.properties`)
+- `IdentityCard` — identity-card datasource mapping
 
-## 4. 快取層（com.killcoding.cache）
+## 4. Cache layer (com.killcoding.cache)
 
-### Cache 靜態 API — life 語義（重要）
+### Cache static API — `life` semantics (important)
 ```
 Cache.set(name, value, life)
-life >= 0  → 存（0 = 永不過期）
-life < 0   → 跳過（不寫入）
+life >= 0  → store (0 = never expire)
+life < 0   → skip (do not write)
 ```
-> **消費方約定**：若你的應用以 `0` 表示「禁用快取」，**必須跳過 `Cache.set` 調用**（不要傳 0——Core 會解釋為永不過期）。見 JsPlus-Tomcat B2 修復（D3/D4）：`cacheSeconds > 0` 才調用。
+> **Consumer contract**: if your application uses `0` to mean "cache disabled", you **must skip the `Cache.set` call** (do not pass 0 — Core interprets it as never-expire). See JsPlus-Tomcat B2 fix (D3/D4): call only when `cacheSeconds > 0`.
 
-`set(name, value)` 無 life 版 = 永不過期（合法用途，如靜態配置）。
+`set(name, value)` without `life` = never expire (legitimate use, e.g. static config).
 
-### CacheArray — 異步過濾管道
-`CacheArray + CacheArrayFilter`：producer 控制台把數據逐項/批量餵入，worker 線程按 `timer/loopTimer` 消費，經 `execute / executeBatch / completed / terminated` 回調驅動（對應 RxJava/Reactor 的 onNext/onComplete/onError 語義）。
+### CacheArray — async filter pipeline
+`CacheArray + CacheArrayFilter`: a producer console feeds data item-by-item or in batches, a worker thread consumes on `timer/loopTimer`, driven by the `execute / executeBatch / completed / terminated` callbacks (onNext/onComplete/onError semantics of RxJava/Reactor).
 
-### 實現
-`MemoryCache`（默認）/ `DiskCache` / `StoredCache` / `AbsCacheApi`（可換實現，`ScriptConsoleBase.setCacheApi`）。
+### Implementations
+`MemoryCache` (default) / `DiskCache` / `StoredCache` / `AbsCacheApi` (swappable implementation via `ScriptConsoleBase.setCacheApi`).
 
-## 5. 檔案層與 DB 同步
+## 5. File layer & DB sync
 
-- **DiskFile** — 本地檔案：寫/讀/刪、目錄、大小、encode/decode
-- **RemoteFile** — 資料庫映射檔案（`RemoteFileBase` 基礎 + `RemoteFileSync` 同步 + 表分片 `FilePart`）
-- **dbsync** — `Database/Table` + `Inserter/Updater/Deleter/Remover`：跨庫增量同步管道
+- **DiskFile** — local files: write/read/delete, directory, size, encode/decode
+- **RemoteFile** — DB-mapped files (`RemoteFileBase` base + `RemoteFileSync` sync + `FilePart` table chunking)
+- **dbsync** — `Database/Table` + `Inserter/Updater/Deleter/Remover`: cross-db incremental sync pipeline
 
-## 6. 正典模式（核心用例）
+## 6. Canonical patterns (core use cases)
 
-1. **雙 console 對象橋**：生產 console 執行 JS 把結果 `getContext().put(name, obj)`，獨立消費 console `getContext().get(name)` 讀取——跨控制台隔離傳值。
-2. **find → CacheArray 饋送**：`CacheDriverExecutor.find(sql, params, getGlobalCacheArray(...))` 逐行饋送，獨立 callback console 以 `Java.extend(Runnable)` 代理 + `CacheArrayFilter` 觀察消費——GraalJS 線程隔離下 worker 線程不能直接進 JS 上下文，這是唯一正典路徑（見 `TestFind` / `TestCacheArray`）。
-3. **動態編譯**：`evalJavaSource(...)` 把 Java 源碼即時編譯載入——無需預編譯即可在運行時擴展能力（見 `TestEvalJava`）。
+1. **Dual-console object bridge**: a producer console runs JS and puts the result via `getContext().put(name, obj)`; an independent consumer console reads it via `getContext().get(name)` — isolated value passing across consoles.
+2. **find → CacheArray feeding**: `CacheDriverExecutor.find(sql, params, getGlobalCacheArray(...))` feeds row-by-row; a dedicated callback console observes consumption via a `Java.extend(Runnable)` proxy + `CacheArrayFilter` — under GraalJS thread isolation, worker threads cannot enter the JS context directly, making this the only canonical path (see `TestFind` / `TestCacheArray`).
+3. **Dynamic compilation**: `evalJavaSource(...)` compiles and loads Java source on the fly — extends capabilities at runtime without precompilation (see `TestEvalJava`).
 
-## 7. 嵌入示例（Java）
+## 7. Embedding example (Java)
 
 ```java
 import com.killcoding.jsplus.ScriptConsole;
 import com.killcoding.cache.CacheArray;
 
 ScriptConsole console = new ScriptConsole();
-console.initScriptEngineManager(true);              // 啟動 GraalVM JS 引擎
+console.initScriptEngineManager(true);              // start the GraalVM JS engine
 console.evalScript("1 + 1");                        // → 2
 
-// 獨立控制台：隔離上下文並行執行
+// Isolated console: parallel execution in a separate context
 ScriptConsole worker = console.newBuilder();
 worker.evalScript("var x = 40 + 2; x");
 
-// 對象橋：JS ↔ Java 傳值
+// Object bridge: pass values between JS and Java
 console.getContext().put("greeting", "hello");
 console.evalScript("greeting.toUpperCase()");       // → "HELLO"
 
-// 全局快取陣列（異步過濾）
+// Global cache array (async filtering)
 CacheArray gca = console.getGlobalCacheArray(5000, 5000);
 gca.add("item");
 
-// 動態編譯 Java 源碼
+// Dynamic compilation of Java source
 ClassLoader cl = console.evalJavaSource(
     "public class Hello { public static String hi() { return \"hi\"; } }");
 ```
 
-完整啟動示例見 `JsPlus\bin\StartCore.bat`（classpath = `LibHome` 下 `graalvm/default`、`nashorn/default`、`h2/default`、`jsplus/default` + 核心 jar）。
+Full bootstrap example: `JsPlus\bin\StartCore.bat` (classpath = `graalvm/default`, `nashorn/default`, `h2/default`, `jsplus/default` under `LibHome` + the core jar).
 
-## 8. 構建與測試
+## 8. Build & test
 
-| 步驟 | 命令 | 產物 |
+| Step | Command | Artifact |
 | --- | --- | --- |
-| 構建 | `ant.bat build`（Linux/macOS：`ant.sh`） | `LibHome\jsplus\default\jsplus-core-<version>.jar`（版本自動 patch+1；每次構建附 changelog 條目至 `changes.log` / `changes_zh-HK.log`；重建 API javadoc 至 `docs/latest/api/`） |
-| 全量測試 | `test\TestAll.bat`（`TestAll.sh`） | **235 passed / 0 failed**（18 個 JS 套件 + LoadTest；自啟 H2 → 初始化 `testdb` → 跑套件 → 精確清理） |
-| 連接池整合測試 | `test\TestDatasource.bat`（`.sh`） | **17 passed / 0 failed**（池參數應用 + 超時回收 + 自癒 + 極限多線程壓力） |
+| Build | `ant.bat build` (Linux/macOS: `ant.sh`) | `LibHome\jsplus\default\jsplus-core-<version>.jar` (version auto patch+1; each build appends a changelog entry to `changes.log` / `changes_zh-HK.log`; regenerates API javadoc into `docs/latest/api/`) |
+| Full test suite | `test\TestAll.bat` (`TestAll.sh`) | **235 passed / 0 failed** (18 JS suites + LoadTest; auto-starts H2 → initializes `testdb` → runs suites → cleans up precisely) |
+| Pool integration tests | `test\TestDatasource.bat` (`.sh`) | **19 passed / 0 failed** (pool param application + timeout reclamation + self-heal + extreme multi-thread stress + Console export/import roundtrip) |
 
-工具鏈隨項目打包（bundled JDK + Ant，無需安裝、無需 `JAVA_HOME`）。所有測試套件均為 **JS 檔案在引擎內運行、直接調用真實 Java API 並斷言**——無 JUnit。
+The toolchain is bundled with the project (JDK + Ant, no installation, no `JAVA_HOME` required). Every test suite is a **JS file running inside the engine that calls the real Java API directly and asserts** — no JUnit.
 
-## 9. 環境變量覆寫（與服務端版同名約定）
+## 9. Environment variable overrides (same naming convention as the server edition)
 
-| 變量 | 默認 | 用途 |
+| Variable | Default | Purpose |
 | --- | --- | --- |
-| `JsPlus_JavaDir_JsPlus-Core` | `default` | `Java\` 下 JDK 目錄名 |
-| `JsPlus_JvmParams_JsPlus-Core` | `-Xms256m -Xmx1024m -Xss256k` | JVM 參數 |
-| `SCRIPT_ENGINE` | `graalvm.js` | 腳本引擎（可選 Nashorn） |
-| `JsPlus_H2_PORT` | `3306` | H2 TCP 端口 |
+| `JsPlus_JavaDir_JsPlus-Core` | `default` | JDK directory name under `Java\` |
+| `JsPlus_JvmParams_JsPlus-Core` | `-Xms256m -Xmx1024m -Xss256k` | JVM parameters |
+| `SCRIPT_ENGINE` | `graalvm.js` | Script engine (Nashorn optional) |
+| `JsPlus_H2_PORT` | `3306` | H2 TCP port |
 
-## 10. 質量與架構定位
+## 10. Quality & architecture positioning
 
-- 質量評分 83/100（6.1.204）——構建/腳本/CI/測試四層達發布水準；已知限制：GraalJS `load()` 共享全局作用域、CacheArray 全局 `forceStop`、`-Xlint:none` 壓制告警、Main scanner 依賴異常退出。
-- CacheArray 管道對標開源模式：**RxJava/Reactor**（observable 語義）、**LMAX Disruptor**（批量消費）、**Akka Actor**（多控制台分工）、**MyBatis Cursor / Spring RowCallbackHandler**（JDBC 流式饋送）。
+- Quality score 83/100 (6.1.204) — build/scripts/CI/tests reach release level; known limitations: GraalJS `load()` shares the global scope, CacheArray global `forceStop`, `-Xlint:none` suppresses warnings, Main scanner relies on abnormal exit.
+- The CacheArray pipeline maps to open-source patterns: **RxJava/Reactor** (observable semantics), **LMAX Disruptor** (batch consumption), **Akka Actor** (multi-console division of labor), **MyBatis Cursor / Spring RowCallbackHandler** (JDBC streaming feeding).
