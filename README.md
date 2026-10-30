@@ -1,183 +1,193 @@
 # JsPlus-Core
 
-JsPlus-Core is the **embedded console engine of JsPlus** — the core engine and utility libraries only (`com.killcoding.{jsplus,file,cache,tool,log,datasource}`), with **no web container dependency** and **no built-in H2 server process**.
-
-> `org/*` (log replacement classes) has been split into a separate project; this repository no longer contains `src/org`.
-
-## Quick Start (3 steps)
-
-The toolchain is bundled with this project (no Java / Ant installation, no `JAVA_HOME` required):
-
-| Step | Command | Output |
-| --- | --- | --- |
-| 1. Build | `ant.bat` (Linux/macOS: `ant.sh`) | `LibHome\jsplus\default\jsplus-core-<version>.jar` |
-| 2. Test | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) | `docs\latest\reports\*` (HTML / MD / CI summary) |
-| 3. Slim runtime | `packJdk.bat` (Linux/macOS: `packJdk.sh`) | `Java\runtime` (jlink cut-down) |
-
-Baseline: `ant build` → BUILD SUCCESSFUL; `TestAll.bat` → **237 passed / 0 failed, exit 0** (19 JS suites + LoadTest.js; H2 server TCP integration, pool tuning-parameter behaviour, `CacheDriverExecutor.find(sql, Map, CacheArray)` + `globalCacheArray`, Cache static API, `evalJavaSource` dynamic compilation, `JsString` interop); cleanup releases `:3306` with no leftover process.
-
-## Alignment with the Server Edition (adapted items)
-
-| Item | JsPlus-Core status |
-| --- | --- |
-| `build.xml` | Fully consistent with the server edition's standard (single jar → `LibHome\jsplus\default`, `-Xlint:none`, clear/compile/package/build targets; the dead `org/*` include removed) |
-| Versioning | `version.properties` (6.1.x) auto-increments **patch +1** on every `ant build`; jar name `jsplus-core-${jr.version}.jar`; old jar removed before build; each build appends a version history entry to `changes.log` (EN) + `changes_zh-HK.log` (繁中) (`-Dchange.en` / `-Dchange.zh` / `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` / defaults) (server-edition quirk: the jar name lags one patch behind — see `QUALITY-REVIEW.md`) |
-| `JsPlus\config` | 7 files + 2 sub-directories copied (server-edition `Logger.properties`; the original Core version is backed up at `build\.logger-core-backup.properties`) |
-| `dbscript\` | Rewritten: keeps only `ghost_remote_command` + 5 test tables; `tomcatdb` renamed everywhere to **`testdb`** |
-| Test framework | `TestBase.js` / `TestAll.js` renderer and report style aligned with the server edition (GitHub style + dbv nested tables) |
-
-## Directory Layout
-
-| Path | Purpose |
-| --- | --- |
-| `src/` | Engine and utility sources (48 .java files) |
-| `LibHome/` | Runtime dependencies (`graalvm\default` script engine, `h2\default` JDBC driver, `nashorn\default`); build artifacts go to `jsplus\default\` |
-| `Java/default` | Bundled JDK (Oracle GraalVM 25.0.3, with jdeps/jlink) |
-| `Java/runtime` | `packJdk`-generated cut-down runtime (can be deleted and rebuilt) |
-| `ant/default` | Bundled Apache Ant 1.10.17 |
-| `JsPlus/bin` | Start/stop script family (see above; `JS_PLUS_PATH` points to `JsPlus\`) |
-| `JsPlus/config` | Runtime settings (`DataSource.properties` / `GhostDataSource.properties` / `Appenv.properties` / `Logger.properties`, etc.) |
-| `JsPlus/ghost` | GhostConsole working directory |
-| `JsPlus/script` | `StartH2.js` / `H2Server.js` (H2 server bootstrap scripts, no external dependency) |
-| `dbscript/` | `fallback.sql` → `change.sql` (fixed DB-init order; `ghost_remote_command` is never DROPped and never touched by tests) |
-| `test/` | Test framework (`TestBase.js` / `TestAll.js` / `TestAll.bat` / `TestAll.sh`) and the 19 JS suites + `LoadTest.js` |
-| `docs/latest/api/` | API javadoc site of the newest release, regenerated on every `ant build` (skip with `-Djavadoc.skip=true`); open `docs/latest/api/index.html` |
-| `docs/apis/<version>.jar` | Archived API javadoc jar per release (one jar per version) |
-| `docs/latest/report/` | Test reports of the newest run - suites write directly here on every `TestAll.bat` / `TestAll.sh` run; open `docs/latest/report/TestAll-Report.html` |
-| `docs/reports/<version>.jar` | Archived test-report jar per run (one jar per version) |
-| `logs/` | Runtime logs (`app\`, `DS\` pool status, `SqlLog\`) |
-| `Database/` | H2 server database files (`testdb.mv.db`, gitignored) |
-| `build/classes/` | Intermediate compilation output (build-time only) |
-| `version.properties` | Build version state (auto-incremented) |
-
-## Test Suite
-
-### Framework signature: JavaScript verifies Java
-
-The defining trait of JsPlus-Core is that **every test suite is a JavaScript file running inside the embedded console engine** — the very engine production code embeds. A suite calls the real Java APIs directly (`Console`, `Cache`, `CacheDriverExecutor`, `DiskFile`, JDBC), asserts on their live results, and renders a GitHub-style HTML/MD report. There is no JUnit and no separate test framework: `test/*.js` + `test/TestBase.js` is the whole harness.
-
-### How to run
-
-| Want | Command |
-| --- | --- |
-| Full run: init H2 + testdb, 19 suites + load test, cleanup, archive reports | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) |
-| Datasource-only (dedicated `TestDatasource.properties` pool tuning) | `test\TestDatasource.bat` (`.sh`) |
-| Load test only (DB CRUD stress, `LOADTEST_ROUNDS` / `LOADTEST_TABLES`) | `test\LoadTest.bat` (`.sh`) |
-| Any single suite | copy the `-Task test/TestXxx.js` line from `TestAll.bat`; every suite is a plain console task and runs standalone too |
-
-Reports land in `docs\latest\reports\*` (HTML + MD + CI summary) and are archived to `docs/reports/<version>.jar` on every run.
-
-### `TestAll.bat` flow (5 steps, re-inits testdb every run)
-
-1. If `:3306` is not listening, run `BG_StartH2.bat %SCRIPT_ENGINE%` (→ `StartH2.bat` → `Main -Task script/StartH2.js`, separate JVM), poll 45×2s until ready;
-2. `RunScript` against `jdbc:h2:tcp://localhost:3306/testdb` (`-user sa`, `-checkResults`) runs `fallback.sql` then `change.sql`;
-3. Run `TestAll.js` (`JSPLUS_TEST_EXIT=1`, `< NUL` closes stdin), then `LoadTest.js` (same testdb, `docs/latest/report/LoadTest-Report.html`; a load failure fails the run);
-4. Precisely kill the java process whose command line contains `script/StartH2.js`, then run the full `StopAll.bat` sweep so no JsPlus/H2 JVM survives the run;
-5. Archive `docs/latest/report/` into **`docs/reports/<version>.jar`** (version from the core jar name) — an archive failure is WARN-only and never changes the exit code; then `exit /b %RC%`.
-
-### The suites
-
-| Suite | Cases | Focus |
-| --- | --- | --- |
-| TestDatasource | 13 | Clock, `Console.getDataSource()` connect, DDL/DML roundtrip, pool borrow/return, **pool-full cap (MaxPoolSize overflow rejected)**, **6 pool tuning params (TestValidTimeout / RefreshPoolTimer / IdleTimeout / Timeout / TransactionTimeout / LifeCycle) config-applied + behaviour** |
-| TestCrud | 23 | **Independent c/r/u/d per table** (5 tables × 4) + schema existence + soft-delete + 6-table dbVerify |
-| TestRemoteFile | 7 | RemoteFile datasource: list / write / read / delete + mkdirs against the mapped table |
-| TestFind | 5 | `CacheDriverExecutor.find` feeding a global `CacheArray` (canonical async pairing) |
-| TestDiskFile | 18 | DiskFile write/read/delete, dirs, size, encode/decode |
-| TestClock | 11 | `Clock` time API + `AppClock.properties` |
-| TestIdentityCard | 9 | IdentityCard datasource + table roundtrip |
-| TestXmlParser | 14 | XML parse + `toMap()` |
-| TestCommonTools | 17 | CommonTools helpers |
-| TestDataObject | 7 | DataObject store/get |
-| TestResultMap | 12 | ResultMap access |
-| TestConfigProperties | 17 | ConfigProperties parse / get / env |
-| TestCipherTools | 11 | cipher encode/decode |
-| TestEscapeTools | 16 | escape/unescape |
-| TestFileTools | 10 | file utilities |
-| TestCache | 11 | Cache static API: set/get/included/remove/removeAll/getNames + StoredCache (covers the life overflow / 0=never-expire / lazy-init fixes) |
-| TestCacheArray | 15 | CacheArray add/remove/sweep + filter worker (execute / executeBatch / completed) |
-| TestEvalJava | 7 | `Console.evalJavaSource` dynamic compile + load (content-addressed jar cache under `JsPlus/.tmp/java`) |
-| TestJsString | 13 | JsString interop layer for GraalJS strings |
-| LoadTest | — | heavy DB CRUD stress on the same testdb (run by `TestAll.bat` step 3b) |
-
-### Mandatory test conventions
-
-- **All DB connections go through `Console.getDataSource()`** (runtime datasource, `config/DataSource.properties` → `jdbc:h2:tcp://localhost:3306/testdb`, user `sample_user`);
-- **All CRUD goes through `CacheDriverExecutor`** (the DriverExecutor synchronous API: `execute()` / `first()` / `find()`); every phase is followed by a **re-select**;
-- **dbVerify always uses `SELECT *`** (full-column nested-table rendering, incl. row num); asserts 1 row after INSERT and 0 rows after DELETE;
-- **`ghost_remote_command` is not tested**: `fallback.sql` does not DROP it, `change.sql` uses `CREATE TABLE IF NOT EXISTS`, suites never touch its data — running tests while GhostConsole is up no longer hits `42104 Table not found`;
-- Reports use the GitHub-style four-column table (Case Id / Test Objective / Result / Detail) + Config Snapshot + yellow-toned dbv nested tables (renderer and style aligned with the server edition).
-
-### How to write a new suite
-
-1. Copy the shape of an existing suite (e.g. `test/TestClock.js`).
-2. Load the harness — `load(System.getProperty("JS_PLUS_PATH") + "../test/TestBase.js")` — and set `REPORT_TITLE` / `REPORT_NAME`.
-3. Call `beginTest()` to reset counters, then one `check({caseId, name, ok, detail, objective, objectiveZh, command})` per assertion; the report numbers the rows C1…Cn automatically.
-4. For DB assertions: connect via `Console.getDataSource()`, run CRUD via `CacheDriverExecutor`, and verify the persisted rows with `dbVerify(function () { return "SELECT * FROM ..."; })`.
-5. Finish with `writeReport()`; **never call `System.exit()`** — `TestAll.js` owns the JVM exit so a failing suite cannot kill the whole run.
-6. Register the suite in `test/TestAll.js` (the `suites` array **and** the one-line suites print); LoadTest and ordering follow the same array.
-
-## Build & Versioning
-
-- `version.properties` (`jr.major` / `jr.minor` / `jr.patch`) auto-increments **patch +1** on every `ant build` (carry at 999, semver).
-- The version is written into `ConsoleImpl.VERSION` (placeholder `${BuildVersion.VERSION}(${BuildVersion.BUILD_DATE})` substituted before compile, restored after).
-- Each build removes the old `jsplus-core-*.jar` and outputs the versioned jar.
-- Each build appends one history entry (UTF-8) to **two** changelog files: `changes.log` (English) and `changes_zh-HK.log` (Traditional Chinese), each headed `## <version> (<builddate> <buildtime>)`. Entry priority per language: `-Dchange.en="..."` / `-Dchange.zh="..."` (CI) → `build\changes-pending-en.txt` / `build\changes-pending-zh-HK.txt` (local note, consumed and deleted) → default `- build: automatic version bump` / `- build: 自動版本遞增`.
-- Each build also diffs the Java sources against the sibling copy at `jr.diffroot` (default `../../Githubrepos/JsPlus-Core/src`, skipped when absent) and writes every differing file into both changelogs as `- found diffed: <path> (A|M|D)` — a temporary marker for later review/refinement (e.g. syncing the change to the Githubrepos checkout).
-- Each build regenerates the API site into **`docs/latest/api/`** (window title carries the version, `-Xdoclint:none`, source links) and archives it as **`docs/apis/<version>.jar`** (one jar per release); use `-Djavadoc.skip=true` to skip.
-- Each `TestAll.bat` / `TestAll.sh` run archives `docs/latest/report/` into **`docs/reports/<version>.jar`** (same docs layout as the javadoc site).
-
-## Database & Configuration
-
-- Database: **`testdb`** (H2 server `tcp://localhost:${H2_PORT}/testdb`, `H2_BASE_DIR=${JS_PLUS_PATH}../Database/`, `H2_PORT=${JsPlus_H2_PORT:3306}`).
-- Account: `sample_user` / `sample_password` (created in `change.sql` via `CREATE USER IF NOT EXISTS` + ADMIN).
-- `DataSource.properties` pool parameters — current values are shortened for testing (restore production values as needed):
+**嵌入式腳本控制台引擎**——把 GraalVM JavaScript 執行環境內嵌進任何 Java 應用，並提供服務端能力庫：池化資料源、多層快取、檔案抽象、DB 同步、加密/解析/工具集。無 Web 容器依賴（不依賴 Tomcat/Servlet）；引擎本體不持有常駐 H2 進程——H2 資料庫伺服器由 `JsPlus\script\StartH2.js` 按需啟動（測試/運行時經 `StartH2.bat` 拉起、`StopH2.bat` 關閉）。
 
 ```
-TestValidTimeout=5s   RefreshPoolTimer=1s
-IdleTimeout=12s       Timeout=25s
-TransactionTimeout=25s  LifeCycle=30s
-MinPoolSize=1         MaxPoolSize=100
+Java 應用 ──► ScriptConsole（嵌入 GraalVM JS 引擎）
+              │
+              ├── 執行 JS（eval / evalScript / evalJavaSource 動態編譯）
+              ├── 資料源（DriverDataSource 池化 + CacheDriverExecutor）
+              ├── 快取（Cache 靜態 API + CacheArray 異步過濾管道）
+              ├── 檔案（DiskFile 本地 / RemoteFile 資料庫映射）
+              ├── DB 同步（dbsync 管道：Insert/Update/Delete/Select）
+              └── 工具（CommonTools / ConfigProperties / XmlParser / CipherTools …）
 ```
 
-- `ghost_remote_command` is the runtime GhostConsole queue table: idempotency is guaranteed by `IF NOT EXISTS`; init and tests only ensure it exists, never delete it.
+## 1. 包架構（src · 61 個 Java 類）
 
-## Quality
-
-- `QUALITY-REVIEW.md`: 70/100 seven-dimension quality report (all P0 items done) — server-edition alignment, toolchain, test closure, versioning, known limitations (e.g. GraalJS `load()` shares the global scope, CacheArray global `forceStop`, PowerShell must use `cmd /c` for `< NUL`).
-- **GraalJS thread confinement** (verified on 25.0.3): a `CacheArray` filter worker thread cannot enter the JS context (`Multi threaded access … not allowed for language(s) js`), so a JS `Console.callback(...)` body never fires on the worker thread. The canonical pattern (see TestFind / TestCacheArray) is: a feeding console runs `find(...)` into `getGlobalCacheArray()`, and a separate callback console observes consumption through the `CacheArrayFilter` worker (`execute` / `executeBatch` / `completed`).
-
-## Architecture Reference: Open-Source Counterparts
-
-The CacheArray pipeline (async filter worker + producer/feeder/consumer consoles + callback proxy) maps onto a set of well-known open-source patterns:
-
-| JsPlus-Core design | Open-source counterpart | Niche |
+| 包 | 核心類 | 職責 |
 | --- | --- | --- |
-| `CacheArray.filter(worker)` fires the callback per row (`execute`≈`onNext`, `completed`≈`onComplete`, `terminated`≈`onError`/dispose) | **RxJava / Project Reactor** (Flowable/Flux) | Observable sequence + backpressure + async consumption — semantically closest |
-| `CacheDriverExecutor.find(sql, params, GCA)` adds rows one by one | **Spring JdbcTemplate RowCallbackHandler** / **MyBatis Cursor** / **jOOQ** streaming queries | Row-by-row JDBC result processing without materialising the whole set |
-| `executeBatch` + `sweepProcessed` (batched consumption + head reclaim) | **LMAX Disruptor** (lock-free ring buffer + batched event processing) | Low-latency batched consumption |
-| insertConsole → feedConsole → callbackConsole (multi-role consoles) | **Akka Actor** / **Vert.x Verticle** / **ZeroMQ** | Multi-role independent message loops |
-| Batched chunk + completion callback | **Spring Batch** (ItemReader→Processor→Writer chunk) | Batch pipelines (ETL / jobs) |
-| Filter worker polling + periodic tasks | **ScheduledExecutorService** / **Quartz** / Node.js `setInterval` | Timer-driven consumption loops |
-| Cache + eviction / reclaim | **Caffeine / Guava Cache** (async refresh, eviction ≈ `sweepProcessed`/`removeAll`) | Cache lifecycle management |
-| Java worker thread + `Java.extend(Runnable)` proxy (GraalJS thread confinement) | **GraalVM Polyglot API** host interop | Cross-thread boundary in polyglot embedding |
+| `com.killcoding.jsplus` | ScriptConsole、ScriptConsoleBase、ConsoleImpl、JsPlusContext、GraalVmContext、NashornContext、JsString、Main、GhostConsole、CmdConsole、JdbcConsole | **Console 引擎核心**：腳本執行、多 console 隔離、引擎橋接（GraalJS/Nashorn）、對象橋、動態編譯、命令執行 |
+| `com.killcoding.datasource` | DriverDataSource、ConnectionPool、DriverConnection、DriverExecutor、CacheDriverExecutor、Clock、IdentityCard | **池化資料源與 JDBC**：連接池生命周期、同步執行器、快取陣列饋送 |
+| `com.killcoding.cache` | Cache、CacheArray、CacheArrayFilter、MemoryCache、DiskCache、StoredCache、AbsCacheApi、DataObject | **多層快取**：靜態鍵值 API + 異步過濾管道（producer/consumer） |
+| `com.killcoding.file` | DiskFile、RemoteFile、RemoteFileBase、RemoteFileSync、BaseFile、FilePart、RemoteFileSQL | **檔案抽象**：本地檔案操作、資料庫映射檔案（分片/同步） |
+| `com.killcoding.dbsync` | Database、Table、Inserter、Updater、Deleter、Remover、Enter、SqlStatement | **資料同步管道**：跨庫/跨表增量同步 |
+| `com.killcoding.tool` | CommonTools、ConfigProperties、ResultMap、XmlParser、CipherTools、EscapeTools、Base64Tools、FileTools、CodeEscape* | **通用工具**：配置/解析/加密/轉義/文件 |
+| `com.killcoding.log` | Logger、LoggerFactory、AlertMessage、LogRecord | **日誌**：非同步寫入、警報訊息 |
 
-Closest overall: **RxJava / Reactor** for the observable semantics, **Disruptor** for batched consumption, **Akka Actor** for the multi-console division, **MyBatis Cursor / Spring RowCallbackHandler** for row-by-row JDBC streaming.
+## 2. Console API（核心入口）
 
-## Environment Overrides (same naming convention as the server edition)
+`ScriptConsole` 是唯一入口，可實例化任意多個（各自獨立引擎上下文）：
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `JsPlus_JavaDir_JsPlus-Core` | `default` | JDK directory name under `Java\` |
-| `JsPlus_JvmParams_JsPlus-Core` | `-Xms256m -Xmx1024m -Xss256k` | JVM parameters |
-| `SCRIPT_ENGINE` (script arg %1) | `graalvm.js` | Script engine |
+### 執行與求值
+| API | 說明 |
+| --- | --- |
+| `evalScript(String)` | 執行原始 JS 字符串，返回結果 |
+| `eval(String/File)` | 執行腳本文件（路徑或 File） |
+| `eval(Runnable)` | 在控制台線程執行 Java 回調 |
+| `evalJavaSource(String / String[])` → `ClassLoader` | **動態編譯 Java 源碼**並載入類（內容定址 jar 緩存於 `JsPlus/.tmp/java`） |
+| `evalJavaFile(String / File)` → `ClassLoader` | 動態編譯 Java 文件 |
+| `execute(String)` / `executeBatch(String)` | 執行 JsPlus 命令 / 批處理文件 |
+| `executeViaGhost / executeViaCmd / executeViaScript` | 經 Ghost 控制台 / 系統命令 / 腳本執行 |
 
-## Running
+### 回調（callback）
+| API | 說明 |
+| --- | --- |
+| `callback(Runnable, boolean callbackSync)` | 註冊回調（異步 / 同步執行） |
+| `callbackBatch(Runnable, boolean)` | 批量回調 |
+| 搭配 `Java.extend(Runnable)` | JS 側把函數包裝為 Java Runnable 代理（GraalJS 線程隔離的橋樑） |
 
-```bat
-:: Build + full test (the test flow starts its own H2 server, inits testdb, then cleans up precisely)
-ant.bat build
-test\TestAll.bat
+### 上下文與對象橋
+| API | 說明 |
+| --- | --- |
+| `getContext()` → `JsPlusContext` | 引擎上下文（`put/get/remove` 名值橋、`evalScript`、`getEngine/getBindings`、`close`） |
+| `newBuilder()` / `newBuilder(engine, allowAllAccess)` | **創建獨立控制台**（隔離上下文，並行執行） |
+| `initScriptEngineManager(boolean allowAllAccess)` | 初始化引擎（可放寬安全訪問） |
+| `closeContext()` | 釋放上下文 |
+
+### 全局快取陣列
+| API | 說明 |
+| --- | --- |
+| `getGlobalCacheArray(long timer, long loopTimer)` | 獲取全局快取陣列（filter worker 定時消費） |
+| `initGlobalCacheArray(long, long)` | 初始化全局快取陣列 |
+
+### 排程與任務
+| API | 說明 |
+| --- | --- |
+| `addSchedule(name, cronRules, Runnable)` / `clearSchedule` / `getScheduleMap` | cron 排程 |
+| `setTask(String)` / `taskExecute()` | 一次性任務模式 |
+| `version(List)` / `help(List)` | 版本 / 命令幫助 |
+
+### GhostConsole — cross-process command queue
+
+`GhostConsole` (`com.killcoding.jsplus.GhostConsole`) is the headless runtime: the main console writes commands into the `ghost_remote_command` queue table via `executeViaGhost(commands)`, the GhostConsole process polls, executes and writes the result back — enabling cross-process / remote control without sharing process state.
+
+Queue-table schema (`dbscript/change.sql`, created with `CREATE TABLE IF NOT EXISTS`):
+
+| Column | Meaning |
+| --- | --- |
+| `id` | unique command record id (CHAR(16) PK) |
+| `ghost_name` | which ghost console owns the command |
+| `request_script` | script to be executed by the ghost |
+| `response_message` | text returned by the ghost after execution |
+| `processed` | 0 = pending, 1 = processed |
+| `requested` / `responsed` | request / response counters |
+| `created_at` / `updated_at` / `deleted_at` / `deleted` | timestamps + soft-delete (0 = active, 1 = deleted) |
+
+> Runtime rule: `ghost_remote_command` belongs to the runtime (GhostConsole); tests/init never DROP or recreate it (`IF NOT EXISTS` keeps it idempotent) — otherwise a running ghost hits "table not found" mid-run.
+
+## 3. 資料層機制（com.killcoding.datasource）
+
+### DriverDataSource 連接池（參數語義）
+| 參數 | 語義 |
+| --- | --- |
+| `MinPoolSize` / `MaxPoolSize` | 池上下限；超過 `MaxPoolSize` 的借出被拒絕（overflow 拋異常） |
+| `TestValidTimeout` | 借出前有效性檢測超時 |
+| `RefreshPoolTimer` | 池刷新週期（驗證/回收空閒連接） |
+| `IdleTimeout` | 空閒超時回收（收斂至 `MinPoolSize`，最後 1 個空閒連接受保護） |
+| `Timeout` | 已借出連接（autoCommit=true）超時中斷回收 |
+| `TransactionTimeout` | 事務中連接（autoCommit=false）超時中斷 |
+| `LifeCycle` | 連接總壽命回收（不受 MinPoolSize 保護） |
+
+池自癒：連接被中斷後 worker 自動回補至 `MinPoolSize`；空池借出自動重載。
+
+### CacheDriverExecutor（JDBC 執行器）
+- `execute(sql, params)` / `first(sql, params)` / `find(sql, params)` — 同步 JDBC
+- `find(sql, params, CacheArray)` — **逐行饋送**進全局快取陣列（流式消費，不整集物化）
+
+### Clock / IdentityCard
+- `Clock` — 時間 API（Date/SQL 時間戳/日曆，可配置 `Clock.properties`）
+- `IdentityCard` — 身份證資料源映射
+
+## 4. 快取層（com.killcoding.cache）
+
+### Cache 靜態 API — life 語義（重要）
+```
+Cache.set(name, value, life)
+life >= 0  → 存（0 = 永不過期）
+life < 0   → 跳過（不寫入）
+```
+> **消費方約定**：若你的應用以 `0` 表示「禁用快取」，**必須跳過 `Cache.set` 調用**（不要傳 0——Core 會解釋為永不過期）。見 JsPlus-Tomcat B2 修復（D3/D4）：`cacheSeconds > 0` 才調用。
+
+`set(name, value)` 無 life 版 = 永不過期（合法用途，如靜態配置）。
+
+### CacheArray — 異步過濾管道
+`CacheArray + CacheArrayFilter`：producer 控制台把數據逐項/批量餵入，worker 線程按 `timer/loopTimer` 消費，經 `execute / executeBatch / completed / terminated` 回調驅動（對應 RxJava/Reactor 的 onNext/onComplete/onError 語義）。
+
+### 實現
+`MemoryCache`（默認）/ `DiskCache` / `StoredCache` / `AbsCacheApi`（可換實現，`ScriptConsoleBase.setCacheApi`）。
+
+## 5. 檔案層與 DB 同步
+
+- **DiskFile** — 本地檔案：寫/讀/刪、目錄、大小、encode/decode
+- **RemoteFile** — 資料庫映射檔案（`RemoteFileBase` 基礎 + `RemoteFileSync` 同步 + 表分片 `FilePart`）
+- **dbsync** — `Database/Table` + `Inserter/Updater/Deleter/Remover`：跨庫增量同步管道
+
+## 6. 正典模式（核心用例）
+
+1. **雙 console 對象橋**：生產 console 執行 JS 把結果 `getContext().put(name, obj)`，獨立消費 console `getContext().get(name)` 讀取——跨控制台隔離傳值。
+2. **find → CacheArray 饋送**：`CacheDriverExecutor.find(sql, params, getGlobalCacheArray(...))` 逐行饋送，獨立 callback console 以 `Java.extend(Runnable)` 代理 + `CacheArrayFilter` 觀察消費——GraalJS 線程隔離下 worker 線程不能直接進 JS 上下文，這是唯一正典路徑（見 `TestFind` / `TestCacheArray`）。
+3. **動態編譯**：`evalJavaSource(...)` 把 Java 源碼即時編譯載入——無需預編譯即可在運行時擴展能力（見 `TestEvalJava`）。
+
+## 7. 嵌入示例（Java）
+
+```java
+import com.killcoding.jsplus.ScriptConsole;
+import com.killcoding.cache.CacheArray;
+
+ScriptConsole console = new ScriptConsole();
+console.initScriptEngineManager(true);              // 啟動 GraalVM JS 引擎
+console.evalScript("1 + 1");                        // → 2
+
+// 獨立控制台：隔離上下文並行執行
+ScriptConsole worker = console.newBuilder();
+worker.evalScript("var x = 40 + 2; x");
+
+// 對象橋：JS ↔ Java 傳值
+console.getContext().put("greeting", "hello");
+console.evalScript("greeting.toUpperCase()");       // → "HELLO"
+
+// 全局快取陣列（異步過濾）
+CacheArray gca = console.getGlobalCacheArray(5000, 5000);
+gca.add("item");
+
+// 動態編譯 Java 源碼
+ClassLoader cl = console.evalJavaSource(
+    "public class Hello { public static String hi() { return \"hi\"; } }");
 ```
 
-To launch the console directly: the classpath must include all dependency directories under `LibHome` (`graalvm\default`, `nashorn\default`, `h2\default`, `jsplus\default`) plus the core jar; see `JsPlus\bin\StartCore.bat`.
+完整啟動示例見 `JsPlus\bin\StartCore.bat`（classpath = `LibHome` 下 `graalvm/default`、`nashorn/default`、`h2/default`、`jsplus/default` + 核心 jar）。
+
+## 8. 構建與測試
+
+| 步驟 | 命令 | 產物 |
+| --- | --- | --- |
+| 構建 | `ant.bat build`（Linux/macOS：`ant.sh`） | `LibHome\jsplus\default\jsplus-core-<version>.jar`（版本自動 patch+1；每次構建附 changelog 條目至 `changes.log` / `changes_zh-HK.log`；重建 API javadoc 至 `docs/latest/api/`） |
+| 全量測試 | `test\TestAll.bat`（`TestAll.sh`） | **235 passed / 0 failed**（18 個 JS 套件 + LoadTest；自啟 H2 → 初始化 `testdb` → 跑套件 → 精確清理） |
+| 連接池整合測試 | `test\TestDatasource.bat`（`.sh`） | **17 passed / 0 failed**（池參數應用 + 超時回收 + 自癒 + 極限多線程壓力） |
+
+工具鏈隨項目打包（bundled JDK + Ant，無需安裝、無需 `JAVA_HOME`）。所有測試套件均為 **JS 檔案在引擎內運行、直接調用真實 Java API 並斷言**——無 JUnit。
+
+## 9. 環境變量覆寫（與服務端版同名約定）
+
+| 變量 | 默認 | 用途 |
+| --- | --- | --- |
+| `JsPlus_JavaDir_JsPlus-Core` | `default` | `Java\` 下 JDK 目錄名 |
+| `JsPlus_JvmParams_JsPlus-Core` | `-Xms256m -Xmx1024m -Xss256k` | JVM 參數 |
+| `SCRIPT_ENGINE` | `graalvm.js` | 腳本引擎（可選 Nashorn） |
+| `JsPlus_H2_PORT` | `3306` | H2 TCP 端口 |
+
+## 10. 質量與架構定位
+
+- 質量評分 83/100（6.1.204）——構建/腳本/CI/測試四層達發布水準；已知限制：GraalJS `load()` 共享全局作用域、CacheArray 全局 `forceStop`、`-Xlint:none` 壓制告警、Main scanner 依賴異常退出。
+- CacheArray 管道對標開源模式：**RxJava/Reactor**（observable 語義）、**LMAX Disruptor**（批量消費）、**Akka Actor**（多控制台分工）、**MyBatis Cursor / Spring RowCallbackHandler**（JDBC 流式饋送）。

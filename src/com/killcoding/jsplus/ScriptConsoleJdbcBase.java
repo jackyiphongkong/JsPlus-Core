@@ -936,7 +936,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 				boolean showResultFooter = consoleVariables.getBoolean("ShowResultFooter", DEFAULT_ShowResultFooter);
 				if (enableSystemOut && showResultFooter) {
 					long timeCostMs = new java.util.Date().getTime() - beginTime.getTime();
-					String footer = String.format("%s rows selected (%sms)", size, timeCostMs);
+					String footer = String.format("%s rows selected (%sms)", this.getCacheArray().getProcessedTotal(), timeCostMs);
 					System.out.println(System.lineSeparator());
 					System.out.println(footer);
 					Integer queryMaxRows = consoleVariables.getInteger("QueryMaxRows",DEFAULT_QueryMaxRows);
