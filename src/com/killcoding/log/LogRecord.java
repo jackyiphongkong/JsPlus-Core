@@ -48,9 +48,12 @@ import javax.sql.DataSource;
 import com.killcoding.tool.CommonTools;
 import java.util.Arrays;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import com.killcoding.datasource.CacheDriverExecutor;
 import java.sql.Connection;
 
@@ -71,11 +74,12 @@ public final class LogRecord {
 
 	/** Shared daemon pool for database log flushing - created once, reused by
 	* every log cycle. Never re-create per cycle (leaks a thread per second). */
-	private static final ExecutorService DB_WRITE_POOL = Executors.newFixedThreadPool(1, r -> {
-		Thread t = new Thread(r, "LogRecord-DB-Writer");
-		t.setDaemon(true);
-		return t;
-	});
+	private static final ExecutorService DB_WRITE_POOL = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+			new ArrayBlockingQueue<Runnable>(1024), r -> {
+				Thread t = new Thread(r, "LogRecord-DB-Writer");
+				t.setDaemon(true);
+				return t;
+			}, new ThreadPoolExecutor.CallerRunsPolicy());
 
 	private static boolean started = false;
 	private static boolean firstRefreshConfig = false;
@@ -484,12 +488,11 @@ public final class LogRecord {
 				String databaseOutArchiveExecute = config.getString("DatabaseOutArchiveExecute", null);
 				String databaseOutInsertExecute = config.getString("DatabaseOutInsertExecute", null);
 				String databaseOutConfigFrom = config.getString("DatabaseOutConfigFrom", null);
-				Integer databaseOutBatchLimit = config.getInteger("DatabaseOutBatchLimit", 100);
 			    Integer databaseOutArchiveDays = config.getInteger("DatabaseOutArchiveDays",31);
 
 				initDataSource(databaseOutDataSource);
 
-				if (dataSource != null && databaseOutConfigFrom != null
+				if (dataSource != null && !CommonTools.isBlank(databaseOutConfigFrom)
 						&& (ms >= databaseOutRefreshConfigTimer || firstRefreshConfig)) {
 					firstRefreshConfig = false;
 					Map<String, Object> paramMap = new HashMap<String, Object>();
@@ -527,22 +530,36 @@ public final class LogRecord {
 					LAST_REFRESH_CONFIG_TIME = new Date();
 				}
 
-				if (dataSource != null && databaseOutInsertExecute != null && list.size() > 0) {
+				if (dataSource != null && !CommonTools.isBlank(databaseOutInsertExecute) && list.size() > 0) {
 					batch(databaseOutInsertExecute, list);
 				}
 
-				if (dataSource != null && databaseOutArchiveExecute != null) {
-				    long archiveTime = System.currentTimeMillis() - databaseOutArchiveDays*24*3600*1000;
-					Map<String, Object> paramMap = new HashMap<String, Object>();
-					paramMap.put("hostname", hostname);
-					paramMap.put("archive_time",new Timestamp(archiveTime));
-					execute(databaseOutArchiveExecute, paramMap);
+				if (dataSource != null && !CommonTools.isBlank(databaseOutArchiveExecute)) {
+				    // Archive throttling: the archive scan used to run on every flush
+				    // (OutLogTimer, ~1/sec); DatabaseOutArchiveTimer (ms, default 60s)
+				    // caps its frequency so the condition scan does not hammer a large table.
+				    long archiveTimerMs = config.getMilliSeconds("DatabaseOutArchiveTimer", 60000L);
+				    long nowMs = System.currentTimeMillis();
+				    if (nowMs - lastArchiveExecuteTime >= archiveTimerMs) {
+				        lastArchiveExecuteTime = nowMs;
+				        long archiveTime = nowMs - databaseOutArchiveDays*24*3600*1000L;
+					    Map<String, Object> paramMap = new HashMap<String, Object>();
+					    paramMap.put("hostname", hostname);
+					    paramMap.put("archive_time",new Timestamp(archiveTime));
+					    execute(databaseOutArchiveExecute, paramMap);
+				    }
 				}
 			}
 		} catch (Exception e) {
 			Logger.systemError(LogRecord.class, e.getMessage(),e);
 		}
 	}
+
+	/** Last failed datasource init time (DB offline reconnect back-off). */
+	private static volatile long lastInitFailAt = 0L;
+
+	/** Last archive execution time (archive frequency throttle). */
+	private static volatile long lastArchiveExecuteTime = 0L;
 
 	/**
 	* For write log to database
@@ -558,10 +575,15 @@ public final class LogRecord {
 		        appDataSourcePath = loadDatabaseOutDataSource;
 		    }
 		    if(dataSource == null){
+		        long retryTimerMs = config.getMilliSeconds("DatabaseOutRetryTimer", 30000L);
+		        if (System.currentTimeMillis() - lastInitFailAt < retryTimerMs) {
+		            return; // DB offline: back off reconnect attempts
+		        }
 		        File appDataSource = new File(appDataSourcePath);
                 dataSource = new DriverDataSource(appDataSource);
 		    }
 		} catch (Exception e) {
+			lastInitFailAt = System.currentTimeMillis();
 			Logger.systemError(LogRecord.class, e.getMessage(),e);
 		}
 	}
@@ -655,7 +677,7 @@ public final class LogRecord {
 		CacheDriverExecutor driverExecutor = null;
 		try {
 			Connection conn = dataSource.getConnection();
-			conn.setAutoCommit(true);
+			conn.setAutoCommit(false);
 			driverExecutor = new CacheDriverExecutor(conn);
 			return driverExecutor.executeBatch(sql, recordsPart);
 		} finally {

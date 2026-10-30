@@ -2046,7 +2046,7 @@ public final class Logger {
 			map.put("log_line_number", 0);
 
 		map.put("id", CommonTools.generateId(16));
-		map.put("created_at", CommonTools.generateId(16));
+		map.put("created_at", new java.sql.Timestamp(new Date().getTime()));
 		map.put("hostname", hostname);
 
 		map.remove("exception");

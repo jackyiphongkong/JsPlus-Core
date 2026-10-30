@@ -3242,3 +3242,9 @@ ${jr.diff.changes}- build: 自動版本遞增
 - found diffed: com/killcoding/jsplus/ScriptConsoleJdbcBase.java (M)
 - build: 自動版本遞增
 
+
+## 6.1.210 (2026.10.30 16:00:52)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- build: 自動版本遞增
+
