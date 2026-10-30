@@ -3264,3 +3264,14 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/log/Logger.java (M)
 - build: automatic version bump
 
+
+## 6.1.211 (2026.10.30 16:13:00)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- build: automatic version bump
+
+
+## 6.1.212 (2026.10.30 18:53:36)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- build: automatic version bump
+

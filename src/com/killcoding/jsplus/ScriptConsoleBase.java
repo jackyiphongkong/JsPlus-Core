@@ -598,7 +598,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
 		consoleVariables.putAndReturnSelf("ExportMaxFileSize", DEFAULT_ExportMaxFileSize);
 		consoleVariables.putAndReturnSelf("ExportCursorStart", DEFAULT_ExportCursorStart);
 		consoleVariables.putAndReturnSelf("ExportMaxRows", DEFAULT_ExportMaxRows);
-		consoleVariables.putAndReturnSelf("ExportTimer", DEFAULT_ExportTimer);
+		consoleVariables.putAndReturnSelf("ExportTimer", DEFAULT_ExportTimer + "ms");
 		consoleVariables.putAndReturnSelf("ExportOrderBy", DEFAULT_ExportOrderBy);
 		consoleVariables.putAndReturnSelf("ExportUpperOrLowerCase", DEFAULT_ExportUpperOrLowerCase);
 		consoleVariables.putAndReturnSelf("ExportSplit", DEFAULT_ExportSplit);

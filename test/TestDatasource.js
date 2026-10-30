@@ -33,6 +33,9 @@
 //              H2 process management is not stable on shared CI runners;
 //              the suite runs C1-C16 + C18 until h2Stop/h2Start are fixed.
 //              [C17-DISABLED]
+//            - Console export/import pipeline: exportTo writes the last SELECT
+//              result to a CSV chunk file; importFrom reads the CSV back into a
+//              target table (roundtrip)                                    [C19-C20]
 // NOTE     : Run with -DAPP_DATASOURCE=<config/TestDatasource.properties>
 //            (test/TestDatasource.bat/.sh and TestAll.bat/.sh pass it) so the
 //            runtime Console.getDataSource() loads the dedicated second-scale
@@ -1208,6 +1211,112 @@ check({
     objective: "Phase1 concurrent borrow/close (local 20x50, CI 12x30; open <= MaxPoolSize, no using leak, open == idle + using); Phase2 hold 80% of the pool and verify using tracks held (>= 80%); Phase3 hold past Timeout and verify the worker aborts the connection",
     objectiveZh: "階段1：併發借還（本地 20×50，CI 12×30；open 不超 MaxPoolSize、無 using 洩漏、計數自洽）；階段2：持有 80% 池容量驗證 using 跟隨（≥80%）；階段3：持有超過 Timeout 驗證被池 worker 中止",
     command: "evalJavaSource(PoolStress) -> PoolStress.stress(ds, pool, CI?12/30:20/50) (3 phases)"
+});
+
+// ---------------------------------------------------------------------------
+// C19: Console.exportTo - export the last SELECT result to a CSV chunk file
+// ---------------------------------------------------------------------------
+var JFile = Java.type("java.io.File");
+var JScanner = Java.type("java.util.Scanner");
+var JFiles = Java.type("java.nio.file.Files");
+var JPaths = Java.type("java.nio.file.Paths");
+var JThread = Java.type("java.lang.Thread");
+
+var exportErr = "";
+var exportOk = false;
+var exportDetail = "";
+var exportCsv = null;
+try {
+    // prepare a small table with 5 rows (INT + VARCHAR only: format/convert risk stays minimal)
+    var c19Conn = Console.getDataSource().getConnection();
+    var c19St = c19Conn.createStatement();
+    c19St.execute("DROP TABLE IF EXISTS test_export_import");
+    c19St.execute("CREATE TABLE test_export_import (id INT PRIMARY KEY, name VARCHAR(50))");
+    for (var r = 1; r <= 5; r++) {
+        c19St.execute("INSERT INTO test_export_import VALUES (" + r + ", 'name" + r + "')");
+    }
+    c19St.close();
+    c19Conn.close();
+
+    // JDBC env + lastSelectCommand via execute(select), then export
+    Console.setUseJdbcEnv();
+    var c19Run = Console.execute("select * from test_export_import order by id");
+    JThread.sleep(500); // let the async find() of execute() settle before re-query
+    var exportDir = basePath + "../docs/latest/export/";
+    JFiles.createDirectories(JPaths.get(exportDir));
+    var exportBase = exportDir + "test_export";
+    var c19Ret = Console.exportTo(exportBase);
+    exportDetail = "execute=" + c19Run + " exportRet=" + c19Ret;
+
+    // exportTo writes <base>.000000000.csv via the export filter (async):
+    // poll until the chunk file holds header + 5 data rows (up to 15s)
+    var chunkFile = new JFile(exportBase + ".000000000.csv");
+    var lineCount = 0;
+    for (var p = 0; p < 150; p++) {
+        if (chunkFile.exists()) {
+            var sc = new JScanner(chunkFile, "UTF-8");
+            lineCount = 0;
+            while (sc.hasNextLine()) { sc.nextLine(); lineCount++; }
+            sc.close();
+            if (lineCount >= 6) break;
+        }
+        JThread.sleep(100);
+    }
+    exportCsv = chunkFile.getAbsolutePath();
+    exportOk = lineCount === 6; // header + 5 data rows
+    exportDetail += " lines=" + lineCount;
+} catch (e) {
+    exportErr = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C19");
+check({
+    name: "Console.exportTo exports the last SELECT result to a CSV chunk file",
+    caseId: "C19",
+    ok: exportOk && exportErr.length === 0,
+    detail: exportErr.length > 0 ? exportErr : exportDetail,
+    objective: "setUseJdbcEnv -> execute(select) sets lastSelectCommand -> exportTo(file) writes <file>.000000000.csv with header + 5 data rows",
+    objectiveZh: "啟用 JDBC 環境後以 execute 執行 SELECT 設定 lastSelectCommand，exportTo 導出含表頭與 5 行資料的 CSV 分卷檔",
+    command: "Console.setUseJdbcEnv(); Console.execute('select ...'); Console.exportTo(file)"
+});
+
+// ---------------------------------------------------------------------------
+// C20: Console.importFrom - import the exported CSV into a target table
+// ---------------------------------------------------------------------------
+var importErr = "";
+var importOk = false;
+var importDetail = "";
+try {
+    var c20Conn = Console.getDataSource().getConnection();
+    var c20St = c20Conn.createStatement();
+    c20St.execute("DROP TABLE IF EXISTS test_import_target");
+    c20St.execute("CREATE TABLE test_import_target (id INT PRIMARY KEY, name VARCHAR(50))");
+    c20St.close();
+    c20Conn.close();
+
+    var c20Ret = Console.importFrom(["test_import_target", exportCsv]);
+    Console.commit(); // the JDBC console connection is AutoCommit=false
+    importDetail = "ret=" + c20Ret;
+
+    var c20Conn2 = Console.getDataSource().getConnection();
+    var c20Rs = c20Conn2.createStatement().executeQuery("SELECT COUNT(*) FROM test_import_target");
+    var c20Cnt = 0;
+    if (c20Rs.next()) { c20Cnt = c20Rs.getInt(1); }
+    c20Rs.close();
+    c20Conn2.close();
+    importOk = c20Ret.indexOf("5 rows inserted") >= 0 && c20Cnt === 5;
+    importDetail += " count=" + c20Cnt;
+} catch (e) {
+    importErr = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C20");
+check({
+    name: "Console.importFrom imports the CSV into a target table",
+    caseId: "C20",
+    ok: importOk && importErr.length === 0,
+    detail: importErr.length > 0 ? importErr : importDetail,
+    objective: "importFrom(tableName, csv) reads the CSV header + rows, inserts via batch and returns 'N rows inserted'; target table COUNT matches the imported rows",
+    objectiveZh: "importFrom 讀取 CSV 表頭與資料列、批次寫入目標表並回傳行數，目標表 COUNT 與匯入列數一致",
+    command: "Console.importFrom('test_import_target', csv)"
 });
 
 writeReport();

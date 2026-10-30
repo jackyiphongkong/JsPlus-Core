@@ -732,7 +732,11 @@ public final class LogRecord {
 				Logger.systemError(LogRecord.class, e);
 			}
 
-			ExecutorService executor = Executors.newFixedThreadPool(1);
+			ExecutorService executor = Executors.newFixedThreadPool(1, r -> {
+				Thread t = new Thread(r, "LogRecord-Flusher");
+				t.setDaemon(true);
+				return t;
+			});
 			executor.execute(new Runnable() {
 
 				/*
