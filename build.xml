@@ -158,12 +158,25 @@
 	     (e.g. CI checkouts) the diff step is skipped silently. -->
 	<property name="jr.diffroot" value="${jr.root}/../../Githubrepos/JsPlus-Core/src" />
 
-	<target name="changelog-diff" depends="write-changelog">
-		<available file="${jr.diffroot}" property="jr.diff.root.exists" />
-		<antcall target="changelog-diff-run" />
+	<target name="changelog-diff" depends="write-changelog,changelog-diff-write">
 	</target>
 
-	<target name="changelog-diff-run" if="jr.diff.root.exists">
+	<!-- changelog-diff-run - diff the Java sources against the sibling
+	     Githubrepos copy and capture the diff lines. The sibling root is
+	     optional: when it does not exist (e.g. CI checkouts) DiffScanner
+	     fails silently (failonerror=false) and no .diff-changes.txt is
+	     produced, which loadfile then treats as "property not set".
+	     NOTE: a plain <available>/<length when="gt"> guard is NOT enough
+	     here - on the bundled Ant, <length> still sets the property to 0
+	     for an empty file and ant's target-level if only tests whether the
+	     property EXISTS, so the concat below would write the literal
+	     "${jr.diff.changes}" (seen on 6.1.196..6.1.203 entries on
+	     2026-10-29/30). Instead we rely on <loadfile> leaving the property
+	     UNDEFINED for an empty/missing file ("Do not set property ... as
+	     its length is 0") and gate the writer on <isset>. These targets run
+	     in the MAIN project via the depends chain (no <antcall>, whose
+	     sub-project would not propagate the property back). -->
+	<target name="changelog-diff-run">
 		<mkdir dir="${jr.build}/tools" />
 		<mkdir dir="${jr.build}/classes-tools" />
 		<javac srcdir="${jr.build}/tools" destdir="${jr.build}/classes-tools"
@@ -177,6 +190,14 @@
 		</java>
 		<loadfile property="jr.diff.changes" srcFile="${jr.build}/.diff-changes.txt"
 			encoding="UTF-8" failonerror="false" />
+		<condition property="jr.diff.changes.ready">
+			<isset property="jr.diff.changes" />
+		</condition>
+	</target>
+
+	<!-- changelog-diff-write - write the diff lines ONLY when loadfile
+	     actually captured a non-empty .diff-changes.txt. -->
+	<target name="changelog-diff-write" depends="changelog-diff-run" if="jr.diff.changes.ready">
 		<concat destfile="${jr.root}/changes.log" append="true" encoding="UTF-8">
 			<string>${jr.diff.changes}</string>
 		</concat>

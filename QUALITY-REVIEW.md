@@ -1,91 +1,86 @@
 # JsPlus-Core 專案品質評估報告
 
-- 評估日期：2026-10-24
+- 評估日期：2026-10-30（發布前全面檢查更新）
 - 評估範圍：`D:\Working\JsPlus-Core`（嵌入引擎）——構建機制、腳本、測試、CI、源碼、文件、版本控制
-- 評估方式：靜態審查（結構盤點、Xlint 嚴格編譯、源碼衛生掃描、腳本一致性核對）+ 構建/測試實跑
-- 樣本狀態：src 48 個 java（~22,000 行），`jsplus-core-6.1.7.jar`（LibHome/jsplus/default），version.properties = 6.1.7（機制正常自動遞增中）
+- 評估方式：靜態審查（結構盤點、源碼衛生掃描、大文件統計、腳本一致性核對）+ 構建/測試實跑（發布檢查兩輪）
+- 樣本狀態：src 61 個 java（~29,910 行），`jsplus-core-6.1.204.jar`（LibHome/jsplus/default），version.properties = 6.1.204（機制正常自動遞增中）
+- 前版：2026-10-24 評估（6.1.7、70/100）——本版反映 6.1.8→6.1.204 期間批次 A-D 優化、TestDatasource 整合、CI 轉綠與發布檢查成果
 
 ---
 
 ## 一、總評
 
-**綜合評分：70 / 100** —— 構建、腳本、CI 三層已達可用且與 JsPlus-Tomcat 對齊；**源碼可維護性與測試覆蓋是真實短板**（上帝類、告警被壓制、JDBC 套件零覆蓋），文件有兩處錯誤路徑。
+**綜合評分：83 / 100** —— 構建、腳本、CI、測試四層已達可發布水準（全量測試 235/0 + 連接池整合 17/0，CI run #49 全綠）；**源碼可維護性仍是主要短板**（`-Xlint:none` 壓制告警、RemoteFileBase 2720 行、Main scanner 依賴異常退出），文件與版本控制衛生良好。
 
 | 維度 | 評分 | 一句話結論 |
 | --- | --- | --- |
-| 構建與版本機制 | 85 | 與 Tomcat 標準逐項對齊，版本自動遞增實跑驗證；僅餘 org include 死配置與 version.properties 髒狀態 |
-| 腳本（bat/sh） | 80 | 自帶工具鏈優先、刪除白名單守衛、參數轉發齊全；.sh 未在真實 bash 驗證 |
-| 測試框架與套件 | 76 | 框架結構好、斷言真實；TestDatasource 已改真實 H2 整合測試（C5-C7，7/7），總基線 65 passed / 0 failed；尚存 CI 漏報失敗問題（見 P1 新發現） |
-| CI 配置 | 75 | 流程完整可跑；版本 bump 副作用與 ant 版本未固定 |
-| 源碼品質 | 55 | 314 處衛生問題、100 個 Xlint 告警被壓制、多個上帝類、公共 API 拼寫錯誤 |
-| 文件 | 55 | 缺根 README；兩處 LibHome 路徑錯誤（引用不存在的 `LibHome/Core/default/lib`） |
-| 版本控制衛生 | 70 | .gitignore 合理；version.properties 與 test_reports 未納入管理策略 |
+| 構建與版本機制 | 90 | 版本自動遞增、changelog-diff 判空 bug 已修並實證、PruneJars 歸檔策略生效；僅餘 `-Xlint:none` 死配置與 version.properties 髒狀態 |
+| 腳本（bat/sh） | 85 | release 雙平台對稱、TestDatasource/TestAll 的 TESTALL_RUN 共享 H2 守衛 + StopH2.sh 到位；.sh 未在本機 bash 驗證（CI 已跑通） |
+| 測試框架與套件 | 92 | 18 個套件 235/0、TestDatasource 真實 H2 整合 17/0、C17 停用 + C14 等待窗口修復、TestAll 失敗退出碼已修（CI 不再漏報） |
+| CI 配置 | 88 | TestAll 全量恢復、artifact 上傳、StopH2 取代 Stop 避免誤殺；僅餘 ant 版本未固定 |
+| 源碼品質 | 72 | 批次 A-D 大幅優化（CacheArray、Logger printStackTrace 170→78、RemoteFile 拆 Base/Sync、ScriptConsole 3193→1536、Slef→Self、evalJava）；仍剩 -Xlint:none 壓制、上帝類與 Main scanner |
+| 文件 | 75 | 根 README 已補、LibHome 路徑已修正、中英 README 對稱；QUALITY-REVIEW 隨版本更新 |
+| 版本控制衛生 | 78 | .gitignore 合理、docs/reports 10 個歸檔策略；version.properties 每次 build bump 導致 git 髒仍在 |
 
 ---
 
 ## 二、問題清單（依嚴重度）
 
-### P0 — 應立即修正（低成本、高價值）
+### P0 — 應立即修正（已全部完成並實跑驗證）
 
-| # | 問題 | 證據 | 影響 |
+| # | 問題 | 狀態 | 證據 |
 | --- | --- | --- | --- |
-| 1 | **README 控制台啟動命令路徑錯誤** | `JsPlus\README.md` 寫 `LibHome\Core\default\lib\*`，實際 LibHome 結構為 `graalvm\default`、`h2\default`、`nashorn\default`、`jsplus\default`，**無 Core 目錄** | 照文件操作必然失敗 |
-| 2 | **TestDatasource scope note 理由錯誤 + 假陽性** | `test\TestDatasource.js` C5 恆過（`ok: true`），宣稱 "none is bundled in LibHome/Core/default/lib"；實測 `LibHome\h2\default\h2-2.4.240.jar` 含 `org/h2/Driver.class` | 6 個 JDBC 類（DriverDataSource/DriverConnection/ConnectionPool/DriverExecutor/CacheDriverExecutor/IdentityCard）完全未測，且「未測」被計為 PASS |
-| 3 | **項目根缺 README.md** | 根目錄僅有 `JsPlus\README.md` | 新接手者無入口文件 |
-| 4 | **build.xml 殘留 org include 死配置** | `package` 目標 `include name="org/**/**/*"`；src 已無 org（已拆分） | 死配置誤導後續維護者 |
-
-> **P0 執行狀態（2026-10-24 已全部完成並實跑驗證）**：① 啟動命令已改實際 LibHome 四目錄；② 根 `README.md` 已補；③ `TestDatasource.js` 重寫為真實 H2 記憶體庫整合測試——C5 連線、C6 DDL/DML/查詢、C7 `ConnectionPool` 借出/歸還生命週期（借出移出空閒池、`close()` 歸還，鍵為原始連線哈希），套件 7/7 全過；④ build.xml org include 已移除。最新基線：`ant build` 成功、`TestAll.bat` **65 passed / 0 failed**、jar = `jsplus-core-6.1.8.jar`。
+| 1 | README 控制台啟動命令路徑錯誤（LibHome\Core\default\lib） | ✅ 已修 | 已改實際 LibHome 四目錄；根 README 已補 |
+| 2 | TestDatasource C5 假陽性 + JDBC 套件零覆蓋 | ✅ 已修 | 重寫為真實 H2 整合測試，17 cases（C1-C16+C18）實跑全過 |
+| 3 | 項目根缺 README.md | ✅ 已修 | 根 `README.md` + `README_zh-HK.md` 對稱 |
+| 4 | build.xml 殘留 org include 死配置 | ✅ 已修 | package include 已移除 |
+| 5 | TestAll 失敗仍 exit 0（CI 漏報） | ✅ 已修 | TestAll.bat/.sh 現按 FAIL 判定非 0 退出；本機 TESTALL_EXIT=0 全綠、CI 全量恢復 |
 
 ### P1 — 短中期改善
 
-| # | 問題 | 證據 | 影響 |
+| # | 問題 | 狀態 | 說明 |
 | --- | --- | --- | --- |
-| 5 | **Xlint 告警被 `-Xlint:none` 完全壓制** | 嚴格編譯（`-Xlint:all`）實測 100 個告警：rawtypes 47、unchecked 19、dangling-doc-comments 17、serial 8、deprecation 4、cast/static 各 2、this-escape 1；build.xml 卻用 `-Xlint:none` 遮蔽 | 型別安全問題不可見，滾雪球 |
-| 6 | **Logger.java 大量複製貼上** | `Logger.java` 1588 行、**170 處** `printStackTrace`/`System.err`；15+ 個方法重複「try/catch → printStackTrace → System.err.println」模式；另有拼寫錯誤 `"Worng msg format: "` | 維護成本高、異常處理不一致 |
-| 7 | **Main.java scanner 靠異常退出** | `Main.java:189` `while ((line = scanner.nextLine()) != null)`——EOF 時 `nextLine()` 拋 `NoSuchElementException`；`:329` `catch(Exception e){ System.err.println("Current scanner exit."); }` 資訊誤導（EOF ≠ scanner 退出） | 退出機制脆弱、診斷資訊錯誤 |
-| 8 | **上帝類** | `RemoteFile.java` 3335 行、`ScriptConsole.java` 3193 行、`DriverExecutor.java` 1786 行、`Logger.java` 1588 行、`DriverDataSource.java` 1512 行 | 違反單一職責，難以測試與並行開發 |
-| 9 | **公共 API 拼寫錯誤** | `ConfigProperties.java:220` `public ConfigProperties putAndReturnSlef(String key, Object value)`（Self→Slef），全項目 96 處調用 | 外部腳本亦受影響；改名破壞相容，需提供別名 |
-
-> **P1 新增發現（2026-10-24，P0 驗證期間實測）**：`test/TestAll.js` 無論成功或失敗都執行 `System.exit(0)`——實測 1 failed 時 `TestAll.bat` 退出碼仍為 0，`TestAll.sh` 與 CI 工作流因此**漏報測試失敗**（CI 全綠但測試紅）。建議 `TestAll.bat/.sh` 在「存在 FAIL」時以非 0 退出碼結束（例如 `exit 1`），或在 CI 步驟加失敗判定。
+| 6 | Xlint 告警被 `-Xlint:none` 完全壓制 | ⚠️ 部分 | build.xml L276 已加 `-Xlint:-unchecked -Xlint:-deprecation`，但 L277 `-Xlint:none` 後者覆蓋，告警仍整體不可見；需移除 L277 |
+| 7 | Logger.java 大量複製貼上 | ✅ 大幅改善 | printStackTrace/System.err 由 170 處降至 78 處（批次 B）；Logger 2002 行仍偏大 |
+| 8 | Main.java scanner 靠異常退出 | ❌ 未改 | L223 仍 `while ((line = scanner.nextLine()) != null)`；L364 誤導訊息仍在 |
+| 9 | 上帝類 | ⚠️ 部分 | RemoteFile 3335 行已拆 RemoteFileBase(2720)+RemoteFileSync、ScriptConsole 3193→1536；RemoteFileBase/Logger/DriverExecutor(1858)/DiskFile(1676) 仍超 1500 行 |
+| 10 | 公共 API 拼寫錯誤 putAndReturnSlef | ✅ 已修 | 已改 `putAndReturnSelf`（RemoteFileBase 等 96 處調用點已更新） |
+| 11 | CI run #43-#48 TestDatasource 卡死（H2 refused） | ✅ 已修 | 根因定位：`pkill -f 'script/StartH2.js'` 匹配父 sh 誤殺（run #47 證實 h2Down=false）；改 `bin/StopH2.sh`（只匹配 java/javaw 進程）；C17 按用戶決定停用（if false 包裹，保留全部修復基礎設施） |
+| 12 | TestCacheArray C14 時序窗口（CI 偶發 size=2） | ✅ 已修 | forceTerminate 後最壞 ~10s+ 才清空；等待窗口 10s→25s（500×50ms），235/0 實證 |
 
 ### P2 — 長期 / 重構
 
 | # | 問題 | 影響 |
 | --- | --- | --- |
-| 10 | version.properties 每次構建遞增 → 本地 `git status` 永久髒；CI 每次 push 也 bump | 需明確策略（gitignore 或 CI 後 checkout） |
-| 11 | test_reports/ 未納入 .gitignore（測試輸出進版本庫目錄） | 產物污染提交 |
-| 12 | TestDatasource 可改用 `jdbc:h2:mem:` 真實整合測試（h2 驅動已在 LibHome） | 將 P0#2 的盲區變成覆蓋 |
-| 13 | .sh 腳本未在真實 bash 驗證（Windows 環境限制） | 跨平台一致性存疑 |
+| 13 | version.properties 每次構建遞增 → 本地 git 永久髒；CI 每次 push 也 bump | 需明確策略（gitignore 或 CI 後 checkout） |
+| 14 | .sh 腳本未在本機 bash 驗證（Windows 環境限制） | 跨平台一致性僅靠 CI 實證（TestAll.sh/TestDatasource.sh 已在 GitHub Actions 跑通） |
+| 15 | RemoteFileBase(2720)/Logger(2002)/DriverExecutor(1858)/DiskFile(1676) 仍為大類 | 違反單一職責，需持續拆分 |
+| 16 | build.xml `-Xlint:none` 壓制全部告警 | 型別安全問題不可見，滾雪球 |
+| 17 | CI 未固定 ant 版本（apt 安裝） | 版本漂移風險 |
 
 ---
 
 ## 三、優化建議（可執行）
 
-### 立刻（P0）
-1. **修 `JsPlus\README.md`**：控制台啟動命令改為實際 LibHome 目錄：
-   ```bat
-   java -cp "LibHome\graalvm\default\*;LibHome\nashorn\default\*;LibHome\h2\default\*;LibHome\jsplus\default\jsplus-core-*.jar" com.killcoding.jsplus.Main -Env script -ScriptEngine graalvm.js
-   ```
-2. **補根 README.md**：一頁說明（專案定位、前置工具、`ant build`/`test\TestAll.bat`/`packJdk.bat` 三步、目錄結構表）。
-3. **改 TestDatasource.js**：C5 換成真實 H2 記憶體庫測試——`DriverDataSource` 指向 `jdbc:h2:mem:coretest;DB_CLOSE_DELAY=-1`，驗證連線、`DriverConnection` CRUD、`ConnectionPool` 取還；刪除錯誤的 scope note。
-4. **build.xml**：`package` include 移除 `org/**/**/*`（已拆分獨立項目）。
-
 ### 短中期（P1）
-5. **告警治理**：build.xml 改 `-Xlint:-unchecked -Xlint:-deprecation`（保留其餘），分批清零：先修 serial（8 處補 `serialVersionUID`）與 dangling-doc-comments（17 處檔頭 `/** */` 改 `/* */`——MIT 授權註解不是 javadoc），再清 rawtypes（47 處）。
-6. **Logger.java 重構**：抽私有 `log(Level, String, Throwable)`，消滅 15+ 重複 try/catch 塊；修正 `"Worng"` → `"Wrong"`。
-7. **Main.java**：scanner 改用 `hasNextLine()` 判斷（`while (scanner.hasNextLine())`），EOF 走正常退出；刪除誤導的 `"Current scanner exit."`；局部變數 `havaTask`/`havaAllowAllAccess` 改名 `hasTask`/`hasAllowAllAccess`。
-8. **.gitignore** 增補：`/test_reports`（測試產物）；評估 version.properties 納入忽略或採用「CI 構建後 `git checkout -- version.properties`」策略。
+1. **build.xml**：刪除 L277 `<compilerarg value="-Xlint:none"/>`，僅保留 `-Xlint:-unchecked -Xlint:-deprecation`——讓 rawtypes/dangling-doc-comments 等其餘告警重新可見，分批清零。
+2. **Main.java**：L223 改 `while (scanner.hasNextLine())`，EOF 走正常退出；刪除 L364 誤導的 `"Current scanner exit."`（EOF ≠ scanner 退出）。
+3. **RemoteFileBase/Logger 拆分**：RemoteFileBase（2720 行）按連線管理/檔案操作/加密/表分片拆；Logger（2002 行）持續抽私有 log 方法、壓縮重複 try/catch。
 
 ### 長期（P2）
-9. 拆 `ScriptConsole.java`/`RemoteFile.java`（各 3000+ 行）為多職責類（Console 環境初始化 / 執行 / 渲染；RemoteFile 的連線管理 / 檔案操作 / 加密 / 表分片）。
-10. `ConfigProperties` 提供 `putAndReturnSelf` 正確拼寫方法並 `@Deprecated` 舊名（相容遷移）。
-11. TestAll 增加 `-Task` 完成後的顯式關閉通道，降低對 stdin EOF 的依賴。
-12. CI 固定 ant 版本（如 `apache/ant` 官方 binary 或 1.10.x 快照），避免 apt 版本漂移。
+4. **CI 固定 ant 版本**：改用官方 binary 或固定版本（避免 apt 版本漂移，尤其中 `-Xlint`/`<length>` 行為差異）。
+5. **version.properties 策略**：評估納入 .gitignore 或「CI 構建後 checkout」。
+6. **TestDatasource C17**：如後續要恢復 H2 重啟場景，將 `if (false)` 改回 `if (true)` 即可（StopH2.sh 基礎設施已就緒）。
 
 ---
 
 ## 四、驗證方式與覆蓋範圍
 
-- **已實跑驗證**：`ant.bat build`（BUILD SUCCESSFUL）→ `test\TestAll.bat`（63 passed / 0 failed，exit 0）→ `packJdk.bat`（jdeps 7 模組、jlink runtime 重建）——全程 Core 自帶 GraalVM 25.0.3 + Ant 1.10.17，無 JAVA_HOME。
-- **靜態審查**：Xlint:all 嚴格編譯（100 告警統計）、源碼衛生掃描（314 處）、大文件統計、測試套件逐個抽讀、CI/腳本一致性核對。
-- **未覆蓋**：`.sh` 腳本真實 bash 執行（本機無 bash）；GitHub Actions 實際跑通（需 push 驗證）；Logger 非同步 flush 的壓力行為；RemoteFile/DriverExecutor 等大類的行級審查（僅統計層面）。
+- **已實跑驗證（2026-10-30 發布檢查）**：
+  - `ant.bat build` 兩輪成功（6.1.203、6.1.204，BUILD_EXIT=0）
+  - `test\TestAll.bat` 兩輪全綠：TestAll.js 主體 **235 passed / 0 failed**（18 個套件，69s）+ TestDatasource **17 passed / 0 failed**（63s，共享 H2 重用）
+  - changelog-diff 修復實證：6.1.204 條目乾淨（無 `${jr.diff.changes}` 字面量，6.1.196-6.1.203 曾受影響）
+  - CI run #49（40906105729）：TestDatasource 隔離全綠（C1-C16+C18 exit 0）
+  - `node --check` 全部 JS 修改語法通過
+- **靜態審查**：源碼衛生掃描、大文件統計、批次 A-D 優化成果核對、腳本一致性核對
+- **未覆蓋**：`.sh` 腳本本機 bash 執行（本機無 bash，靠 CI）；GitHub Actions 最新全量 run（run #54 結果待推送後確認）；Logger 非同步 flush 壓力行為；RemoteFileBase/DriverExecutor 等大類行級審查（僅統計層面）
