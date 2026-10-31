@@ -213,7 +213,7 @@ try {
         + (cfgCheck.ok ? "PASS: " + cfgCheck.detail : "FAIL: " + cfgCheck.detail) + "</div>\n"
         + "<table>\n<tr><th>Suite</th><th>Passed</th><th>Failed</th></tr>\n";
     for (var m2 = 0; m2 < suiteResults.length; m2++) {
-        html += "<tr><td>" + suiteResults[m2].title + "</td><td>" + suiteResults[m2].pass + "</td><td>" + suiteResults[m2].fail + "</td></tr>\n";
+        html += "<tr><td><a href=\"" + suiteResults[m2].title + "-Report.html\">" + suiteResults[m2].title + "</a></td><td>" + suiteResults[m2].pass + "</td><td>" + suiteResults[m2].fail + "</td></tr>\n";
     }
     html += "</table>\n</body>\n</html>\n";
     var htmlPath = basePath + "../docs/latest/report/TestAll-Report.html";

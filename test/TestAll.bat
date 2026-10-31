@@ -69,6 +69,28 @@ if exist "%JS_PLUS_PATH_ORIGIN%.tmp" (
     echo [TestAll] Removed JsPlus\.tmp
 )
 
+REM ------------------------------------------------------------------
+REM Step 0c: clear <PROJECT_ROOT>/logs/* (app + archive logs) so every
+REM test run starts with a clean log tree - stale logs cannot accumulate
+REM between runs.
+REM ------------------------------------------------------------------
+if exist "%JS_PLUS_PATH_ORIGIN%..\logs" (
+    del /s /q "%JS_PLUS_PATH_ORIGIN%..\logs\*" >nul 2>&1
+    echo [TestAll] Cleared logs
+)
+
+REM ------------------------------------------------------------------
+REM Step 0d: remove <PROJECT_ROOT>/testdata/* (per-run test workspaces such
+REM as TestDiskFile's testdata/diskfile) so every test run starts with a
+REM clean data tree - artifacts left by an interrupted run must not fail
+REM cases that expect a fresh workspace (e.g. mkdirs=false,
+REM FileAlreadyExistsException).
+REM ------------------------------------------------------------------
+if exist "%JS_PLUS_PATH_ORIGIN%..\testdata" (
+    del /s /q "%JS_PLUS_PATH_ORIGIN%..\testdata\*" >nul 2>&1
+    echo [TestAll] Removed testdata
+)
+
 set "DEPEND_LIBS="
 for /r "%JS_PLUS_PATH_ORIGIN%..\LibHome" %%j in (*.jar) do set "DEPEND_LIBS=!DEPEND_LIBS!;%%j"
 set "DEPEND_LIBS=!DEPEND_LIBS:~1!"

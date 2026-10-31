@@ -79,6 +79,24 @@ if [ -d "${JS_PLUS_PATH_ORIGIN}.tmp" ]; then
     echo "[TestAll] Removed JsPlus/.tmp"
 fi
 
+# Step 0c: clear <PROJECT_ROOT>/logs/* (app + archive logs) so every test
+# run starts with a clean log tree - stale logs cannot accumulate between
+# runs.
+if [ -d "${JS_PLUS_PATH_ORIGIN}../logs" ]; then
+    rm -rf "${JS_PLUS_PATH_ORIGIN}../logs"/*
+    echo "[TestAll] Cleared logs"
+fi
+
+# Step 0d: remove <PROJECT_ROOT>/testdata/* (per-run test workspaces such
+# as TestDiskFile's testdata/diskfile) so every test run starts with a
+# clean data tree - artifacts left by an interrupted run must not fail
+# cases that expect a fresh workspace (e.g. mkdirs=false,
+# FileAlreadyExistsException).
+if [ -d "${JS_PLUS_PATH_ORIGIN}../testdata" ]; then
+    rm -rf "${JS_PLUS_PATH_ORIGIN}../testdata"/*
+    echo "[TestAll] Removed testdata"
+fi
+
 DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
 DEPEND_LIBS="${DEPEND_LIBS%:}"
 if [ -z "$DEPEND_LIBS" ]; then
