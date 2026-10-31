@@ -191,3 +191,16 @@ The toolchain is bundled with the project (JDK + Ant, no installation, no `JAVA_
 
 - Quality score 83/100 (6.1.204) — build/scripts/CI/tests reach release level; known limitations: GraalJS `load()` shares the global scope, CacheArray global `forceStop`, `-Xlint:none` suppresses warnings, Main scanner relies on abnormal exit.
 - The CacheArray pipeline maps to open-source patterns: **RxJava/Reactor** (observable semantics), **LMAX Disruptor** (batch consumption), **Akka Actor** (multi-console division of labor), **MyBatis Cursor / Spring RowCallbackHandler** (JDBC streaming feeding).
+
+### CacheArray pipeline vs. mainstream frameworks
+
+| JsPlus design | Open-source counterpart | Niche |
+| --- | --- | --- |
+| `CacheArray.filter(worker)` row-by-row callbacks (`execute`≈onNext, `completed`≈onComplete, `terminated`≈onError) | **RxJava / Project Reactor** (Flowable/Flux) | Observable sequence + backpressure + async consumption — closest semantics |
+| `CacheDriverExecutor.find(sql, params, GCA)` row-by-row `add` | **Spring JdbcTemplate RowCallbackHandler** / **MyBatis Cursor** / **jOOQ** streaming queries | JDBC row-by-row callbacks, no full-table materialization in memory |
+| `executeBatch + sweepProcessed` (batch consumption + head reclamation) | **LMAX Disruptor** (lock-free ring buffer + batch event processing) | Low-latency batch consumption; `sweep` mirrors its event reclamation |
+| insertConsole produces → feedConsole feeds → callbackConsole consumes | **Akka Actor** / **Vert.x Verticle** / **ZeroMQ** | Multi-role independent message loops, one thread/mailbox per console |
+| Batch chunk + completion callback | **Spring Batch** (ItemReader→Processor→Writer chunk) | Batch pipeline (ETL/Job); `completed` ≈ JobCompletion |
+| Filter worker polling + periodic tasks | **ScheduledExecutorService** / **Quartz** / Node.js `setInterval` | Timer-driven consumption loop |
+| Cache + eviction/reclamation | **Caffeine / Guava Cache** (async refresh, eviction ≈ `sweepProcessed`/`removeAll`) | Cache lifecycle management |
+| Java worker thread + `Java.extend(Runnable)` proxy to bypass GraalJS multi-threading limits | **GraalVM Polyglot API** host interop; same idea as Rhino/Nashorn-era host-callback bridges | Cross-thread boundary design for multi-language embedding |

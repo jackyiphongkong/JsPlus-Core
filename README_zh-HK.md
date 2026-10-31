@@ -262,3 +262,16 @@ ClassLoader cl = console.evalJavaSource(
 * 品質評分 83/100（6.1.204）—— 構建 / 腳本 / CI / 測試四層達發布水準；已知限制：GraalJS `load()` 共用全域作用域、CacheArray 全域 `forceStop`、`-Xlint:none` 壓制告警、Main scanner 依賴例外退出。
 
 * CacheArray 管道對標開源模式：**RxJava/Reactor**（observable 語義）、**LMAX Disruptor**（批次消費）、**Akka Actor**（多控制台分工）、**MyBatis Cursor / Spring RowCallbackHandler**（JDBC 串流饋送）。
+
+### CacheArray 管道對標主流框架
+
+| JsPlus 設計 | 開源對應物 | 生態位 |
+| --- | --- | --- |
+| `CacheArray.filter(worker)` 逐行觸發回調（execute≈onNext、completed≈onComplete、terminated≈onError） | **RxJava / Project Reactor**（Flowable/Flux） | 可觀察序列 + 背壓 + 非同步消費，語義最貼近 |
+| `CacheDriverExecutor.find(sql, params, GCA)` 逐行 add | **Spring JdbcTemplate RowCallbackHandler** / **MyBatis Cursor** / **jOOQ** 串流查詢 | JDBC 結果集逐行回調，不整表駐記憶體 |
+| `executeBatch + sweepProcessed`（批量消費 + 頭部回收） | **LMAX Disruptor**（無鎖環形緩衝 + 批量事件處理） | 低延遲批量消費，sweep 與其事件回收同思路 |
+| insertConsole 生產 → feedConsole 餵入 → callbackConsole 消費 | **Akka Actor** / **Vert.x Verticle** / **ZeroMQ** | 多角色獨立訊息循環，每 console 一條執行緒/信箱 |
+| 批量 chunk + 完成回調 | **Spring Batch**（ItemReader→Processor→Writer chunk） | 批處理管道（ETL/Job），completed≈JobCompletion |
+| filter worker 輪詢 + 週期任務 | **ScheduledExecutorService** / **Quartz** / Node.js `setInterval` | 定時驅動消費循環 |
+| 快取 + 淘汰/回收 | **Caffeine / Guava Cache**（非同步 refresh、淘汰 ≈ sweepProcessed/removeAll） | 快取生命週期管理 |
+| Java worker 執行緒 + `Java.extend(Runnable)` 代理，規避 GraalJS 多執行緒限制 | **GraalVM Polyglot API** 宿主互操作；同思路還有 Rhino/Nashorn 時代的主機回調橋接 | 多語言嵌入的跨執行緒邊界設計 |
