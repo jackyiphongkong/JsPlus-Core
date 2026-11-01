@@ -56,7 +56,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestJsString -> TestDBSync");
+print("Suites       : TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestJsString -> TestDBSync -> TestTextScript -> TestSimpleJsCompressor -> TestSimpleCssCompressor -> TestSimpleHtmlScanner -> TestWebClient");
 print("               (TestDatasource runs LAST via TestAll.bat/.sh -> TestDatasource.bat/.sh: its H2 stop/restart case must not precede H2-dependent suites)");
 
 var suites = [
@@ -79,7 +79,12 @@ var suites = [
     { file: "TestCacheArray.js",      title: "TestCacheArray" },
     { file: "TestEvalJava.js",        title: "TestEvalJava" },
     { file: "TestJsString.js",        title: "TestJsString" },
-    { file: "TestDBSync.js",          title: "TestDBSync" }
+    { file: "TestDBSync.js",          title: "TestDBSync" },
+    { file: "TestTextScript.js",      title: "TestTextScript" },
+    { file: "TestSimpleJsCompressor.js", title: "TestSimpleJsCompressor" },
+    { file: "TestSimpleCssCompressor.js", title: "TestSimpleCssCompressor" },
+    { file: "TestSimpleHtmlScanner.js",   title: "TestSimpleHtmlScanner" },
+    { file: "TestWebClient.js",            title: "TestWebClient" }
 ];
 
 var totalPass = 0;

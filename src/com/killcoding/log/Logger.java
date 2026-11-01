@@ -39,6 +39,24 @@ import java.util.ArrayList;
 * This is logger class
 * Sample,
 * Logger log = LoggerFactory.getLogger(clazz);
+*
+* <p><b>Known issues / design constraints:</b>
+* <ol>
+* <li><b>Clock recursion ring (StackOverflowError).</b> The log module must NOT call
+*     {@link com.killcoding.datasource.Clock}. With Clock.properties {@code Enable=true},
+*     Clock.getCalendar() routes through Clock.getDefaultCalendear() -&gt; Cache.get(),
+*     Cache logs through Logger.debug(), and Logger.log would re-enter Clock.getDate()
+*     indefinitely, crashing the JVM. The log module therefore reads the raw system
+*     clock ({@code new Date()} / {@code new java.sql.Timestamp(new Date().getTime())})
+*     at every timestamp point; all other modules may still use Clock as the single
+*     time source. To restore Clock here, first break the Clock-&gt;Cache-&gt;Logger
+*     dependency (e.g. Cache logging without Logger, or a cache-free time entry in
+*     Clock) and re-run the full test suite with Enable=true.</li>
+* <li><b>Timezone skew.</b> Because the log module cannot use Clock, log timestamps
+*     follow the JVM default timezone, while Clock follows DefaultTimeZone
+*     (default GMT+8) when enabled. On a host whose JVM timezone differs, log times
+*     and Clock-derived times can diverge.</li>
+* </ol>
 * */
 public final class Logger {
 

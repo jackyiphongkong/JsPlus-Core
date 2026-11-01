@@ -3283,3 +3283,217 @@ ${jr.diff.changes}- build: 自動版本遞增
 ## 6.1.218 (2026.10.31 13:15:46)
 - build: 自動版本遞增
 
+
+## 6.1.220 (2026.11.01 10:42:30)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScan.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.222 (2026.11.01 10:43:44)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.223 (2026.11.01 10:44:13)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.224 (2026.11.01 10:44:39)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.226 (2026.11.01 11:03:58)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.227 (2026.11.01 11:04:57)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.228 (2026.11.01 11:10:10)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.229 (2026.11.01 11:11:09)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.230 (2026.11.01 11:11:53)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- build: 自動版本遞增
+
+
+## 6.1.231 (2026.11.01 11:18:13)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.232 (2026.11.01 11:33:17)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tool/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tool/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tool/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.233 (2026.11.01 11:41:27)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.234 (2026.11.01 11:42:16)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.235 (2026.11.01 11:56:19)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.236 (2026.11.01 12:18:06)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.237 (2026.11.01 12:28:49)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.238 (2026.11.01 12:39:52)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.239 (2026.11.01 12:42:15)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.240 (2026.11.01 12:44:15)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tpl/SimpleCssCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (A)
+- found diffed: com/killcoding/tpl/SimpleJsCompressor.java (A)
+- found diffed: com/killcoding/tpl/XmlParser.java (A)
+- found diffed: com/killcoding/tool/XmlParser.java (D)
+- build: 自動版本遞增
+
+
+## 6.1.241 (2026.11.01 13:58:25)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.242 (2026.11.01 14:06:32)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tool/WebClient.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.243 (2026.11.01 14:15:06)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tool/WebClient.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.244 (2026.11.01 14:21:03)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- found diffed: com/killcoding/tool/WebClient.java (M)
+- build: 自動版本遞增
+

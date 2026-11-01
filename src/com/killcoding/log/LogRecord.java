@@ -64,7 +64,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import com.killcoding.file.BaseFile;
 /**
-* The class is write application log
+* The class is write application log (batch pool, async flush, archive).
+*
+* <p><b>Known issues / design constraints:</b>
+* <ol>
+* <li><b>Clock recursion ring (StackOverflowError).</b> Same constraint as
+*     {@link Logger}: the write path reachable synchronously from Logger.log
+*     (add/process, file-name formatting, flush, DB batch) must not call
+*     {@link com.killcoding.datasource.Clock} - Clock-&gt;Cache-&gt;Logger.debug-&gt;Logger.log
+*     would recurse indefinitely when Clock.properties {@code Enable=true}. Raw system
+*     time ({@code new Date()}) is used on this path.</li>
+* <li><b>Timezone skew.</b> File names and DB timestamps written here follow the JVM
+*     default timezone, not Clock's DefaultTimeZone.</li>
+* </ol>
 * */
 public final class LogRecord {
 

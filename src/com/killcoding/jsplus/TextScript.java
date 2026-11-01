@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 * */
 public class TextScript {
 
-    public static String DEFAULT_ENGINE_NAME = "nashorn";
+    public static String DEFAULT_ENGINE_NAME = "graalvm.js";
 
     protected boolean allowAllAccess = true;
 

@@ -1,5 +1,5 @@
 // ============================================================================
-// JsPlus-Core TestXmlParser - XML-to-Map parser (com.killcoding.tool.XmlParser)
+// JsPlus-Core TestXmlParser - XML-to-Map parser (com.killcoding.tpl.XmlParser)
 // ----------------------------------------------------------------------------
 // Run      : test/TestAll.bat (included as a suite) or standalone:
 //              <java> -cp <LibHome + build jars> com.killcoding.jsplus.Main
@@ -19,7 +19,7 @@
 var Logger = Java.type("com.killcoding.log.Logger");
 var System = Java.type("java.lang.System");
 var HashMap = Java.type("java.util.HashMap");
-var XmlParser = Java.type("com.killcoding.tool.XmlParser");
+var XmlParser = Java.type("com.killcoding.tpl.XmlParser");
 
 var basePath = System.getProperty("JS_PLUS_PATH");
 try {
