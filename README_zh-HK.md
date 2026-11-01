@@ -2,7 +2,26 @@
 
 **嵌入式腳本控制台引擎**—— 把 GraalVM JavaScript 執行環境內嵌進任何 Java 應用，並提供伺服器端能力庫：池化資料源、多層快取、檔案抽象、DB 同步、加密 / 剖析 / 工具集。無 Web 容器依賴（不依賴 Tomcat / Servlet）；引擎本體不持有常駐 H2 進程—— H2 資料庫伺服器由 `JsPlus\script\StartH2.js` 按需啟動（測試 / 運行時經 `StartH2.bat` 拉起、`StopH2.bat` 關閉）。
 
+## 生態閉環與輕量級定位
 
+**JsPlus-Core 是閉環、輕量級的能力引擎** —— 一個 Console、一個運行時、一個 jar：
+
+| 閉環 | 閉環內容 |
+| --- | --- |
+| **能力閉環** | Java 核心庫（資料源 / 快取 / 檔案 / 同步 / 工具）→ 統一 `ScriptConsole` → JS 腳本直接呼叫真實 Java API → 同一 Console 執行、斷言、出報告（測試套件即 JS 檔案直接對真實 Java 斷言—— 無 JUnit） |
+| **動態編譯閉環** | `evalJavaSource()` 於執行期編譯 Java 原始碼 → 載入類別 → JS 立即呼叫 —— 即時擴充能力，無需預先編譯、無需重啟 |
+| **資料閉環** | 按需 H2 + 池化 `DriverDataSource` + 多層 `Cache` + `CacheArray` 非同步管道 + `RemoteFile` 資料庫映射檔案 + `dbsync` —— 完整資料路徑（儲存 / 快取 / 串流 / 同步）內建 |
+| **跨進程閉環** | `GhostConsole` 隊列 —— 主 console 發命令 → ghost 進程輪詢、執行、回寫結果 —— 不共用進程狀態的遠程控制 |
+| **伺服器生態閉環** | 與 **JsPlus-Tomcat**（伺服器版）共用同名環境變數、同一 Console API、同一能力庫 —— Core 提供能力，伺服器版提供 HTTP/TCP 服務 |
+
+**輕量級設計：**
+
+- **無 Web 容器依賴** —— 引擎是嵌入式腳本控制台；無 Tomcat/Servlet、無 Web 層
+- **單一能力 jar** —— `jsplus-core-<version>.jar`；自足工具（`HttpURLConnection` 的 WebClient HTTP 客戶端、`SimpleHtmlScanner` / `SimpleCssCompressor` / `SimpleJsCompressor` 壓縮器）—— 無重型第三方框架
+- **工具鏈捆綁** —— JDK + Ant 隨專案打包；無需安裝、無需 `JAVA_HOME`
+- **按需 H2** —— 無常駐資料庫進程；`StartH2.js` / `StopH2.bat` 需要時才啟動 / 關閉
+- **輕量測試** —— JS 套件在引擎內執行並對真實 Java 斷言；無 JUnit、無外部測試框架
+- **低資源起步** —— `-Xms256m -Xmx1024m`
 
 ```
 Java 應用 ──► ScriptConsole（嵌入 GraalVM JS 引擎）
@@ -104,6 +123,29 @@ Java 應用 ──► ScriptConsole（嵌入 GraalVM JS 引擎）
 | `created_at` / `updated_at` / `deleted_at` / `deleted` | 時間戳 + 軟刪除（0 = active、1 = deleted） |
 
 > 運行時規則：`ghost_remote_command` 屬於執行期（GhostConsole），測試 / 初始化永不 DROP 或重建它（`IF NOT EXISTS` 保證冪等）——否則運行中的 ghost 會撞「table not found」。
+
+### TextScript — 腳本化文本模板引擎（內建）
+
+`TextScript`（`com.killcoding.jsplus.TextScript`）把含 `#` 指令的文本模板編譯成 JS 函數並在控制台內執行：普通行原文輸出、`#{expr}` 行內求值、`#if / #else / #end / #for / #code / #block / #end` 驅動控制流。變量經 `addParams({...})` 注入；`parse()` 渲染文字、`parse(true)` 返回編譯後的 JS 源碼。
+
+```text
+#comment 問候模板 - 指令行不輸出
+Hello #{name}, welcome to JsPlus-Core!
+#if(release)
+Build: STABLE
+#else
+Build: DEV
+#end
+```
+
+```java
+TextScript ts = new TextScript(template);       // 上方模板文字
+ts.addParams(mapOf("name", "World", "release", true));
+String out = ts.parse();                        // 渲染結果
+String src = ts.parse(true);                    // 編譯後的 JS 函數源碼
+```
+
+> 注意：一次 `parse()` 會消費 scanner —— 每次渲染需新建 `TextScript` 實例。可運行實例：`examples/TextScript-demo.js`。
 
 ## 3. 資料層機制（com.killcoding.datasource）
 
@@ -239,8 +281,8 @@ ClassLoader cl = console.evalJavaSource(
 | 步驟      | 命令                                    | 產出                                                                                                                                                           |
 | ------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 構建      | `ant.bat build`（Linux/macOS：`ant.sh`） | `LibHome\jsplus\default\jsplus-core-<version>.jar`（版本自動 patch+1；每次構建附 changelog 條目至 `changes.log` / `changes_zh-HK.log`；重建 API javadoc 至 `docs/latest/api/`） |
-| 全量測試    | `test\TestAll.bat`（`TestAll.sh`）      | **235 passed / 0 failed**（18 個 JS 套件 + LoadTest；自啟 H2 → 初始化 `testdb` → 跑套件 → 精確清理）                                                                           |
-| 連接池整合測試 | `test\TestDatasource.bat`（`.sh`）      | **17 passed / 0 failed**（池參數應用 + 逾時回收 + 自癒 + 極限多執行緒壓力）                                                                                                       |
+| 全量測試    | `test\TestAll.bat`（`TestAll.sh`）      | **294 passed / 0 failed**（24 個 JS 套件 + TestDatasource 連接池整合；自啟 H2 → 初始化 `testdb` → 跑套件 → 精確清理）                                                                           |
+| 連接池整合測試 | `test\TestDatasource.bat`（`.sh`）      | **19 passed / 0 failed**（池參數應用 + 逾時回收 + 自癒 + 極限多執行緒壓力 + Console export/import roundtrip）                                                                                                       |
 
 工具鏈隨專案打包（bundled JDK + Ant，無需安裝、無需 `JAVA_HOME`）。所有測試套件均為 **JS 檔案在引擎內執行、直接呼叫真實 Java API 並斷言**—— 無 JUnit。
 

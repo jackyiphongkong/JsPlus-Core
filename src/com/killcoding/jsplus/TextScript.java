@@ -615,11 +615,60 @@ public class TextScript {
     }
 
     /**
+    * Thread-safe one-step render built on the pooled console pool (pool
+    * concept, mirrors JsPlus-Tomcat TomcatScriptConsole): the DEFAULT engine
+    * name resolves to the current thread's own pooled context, so concurrent
+    * callers never share a context and need no locks - every thread renders on
+    * its own context with real parallelism. The pooled console is returned to
+    * the pool (freed) when the render completes.
+    * @param template the TextScript template source
+    * @param params the params injected via addParams (may be null)
+    * @return the rendered output
+    * @throws Exception when rendering fails
+    * */
+    public static String render(String template, Map<String,Object> params) throws Exception {
+        TextScript ts = new TextScript(template);
+        try {
+            ts.useEngine(DEFAULT_ENGINE_NAME);
+            if(params != null){
+                Set<String> keys = params.keySet();
+                for(String key : keys){
+                    ts.context.put(key, params.get(key));
+                }
+            }
+            return ts.parse();
+        } finally {
+            ts.freed();
+        }
+    }
+
+    /**
+    * Returns the current thread's pooled console context back to the pool
+    * (delayed by TextScriptConsole's freed delay). No-op for contexts that
+    * were not acquired from the pool (e.g. bound via
+    * {@link #setContext(JsPlusContext)}).
+    * @throws Exception when returning fails
+    * */
+    public void freed() throws Exception {
+        if(context != null){
+            TextScriptConsole.freed();
+            context = null;
+        }
+    }
+
+    /**
     * Performs the useEngine operation
     * @param engineName - the engineName
     * @return the useEngine result
     * */
     public TextScript useEngine(String engineName) throws Exception {
+        if(engineName != null && engineName.equals(DEFAULT_ENGINE_NAME)){
+            // DEFAULT engine = thread-confined pooled context (pool concept,
+            // mirrors JsPlus-Tomcat TomcatScriptConsole): every thread renders
+            // on its own pooled console context - real parallelism, no locks.
+            this.context = TextScriptConsole.getThreadContext();
+            return this;
+        }
 	    this.context = CONTEXT_MAPPING.get(engineName);
 	    if(this.context == null){
 	        TextScript.initEngine(allowAllAccess,engineName);
@@ -631,6 +680,22 @@ public class TextScript {
 	    }
 
 	    return this;
+    }
+
+    /**
+    * Binds this TextScript to an explicit engine context for thread-confined
+    * rendering - e.g. the per-thread console context handed out by
+    * {@link TextScriptConsole} (mirrors JsPlus-Tomcat TomcatScriptConsole).
+    * Unlike {@link #useEngine(String)} this does NOT touch the shared static
+    * CONTEXT_MAPPING, so every worker thread can render on its own
+    * thread-confined context concurrently.
+    * @param ctx the JsPlusContext to bind (must not be null)
+    * @return this TextScript (chainable)
+    * */
+    public TextScript setContext(JsPlusContext ctx){
+        if(ctx == null) throw new NullPointerException("The 'context' is null.");
+        this.context = ctx;
+        return this;
     }
 
     /**
@@ -653,12 +718,17 @@ public class TextScript {
         if(_context == null){
     	    boolean isGraalJs = JsPlusContext.isGraalJs(engineName);
     	    boolean isNashornJs = JsPlusContext.isNashornJs(engineName);
-    	    if(isGraalJs){
+    	    if(isGraalJs && engineName.equals(DEFAULT_ENGINE_NAME)){
     	        _context = new GraalVmContext(engineName);
-    	    }else if(isNashornJs){
+    	    }else if(isNashornJs && "nashorn".equals(engineName)){
                 _context = new NashornContext(engineName);
 	        }else{
-                _context = new JsContext(engineName);
+                // custom engine name = a thread-isolated context built on the
+                // default GraalVM engine (the name is only the isolation key,
+                // NOT a language id - even when it carries a 'graalvm'
+                // prefix), so useEngine("myName") supports per-thread
+                // isolation for concurrent rendering
+                _context = new GraalVmContext(DEFAULT_ENGINE_NAME);
     	    }
     	    _context.setAllowAllAccess(allowAllAccess);
     	    _context.initScriptEngineManager();

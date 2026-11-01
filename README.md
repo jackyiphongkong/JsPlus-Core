@@ -2,6 +2,27 @@
 
 **Embedded Script Console Engine** — embeds a GraalVM JavaScript runtime into any Java application, with a server-side capability library: pooled datasource, multi-layer cache, file abstraction, DB sync, cipher/parse/toolkit. No web-container dependency (no Tomcat/Servlet); the engine itself does not host a resident H2 process — the H2 database server is started on demand by `JsPlus\script\StartH2.js` (tests/runtime start it via `StartH2.bat` and stop it via `StopH2.bat`).
 
+## Ecosystem loop & lightweight positioning
+
+**JsPlus-Core is a closed-loop, lightweight capability engine** — one console, one runtime, one jar:
+
+| Loop | What closes the loop |
+| --- | --- |
+| **Capability loop** | Java core library (datasource / cache / file / sync / toolkit) → unified `ScriptConsole` → JS scripts call the real Java API directly → the same console executes, asserts and reports (test suites are JS files asserting against real Java — no JUnit) |
+| **Dynamic-compile loop** | `evalJavaSource()` compiles Java source at runtime → loads the classes → JS invokes them immediately — extending capabilities on the fly, no precompilation, no restart |
+| **Data loop** | On-demand H2 + pooled `DriverDataSource` + multi-layer `Cache` + `CacheArray` async pipeline + `RemoteFile` DB-mapped files + `dbsync` — the full data path (store / cache / stream / sync) is built in |
+| **Cross-process loop** | `GhostConsole` queue — the main console issues commands → a ghost process polls, executes and writes the result back — remote control without sharing process state |
+| **Server-ecosystem loop** | Same env-var conventions, same console API and the same capability library as **JsPlus-Tomcat** (the server edition) — Core supplies the capabilities, the server edition supplies HTTP/TCP serving |
+
+**Lightweight by design:**
+
+- **No web-container dependency** — the engine is an embedded script console; no Tomcat/Servlet, no web layer
+- **One capability jar** — `jsplus-core-<version>.jar`; self-contained utilities (WebClient HTTP client on `HttpURLConnection`, `SimpleHtmlScanner` / `SimpleCssCompressor` / `SimpleJsCompressor` minifiers) — no heavyweight third-party frameworks
+- **Bundled toolchain** — JDK + Ant ship with the project; no installation, no `JAVA_HOME`
+- **On-demand H2** — no resident database process; `StartH2.js` / `StopH2.bat` start and stop it only when needed
+- **Lightweight tests** — JS suites run inside the engine and assert against real Java; no JUnit, no external test framework
+- **Small footprint** — starts at `-Xms256m -Xmx1024m`
+
 ```
 Java Application ──► ScriptConsole (embeds GraalVM JS engine)
               │
@@ -85,6 +106,29 @@ Queue-table schema (`dbscript/change.sql`, created with `CREATE TABLE IF NOT EXI
 | `created_at` / `updated_at` / `deleted_at` / `deleted` | timestamps + soft-delete (0 = active, 1 = deleted) |
 
 > Runtime rule: `ghost_remote_command` belongs to the runtime (GhostConsole); tests/init never DROP or recreate it (`IF NOT EXISTS` keeps it idempotent) — otherwise a running ghost hits "table not found" mid-run.
+
+### TextScript — scriptable text template engine (built-in)
+
+`TextScript` (`com.killcoding.jsplus.TextScript`) compiles a text template with `#` directives into a JS function and runs it inside the console: plain lines are emitted literally, `#{expr}` is evaluated inline, and `#if / #else / #end / #for / #code / #block / #end` drive control flow. Variables are injected with `addParams({...})`; `parse()` renders the text and `parse(true)` returns the compiled JS source.
+
+```text
+#comment greeting template - directive lines are dropped
+Hello #{name}, welcome to JsPlus-Core!
+#if(release)
+Build: STABLE
+#else
+Build: DEV
+#end
+```
+
+```java
+TextScript ts = new TextScript(template);       // template text above
+ts.addParams(mapOf("name", "World", "release", true));
+String out = ts.parse();                        // rendered text
+String src = ts.parse(true);                    // compiled JS function source
+```
+
+> Note: one `parse()` call consumes the scanner — use a fresh `TextScript` instance per render. Runnable demo: `examples/TextScript-demo.js`.
 
 ## 3. Data layer mechanics (com.killcoding.datasource)
 
@@ -173,7 +217,7 @@ Full bootstrap example: `JsPlus\bin\StartCore.bat` (classpath = `graalvm/default
 | Step | Command | Artifact |
 | --- | --- | --- |
 | Build | `ant.bat build` (Linux/macOS: `ant.sh`) | `LibHome\jsplus\default\jsplus-core-<version>.jar` (version auto patch+1; each build appends a changelog entry to `changes.log` / `changes_zh-HK.log`; regenerates API javadoc into `docs/latest/api/`) |
-| Full test suite | `test\TestAll.bat` (`TestAll.sh`) | **235 passed / 0 failed** (18 JS suites + LoadTest; auto-starts H2 → initializes `testdb` → runs suites → cleans up precisely) |
+| Full test suite | `test\TestAll.bat` (`TestAll.sh`) | **294 passed / 0 failed** (24 JS suites + TestDatasource pool-integration; auto-starts H2 → initializes `testdb` → runs suites → cleans up precisely) |
 | Pool integration tests | `test\TestDatasource.bat` (`.sh`) | **19 passed / 0 failed** (pool param application + timeout reclamation + self-heal + extreme multi-thread stress + Console export/import roundtrip) |
 
 The toolchain is bundled with the project (JDK + Ant, no installation, no `JAVA_HOME` required). Every test suite is a **JS file running inside the engine that calls the real Java API directly and asserts** — no JUnit.
