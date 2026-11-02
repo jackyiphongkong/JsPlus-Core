@@ -6,7 +6,7 @@
 
 | 功能 | 說明 | 對應類 |
 | --- | --- | --- |
-| **快速調試** | 以 JavaScript 調用 Java 原生類庫，啟動控制臺即可調試程式 | `ScriptConsole` |
+| **快速調試** | 以 JavaScript 調用 Java 原生類庫，啟動控制台即可調試程式 | `ScriptConsole` |
 | **高效數據源** | 自動管理連線、壞連線自癒；資料可直接饋入快取，也可通過簡單配置同步到多個數據源 | `DriverDataSource` |
 | **快取層** | 鍵值快取 + 非同步過濾管線：大量資料先過濾再交給處理者，毋須自行編寫執行緒 | `Cache` / `CacheArray` |
 | **遠程檔案** | 把檔案存入資料庫、分塊管理、跨機器同步讀寫，也可用作多機熱備份 | `RemoteFile` / `RemoteFileSync` |
@@ -28,13 +28,13 @@
 
 於控制台提示符直接輸入 JavaScript，以 `/` 結束指令；
 ```
-script> print('Hello World.');/
+js> print('Hello World.');/
 Hello World.
 ```
 
 輸入 `jdbc/` 切換至 JdbcConsole，以 `;` 結束 SQL：
 ```
-script> jdbc/                 // 切換至 JdbcConsole
+js> jdbc/                 // 切換至 JdbcConsole
 jdbc> select * from test_user;   // 執行 SQL（以 ; 結束）
 
 0 rows selected (10ms)
@@ -53,4 +53,26 @@ u000000000000001             Alice      alice@example.com
 
 1 rows selected (523ms)
 Current QueryMaxRows=1000
+```
+
+輸入 `script;` 切換至 ScriptConsole，以 `/` 結束 SQL：
+```
+jdbc>script;
+js> var TextScript = Java.type('com.killcoding.jsplus.TextScript');/
+var emailBodyTpl = `
+To: #{email}\n
+
+Dear #{username},\n
+
+Wellcom to use Jsplus.\n
+
+Thanks\n
+
+Regards
+Jack
+`;/
+
+var ts = new TextScript(emailBodyTpl,false);/
+ts.addParams({email:'test@gmail.com',username: 'Alice'});
+var emailBody = ts.parse();/
 ```
