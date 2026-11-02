@@ -17,3 +17,19 @@
 | **時間同步獲取器** | 簡單設定即可統一應用程序與數據庫時間的一致性 | `Clock` |
 | **編號生成器** | 產生定長流水號 / 單據號，可帶前綴後綴，跨機器不重複 | `IdentityCard` |
 
+## 快速啟動
+
+| 步驟 | 指令 | 作用 |
+| --- | --- | --- |
+| 1 | `JsPlus\bin\StopAll.bat` | 停止所有服務（H2 / Core） |
+| 2 | `JsPlus\bin\StartH2Console.bat init testdb` | 初始化資料庫（`fallback.sql` → `change.sql`，建立 9 張表 + `sample_user`） |
+| 3 | `JsPlus\bin\BG_StartH2.bat` | 後台啟動 H2 資料庫（隱藏窗口） |
+| 4 | `JsPlus\bin\StartCore.bat` | 啟動 Core 互動控制台（自動執行 `script/main.js``） |
+
+於控制台提示符直接輸入 JavaScript，以 `/` 結束指令：
+
+```
+graalvm.js> print('Hello World.')/
+Hello World.
+```
+
