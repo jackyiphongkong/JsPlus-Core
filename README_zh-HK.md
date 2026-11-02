@@ -26,12 +26,14 @@
 | 3 | `JsPlus\bin\BG_StartH2.bat` | 後台啟動 H2 資料庫（隱藏窗口） |
 | 4 | `JsPlus\bin\StartCore.bat` | 啟動 Core 互動控制台（自動執行 `script/main.js``） |
 
-於控制台提示符直接輸入 JavaScript，以 `/` 結束指令；輸入 `jdbc/` 切換至 JDBC Console，以 `;` 結束 SQL：
-
+於控制台提示符直接輸入 JavaScript，以 `/` 結束指令；
 ```
 script> print('Hello World.');/
 Hello World.
+```
+
+輸入 `jdbc/` 切換至 JDBC Console，以 `;` 結束 SQL：
+```
 script> jdbc/                 // 切換至 JDBC Console
 jdbc> select * from sample_user;   // 執行 SQL（以 ; 結束）
 ```
-
