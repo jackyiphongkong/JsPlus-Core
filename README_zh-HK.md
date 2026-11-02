@@ -61,13 +61,13 @@ jdbc>script;
 js> var TextScript = Java.type('com.killcoding.jsplus.TextScript');/
 var emailBodyTpl = `
 To: #{email}\n
-
+\n
 Dear #{username},\n
-
+\n
 Wellcom to use Jsplus.\n
-
+\n
 Thanks\n
-
+\n
 Regards
 Jack
 `;/
@@ -75,4 +75,15 @@ Jack
 var ts = new TextScript(emailBodyTpl,false);/
 ts.addParams({email:'test@gmail.com',username: 'Alice'});
 var emailBody = ts.parse();/
+print(emailBody);
+
+ To: test@gmail.com
+
+ Dear Alice,
+
+ Wellcom to use Jsplus.
+
+ Thanks
+
+ Regards Jack
 ```
