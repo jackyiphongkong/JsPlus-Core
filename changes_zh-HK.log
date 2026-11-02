@@ -3521,3 +3521,52 @@ ${jr.diff.changes}- build: 自動版本遞增
 - found diffed: com/killcoding/jsplus/TextScriptConsole.java (A)
 - build: 自動版本遞增
 
+
+## 6.1.250 (2026.11.01 23:39:07)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.251 (2026.11.02 07:37:10)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.252 (2026.11.02 08:00:07)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.255 (2026.11.02 08:24:33)
+- found diffed: com/killcoding/jsplus/AllowAllAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/NotAllowAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.256 (2026.11.02 08:35:50)
+- found diffed: com/killcoding/jsplus/AllowAllAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/NotAllowAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.257 (2026.11.02 09:02:56)
+- found diffed: com/killcoding/jsplus/AllowAllAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/NotAllowAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+
+
+## 6.1.258 (2026.11.02 09:26:33)
+- found diffed: com/killcoding/jsplus/AllowAllAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/NotAllowAccessPool.java (A)
+- found diffed: com/killcoding/jsplus/TextScript.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: 自動版本遞增
+

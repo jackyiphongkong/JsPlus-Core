@@ -37,7 +37,6 @@ import java.util.HashMap;
 import com.killcoding.tool.CommonTools;
 import java.util.Set;
 import com.killcoding.file.DiskFile;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
 * Text-script loader: reads script source from a file / stream / string and feeds it to the
@@ -47,28 +46,46 @@ public class TextScript {
 
     public static String DEFAULT_ENGINE_NAME = "graalvm.js";
 
-    protected boolean allowAllAccess = true;
-
-    protected final static Map<String,JsPlusContext> CONTEXT_MAPPING = new ConcurrentHashMap<String,JsPlusContext>();
-
     protected String prefix = "#";
 
     protected String varName = "theContent";
 
     protected JsPlusContext context = null;
 
+    /** The console pool this TextScript renders through. The default
+     *  constructor uses the shared default pool; callers may pick a
+     *  security-profile pool explicitly via the boolean strategy
+     *  constructors (true = {@link AllowAllAccessPool}, false =
+     *  {@link NotAllowAccessPool}). */
+    protected TextScriptConsole console = null;
+
     protected Scanner scanner = null;
 
     /**
-    * Constructs a new TextScript
+    * Constructs a new TextScript on the shared default pool
+    * ({@link TextScriptConsole#getDefaultPool()}).
     * */
     public TextScript() throws Exception{
         super();
+        this.console = TextScriptConsole.getDefaultPool();
     }
 
     /**
-    * Constructs a new TextScript
-    * @param scriptPath - the scriptPath
+    * Constructs a new TextScript on the security-profile pool selected by the
+    * boolean policy: {@code true} = {@link AllowAllAccessPool} (permissive),
+    * {@code false} = {@link NotAllowAccessPool} (restricted). The policy is
+    * fixed at construction time.
+    * @param allowAllAccess the security policy for the pool
+    * */
+    public TextScript(boolean allowAllAccess) throws Exception{
+        super();
+        this.console = resolveStrategyPool(allowAllAccess);
+    }
+
+    /**
+    * Constructs a new TextScript on the shared default pool, loading the
+    * script source from a file.
+    * @param scriptPath the script file
     * */
     public TextScript(File scriptPath) throws Exception{
         super();
@@ -77,11 +94,25 @@ public class TextScript {
 
         byte[] scriptBytes = new DiskFile(scriptPath).readAllBytes();
         scanner = new Scanner(new ByteArrayInputStream(scriptBytes), BaseFile.CHARSET);
+        this.console = TextScriptConsole.getDefaultPool();
     }
 
     /**
-    * Constructs a new TextScript
-    * @param script - the script
+    * Constructs a new TextScript on the security-profile pool selected by the
+    * boolean policy, loading the script source from a file.
+    * @param scriptPath the script file
+    * @param allowAllAccess the security policy for the pool ({@code true} =
+    *                       {@link AllowAllAccessPool}, {@code false} =
+    *                       {@link NotAllowAccessPool})
+    * */
+    public TextScript(File scriptPath, boolean allowAllAccess) throws Exception{
+        this(scriptPath);
+        this.console = resolveStrategyPool(allowAllAccess);
+    }
+
+    /**
+    * Constructs a new TextScript on the shared default pool from script source.
+    * @param script the script
     * */
     public TextScript(String script) throws Exception{
         super();
@@ -90,6 +121,41 @@ public class TextScript {
 
         byte[] scriptBytes = script.getBytes(BaseFile.CHARSET);
         scanner = new Scanner(new ByteArrayInputStream(scriptBytes), BaseFile.CHARSET);
+        this.console = TextScriptConsole.getDefaultPool();
+    }
+
+    /**
+    * Constructs a new TextScript on the security-profile pool selected by the
+    * boolean policy, loading the script source from a string.
+    * @param script the script
+    * @param allowAllAccess the security policy for the pool ({@code true} =
+    *                       {@link AllowAllAccessPool}, {@code false} =
+    *                       {@link NotAllowAccessPool})
+    * */
+    public TextScript(String script, boolean allowAllAccess) throws Exception{
+        this(script);
+        this.console = resolveStrategyPool(allowAllAccess);
+    }
+
+    /**
+    * Constructs a new TextScript bound to an explicit pool instance. Internal
+    * (same-package) use by {@link TextScriptConsole#newTextScript(String)} so
+    * a pool hands out a TextScript bound to its own instance.
+    * @param script the script
+    * @param console the pool to render through
+    * */
+    protected TextScript(String script, TextScriptConsole console) throws Exception{
+        this(script);
+        this.console = console != null ? console : TextScriptConsole.getDefaultPool();
+    }
+
+    /** Resolves the named strategy pool instance for a boolean policy:
+     *  {@code true} = permissive ({@link AllowAllAccessPool#getInstance()}),
+     *  {@code false} = restricted ({@link NotAllowAccessPool#getInstance()}). */
+    private static TextScriptConsole resolveStrategyPool(boolean allowAllAccess) {
+        return allowAllAccess
+                ? AllowAllAccessPool.getInstance()
+                : NotAllowAccessPool.getInstance();
     }
 
     /**
@@ -643,52 +709,39 @@ public class TextScript {
     }
 
     /**
-    * Returns the current thread's pooled console context back to the pool
-    * (delayed by TextScriptConsole's freed delay). No-op for contexts that
-    * were not acquired from the pool (e.g. bound via
+    * Returns the current thread's pooled console context back to this
+    * TextScript's pool (delayed by TextScriptConsole's freed delay). No-op
+    * for contexts that were not acquired from the pool (e.g. bound via
     * {@link #setContext(JsPlusContext)}).
     * @throws Exception when returning fails
     * */
     public void freed() throws Exception {
         if(context != null){
-            TextScriptConsole.freed();
+            console.freed();
             context = null;
         }
     }
 
     /**
-    * Performs the useEngine operation
+    * Performs the useEngine operation. Pool concept (mirrors JsPlus-Tomcat
+    * TomcatScriptConsole): EVERY engine name - default or custom - resolves to
+    * the current thread's OWN pooled console context via this TextScript's
+    * pool ({@link TextScriptConsole#getThreadContext()} on the bound pool).
+    * Isolation is guaranteed by the thread-confined pool (one console per
+    * thread), so the former static CONTEXT_MAPPING is gone and no locks are
+    * needed. The name is kept purely for API compatibility/identification.
     * @param engineName - the engineName
     * @return the useEngine result
     * */
     public TextScript useEngine(String engineName) throws Exception {
-        if(engineName != null && engineName.equals(DEFAULT_ENGINE_NAME)){
-            // DEFAULT engine = thread-confined pooled context (pool concept,
-            // mirrors JsPlus-Tomcat TomcatScriptConsole): every thread renders
-            // on its own pooled console context - real parallelism, no locks.
-            this.context = TextScriptConsole.getThreadContext();
-            return this;
-        }
-	    this.context = CONTEXT_MAPPING.get(engineName);
-	    if(this.context == null){
-	        TextScript.initEngine(allowAllAccess,engineName);
-	        this.context = CONTEXT_MAPPING.get(engineName);
-    	    if(this.context == null){
-    	        TextScript.initEngine(allowAllAccess,engineName);
-    	        throw new Exception("The context is null, please init engine (e.g. TextScript.initEngine(engineName)).");
-    	    }
-	    }
-
-	    return this;
+        this.context = console.getThreadContext();
+        return this;
     }
 
     /**
     * Binds this TextScript to an explicit engine context for thread-confined
     * rendering - e.g. the per-thread console context handed out by
     * {@link TextScriptConsole} (mirrors JsPlus-Tomcat TomcatScriptConsole).
-    * Unlike {@link #useEngine(String)} this does NOT touch the shared static
-    * CONTEXT_MAPPING, so every worker thread can render on its own
-    * thread-confined context concurrently.
     * @param ctx the JsPlusContext to bind (must not be null)
     * @return this TextScript (chainable)
     * */
@@ -699,45 +752,24 @@ public class TextScript {
     }
 
     /**
-    * Performs the initEngine operation
+    * Initialises the script engine for TextScript rendering. Since the pool
+    * concept took over (CONTEXT_MAPPING was removed), this delegates to
+    * {@link TextScriptConsole#initTextScriptConsole(String)}: it initialises
+    * the master console + pool once, and every subsequent engine name simply
+    * resolves to the current thread's pooled context. The allowAllAccess /
+    * engine / pool-size settings are all owned by the pool's
+    * {@link TextScriptConsole} (external config, see its javadoc).
     * @param engineName - the engineName
     * @return the initEngine result
     * */
     public static boolean initEngine(String engineName) throws Exception {
-        return initEngine(true,engineName);
-    }
-
-    /**
-    * Performs the initEngine operation
-    * @param allowAllAccess - the allowAllAccess
-    * @param engineName - the engineName
-    * @return the initEngine result
-    * */
-    public static boolean initEngine(boolean allowAllAccess,String engineName) throws Exception {
-        JsPlusContext _context = CONTEXT_MAPPING.get(engineName);
-        if(_context == null){
-    	    boolean isGraalJs = JsPlusContext.isGraalJs(engineName);
-    	    boolean isNashornJs = JsPlusContext.isNashornJs(engineName);
-    	    if(isGraalJs && engineName.equals(DEFAULT_ENGINE_NAME)){
-    	        _context = new GraalVmContext(engineName);
-    	    }else if(isNashornJs && "nashorn".equals(engineName)){
-                _context = new NashornContext(engineName);
-	        }else{
-                // custom engine name = a thread-isolated context built on the
-                // default GraalVM engine (the name is only the isolation key,
-                // NOT a language id - even when it carries a 'graalvm'
-                // prefix), so useEngine("myName") supports per-thread
-                // isolation for concurrent rendering
-                _context = new GraalVmContext(DEFAULT_ENGINE_NAME);
-    	    }
-    	    _context.setAllowAllAccess(allowAllAccess);
-    	    _context.initScriptEngineManager();
-    	    CONTEXT_MAPPING.put(engineName,_context);
-    	    return true;
-        }else{
-            Logger.systemDebug(TextScript.class,"This engine '{}' already exists.",engineName);
-            return false;
+        if(!TextScriptConsole.isLoadedScriptEngine()){
+            TextScriptConsole.initTextScriptConsole(engineName);
+            Logger.systemMark(TextScript.class, "TextScript engine '{}' initialised via TextScriptConsole pool.", engineName);
+            return true;
         }
+        Logger.systemDebug(TextScript.class,"TextScriptConsole engine already initialised ({}); initEngine({}) is a no-op.", TextScriptConsole.getEngineName(), engineName);
+        return false;
     }
 
     /**
@@ -869,22 +901,6 @@ public class TextScript {
     * */
     protected String getBlockRegex(){
         return "([^\\S]*" + getPrefix() +"(block){1}[^\\S]*)$";
-    }
-
-    /**
-    * Performs the setAllowAllAccess operation
-    * @param allowAllAccess - the allowAllAccess
-    * */
-    public void setAllowAllAccess(boolean allowAllAccess){
-        this.allowAllAccess = allowAllAccess;
-    }
-
-    /**
-    * Performs the isAllowAllAccess operation
-    * @return the isAllowAllAccess result
-    * */
-    public boolean isAllowAllAccess(){
-        return this.allowAllAccess;
     }
 
 }

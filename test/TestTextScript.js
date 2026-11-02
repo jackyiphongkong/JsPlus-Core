@@ -63,17 +63,20 @@ try {
     var TextScript = Java.type("com.killcoding.jsplus.TextScript");
     var DiskFile = Java.type("com.killcoding.file.DiskFile");
 
-    // C1: default constructor - prefix / varName / allowAllAccess defaults
+    // C1: default constructor - prefix / varName defaults
+    // (allowAllAccess was a TextScript instance flag with no consumer once the
+    // pool concept took over - removed; the security flag now lives on
+    // TextScriptConsole.isAllowAllAccess(), default true)
     var ts1 = new TextScript();
     Logger.systemMark("TestTextScript.js", "C1");
     check({
         caseId: "C1",
         name: "TextScript() default constructor exposes defaults",
-        ok: str(ts1.getPrefix()) === "#" && str(ts1.getVarName()) === "theContent" && ts1.isAllowAllAccess() === true,
-        detail: "prefix=" + str(ts1.getPrefix()) + " varName=" + str(ts1.getVarName()) + " allowAllAccess=" + ts1.isAllowAllAccess(),
-        objective: "empty constructor sets the documented defaults (prefix '#', varName 'theContent', allowAllAccess true)",
-        objectiveZh: "無參構造設定文件化預設值（prefix '#、varName theContent、allowAllAccess true）",
-        command: "new TextScript(); getPrefix()/getVarName()/isAllowAllAccess()"
+        ok: str(ts1.getPrefix()) === "#" && str(ts1.getVarName()) === "theContent",
+        detail: "prefix=" + str(ts1.getPrefix()) + " varName=" + str(ts1.getVarName()),
+        objective: "empty constructor sets the documented defaults (prefix '#', varName 'theContent'); the allowAllAccess instance flag was removed with the pool takeover - it now lives on TextScriptConsole (default true)",
+        objectiveZh: "無參構造設定文件化預設值（prefix '#、varName theContent）；allowAllAccess 實例旗標隨 pool 接管已廢除——現由 TextScriptConsole 持有（默認 true）",
+        command: "new TextScript(); getPrefix()/getVarName()"
     });
 
     // C2: plain single-line text parses back verbatim
