@@ -21,7 +21,7 @@
 
 | 步驟 | 指令 | 作用 |
 | --- | --- | --- |
-| 1 | `JsPlus\bin\StopAll.bat` | 停止所有服務（H2 / Core） |
+| 1 | `JsPlus\bin\StopAll.bat` | 停止所有服務 |
 | 2 | `JsPlus\bin\StartH2Console.bat init testdb` | 初始化資料庫（`fallback.sql` → `change.sql`） |
 | 3 | `JsPlus\bin\BG_StartH2.bat` | 後台啟動 H2 資料庫（隱藏窗口） |
 | 4 | `JsPlus\bin\StartCore.bat` | 啟動 ScriptConsole 互動控制台 |
