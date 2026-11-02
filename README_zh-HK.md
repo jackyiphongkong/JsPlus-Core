@@ -22,7 +22,7 @@
 | 步驟 | 指令 | 作用 |
 | --- | --- | --- |
 | 1 | `JsPlus\bin\StopAll.bat` | 停止所有服務（H2 / Core） |
-| 2 | `JsPlus\bin\StartH2Console.bat init testdb` | 初始化資料庫（`fallback.sql` → `change.sql`，建立 9 張表 + `test_user`） |
+| 2 | `JsPlus\bin\StartH2Console.bat init testdb` | 初始化資料庫（`fallback.sql` → `change.sql`） |
 | 3 | `JsPlus\bin\BG_StartH2.bat` | 後台啟動 H2 資料庫（隱藏窗口） |
 | 4 | `JsPlus\bin\StartCore.bat` | 啟動 ScriptConsole 互動控制台 |
 
@@ -43,5 +43,14 @@ Current QueryMaxRows=1000
 
 插入測試數據
 ```
-jdbc> insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+jdbc> insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'Alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+
+1 row executed (8ms)
+
+jdbc> select id,username,email from test_user;
+ id        username           email
+u000000000000001             Alice      alice@example.com
+
+1 rows selected (523ms)
+Current QueryMaxRows=1000
 ```
