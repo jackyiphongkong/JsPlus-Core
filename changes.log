@@ -3586,3 +3586,11 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
 - build: automatic version bump
 
+
+## 6.1.259 (2026.11.03 09:54:26)
+- build: automatic version bump
+
+
+## 6.1.260 (2026.11.03 11:20:47)
+- build: automatic version bump
+
