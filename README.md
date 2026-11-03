@@ -44,6 +44,9 @@ Requires **GraalVM 25 (Java 25)**, placed at `Java\default` (this directory is n
 Type JavaScript directly at the console prompt, end the command with `/`:
 ```
 js> print('Hello World.');/
+```
+Output
+```
 Hello World.
 ```
 
@@ -64,12 +67,18 @@ Current QueryMaxRows=1000
 
 Insert test data:
 ```
-jdbc> 
 insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'Alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
-
+```
+Output
+```
 1 row executed (8ms)
-
-jdbc> select id,username,email from test_user;
+```
+Query the inserted record:
+```
+select id,username,email from test_user;
+```
+Output
+```
  id        username           email
 u000000000000001             Alice      alice@example.com
 
@@ -77,25 +86,30 @@ u000000000000001             Alice      alice@example.com
 Current QueryMaxRows=1000
 ```
 
-Type `script;` to switch back to the ScriptConsole, use JS to read the test record, end with `/`:
+Type `script;` to switch back to the ScriptConsole, use JS to read the test record:
 ```
-jdbc>script;
-js>
+jdbc>script;  
+js> 
+```
+Run JS (end with /)
+```
 var CacheDriverExecutor = Java.type('com.killcoding.datasource.CacheDriverExecutor');
 var cde = new CacheDriverExecutor(Console.getDataSource().getConnection());
 var testUser = cde.first("select * from test_user where username = :username",{username: 'Alice'});
 print(testUser);/
 ```
-Output:
+Output
 ```
 {id=u000000000000001, username=Alice, email=alice@example.com, age=30, status=active, created_at=2026-11-03 10:07:30.583287, updated_at=2026-11-03 10:07:30.583287, deleted_at=null, deleted=false}
-
 ```
 
-Use the test data as parameters with TextScript to generate an email template, end with `/`:
+Type `script;` to switch back to the ScriptConsole, use TextScript to generate an email template:
 ```
-jdbc>script;
+jdbc>script;  
 js> 
+```
+Define the email template (end with /)
+```
 var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var emailBodyTpl = `
 To: #{email}\n
@@ -111,7 +125,7 @@ Regards
 Jack
 `;/
 ```
-
+Render and output the email body
 ```
 var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
@@ -120,7 +134,7 @@ print("----------------------");
 print(emailBody);
 print("----------------------");/
 ```
-Output:
+Output
 ```
 ----------------------
  To: test@gmail.com
