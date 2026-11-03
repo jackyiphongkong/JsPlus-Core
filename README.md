@@ -163,3 +163,15 @@ Close the connection:
 For unit tests, start the corresponding suite's `bat` / `sh`, e.g. `test\TestTextScriptStress.bat` (Linux/macOS: `test\TestTextScriptStress.sh`).
 
 The test suites cover examples of every **Main features** item, e.g. `TestDatasource` (efficient datasource), `TestCache` / `TestCacheArray` (cache layer), `TestRemoteFile` (remote files), `TestDBSync` (database async sync), `TestTextScript` (template engine), `TestClock` (time-sync getter), `TestIdentityCard` (number generator), `TestCommonTools` etc. (daily toolkit).
+
+## AI-Agent collaborative development
+
+JsPlus-Core supports AI-Agent-assisted development by design — automated environment setup, AI-generated code and tests, fully automated verification, and human review of reports form a complete loop.
+
+| Stage | Description |
+| --- | --- |
+| **Automated environment setup** | `ant.bat` builds with one command (auto `StopAll` → version management → packaging); only GraalVM 25 is required (Ant optional); Windows / Linux share the same `.bat` / `.sh` scripts, so the environment is reproducible |
+| **AI-assisted coding** | Embedded GraalVM JS console: AI-generated logic can be executed and verified immediately, no restart or recompilation needed; `Console.evalJavaSource()` compiles Java source at runtime and calls it for fast iteration |
+| **AI-authored test cases** | Standardized JS test-suite pattern (`Case Cxx` naming + TestBase harness): AI can generate new cases following the existing pattern and they plug into `TestAll` seamlessly |
+| **Fully automated test runs** | Local one-click `TestAll.bat` / `TestAll.sh`; CI (GitHub Actions) builds, runs tests and archives reports automatically |
+| **Human review of reports** | `TestAll-Report` / `TestAll-CI-Summary` are generated automatically with per-case results and failure details; machines judge tests, humans own quality |

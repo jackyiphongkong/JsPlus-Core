@@ -9,8 +9,8 @@
 | **快速調試** | 以 JavaScript 調用 Java 原生類庫，啟動控制台即可調試程式 | `ScriptConsole` |
 | **高效數據源** | 自動管理連線、壞連線自癒；資料可直接饋入快取，也可通過簡單配置同步到多個數據源 | `DriverDataSource` |
 | **快取層** | 鍵值快取 + 非同步過濾管線：大量資料先過濾再交給處理者，毋須自行編寫執行緒 | `Cache` / `CacheArray` |
-| **遠程檔案** | 把檔案存入資料庫、分塊管理、跨機器同步讀寫，也可用作多機熱備份 | `RemoteFile` / `RemoteFileSync` |
-| **資料庫異步同步** | 兩個資料庫之間增量同步，支援新增 / 更新 / 刪除 | `dbsync` |
+| **遠程檔案** | 把檔案存入資料庫、分塊管理、跨機器同步讀寫，也可用作多機熱備份 | `RemoteFile` |
+| **資料庫異步同步** | 兩個資料庫之間增量同步，支援新增 / 更新 / 刪除 | `dbsync(Package)` |
 | **模板引擎** | 報表、信件、HTML 等文字模板內嵌 `#` 指令，模板自帶邏輯、自動渲染 | `TextScript` |
 | **遠端控制其他程序** | 主程序下達指令，另一台機器上的程序輪詢執行並回傳結果 | `GhostConsole` |
 | **日常工具箱** | 設定讀取、XML、加解密、轉義、檔案處理、JS / CSS / HTML 壓縮、HTTP 客戶端 | `CommonTools` 等 |
@@ -163,3 +163,15 @@ print("----------------------");/
 如需單元測試，可啟動對應套件的 `bat` / `sh`，例如 `test\TestTextScriptStress.bat`（Linux/macOS：`test\TestTextScriptStress.sh`）。
 
 測試案例已涵蓋「主要功能」各項的示例，例如 `TestDatasource`（高效數據源）、`TestCache` / `TestCacheArray`（快取層）、`TestRemoteFile`（遠程檔案）、`TestDBSync`（資料庫異步同步）、`TestTextScript`（模板引擎）、`TestClock`（時間同步獲取器）、`TestIdentityCard`（編號生成器）、`TestCommonTools` 等（日常工具箱）。
+
+## AI-Agent 協作開發
+
+JsPlus-Core 從設計上即支援 AI Agent 參與開發——環境自動化、AI 生成代碼與測試、全自動驗證、人為把關報告，形成完整閉環。
+
+| 環節 | 說明 |
+| --- | --- |
+| **初始環境自動化** | `ant.bat` 一條命令完成建置（自動 `StopAll` → 版本管理 → 打包）；只需 GraalVM 25（Ant 可選）；Windows / Linux 共用同一套 `.bat` / `.sh` 腳本，環境可重現 |
+| **AI 幫手寫 Code** | 內嵌 GraalVM JS Console：AI 生成的邏輯可直接執行驗證，毋須重啟、毋須重編譯；`Console.evalJavaSource()` 於執行期即時編譯一段 Java 源碼並呼叫，快速迭代 |
+| **AI 寫測試案例** | 統一 JS 測試套件範式（`Case Cxx` 命名 + TestBase 測試框架），AI 按既有模式生成新案例即可無縫納入 `TestAll` |
+| **全自動運行測試** | 本地 `TestAll.bat` / `TestAll.sh` 一鍵全量；CI（GitHub Actions）自動建置、執行測試並歸檔報告 |
+| **人為檢測測試報告** | 自動產出 `TestAll-Report` / `TestAll-CI-Summary`，詳列每案例結果與失敗細節；測試判斷交給機器，質量把關交給人 |
