@@ -86,10 +86,13 @@ u000000000000001             Alice      alice@example.com
 Current QueryMaxRows=1000
 ```
 
-輸入 `script;` 切換至 ScriptConsole，使用 JS 讀取測試記錄，以 `/` 結束指令：
+輸入 `script;` 切換至 ScriptConsole，使用 JS 讀取測試記錄：
 ```
-jdbc>script;
-js>
+jdbc>script;  
+js> 
+```
+執行 JS（以 / 結束指令）
+```
 var CacheDriverExecutor = Java.type('com.killcoding.datasource.CacheDriverExecutor');
 var cde = new CacheDriverExecutor(Console.getDataSource().getConnection());
 var testUser = cde.first("select * from test_user where username = :username",{username: 'Alice'});
@@ -100,10 +103,13 @@ print(testUser);/
 {id=u000000000000001, username=Alice, email=alice@example.com, age=30, status=active, created_at=2026-11-03 10:07:30.583287, updated_at=2026-11-03 10:07:30.583287, deleted_at=null, deleted=false}
 ```
 
-使用測試數據為參數配合 TextScript 生成郵件模板，以 `/` 結束指令：
+輸入 `script;` 切換至 ScriptConsole，配合 TextScript 生成郵件模板：
 ```
-jdbc>script;
+jdbc>script;  
 js> 
+```
+定義郵件模板（以 / 結束指令）
+```
 var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var emailBodyTpl = `
 To: #{email}\n
