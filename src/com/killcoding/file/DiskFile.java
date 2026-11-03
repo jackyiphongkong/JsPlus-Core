@@ -1796,6 +1796,7 @@ public class DiskFile extends BaseFile {
 	* */
 	protected static synchronized boolean addQueuePathMapping(String path) {
 		Long addTimeMs = null;
+		path = CommonTools.normalizePath(path);
 		boolean allowed = checkQueuePathMapping();
 
 		if (!allowed)
@@ -1841,7 +1842,7 @@ public class DiskFile extends BaseFile {
 	* @param path - the path
 	* */
 	protected static synchronized void removeQueuePathMapping(String path) {
-		QUEUE_PATH_MAPPING.remove(path);
+		QUEUE_PATH_MAPPING.remove(CommonTools.normalizePath(path));
 	}
 
 	/**

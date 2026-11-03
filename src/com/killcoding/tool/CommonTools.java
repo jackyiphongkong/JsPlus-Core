@@ -201,6 +201,19 @@ public final class CommonTools {
 	}
 
 	/**
+	 * Normalize a file path (resolves ".", ".." and duplicate separators).
+	 * Used where a path string is the key of a shared map or compared against
+	 * configured patterns, so different spellings of the same location map
+	 * to one key.
+	 *
+	 * @param path - the file path
+	 * @return the normalized absolute path
+	 */
+	public static String normalizePath(String path) {
+		return Paths.get(path).normalize().toAbsolutePath().toString();
+	}
+
+	/**
 	 * Performs the isBlank operation
 	 * 
 	 * @param o - the o

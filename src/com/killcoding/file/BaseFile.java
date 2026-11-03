@@ -393,8 +393,8 @@ public abstract class BaseFile {
 
         File syncFile = new File(getPath());
         if(syncRoot != null){
-            String syncRootParent = replacePath(syncRoot.getParent()) + "/";
-            String replacedFilePath = TEMP_DIR.toAbsolutePath() + "/." + replacePath(syncFile.getAbsolutePath()).replaceFirst(syncRootParent,"") + TMP_EXT_MODIFY_FILE;
+            String syncRootParent = replacePath(CommonTools.normalizePath(syncRoot.getParent())) + "/";
+            String replacedFilePath = TEMP_DIR.toAbsolutePath() + "/." + replacePath(CommonTools.normalizePath(syncFile.getAbsolutePath())).replaceFirst(syncRootParent,"") + TMP_EXT_MODIFY_FILE;
             return replacedFilePath;
         }
         return null;
@@ -409,8 +409,8 @@ public abstract class BaseFile {
 
         File syncFile = new File(getPath());
         if(syncRoot != null){
-            String syncRootParent = replacePath(syncRoot.getParent()) + "/";
-            String replacedFilePath = TEMP_DIR.toAbsolutePath() + "/." + replacePath(syncFile.getAbsolutePath()).replaceFirst(syncRootParent,"") + TMP_EXT_ACCESS_FILE;
+            String syncRootParent = replacePath(CommonTools.normalizePath(syncRoot.getParent())) + "/";
+            String replacedFilePath = TEMP_DIR.toAbsolutePath() + "/." + replacePath(CommonTools.normalizePath(syncFile.getAbsolutePath())).replaceFirst(syncRootParent,"") + TMP_EXT_ACCESS_FILE;
             return replacedFilePath;
         }
         return null;
@@ -425,8 +425,8 @@ public abstract class BaseFile {
 
         File syncFile = new File(getPath());
         if(syncRoot != null){
-            String syncRootParent = replacePath(syncRoot.getParent()) + "/";
-            String replacedFilePath = TEMP_DIR.toAbsolutePath() + "/." + replacePath(syncFile.getAbsolutePath()).replaceFirst(syncRootParent,"") + TMP_EXT_CHECK_FILE;
+            String syncRootParent = replacePath(CommonTools.normalizePath(syncRoot.getParent())) + "/";
+            String replacedFilePath = TEMP_DIR.toAbsolutePath() + "/." + replacePath(CommonTools.normalizePath(syncFile.getAbsolutePath())).replaceFirst(syncRootParent,"") + TMP_EXT_CHECK_FILE;
             return replacedFilePath;
         }
         return null;
@@ -532,7 +532,7 @@ public abstract class BaseFile {
 			if (matchedAllowed && syncPathAllowed != null) {
 				for (String regex : syncPathAllowed) {
 					if (!CommonTools.isBlank(regex)) {
-						matchedAllowed = path.matches(regex);
+						matchedAllowed = replacePath(CommonTools.normalizePath(path)).matches(regex);
 
 						if (matchedAllowed)
 							break;
@@ -542,7 +542,7 @@ public abstract class BaseFile {
 			if (matchedAllowed && syncPathIgnored != null) {
 				for (String regex : syncPathIgnored) {
 					if (!CommonTools.isBlank(regex)) {
-						matchedIgnored = path.matches(regex);
+						matchedIgnored = replacePath(CommonTools.normalizePath(path)).matches(regex);
 
 						if (matchedIgnored)
 							break;

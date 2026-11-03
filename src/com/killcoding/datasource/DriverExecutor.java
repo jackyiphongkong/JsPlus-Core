@@ -88,7 +88,7 @@ public class DriverExecutor {
 
 	protected boolean closed = true;
 	protected Connection connection = null;
-	private static CacheArray sqlLogCacheArray = null;
+	private static ConcurrentHashMap<String, CacheArray> sqlLogCacheArrayMap = new ConcurrentHashMap<String, CacheArray>();
 
 	/**
 	* New a DriverExecutor object
@@ -1291,6 +1291,8 @@ public class DriverExecutor {
 			final int archiveDays = configProperties.getInteger("SqlLogArchiveDays", 31);
 			final int logParamMaxLength = configProperties.getInteger("SqlLogParamMaxLength", 20);
 
+			final String logFolderKey = Paths.get(logFolderPath).normalize().toAbsolutePath().toString();
+			CacheArray sqlLogCacheArray = sqlLogCacheArrayMap.get(logFolderKey);
 			if (sqlLogCacheArray == null) {
 
 				sqlLogCacheArray = new CacheArray();
@@ -1350,6 +1352,7 @@ public class DriverExecutor {
 						}
 					}
 				});
+				sqlLogCacheArrayMap.put(logFolderKey, sqlLogCacheArray);
 			}
 
 			if (logEnable) {

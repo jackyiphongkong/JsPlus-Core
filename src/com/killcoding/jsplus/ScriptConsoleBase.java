@@ -194,7 +194,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
     		System.setProperty(JS_PLUS_PATH_KEY, jsPlusPath);
     		File logConfFile = new File(String.format("%s/config/Logger.properties",jsPlusPath));
     		if(logConfFile.exists()){
-    		    System.setProperty(LoggerFactory.APP_LOGGER_KEY,logConfFile.getAbsolutePath());
+    		    System.setProperty(LoggerFactory.APP_LOGGER_KEY,CommonTools.normalizePath(logConfFile.getAbsolutePath()));
     		}
     		System.out.println("SET JS_PLUS_PATH=" + System.getProperty(JS_PLUS_PATH_KEY));
 	    }

@@ -214,7 +214,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* Performs the init operation
 	* */
 	private synchronized void init() {
-		dsKey = CommonTools.md5(appRemoteFile.getAbsolutePath());
+		dsKey = CommonTools.md5(CommonTools.normalizePath(appRemoteFile.getAbsolutePath()));
 		dataSourceReader = DATASOURCE_REMOTE_FILE.get(String.format("%s.reader", dsKey));
 		dataSourceWriter = DATASOURCE_REMOTE_FILE.get(String.format("%s.writer", dsKey));
 		configProperties = CONFIG_PROPS_REMOTE_FILE.get(dsKey);
@@ -2823,6 +2823,8 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	protected static synchronized boolean addQueuePathMapping(String path) {
 		Long addTimeMs = null;
 
+		path = CommonTools.normalizePath(path);
+
 		boolean allowed = checkQueuePathMapping();
 
 		if (!allowed)
@@ -2868,7 +2870,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 	* @param path - the path
 	* */
 	protected static synchronized void removeQueuePathMapping(String path) {
-		QUEUE_PATH_MAPPING.remove(path);
+		QUEUE_PATH_MAPPING.remove(CommonTools.normalizePath(path));
 	}
 
 	/**

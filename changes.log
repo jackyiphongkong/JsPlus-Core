@@ -3602,3 +3602,22 @@ ${jr.diff.changes}- build: automatic version bump
 ## 6.1.262 (2026.11.03 13:56:49)
 - build: automatic version bump
 
+
+## 6.1.263 (2026.11.03 17:31:39)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- build: automatic version bump
+
+
+## 6.1.264 (2026.11.03 17:35:39)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- build: automatic version bump
+
+
+## 6.1.265 (2026.11.03 17:58:37)
+- found diffed: com/killcoding/file/BaseFile.java (M)
+- found diffed: com/killcoding/file/DiskFile.java (M)
+- found diffed: com/killcoding/file/RemoteFileBase.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/tool/CommonTools.java (M)
+- build: automatic version bump
+
