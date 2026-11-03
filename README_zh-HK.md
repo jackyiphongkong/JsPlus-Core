@@ -110,7 +110,6 @@ js>
 ```
 定義郵件模板（以 / 結束指令）
 ```
-var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var emailBodyTpl = `
 To: #{email}\n
 \n
@@ -127,6 +126,7 @@ Jack
 ```
 渲染並輸出郵件內容
 ```
+var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
 var emailBody = ts.parse();
