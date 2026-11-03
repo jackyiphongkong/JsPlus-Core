@@ -89,8 +89,10 @@ Jack
 var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
 var emailBody = ts.parse();
-print(emailBody);/
-
+print("----------------------");
+print(emailBody);
+print("----------------------");/
+----------------------
  To: test@gmail.com
 
  Dear Alice,
@@ -101,4 +103,6 @@ print(emailBody);/
 
  Regards 
  Jack
+----------------------
+ cde.close();/
 ```
