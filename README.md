@@ -153,3 +153,13 @@ Close the connection:
 ```
  cde.close();/
 ```
+
+## Quick test
+
+| Step | Command | Purpose |
+| --- | --- | --- |
+| 1 | `test\TestAll.bat` (Linux/macOS: `test\TestAll.sh`) | Full test suite: auto `StopAll` → initialize databases (`testdb` + dbsync) → start H2 → run all JS test suites |
+
+For unit tests, start the corresponding suite's `bat` / `sh`, e.g. `test\TestTextScriptStress.bat` (Linux/macOS: `test\TestTextScriptStress.sh`).
+
+The test suites cover examples of every **Main features** item, e.g. `TestDatasource` (efficient datasource), `TestCache` / `TestCacheArray` (cache layer), `TestRemoteFile` (remote files), `TestDBSync` (database async sync), `TestTextScript` (template engine), `TestClock` (time-sync getter), `TestIdentityCard` (number generator), `TestCommonTools` etc. (daily toolkit).
