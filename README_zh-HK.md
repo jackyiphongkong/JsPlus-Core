@@ -47,11 +47,17 @@ js> print('Hello World.');/
 Hello World.
 ```
 
-輸入 `jdbc/` 切換至 JdbcConsole，以 `;` 結束 SQL：
+輸入 `jdbc/` 切換至 JdbcConsole：
 ```
-js> jdbc/                 // 切換至 JdbcConsole
-jdbc> select * from test_user;   // 執行 SQL（以 ; 結束）
-
+js> jdbc/  
+jdbc> 
+```
+執行 SQL（以 ; 結束）
+```             
+select * from test_user;
+```
+輸出
+```
 0 rows selected (10ms)
 Current QueryMaxRows=1000
 ```
