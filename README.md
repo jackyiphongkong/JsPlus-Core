@@ -1,147 +1,135 @@
 # JsPlus-Core
 
-**Embedded script-console engine + server-side capability library.** Embeds a GraalVM JavaScript runtime in any Java application and closes the loop between Java and JS: one console, one runtime, one jar — the JS scripts call the real Java API directly, and the same console executes, asserts and reports the tests.
+**A standard GraalVM JS Java API calling engine.** Embeds a GraalVM JavaScript runtime in any Java application; lightweight dependency references let JS call the real Java API directly: developers build fast and verify logic on the spot; operators automate scripts and scheduled tasks. Built-in Script / JDBC / Cmd consoles suit all kinds of technical staff. The advantage of the reference pool lets GraalVM JS support multi-threaded calls.
 
-## Ecosystem loop & lightweight positioning
+## Main features
 
-**JsPlus-Core is a closed-loop, lightweight capability engine:**
-
-| Loop | What closes the loop |
-| --- | --- |
-| **Capability loop** | Java core library (datasource / cache / file / sync / toolkit) → unified `ScriptConsole` → JS scripts call the real Java API → the same console executes, asserts and reports (test suites are JS files asserting against real Java — no JUnit) |
-| **Dynamic-compile loop** | `evalJavaSource()` compiles Java source at runtime → loads the classes → JS invokes them immediately — extend capabilities on the fly, no precompilation, no restart |
-| **Data loop** | On-demand H2 + pooled `DriverDataSource` + multi-layer `Cache` + `CacheArray` async pipeline + `RemoteFile` DB-mapped files + `dbsync` — the full data path (store / cache / stream / sync) is built in |
-| **Cross-process loop** | `GhostConsole` queue — the main console issues commands → a ghost process polls, executes and writes the result back — remote control without sharing process state |
-| **Server-ecosystem loop** | Same env-var conventions, same console API and the same capability library as **JsPlus-Tomcat** (the server edition) — Core supplies the capabilities, the server edition supplies HTTP/TCP serving |
-
-**Lightweight by design:** no web-container dependency (no Tomcat/Servlet) · one capability jar · bundled toolchain (JDK + Ant, no `JAVA_HOME`) · on-demand H2 (no resident database process) · JS test suites instead of JUnit · small footprint (`-Xms256m -Xmx1024m`).
-
-## Capability overview
-
-| Capability | What it does |
-| --- | --- |
-| **Script console** | GraalVM JS (or Nashorn) embedded engine: `evalScript` / `eval(File)` / callbacks / multi-console isolation via `newBuilder()` / dynamic compilation `evalJavaSource()` |
-| **Database connection pool** | `DriverDataSource` pooled JDBC (min/max pool, validity check, idle/lifetime reclamation, self-healing) + `CacheDriverExecutor` sync executor & row-by-row cache-array feeding |
-| **Cache** | `Cache` static key-value API (life semantics) + `CacheArray` async filter pipeline (producer → filter worker → consumer callbacks) |
-| **Remote files** | `DiskFile` local abstraction; `RemoteFile` DB-mapped files (chunking via `FilePart` + `RemoteFileSync`) |
-| **Database sync** | `dbsync` pipeline: `Database/Table` + `Inserter/Updater/Deleter` — cross-db/cross-table incremental sync |
-| **Toolkit** | `CommonTools` / `ConfigProperties` / `XmlParser` / `CipherTools` / `EscapeTools` / `FileTools` / minifiers (`SimpleJsCompressor` / `SimpleCssCompressor` / `SimpleHtmlScanner`) / `WebClient` (HTTP client) |
-| **TextScript** | Scriptable text-template engine: `#` directives compiled into a JS function — see below |
-| **GhostConsole** | Cross-process command queue (`ghost_remote_command` table): issue commands from the main console, a ghost process executes them |
-
-## Related projects
-
-| Project | Role |
-| --- | --- |
-| **JsPlus** (root) | Bundled toolchain & scripts: JDK/Ant, H2 startup (`StartH2.js` / `StopH2.bat`), unified bat/sh entry points |
-| **JsPlus-Core** (this) | The capability engine: script console + datasource/cache/file/sync/toolkit in one jar |
-| **JsPlus-Tomcat** | The server edition: HTTP/TCP reverse proxy with the same console API & capability library (`TomcatScriptConsole` — the pool concept this Core pool mirrors) |
-
-## Suite architecture
-
-Every test suite is a **JS file running inside the engine that calls the real Java API directly and asserts** — no JUnit, no external framework. Build & full regression:
-
-| Step | Command | Artifact / result |
+| Feature | Description | Class |
 | --- | --- | --- |
-| Build | `ant.bat build` (Linux/macOS: `ant.sh`) | `LibHome\jsplus\default\jsplus-core-<version>.jar`; version auto patch+1; changelog appended to `changes.log` / `changes_zh-HK.log`; API javadoc regenerated |
-| Full test suite | `test\TestAll.bat` (`TestAll.sh`) | **294 passed / 0 failed** (24 JS suites + TestDatasource pool integration; auto-starts H2 → initializes `testdb` → runs → cleans up) |
-| Stress suite | `test\_RunOne.bat TestTextScriptStress` | **7 cases all green** — C1 sequential · C2/C3/C4 concurrent pooled render (240/240/800) · C5 per-thread `newBuilder()` + callback + `ca.add()` · C6 pool exhaustion (acquired=99 rejected=20, pool recovers) · C7 named strategy pools `new TextScript(t, true/false)` |
+| **Quick debugging** | Call Java native libraries with JavaScript; start the console and debug programs right away | `ScriptConsole` |
+| **Efficient datasource** | Automatically manages connections and self-heals broken ones; data can feed the cache directly, or sync to multiple datasources with simple configuration | `DriverDataSource` |
+| **Cache layer** | Key-value cache + async filter pipeline: large data is filtered before reaching handlers, no need to write threads yourself | `Cache` / `CacheArray` |
+| **Remote files** | Store files in the database with chunked management, cross-machine sync read/write; also usable as multi-machine hot backup | `RemoteFile` / `RemoteFileSync` |
+| **Database async sync** | Incremental sync between two databases, supports insert / update / delete | `dbsync` |
+| **Template engine** | Text templates with embedded `#` directives for reports, letters, HTML; templates carry their own logic and render automatically | `TextScript` |
+| **Remote control of other programs** | Main program issues commands; a program on another machine polls, executes and returns the result | `GhostConsole` |
+| **Daily toolkit** | Config reading, XML, encryption/decryption, escaping, file handling, JS / CSS / HTML minification, HTTP client | `CommonTools` etc. |
+| **Time-sync getter** | Simple configuration unifies application and database time consistency | `Clock` |
+| **Number generator** | Generates fixed-length sequence numbers / document numbers, with optional prefix/suffix, unique across machines | `IdentityCard` |
 
-Packages: `com.killcoding.jsplus` (console engine core) · `com.killcoding.datasource` (pooled JDBC) · `com.killcoding.cache` (multi-layer cache) · `com.killcoding.file` (local + DB-mapped files) · `com.killcoding.dbsync` (sync pipeline) · `com.killcoding.tool` (toolkit) · `com.killcoding.log` (logging).
+## Runtime environment
 
-## Console API (core entry) — hello world
+### Java
 
-`ScriptConsole` is the single entry point; any number of instances can be created (each with its own isolated engine context):
+Requires **GraalVM 25 (Java 25)**, placed at `Java\default` (this directory is not tracked by Git; scripts fall back to the system `JAVA_HOME` when it is missing):
 
-```java
-import com.killcoding.jsplus.ScriptConsole;
+| Directory | Purpose |
+| --- | --- |
+| `Java\default` | Full JDK for build / startup (includes `jmods`) |
+| `Java\runtime` | Trimmed JRE for deployment, generated by `packJdk.bat` (jdeps + jlink) |
 
-ScriptConsole console = new ScriptConsole();
-console.initScriptEngineManager(true);          // start the GraalVM JS engine
+### Ant (optional)
 
-console.evalScript("print('Hello, world!')");   // → Hello, world!   (JS)
-console.evalScript("'Hello from JS: ' + (40 + 2)"); // → Hello from JS: 42
+`Ant\default` bundles Ant; falls back to the system `ANT_HOME` when missing. Build entry: `ant.bat` (Linux/macOS: `ant.sh`) — runs `StopAll` before building.
 
-// Object bridge: pass values between JS and Java
-console.getContext().put("greeting", "hello");
-console.evalScript("greeting.toUpperCase()");   // → HELLO
+## Quick start
 
-// Isolated console for parallel execution (own context)
-ScriptConsole worker = console.newBuilder();
-worker.evalScript("var x = 40 + 2; x");
-
-// Dynamic compilation of Java source at runtime
-ClassLoader cl = console.evalJavaSource(
-    "public class Hello { public static String hi() { return \"hi\"; } }");
-```
-
-Key API surface: `evalScript(String)` / `eval(File|Runnable)` / `evalJavaSource(String[])` / `newBuilder()` / `getContext()` (`put/get/remove` bridge) / `callback(Runnable, sync)` / `getGlobalCacheArray(timer, loopTimer)` / `addSchedule(...)` (below) / `executeViaGhost(...)`.
-
-## Scheduling & tasks — sample
-
-```java
-// cron-style schedule: the console checks every minute.
-// Rules: "HH:mm" (e.g. "08:00"), "E HH:mm" (e.g. "MON 08:00"),
-//        "mm" (minute), or "*N" = every N minutes (e.g. "*5" = every 5 min).
-console.addSchedule("daily-report", "08:00", () ->
-    console.evalScript("print('daily report generated')"));
-
-console.addSchedule("heartbeat", "*5", () ->
-    console.evalScript("print('tick')"));
-
-console.getScheduleMap();   // → { name -> { cronRules, runnable } }
-console.clearSchedule("daily-report");
-
-// One-shot task mode
-console.setTask("print('one-shot task')");
-console.taskExecute();
-```
-
-## TextScript — scriptable text template engine — sample
-
-`TextScript` compiles a text template with `#` directives into a JS function and runs it inside the console: plain lines are emitted literally, `#{expr}` is evaluated inline, and `#if / #else / #end / #for / #code / #block / #end` drive control flow.
-
-```text
-#comment greeting template - directive lines are dropped
-Hello #{name}, welcome to JsPlus-Core!
-#if(release)
-Build: STABLE
-#else
-Build: DEV
-#end
-```
-
-```java
-import com.killcoding.jsplus.TextScript;
-import java.util.HashMap;
-import java.util.Map;
-
-TextScript ts = new TextScript(template);       // template text above
-Map<String,Object> params = new HashMap<String,Object>();
-params.put("name", "World");
-params.put("release", true);
-ts.addParams(params);
-String out = ts.parse();                        // rendered text
-String src = ts.parse(true);                    // compiled JS function source
-```
-
-Pool & security policy — `TextScript` renders on a thread-confined console pool (one console per thread, mirrors JsPlus-Tomcat `TomcatScriptConsole`). Pick the security policy at the constructor:
-
-```java
-new TextScript(template)            // default pool (TextScriptConsole)
-new TextScript(template, true)      // AllowAllAccessPool  (permissive)
-new TextScript(template, false)     // NotAllowAccessPool  (restricted)
-```
-
-> Note: one `parse()` call consumes the scanner — use a fresh `TextScript` instance per render. Runnable demo: `examples/TextScript-demo.js`.
-
-## Environment variable overrides (same convention as the server edition)
-
-| Variable | Default | Purpose |
+| Step | Command | Purpose |
 | --- | --- | --- |
-| `JsPlus_JavaDir_JsPlus-Core` | `default` | JDK directory name under `Java\` |
-| `JsPlus_JvmParams_JsPlus-Core` | `-Xms256m -Xmx1024m -Xss256k` | JVM parameters |
-| `SCRIPT_ENGINE` | `graalvm.js` | Script engine (Nashorn optional) |
-| `JsPlus_H2_PORT` | `3306` | H2 TCP port |
+| 1 | `JsPlus\bin\StopAll.bat` | Stop all services |
+| 2 | `JsPlus\bin\StartH2Console.bat init testdb` | Initialize the database (`fallback.sql` → `change.sql`) |
+| 3 | `JsPlus\bin\BG_StartH2.bat` | Start H2 in the background (hidden window) |
+| 4 | `JsPlus\bin\StartCore.bat` | Start the ScriptConsole interactive console |
 
-Console-pool external config (env first, then `-D`): `jsplus.textscript.poolsize` · `jsplus.textscript.engine` · `jsplus.textscript.allowallaccess`. Applied only to the default pool; strategy pools (`true`/`false`) are fixed at construction.
+Type JavaScript directly at the console prompt, end the command with `/`:
+```
+js> print('Hello World.');/
+Hello World.
+```
+
+Type `jdbc/` to switch to the JdbcConsole, end SQL with `;`:
+```
+js> jdbc/                 // switch to JdbcConsole
+jdbc> select * from test_user;   // run SQL (end with ;)
+
+0 rows selected (10ms)
+Current QueryMaxRows=1000
+```
+
+Insert test data:
+```
+jdbc> 
+insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'Alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+
+1 row executed (8ms)
+
+jdbc> select id,username,email from test_user;
+ id        username           email
+u000000000000001             Alice      alice@example.com
+
+1 rows selected (523ms)
+Current QueryMaxRows=1000
+```
+
+Type `script;` to switch back to the ScriptConsole, use JS to read the test record, end with `/`:
+```
+jdbc>script;
+js>
+var CacheDriverExecutor = Java.type('com.killcoding.datasource.CacheDriverExecutor');
+var cde = new CacheDriverExecutor(Console.getDataSource().getConnection());
+var testUser = cde.first("select * from test_user where username = :username",{username: 'Alice'});
+print(testUser);/
+```
+Output:
+```
+{id=u000000000000001, username=Alice, email=alice@example.com, age=30, status=active, created_at=2026-11-03 10:07:30.583287, updated_at=2026-11-03 10:07:30.583287, deleted_at=null, deleted=false}
+
+```
+
+Use the test data as parameters with TextScript to generate an email template, end with `/`:
+```
+jdbc>script;
+js> 
+var TextScript = Java.type('com.killcoding.jsplus.TextScript');
+var emailBodyTpl = `
+To: #{email}\n
+\n
+Dear #{username},\n
+\n
+Wellcom to use Jsplus.\n
+\n
+Thanks\n
+\n
+Regards
+\n
+Jack
+`;/
+```
+
+```
+var ts = new TextScript(emailBodyTpl,false);
+ts.addParams(testUser);
+var emailBody = ts.parse();
+print("----------------------");
+print(emailBody);
+print("----------------------");/
+```
+Output:
+```
+----------------------
+ To: test@gmail.com
+
+ Dear Alice,
+
+ Wellcom to use Jsplus.
+
+ Thanks
+
+ Regards 
+ Jack
+----------------------
+```
+Close the connection:
+```
+ cde.close();/
+```
