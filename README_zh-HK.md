@@ -55,10 +55,23 @@ u000000000000001             Alice      alice@example.com
 Current QueryMaxRows=1000
 ```
 
-輸入 `script;` 切換至 ScriptConsole，以 `/` 結束 SQL：
+輸入 `script;` 切換至 ScriptConsole，使用JS讀取測試記錄，以 `/` 結束 SQL：
 ```
 jdbc>script;
-js> var TextScript = Java.type('com.killcoding.jsplus.TextScript');/
+js>
+var CacheDriverExecutor = Java.type('com.killcoding.datasource.CacheDriverExecutor');
+var cde = new CacheDriverExecutor(Console.getDataSource().getConnection());
+var testUser = cde.first("select * from test_user where username = :username",{username: 'Alice'});
+print(testUser);/
+
+{id=u000000000000001, username=Alice, email=alice@example.com, age=30, status=active, created_at=2026-11-03 10:07:30.583287, updated_at=2026-11-03 10:07:30.583287, deleted_at=null, deleted=false}
+
+```
+
+使用測試數據為參數配合TextScript生成郵件模板，以 `/` 結束 SQL：
+```
+jdbc>script;
+js> var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var emailBodyTpl = `
 To: #{email}\n
 \n
@@ -69,11 +82,12 @@ Wellcom to use Jsplus.\n
 Thanks\n
 \n
 Regards
+\n
 Jack
 `;/
 
 var ts = new TextScript(emailBodyTpl,false);/
-ts.addParams({email:'test@gmail.com',username: 'Alice'});
+ts.addParams(testUser);
 var emailBody = ts.parse();/
 print(emailBody);
 
