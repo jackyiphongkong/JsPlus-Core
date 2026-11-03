@@ -43,7 +43,8 @@ Current QueryMaxRows=1000
 
 插入測試數據
 ```
-jdbc> insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'Alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+jdbc> 
+insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'Alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
 
 1 row executed (8ms)
 
@@ -72,7 +73,8 @@ print(testUser);/
 使用測試數據為參數配合TextScript生成郵件模板，以 `/` 結束 SQL：
 ```
 jdbc>script;
-js> var TextScript = Java.type('com.killcoding.jsplus.TextScript');
+js> 
+var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var emailBodyTpl = `
 To: #{email}\n
 \n
