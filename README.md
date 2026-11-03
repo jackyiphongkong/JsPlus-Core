@@ -110,7 +110,6 @@ js>
 ```
 Define the email template (end with /)
 ```
-var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var emailBodyTpl = `
 To: #{email}\n
 \n
@@ -127,6 +126,7 @@ Jack
 ```
 Render and output the email body
 ```
+var TextScript = Java.type('com.killcoding.jsplus.TextScript');
 var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
 var emailBody = ts.parse();
