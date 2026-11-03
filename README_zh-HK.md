@@ -21,7 +21,7 @@
 
 ### Java
 
-需要 **GraalVM 25.0.3（Java 25）**，放置於 `Java\default`（該目錄不入版本庫，缺失時自動回退系統 `JAVA_HOME`）：
+需要 **GraalVM 25（Java 25）**，放置於 `Java\default`（該目錄不入版本庫，缺失時自動回退系統 `JAVA_HOME`）：
 
 | 目錄 | 作用 |
 | --- | --- |
