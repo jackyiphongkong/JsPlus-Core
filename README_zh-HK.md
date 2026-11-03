@@ -85,13 +85,18 @@ Regards
 \n
 Jack
 `;/
+```
 
+```
 var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
 var emailBody = ts.parse();
 print("----------------------");
 print(emailBody);
 print("----------------------");/
+```
+輸出
+```
 ----------------------
  To: test@gmail.com
 
@@ -104,5 +109,8 @@ print("----------------------");/
  Regards 
  Jack
 ----------------------
+```
+關閉連接
+```
  cde.close();/
 ```
