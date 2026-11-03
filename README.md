@@ -47,11 +47,17 @@ js> print('Hello World.');/
 Hello World.
 ```
 
-Type `jdbc/` to switch to the JdbcConsole, end SQL with `;`:
+Type `jdbc/` to switch to the JdbcConsole:
 ```
-js> jdbc/                 // switch to JdbcConsole
-jdbc> select * from test_user;   // run SQL (end with ;)
-
+js> jdbc/  
+jdbc> 
+```
+Run SQL (end with ;)
+```
+select * from test_user;
+```
+Output
+```
 0 rows selected (10ms)
 Current QueryMaxRows=1000
 ```
