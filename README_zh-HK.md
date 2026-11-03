@@ -80,6 +80,7 @@ var cde = new CacheDriverExecutor(Console.getDataSource().getConnection());
 var testUser = cde.first("select * from test_user where username = :username",{username: 'Alice'});
 print(testUser);/
 ```
+輸出
 ```
 {id=u000000000000001, username=Alice, email=alice@example.com, age=30, status=active, created_at=2026-11-03 10:07:30.583287, updated_at=2026-11-03 10:07:30.583287, deleted_at=null, deleted=false}
 
