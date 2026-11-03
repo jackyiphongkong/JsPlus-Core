@@ -17,6 +17,21 @@
 | **時間同步獲取器** | 簡單設定即可統一應用程序與數據庫時間的一致性 | `Clock` |
 | **編號生成器** | 產生定長流水號 / 單據號，可帶前綴後綴，跨機器不重複 | `IdentityCard` |
 
+## 運行環境設定
+
+### Java
+
+需要 **GraalVM 25.0.3（Java 25）**，放置於 `Java\default`（該目錄不入版本庫，缺失時自動回退系統 `JAVA_HOME`）：
+
+| 目錄 | 作用 |
+| --- | --- |
+| `Java\default` | 建置 / 啟動用完整 JDK（含 `jmods`） |
+| `Java\runtime` | 部署用裁剪 JRE，由 `packJdk.bat`（jdeps + jlink）生成 |
+
+### Ant（可選）
+
+`Ant\default` 隨附 Ant；缺失時回退系統 `ANT_HOME`。建置入口：`ant.bat`（Linux/macOS：`ant.sh`），構建前自動執行 `StopAll`。
+
 ## 快速啟動
 
 | 步驟 | 指令 | 作用 |
