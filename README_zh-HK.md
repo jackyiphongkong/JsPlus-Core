@@ -161,3 +161,5 @@ print("----------------------");/
 | 1 | `test\TestAll.bat`（Linux/macOS：`test\TestAll.sh`） | 全量測試：自動 `StopAll` → 初始化資料庫（`testdb` + dbsync）→ 啟動 H2 → 執行全部 JS 測試套件 |
 
 如需單元測試，可啟動對應套件的 `bat` / `sh`，例如 `test\TestTextScriptStress.bat`（Linux/macOS：`test\TestTextScriptStress.sh`）。
+
+測試案例已涵蓋「主要功能」各項的示例，例如 `TestDatasource`（高效數據源）、`TestCache` / `TestCacheArray`（快取層）、`TestRemoteFile`（遠程檔案）、`TestDBSync`（資料庫異步同步）、`TestTextScript`（模板引擎）、`TestClock`（時間同步獲取器）、`TestIdentityCard`（編號生成器）、`TestCommonTools` 等（日常工具箱）。
