@@ -153,3 +153,11 @@ print("----------------------");/
 ```
  cde.close();/
 ```
+
+## 快速測試
+
+| 步驟 | 指令 | 作用 |
+| --- | --- | --- |
+| 1 | `test\TestAll.bat`（Linux/macOS：`test\TestAll.sh`） | 全量測試：自動 `StopAll` → 初始化資料庫（`testdb` + dbsync）→ 啟動 H2 → 執行全部 JS 測試套件 |
+
+如需單元測試，可啟動對應套件的 `bat` / `sh`，例如 `test\TestTextScriptStress.bat`（Linux/macOS：`test\TestTextScriptStress.sh`）。
