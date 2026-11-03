@@ -14,12 +14,14 @@
 //            consumption flow (same pattern as TestFind.js).
 // NOTE     : GraalVM JS forbids touching JS values from the filter worker
 //            thread (PolyglotThreadAccessException). Like TestFind.js we only
-//            use engine-managed GCAs: a slow GCA (5000/5000ms) without any
-//            Console.callback gives a deterministic window for the synchronous
-//            API assertions (the worker's execute() is skipped when callback
-//            is null, so it never touches JS), and a fast GCA (1/1ms) inside a
-//            dedicated console with a Java.extend(Runnable) callback exercises
-//            the consumption flow. NEVER call new CacheArray().filter(...)
+//            use engine-managed GCAs: a dedicated slow GCA (60000/60000ms)
+//            without any Console.callback gives a wide deterministic window
+//            for the synchronous API assertions (the worker's execute() is
+//            skipped when callback is null, so it never touches JS; the 60s
+//            loop keeps the worker from consuming/removing a fresh add() even
+//            on slow CI runners), and a fast GCA (1/1ms) inside a dedicated
+//            console with a Java.extend(Runnable) callback exercises the
+//            consumption flow. NEVER call new CacheArray().filter(...)
 //            manually in the main console.
 // ============================================================================
 
@@ -28,6 +30,7 @@ var System = Java.type("java.lang.System");
 var Thread = Java.type("java.lang.Thread");
 var ArrayList = Java.type("java.util.ArrayList");
 var CacheArray = Java.type("com.killcoding.cache.CacheArray");
+var Runnable = Java.type("java.lang.Runnable");   // Part 2 callback proxy; explicit so this suite also runs standalone
 
 var basePath = System.getProperty("JS_PLUS_PATH");
 try {
@@ -49,12 +52,22 @@ print("=== JsPlus-Core CacheArray Test ===");
 print("JS_PLUS_PATH: " + basePath);
 
 // ---------------------------------------------------------------------------
-// Part 1 - synchronous API on a slow engine-managed GCA (5000/5000ms)
-// The worker is created by the engine; no Console.callback is registered here,
-// so execute()/executeBatch() are skipped and the worker never touches JS.
-// 5000ms loop gives a deterministic window for add/get/remove assertions.
+// Part 1 - synchronous API on a dedicated slow engine-managed GCA
+// (60000/60000ms). The worker is created by the engine; no Console.callback
+// is registered here, so execute()/executeBatch() are skipped and the worker
+// never touches JS. The 60s loop keeps the assertions deterministic even on
+// slow CI runners (a 5000ms loop could let the worker consume a fresh add()
+// and remove it from StoredCache before get() reads it - CI flake 2026-11-03).
+// The GCA lives in a dedicated console (TestFind pattern: context put/get),
+// so it does not collide with the main console's per-console singleton used
+// by other suites (e.g. TestRemoteFile).
 // ---------------------------------------------------------------------------
-var GCA = Console.getGlobalCacheArray(5000, 5000);
+var syncConsole = Console.newBuilder();
+syncConsole.evalScript("(function(){"
+    + " var g = Console.getGlobalCacheArray(60000, 60000);"
+    + " Console.getContext().put('GCA_SYNC', g);"
+    + "}())");
+var GCA = syncConsole.getContext().get("GCA_SYNC");
 
 try {
     // C1: the engine GCA is a CacheArray with nullIsCompleted=false
@@ -66,16 +79,16 @@ try {
         detail: "nullIsCompleted=" + GCA.isNulIsCompleted(),
         objective: "engine GCA is created via new CacheArray(false)",
         objectiveZh: "引擎 GCA 以 new CacheArray(false) 建立",
-        command: "Console.getGlobalCacheArray(5000, 5000).isNulIsCompleted()"
+        command: "syncConsole.getGlobalCacheArray(60000, 60000).isNulIsCompleted()"
     });
 
     // C2: the engine attached a filter with the requested timers
     Logger.systemMark("TestCacheArray.js", "C2");
     check({
         caseId: "C2",
-        name: "GCA filter attached with timer=loopTimer=5000",
-        ok: GCA.getFilter() !== null && GCA.getFilter().getTimer() === 5000
-            && GCA.getFilter().getLoopTimer() === 5000,
+        name: "GCA filter attached with timer=loopTimer=60000",
+        ok: GCA.getFilter() !== null && GCA.getFilter().getTimer() === 60000
+            && GCA.getFilter().getLoopTimer() === 60000,
         detail: "timer=" + GCA.getFilter().getTimer()
             + " loopTimer=" + GCA.getFilter().getLoopTimer(),
         objective: "getGlobalCacheArray(timer, loopTimer) configures the filter",
@@ -300,6 +313,11 @@ try {
         objectiveZh: "terminate() 設定旗標；forceTerminate() 使 worker 退出並 removeAll() 清空",
         command: "gca14.terminate(); gca14.forceTerminate(); wait gca14.size()===0"
     });
+
+    // Release the C1-C8 dedicated slow GCA: flag its worker for termination
+    // so it sweeps/removes the remaining values after it wakes (60s), keeping
+    // no stray worker alive past this suite.
+    GCA.forceTerminate();
 
 } catch (e) {
     Logger.systemMark("TestCacheArray.js", "C-ERR-1");
