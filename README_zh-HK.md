@@ -86,10 +86,10 @@ Regards
 Jack
 `;/
 
-var ts = new TextScript(emailBodyTpl,false);/
+var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
-var emailBody = ts.parse();/
-print(emailBody);
+var emailBody = ts.parse();
+print(emailBody);/
 
  To: test@gmail.com
 
