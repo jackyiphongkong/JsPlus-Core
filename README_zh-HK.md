@@ -41,9 +41,12 @@
 | 3 | `JsPlus\bin\BG_StartH2.bat` | 後台啟動 H2 資料庫（隱藏窗口） |
 | 4 | `JsPlus\bin\StartCore.bat` | 啟動 ScriptConsole 互動控制台 |
 
-於控制台提示符直接輸入 JavaScript，以 `/` 結束指令；
+於控制台提示符直接輸入 JavaScript，以 `/` 結束指令：
 ```
 js> print('Hello World.');/
+```
+輸出
+```
 Hello World.
 ```
 
@@ -53,7 +56,7 @@ js> jdbc/
 jdbc> 
 ```
 執行 SQL（以 ; 結束）
-```             
+```
 select * from test_user;
 ```
 輸出
@@ -64,12 +67,18 @@ Current QueryMaxRows=1000
 
 插入測試數據
 ```
-jdbc> 
 insert into test_user (id, username, email, age, status, created_at, updated_at, deleted) values ('u000000000000001', 'Alice', 'alice@example.com', 30, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
-
+```
+輸出
+```
 1 row executed (8ms)
-
-jdbc> select id,username,email from test_user;
+```
+查詢插入結果
+```
+select id,username,email from test_user;
+```
+輸出
+```
  id        username           email
 u000000000000001             Alice      alice@example.com
 
@@ -77,7 +86,7 @@ u000000000000001             Alice      alice@example.com
 Current QueryMaxRows=1000
 ```
 
-輸入 `script;` 切換至 ScriptConsole，使用JS讀取測試記錄，以 `/` 結束 SQL：
+輸入 `script;` 切換至 ScriptConsole，使用 JS 讀取測試記錄，以 `/` 結束指令：
 ```
 jdbc>script;
 js>
@@ -89,10 +98,9 @@ print(testUser);/
 輸出
 ```
 {id=u000000000000001, username=Alice, email=alice@example.com, age=30, status=active, created_at=2026-11-03 10:07:30.583287, updated_at=2026-11-03 10:07:30.583287, deleted_at=null, deleted=false}
-
 ```
 
-使用測試數據為參數配合TextScript生成郵件模板，以 `/` 結束 SQL：
+使用測試數據為參數配合 TextScript 生成郵件模板，以 `/` 結束指令：
 ```
 jdbc>script;
 js> 
@@ -111,7 +119,7 @@ Regards
 Jack
 `;/
 ```
-
+渲染並輸出郵件內容
 ```
 var ts = new TextScript(emailBodyTpl,false);
 ts.addParams(testUser);
