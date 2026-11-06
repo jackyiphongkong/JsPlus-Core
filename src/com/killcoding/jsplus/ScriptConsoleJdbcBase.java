@@ -872,6 +872,11 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			final java.util.Date beginTime = new java.util.Date();
 			final List<String> columns = new ArrayList<String>();
 			String format = "%" + consoleVariables.getInteger("ColumnWidth", DEFAULT_ColumnWidth) + "s";
+			// The filter index is a per-batch local position: CacheArray reclaims
+			// the processed head after every executeBatch and restarts the index
+			// from 0. A header must therefore be driven by this flag, never by
+			// "index == 0" (that repeats the column set on every batch).
+			boolean headerDone = false;
 
 			/*
 			* Performs the execute operation
@@ -880,12 +885,17 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			* */
 			@SuppressWarnings("unchecked")
 			public void execute(Integer index, Object o) {
-				if (index == 0) {
+				Map<String, Object> row = (Map<String, Object>) o;
+				if (row == null) {
+					return;
+				}
+				boolean firstRow = !headerDone;
+				if (firstRow) {
+					headerDone = true;
 					StringBuffer header = new StringBuffer();
 					boolean showResultHeader = consoleVariables.getBoolean("ShowResultHeader",
 							DEFAULT_ShowResultHeader);
-					Map<String, Object> firstRow = (Map<String, Object>) o;
-					columns.addAll(firstRow.keySet());
+					columns.addAll(row.keySet());
 					int columsSize = columns.size();
 					for (int i = 0; i < columsSize; i++) {
 						header.append(String.format(format, columns.get(i)));
@@ -904,26 +914,22 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 						System.out.println(header);
 					}
 				}
-				if (index >= 0) {
-					int columsSize = columns.size();
-					@SuppressWarnings("unchecked")
-					StringBuffer body = new StringBuffer();
-					boolean showResultBody = consoleVariables.getBoolean("ShowResultBody", DEFAULT_ShowResultBody);
-					Map<String, Object> row = (Map<String, Object>) o;
-					for (int i = 0; i < columsSize; i++) {
-						String column = columns.get(i);
-						Object objValue = row.get(column);
-						String value = format(objValue);
-						if (index == 0 && i == 0) {
-							setIntoValue(objValue);
-						}
-						body.append(value);
-						if (i < columsSize - 1)
-							body.append("\t");
+				int columsSize = columns.size();
+				StringBuffer body = new StringBuffer();
+				boolean showResultBody = consoleVariables.getBoolean("ShowResultBody", DEFAULT_ShowResultBody);
+				for (int i = 0; i < columsSize; i++) {
+					String column = columns.get(i);
+					Object objValue = row.get(column);
+					String value = format(objValue);
+					if (firstRow && i == 0) {
+						setIntoValue(objValue);
 					}
-					if (enableSystemOut && showResultBody) {
-						System.out.println(body);
-					}
+					body.append(value);
+					if (i < columsSize - 1)
+						body.append("\t");
+				}
+				if (enableSystemOut && showResultBody) {
+					System.out.println(body);
 				}
 			}
 

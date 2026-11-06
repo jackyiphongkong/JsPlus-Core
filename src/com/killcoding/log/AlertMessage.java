@@ -23,7 +23,6 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.log;
 
-import java.util.concurrent.Executors;
 import java.util.Map;
 
 /**
