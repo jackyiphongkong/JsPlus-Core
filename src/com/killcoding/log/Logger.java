@@ -71,6 +71,8 @@ public final class Logger {
 
 	private static Integer LEVEL = LEVEL_DEBUG;
 
+	private LoggerContext context = null;
+
 	private String clazzName;
 
 	private String hostname;
@@ -79,23 +81,70 @@ public final class Logger {
 	private static String classNameDisableRegex = null;
 
 	/**
-	* Constructs a new Logger
+	* Constructs a new Logger bound to the default bucket
 	* @param clazz - the clazz
 	* */
 	public Logger(Class<?> clazz) {
+		this(LoggerFactory.getDefaultContext(), clazz == null ? "Unknown" : clazz.getName());
+	}
+
+	/**
+	* Constructs a new Logger bound to the given bucket
+	* @param context - the bucket (null falls back to the default bucket)
+	* @param clazz - the clazz
+	* */
+	public Logger(LoggerContext context, Class<?> clazz) {
+		this(context, clazz == null ? "Unknown" : clazz.getName());
+	}
+
+	/**
+	* Constructs a new Logger bound to the default bucket
+	* @param clazzName - the clazzName
+	* */
+	public Logger(String clazzName) {
+		this(LoggerFactory.getDefaultContext(), clazzName);
+	}
+
+	/**
+	* Constructs a new Logger bound to the given bucket
+	* @param context - the bucket (null falls back to the default bucket)
+	* @param clazzName - the clazzName
+	* */
+	public Logger(LoggerContext context, String clazzName) {
 		super();
-		this.clazzName = clazz.getName();
+		this.context = context == null ? LoggerFactory.getDefaultContext() : context;
+		this.clazzName = clazzName;
 		hostname = CommonTools.getHostname();
 	}
 
 	/**
-	* Constructs a new Logger
-	* @param clazzName - the clazzName
+	* Returns the bucket of this logger (lazily resolves the default bucket)
+	* @return the context
 	* */
-	public Logger(String clazzName) {
-		super();
-		this.clazzName = clazzName;
-		hostname = CommonTools.getHostname();
+	private LoggerContext context() {
+		LoggerContext ctx = context;
+		if (ctx == null) {
+			ctx = LoggerFactory.getDefaultContext();
+			context = ctx;
+		}
+		return ctx;
+	}
+
+	/**
+	* Returns the effective level of this logger's bucket
+	* @return the level
+	* */
+	private Integer levelOf() {
+		LoggerContext ctx = context();
+		return ctx == null ? LEVEL : ctx.getLevel();
+	}
+
+	/**
+	* Returns the bucket this logger writes to (lazily resolves the default bucket)
+	* @return the context
+	* */
+	public LoggerContext getContext() {
+		return context();
 	}
 
 	/**
@@ -149,7 +198,7 @@ public final class Logger {
 	* @return the isDebugEnabled result
 	* */
 	public boolean isDebugEnabled() {
-		return LEVEL == LEVEL_DEBUG;
+		return levelOf() == LEVEL_DEBUG;
 	}
 
 	/**
@@ -157,7 +206,7 @@ public final class Logger {
 	* @return the isInfoEnabled result
 	* */
 	public boolean isInfoEnabled() {
-		return LEVEL == LEVEL_INFO;
+		return levelOf() == LEVEL_INFO;
 	}
 
 	/**
@@ -165,7 +214,7 @@ public final class Logger {
 	* @return the isWarnEnabled result
 	* */
 	public boolean isWarnEnabled() {
-		return LEVEL == LEVEL_WARN;
+		return levelOf() == LEVEL_WARN;
 	}
 
 	/**
@@ -173,7 +222,7 @@ public final class Logger {
 	* @return the isErrorEnabled result
 	* */
 	public boolean isErrorEnabled() {
-		return LEVEL == LEVEL_ERROR;
+		return levelOf() == LEVEL_ERROR;
 	}
 
 	/**
@@ -182,7 +231,7 @@ public final class Logger {
 	* */
 	public void debug(Object obj) {
 		try {
-			if (LEVEL <= LEVEL_DEBUG) {
+			if (levelOf() <= LEVEL_DEBUG) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", obj + "");
 				log(LEVEL_DEBUG, map);
@@ -198,7 +247,7 @@ public final class Logger {
 	* */
 	public void debug(String message) {
 		try {
-			if (LEVEL <= LEVEL_DEBUG) {
+			if (levelOf() <= LEVEL_DEBUG) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				log(LEVEL_DEBUG, map);
@@ -215,7 +264,7 @@ public final class Logger {
 	* */
 	public void debug(String message, Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_DEBUG) {
+			if (levelOf() <= LEVEL_DEBUG) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				map.put("exception", exception);
@@ -232,7 +281,7 @@ public final class Logger {
 	* */
 	public void debug(Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_DEBUG) {
+			if (levelOf() <= LEVEL_DEBUG) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", exception.getMessage());
 				map.put("exception", exception);
@@ -250,7 +299,7 @@ public final class Logger {
 	* */
 	public void debug(String message, Object... params) {
 		try {
-			if (LEVEL <= LEVEL_DEBUG) {
+			if (levelOf() <= LEVEL_DEBUG) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				String _message = stringFormat(msg, converParams(params));
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -270,7 +319,7 @@ public final class Logger {
 	* */
 	public void debug(String message, Object obj) {
 		try {
-			if (LEVEL <= LEVEL_DEBUG) {
+			if (levelOf() <= LEVEL_DEBUG) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				Object[] params = new Object[] { obj + "" };
 				String _message = stringFormat(msg, converParams(params));
@@ -289,7 +338,7 @@ public final class Logger {
 	* */
 	public void info(String message) {
 		try {
-			if (LEVEL <= LEVEL_INFO) {
+			if (levelOf() <= LEVEL_INFO) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				log(LEVEL_INFO, map);
@@ -305,7 +354,7 @@ public final class Logger {
 	* */
 	public void info(Object obj) {
 		try {
-			if (LEVEL <= LEVEL_INFO) {
+			if (levelOf() <= LEVEL_INFO) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", obj + "");
 				log(LEVEL_INFO, map);
@@ -322,7 +371,7 @@ public final class Logger {
 	* */
 	public void info(String message, Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_INFO) {
+			if (levelOf() <= LEVEL_INFO) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				map.put("exception", exception);
@@ -339,7 +388,7 @@ public final class Logger {
 	* */
 	public void info(Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_INFO) {
+			if (levelOf() <= LEVEL_INFO) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", exception.getMessage());
 				map.put("exception", exception);
@@ -357,7 +406,7 @@ public final class Logger {
 	* */
 	public void info(String message, Object... params) {
 		try {
-			if (LEVEL <= LEVEL_INFO) {
+			if (levelOf() <= LEVEL_INFO) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				String _message = stringFormat(msg, converParams(params));
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -377,7 +426,7 @@ public final class Logger {
 	* */
 	public void info(String message, Object obj) {
 		try {
-			if (LEVEL <= LEVEL_INFO) {
+			if (levelOf() <= LEVEL_INFO) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				Object[] params = new Object[] { obj + "" };
 				String _message = stringFormat(msg, converParams(params));
@@ -396,7 +445,7 @@ public final class Logger {
 	* */
 	public void warn(String message) {
 		try {
-			if (LEVEL <= LEVEL_WARN) {
+			if (levelOf() <= LEVEL_WARN) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				log(LEVEL_WARN, map);
@@ -412,7 +461,7 @@ public final class Logger {
 	* */
 	public void warn(Object obj) {
 		try {
-			if (LEVEL <= LEVEL_WARN) {
+			if (levelOf() <= LEVEL_WARN) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", obj + "");
 				log(LEVEL_WARN, map);
@@ -429,7 +478,7 @@ public final class Logger {
 	* */
 	public void warn(String message, Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_WARN) {
+			if (levelOf() <= LEVEL_WARN) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				map.put("exception", exception);
@@ -446,7 +495,7 @@ public final class Logger {
 	* */
 	public void warn(Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_WARN) {
+			if (levelOf() <= LEVEL_WARN) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", exception.getMessage());
 				map.put("exception", exception);
@@ -464,7 +513,7 @@ public final class Logger {
 	* */
 	public void warn(String message, Object... params) {
 		try {
-			if (LEVEL <= LEVEL_WARN) {
+			if (levelOf() <= LEVEL_WARN) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				String _message = stringFormat(msg, converParams(params));
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -484,7 +533,7 @@ public final class Logger {
 	* */
 	public void warn(String message, Object obj) {
 		try {
-			if (LEVEL <= LEVEL_WARN) {
+			if (levelOf() <= LEVEL_WARN) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				Object[] params = new Object[] { obj + "" };
 				String _message = stringFormat(msg, converParams(params));
@@ -503,7 +552,7 @@ public final class Logger {
 	* */
 	public void error(String message) {
 		try {
-			if (LEVEL <= LEVEL_ERROR) {
+			if (levelOf() <= LEVEL_ERROR) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				log(LEVEL_ERROR, map);
@@ -519,7 +568,7 @@ public final class Logger {
 	* */
 	public void error(Object obj) {
 		try {
-			if (LEVEL <= LEVEL_ERROR) {
+			if (levelOf() <= LEVEL_ERROR) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", obj + "");
 				log(LEVEL_ERROR, map);
@@ -536,7 +585,7 @@ public final class Logger {
 	* */
 	public void error(String message, Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_ERROR) {
+			if (levelOf() <= LEVEL_ERROR) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", message);
 				map.put("exception", exception);
@@ -553,7 +602,7 @@ public final class Logger {
 	* */
 	public void error(Exception exception) {
 		try {
-			if (LEVEL <= LEVEL_ERROR) {
+			if (levelOf() <= LEVEL_ERROR) {
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("message", exception.getMessage());
 				map.put("exception", exception);
@@ -571,7 +620,7 @@ public final class Logger {
 	* */
 	public void error(String message, Object... params) {
 		try {
-			if (LEVEL <= LEVEL_ERROR) {
+			if (levelOf() <= LEVEL_ERROR) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				String _message = stringFormat(msg, converParams(params));
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -591,7 +640,7 @@ public final class Logger {
 	* */
 	public void error(String message, Object obj) {
 		try {
-			if (LEVEL <= LEVEL_ERROR) {
+			if (levelOf() <= LEVEL_ERROR) {
 				String msg = (message + "").replaceAll("\\{\\}", "%s");
 				Object[] params = new Object[] { obj + "" };
 				String _message = stringFormat(msg, converParams(params));
@@ -1963,6 +2012,7 @@ public final class Logger {
 	* @param map - the map
 	* */
 	protected void log(Integer _level, Map<String, Object> map) {
+		LoggerContext ctx = context();
 		String levelStr = null;
 		String log4jMethodName = null;
 		switch (_level) {
@@ -2007,7 +2057,7 @@ public final class Logger {
 
 		Date logTime = new Date();
 		map.put("log_time", logTime);
-		map.put("log_time_format", LogRecord.getLogTimeFormat().format(logTime));
+		map.put("log_time_format", (ctx == null ? LogRecord.getLogTimeFormat() : ctx.getLogTimeFormat()).format(logTime));
 		map.put("log_thread_id", threadId);
 		map.put("log_thread_name", threadName);
 
@@ -2074,7 +2124,7 @@ public final class Logger {
 		boolean passDisableRegex = !checkClassNameDisableRegex(logClassName);
 
 		if (passEnableRegex && passDisableRegex) {
-			LogRecord.add(map);
+			if (ctx != null) ctx.add(map);
 		}
 	}
 
@@ -2084,8 +2134,10 @@ public final class Logger {
 	* @return the checkClassNameEnableRegex result
 	* */
 	private boolean checkClassNameEnableRegex(String logClassName) {
-		if (!ConfigProperties.isBlank(classNameEnableRegex)) {
-			return logClassName.matches(classNameEnableRegex);
+		LoggerContext ctx = context();
+		String regex = ctx == null ? classNameEnableRegex : ctx.getClassNameEnableRegex();
+		if (!ConfigProperties.isBlank(regex)) {
+			return logClassName.matches(regex);
 		}
 		return true;
 	}
@@ -2096,8 +2148,10 @@ public final class Logger {
 	* @return the checkClassNameDisableRegex result
 	* */
 	private boolean checkClassNameDisableRegex(String logClassName) {
-		if (!ConfigProperties.isBlank(classNameDisableRegex)) {
-			return logClassName.matches(classNameDisableRegex);
+		LoggerContext ctx = context();
+		String regex = ctx == null ? classNameDisableRegex : ctx.getClassNameDisableRegex();
+		if (!ConfigProperties.isBlank(regex)) {
+			return logClassName.matches(regex);
 		}
 		return false;
 	}

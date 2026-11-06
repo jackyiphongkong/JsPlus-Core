@@ -56,7 +56,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestJsString -> TestDBSync -> TestTextScript -> TestSimpleJsCompressor -> TestSimpleCssCompressor -> TestSimpleHtmlScanner -> TestWebClient");
+print("Suites       : TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestLogger -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestJsString -> TestDBSync -> TestTextScript -> TestSimpleJsCompressor -> TestSimpleCssCompressor -> TestSimpleHtmlScanner -> TestWebClient");
 print("               (TestDatasource runs LAST via TestAll.bat/.sh -> TestDatasource.bat/.sh: its H2 stop/restart case must not precede H2-dependent suites)");
 
 var suites = [
@@ -72,6 +72,7 @@ var suites = [
     { file: "TestDataObject.js",      title: "TestDataObject" },
     { file: "TestResultMap.js",       title: "TestResultMap" },
     { file: "TestConfigProperties.js", title: "TestConfigProperties" },
+    { file: "TestLogger.js",          title: "TestLogger" },
     { file: "TestCipherTools.js",     title: "TestCipherTools" },
     { file: "TestEscapeTools.js",     title: "TestEscapeTools" },
     { file: "TestFileTools.js",       title: "TestFileTools" },
