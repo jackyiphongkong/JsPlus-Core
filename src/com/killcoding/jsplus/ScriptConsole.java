@@ -61,26 +61,36 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 /**
-* Script console: executes .js / .txt script files and inline scripts through the configured JS
-* engine. Manages the console variable map, task timers, Console.callback / getObject() /
-* getDataSource() plumbing, cache-api wiring and the ExitPolicy for controlled shutdown.
-*
-* Inherits the process-wide static foundation from ScriptConsoleBase (exit policy, JS_PLUS_PATH /
-* Appenv bootstrap, exit monitor, static datasource, console variables, connection lifecycle,
-* formatters, history) and the JDBC data access layer from ScriptConsoleJdbcBase (SQL execution,
-* metadata / DDL, CSV import / export, JDBC-side Console functions).
-*
-* This top level owns: the script engine bootstrap (initScriptEngineManager / newBuilder /
-* eval / evalScript), the GlobalCacheArray + Console.callback plumbing, the task timer and
-* cron-like schedule machinery, the command router (execute / executeViaScript / executeViaCmd /
-* executeViaGhost) and the 15 base-side Console functions (List&lt;String&gt; overloads).
-* */
+ * Script console: executes .js / .txt script files and inline scripts through
+ * the configured JS
+ * engine. Manages the console variable map, task timers, Console.callback /
+ * getObject() /
+ * getDataSource() plumbing, cache-api wiring and the ExitPolicy for controlled
+ * shutdown.
+ *
+ * Inherits the process-wide static foundation from ScriptConsoleBase (exit
+ * policy, JS_PLUS_PATH /
+ * Appenv bootstrap, exit monitor, static datasource, console variables,
+ * connection lifecycle,
+ * formatters, history) and the JDBC data access layer from
+ * ScriptConsoleJdbcBase (SQL execution,
+ * metadata / DDL, CSV import / export, JDBC-side Console functions).
+ *
+ * This top level owns: the script engine bootstrap (initScriptEngineManager /
+ * newBuilder /
+ * eval / evalScript), the GlobalCacheArray + Console.callback plumbing, the
+ * task timer and
+ * cron-like schedule machinery, the command router (execute / executeViaScript
+ * / executeViaCmd /
+ * executeViaGhost) and the 15 base-side Console functions (List&lt;String&gt;
+ * overloads).
+ */
 public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl {
 
 	protected boolean taskExecuted = false;
 	private String engineName = null;
 
-    protected JsPlusContext jsPlusContext = null;
+	protected JsPlusContext jsPlusContext = null;
 
 	protected CacheArray globalCacheArray = null;
 	protected Runnable callback = null;
@@ -88,282 +98,314 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	protected boolean callbackSync = true;
 
 	private ScheduledExecutorService scheduleExecutor = null;
-	private final Map<String,Map<String,Object>> scheduleMap = new HashMap<String,Map<String,Object>>();
+	private final Map<String, Map<String, Object>> scheduleMap = new HashMap<String, Map<String, Object>>();
 
-	/** ClassLoaders created by evalJavaSource / evalJavaFile - kept referenced so evaluated
-	*  classes stay usable (and their temporary jars stay open) for the life of this console. */
+	/**
+	 * ClassLoaders created by evalJavaSource / evalJavaFile - kept referenced so
+	 * evaluated
+	 * classes stay usable (and their temporary jars stay open) for the life of this
+	 * console.
+	 */
 	protected final List<ClassLoader> evalJavaClassLoaders = new ArrayList<ClassLoader>();
 
 	/**
-	* Performs the callback operation
-	* @param callback - the callback
-	* @param callbackSync - the callbackSync
-	* */
-	public void callback(Runnable callback,boolean callbackSync) throws Exception {
-	    if(this.callback == null){
-	        this.callback = callback;
-	        this.callbackSync = callbackSync;
-	    }else{
-	        throw new Exception("The GlobalCacheArray callback already exists.");
-	    }
+	 * Performs the callback operation
+	 * 
+	 * @param callback     - the callback
+	 * @param callbackSync - the callbackSync
+	 */
+	public void callback(Runnable callback, boolean callbackSync) throws Exception {
+		if (this.callback == null) {
+			this.callback = callback;
+			this.callbackSync = callbackSync;
+		} else {
+			throw new Exception("The GlobalCacheArray callback already exists.");
+		}
 	}
 
 	/**
-	* Performs the callback operation
-	* @param callback - the callback
-	* */
+	 * Performs the callback operation
+	 * 
+	 * @param callback - the callback
+	 */
 	public void callback(Runnable callback) throws Exception {
-	    callback(callback,true);
+		callback(callback, true);
 	}
 
 	/**
-	* Performs the callbackBatch operation
-	* @param callbackBatch - the callbackBatch
-	* @param callbackSync - the callbackSync
-	* */
-	public void callbackBatch(Runnable callbackBatch,boolean callbackSync) throws Exception {
-	    if(this.callbackBatch == null){
-	        this.callbackBatch = callbackBatch;
-	        this.callbackSync = callbackSync;
-	    }else{
-	        throw new Exception("The GlobalCacheArray callbackBatch already exists.");
-	    }
+	 * Performs the callbackBatch operation
+	 * 
+	 * @param callbackBatch - the callbackBatch
+	 * @param callbackSync  - the callbackSync
+	 */
+	public void callbackBatch(Runnable callbackBatch, boolean callbackSync) throws Exception {
+		if (this.callbackBatch == null) {
+			this.callbackBatch = callbackBatch;
+			this.callbackSync = callbackSync;
+		} else {
+			throw new Exception("The GlobalCacheArray callbackBatch already exists.");
+		}
 	}
 
 	/**
-	* Performs the callbackBatch operation
-	* @param callbackBatch - the callbackBatch
-	* */
+	 * Performs the callbackBatch operation
+	 * 
+	 * @param callbackBatch - the callbackBatch
+	 */
 	public void callbackBatch(Runnable callbackBatch) throws Exception {
-	    callbackBatch(callbackBatch,true);
+		callbackBatch(callbackBatch, true);
 	}
 
 	/**
-	* Performs the getGlobalCacheArray operation
-	* @param filterTimer - the filterTimer
-	* @param filterLoopTimer - the filterLoopTimer
-	* @return the getGlobalCacheArray result
-	* */
-	public CacheArray getGlobalCacheArray(long filterTimer,int filterLoopTimer){
-	    initGlobalCacheArray(filterTimer,filterLoopTimer);
-	    return globalCacheArray;
+	 * Performs the getGlobalCacheArray operation
+	 * 
+	 * @param filterTimer     - the filterTimer
+	 * @param filterLoopTimer - the filterLoopTimer
+	 * @return the getGlobalCacheArray result
+	 */
+	public CacheArray getGlobalCacheArray(long filterTimer, int filterLoopTimer) {
+		initGlobalCacheArray(filterTimer, filterLoopTimer);
+		return globalCacheArray;
 	}
 
 	/**
-	* Performs the getGlobalCacheArray operation
-	* @return the getGlobalCacheArray result
-	* */
-	public CacheArray getGlobalCacheArray(){
-	    initGlobalCacheArray(10L,100L);
-	    return globalCacheArray;
+	 * Performs the getGlobalCacheArray operation
+	 * 
+	 * @return the getGlobalCacheArray result
+	 */
+	public CacheArray getGlobalCacheArray() {
+		initGlobalCacheArray(10L, 100L);
+		return globalCacheArray;
 	}
 
 	/**
-	* Performs the createCacheArrayFilter operation
-	* @param filterTimer - the filterTimer
-	* @param filterLoopTimer - the filterLoopTimer
-	* @return the createCacheArrayFilter result
-	* */
-	protected CacheArrayFilter createCacheArrayFilter(long filterTimer,long filterLoopTimer){
-	    return new CacheArrayFilter(filterTimer,filterLoopTimer){
-	        /*
-	        * Performs the execute operation
-	        * @param index - the index
-	        * @param o - the o
-	        * */
-	        @Override
-	        public void execute(Integer index, Object o) {
-                if(callback != null) {
-                    if(callbackSync){
-                        callback.run();
-                    }else{
-                        Executors.newSingleThreadExecutor().execute(callback);
-                    }
-                }
-	        }
+	 * Performs the createCacheArrayFilter operation
+	 * 
+	 * @param filterTimer     - the filterTimer
+	 * @param filterLoopTimer - the filterLoopTimer
+	 * @return the createCacheArrayFilter result
+	 */
+	protected CacheArrayFilter createCacheArrayFilter(long filterTimer, long filterLoopTimer) {
+		return new CacheArrayFilter(filterTimer, filterLoopTimer) {
+			/*
+			 * Performs the execute operation
+			 * 
+			 * @param index - the index
+			 * 
+			 * @param o - the o
+			 */
+			@Override
+			public void execute(Integer index, Object o) {
+				if (callback != null) {
+					if (callbackSync) {
+						callback.run();
+					} else {
+						Executors.newSingleThreadExecutor().execute(callback);
+					}
+				}
+			}
 
 			@Override
-        	public void completed(Integer size) {
-                log.info("The GlobalCacheArray completed (Processed Total = {}).",globalCacheArray.getProcessedTotal());
-        	}
+			public void completed(Integer size) {
+				log.info("The GlobalCacheArray completed (Processed Total = {}).",
+						globalCacheArray.getProcessedTotal());
+			}
 
-	        /*
-	        * Performs the executeBatch operation
-	        * @param batchIndex - the batchIndex
-	        * @param batch - the batch
-	        * */
-	        @Override
-	        public void executeBatch(Integer batchIndex,List<?> batch) {
-                if(callbackBatch != null) {
-                    if(callbackSync){
-                        callbackBatch.run();
-                    }else{
-                        Executors.newSingleThreadExecutor().execute(callbackBatch);
-                    }
-                }
-	        }
+			/*
+			 * Performs the executeBatch operation
+			 * 
+			 * @param batchIndex - the batchIndex
+			 * 
+			 * @param batch - the batch
+			 */
+			@Override
+			public void executeBatch(Integer batchIndex, List<?> batch) {
+				if (callbackBatch != null) {
+					if (callbackSync) {
+						callbackBatch.run();
+					} else {
+						Executors.newSingleThreadExecutor().execute(callbackBatch);
+					}
+				}
+			}
 
-	        /*
-	        * Performs the terminated operation
-	        * */
-	        @Override
-	        public void terminated() {
+			/*
+			 * Performs the terminated operation
+			 */
+			@Override
+			public void terminated() {
 				log.info("The GlobalCacheArray Terminated.");
-	        }
-	    };
+			}
+		};
 	}
 
 	/**
-	* Performs the initGlobalCacheArray operation
-	* @param filterTimer - the filterTimer
-	* @param filterLoopTimer - the filterLoopTimer
-	* */
-	public void initGlobalCacheArray(long filterTimer,long filterLoopTimer){
-	    if(globalCacheArray == null){
-    	    globalCacheArray = new CacheArray(false);
-    	    globalCacheArray.filter(createCacheArrayFilter(filterTimer,filterLoopTimer));
-	    }
+	 * Performs the initGlobalCacheArray operation
+	 * 
+	 * @param filterTimer     - the filterTimer
+	 * @param filterLoopTimer - the filterLoopTimer
+	 */
+	public void initGlobalCacheArray(long filterTimer, long filterLoopTimer) {
+		if (globalCacheArray == null) {
+			globalCacheArray = new CacheArray(false);
+			globalCacheArray.filter(createCacheArrayFilter(filterTimer, filterLoopTimer));
+		}
 	}
 
 	/**
-	* Performs the initScriptEngineManager operation
-	* */
+	 * Performs the initScriptEngineManager operation
+	 */
 	public void initScriptEngineManager() throws Exception {
-	    initScriptEngineManager(true);
+		initScriptEngineManager(true);
 	}
 
 	/**
-	* Performs the initScriptEngineManager operation
-	* @param allowAllAccess - the allowAllAccess
-	* */
+	 * Performs the initScriptEngineManager operation
+	 * 
+	 * @param allowAllAccess - the allowAllAccess
+	 */
 	public void initScriptEngineManager(boolean allowAllAccess) throws Exception {
-	    String engineName = consoleVariables.getString("ScriptEngine", DEFAULT_ScriptEngine);
-	    this.engineName = engineName;
-	    System.out.println(String.format("***Current engine is '%s'.***",engineName));
-	    boolean isGraalJs = JsPlusContext.isGraalJs(engineName);
-	    boolean isNashornJs = JsPlusContext.isNashornJs(engineName);
-	    if(isGraalJs){
-	        jsPlusContext = new GraalVmContext(engineName);
-	    }else if(isNashornJs){
-	        jsPlusContext = new NashornContext(engineName);
-	    }else{
-            jsPlusContext = new JsContext(engineName);
-	    }
-	    jsPlusContext.setAllowAllAccess(allowAllAccess);
-	    jsPlusContext.initScriptEngineManager();
-	    String aesKey = consoleVariables.getString("Script_Cipher_AesKey", DEFAULT_Script_Cipher_AesKey);
-	    jsPlusContext.setScriptCipherAesKey(aesKey);
-	    jsPlusContext.put("Console",this);
-	    displayEngineName = jsPlusContext.getEngineName();
-	    set("Name",displayEngineName);
+		String engineName = consoleVariables.getString("ScriptEngine", DEFAULT_ScriptEngine);
+		this.engineName = engineName;
+		System.out.println(String.format("***Current engine is '%s'.***", engineName));
+		boolean isGraalJs = JsPlusContext.isGraalJs(engineName);
+		boolean isNashornJs = JsPlusContext.isNashornJs(engineName);
+		if (isGraalJs) {
+			jsPlusContext = new GraalVmContext(engineName);
+		} else if (isNashornJs) {
+			jsPlusContext = new NashornContext(engineName);
+		} else {
+			jsPlusContext = new JsContext(engineName);
+		}
+		jsPlusContext.setAllowAllAccess(allowAllAccess);
+		jsPlusContext.initScriptEngineManager();
+		String aesKey = consoleVariables.getString("Script_Cipher_AesKey", DEFAULT_Script_Cipher_AesKey);
+		jsPlusContext.setScriptCipherAesKey(aesKey);
+		jsPlusContext.put("Console", this);
+		displayEngineName = jsPlusContext.getEngineName();
+		set("Name", displayEngineName);
 	}
 
 	/**
-	* Performs the getContext operation
-	* @return the getContext result
-	* */
-	public JsPlusContext getContext(){
-	    return jsPlusContext;
+	 * Performs the getContext operation
+	 * 
+	 * @return the getContext result
+	 */
+	public JsPlusContext getContext() {
+		return jsPlusContext;
 	}
 
 	/**
-	* Performs the eval operation
-	* @param scriptPath - the scriptPath
-	* @return the eval result
-	* */
+	 * Performs the eval operation
+	 * 
+	 * @param scriptPath - the scriptPath
+	 * @return the eval result
+	 */
 	public Object eval(String scriptPath) throws Exception {
 		return eval(new File(scriptPath));
 	}
 
 	/**
-	* Performs the eval operation
-	* @param scriptPath - the scriptPath
-	* @return the eval result
-	* */
+	 * Performs the eval operation
+	 * 
+	 * @param scriptPath - the scriptPath
+	 * @return the eval result
+	 */
 	public Object eval(File scriptPath) throws Exception {
 		return jsPlusContext.eval(scriptPath);
 	}
 
 	/**
-	* Performs the eval operation
-	* @param execRun - the execRun
-	* */
+	 * Performs the eval operation
+	 * 
+	 * @param execRun - the execRun
+	 */
 	public void eval(Runnable execRun) throws Exception {
 		ExecutorService exec = Executors.newFixedThreadPool(1);
 		exec.execute(execRun);
 	}
 
 	/**
-	* Performs the closeContext operation
-	* */
+	 * Performs the closeContext operation
+	 */
 	public void closeContext() throws Exception {
 		jsPlusContext.close();
 	}
 
 	/**
-	* Performs the newBuilder operation
-	* @param _engineName - the _engineName
-	* @param allowAllAccess - the allowAllAccess
-	* @return the newBuilder result
-	* */
-	public ScriptConsole newBuilder(String _engineName,boolean allowAllAccess) throws Exception {
-	    ScriptConsole console = new ScriptConsole();
-	    console.useScriptEnv = this.useScriptEnv;
-	    console.useCmdEnv = this.useCmdEnv;
-	    console.useJdbcEnv = this.useJdbcEnv;
-	    console.consoleVariables = (ConfigProperties)this.consoleVariables.clone();
-	    console.stopTask();
-	    console.datasourceVariables = (ConfigProperties)this.datasourceVariables.clone();
-	    console.set("ScriptEngine",_engineName);
-	    console.initScriptEngineManager(allowAllAccess);
-	    System.out.println("***New ScriptConsole: " + console.hashCode() + "***");
-	    CONNECT_CONSOLES.put(console.hashCode(),console);
-	    return console;
+	 * Performs the newBuilder operation
+	 * 
+	 * @param _engineName    - the _engineName
+	 * @param allowAllAccess - the allowAllAccess
+	 * @return the newBuilder result
+	 */
+	public ScriptConsole newBuilder(String _engineName, boolean allowAllAccess) throws Exception {
+		ScriptConsole console = new ScriptConsole();
+		console.useScriptEnv = this.useScriptEnv;
+		console.useCmdEnv = this.useCmdEnv;
+		console.useJdbcEnv = this.useJdbcEnv;
+		console.consoleVariables = (ConfigProperties) this.consoleVariables.clone();
+		console.stopTask();
+		console.datasourceVariables = (ConfigProperties) this.datasourceVariables.clone();
+		console.set("ScriptEngine", _engineName);
+		console.initScriptEngineManager(allowAllAccess);
+		System.out.println("***New ScriptConsole: " + console.hashCode() + "***");
+		CONNECT_CONSOLES.put(console.hashCode(), console);
+		return console;
 	}
 
 	/**
-	* Performs the newBuilder operation
-	* @param _engineName - the _engineName
-	* @return the newBuilder result
-	* */
+	 * Performs the newBuilder operation
+	 * 
+	 * @param _engineName - the _engineName
+	 * @return the newBuilder result
+	 */
 	public ScriptConsole newBuilder(String _engineName) throws Exception {
-	    return newBuilder(_engineName,true);
+		return newBuilder(_engineName, true);
 	}
 
 	/**
-	* Performs the newBuilder operation
-	* @param allowAllAccess - the allowAllAccess
-	* @return the newBuilder result
-	* */
+	 * Performs the newBuilder operation
+	 * 
+	 * @param allowAllAccess - the allowAllAccess
+	 * @return the newBuilder result
+	 */
 	public ScriptConsole newBuilder(boolean allowAllAccess) throws Exception {
-	    return newBuilder(this.engineName,allowAllAccess);
+		return newBuilder(this.engineName, allowAllAccess);
 	}
 
 	/**
-	* Performs the newBuilder operation
-	* @return the newBuilder result
-	* */
+	 * Performs the newBuilder operation
+	 * 
+	 * @return the newBuilder result
+	 */
 	public ScriptConsole newBuilder() throws Exception {
-	    return newBuilder(this.engineName,true);
+		return newBuilder(this.engineName, true);
 	}
 
 	/**
-	* Performs the evalScript operation
-	* @param script - the script
-	* @return the evalScript result
-	* */
+	 * Performs the evalScript operation
+	 * 
+	 * @param script - the script
+	 * @return the evalScript result
+	 */
 	public Object evalScript(String script) throws Exception {
 		return jsPlusContext.evalScript(script);
 	}
-
+	
 	/**
-	* Dynamically compiles the given Java source code into a temporary jar and loads the compiled
-	* class into a dedicated ClassLoader. The returned ClassLoader can be used from JS to load and
-	* instantiate the compiled classes (e.g. loader.loadClass("Hello").newInstance()) when the
-	* console was built with allowAllAccess enabled.
-	* @param javaSource - the Java source code to compile (may carry a package declaration)
-	* @return the dedicated ClassLoader that loaded the compiled jar
-	* */
+	 * Dynamically compiles the given Java source code into a temporary jar and
+	 * loads the compiled
+	 * class into a dedicated ClassLoader. The returned ClassLoader can be used from
+	 * JS to load and
+	 * instantiate the compiled classes (e.g.
+	 * loader.loadClass("Hello").newInstance()) when the
+	 * console was built with allowAllAccess enabled.
+	 * 
+	 * @param javaSource - the Java source code to compile (may carry a package
+	 *                   declaration)
+	 * @return the dedicated ClassLoader that loaded the compiled jar
+	 */
 	public ClassLoader evalJavaSource(String javaSource) throws Exception {
 		if (CommonTools.isBlank(javaSource)) {
 			throw new Exception("evalJavaSource: blank Java source code.");
@@ -372,16 +414,24 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Array / list form of evalJavaSource - compiles a JS array of Java source segments
-	* where each element is a complete class source (may carry its own package/import).
-	* All segments are compiled in a single javac task, so the classes can reference each
-	* other, and the produced jar is loaded with one dedicated URLClassLoader. Returns that
-	* ClassLoader; the classes are loaded lazily via loader.loadClass(qualifiedName).
-	* Content addressing uses the MD5 of all joined sources, so identical segment sets
-	* reuse the compiled jar while every call still gets a fresh ClassLoader.
-	* @param javaSources - Java source code segments, one complete class per element
-	* @return the dedicated ClassLoader that loaded the compiled jar
-	* */
+	 * Array / list form of evalJavaSource - compiles a JS array of Java source
+	 * segments
+	 * where each element is a complete class source (may carry its own
+	 * package/import).
+	 * All segments are compiled in a single javac task, so the classes can
+	 * reference each
+	 * other, and the produced jar is loaded with one dedicated URLClassLoader.
+	 * Returns that
+	 * ClassLoader; the classes are loaded lazily via
+	 * loader.loadClass(qualifiedName).
+	 * Content addressing uses the MD5 of all joined sources, so identical segment
+	 * sets
+	 * reuse the compiled jar while every call still gets a fresh ClassLoader.
+	 * 
+	 * @param javaSources - Java source code segments, one complete class per
+	 *                    element
+	 * @return the dedicated ClassLoader that loaded the compiled jar
+	 */
 	public ClassLoader evalJavaSource(String[] javaSources) throws Exception {
 		if (javaSources == null || javaSources.length == 0) {
 			throw new Exception("evalJavaSource(String[]): blank Java source array.");
@@ -397,14 +447,20 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Dynamically compiles the given Java source file (.java) - or a whole folder of
-	* .java files - into a temporary jar and loads the compiled classes. When the path
-	* points to a folder, every .java file under it (recursively) is compiled in a single
-	* javac task, so the folder classes can reference each other. Content addressing uses
-	* the MD5 of the joined sources, so identical content reuses the compiled jar.
-	* @param javaFilePath - the path of a .java file or a folder containing .java files
-	* @return the dedicated ClassLoader that loaded the compiled jar
-	* */
+	 * Dynamically compiles the given Java source file (.java) - or a whole folder
+	 * of
+	 * .java files - into a temporary jar and loads the compiled classes. When the
+	 * path
+	 * points to a folder, every .java file under it (recursively) is compiled in a
+	 * single
+	 * javac task, so the folder classes can reference each other. Content
+	 * addressing uses
+	 * the MD5 of the joined sources, so identical content reuses the compiled jar.
+	 * 
+	 * @param javaFilePath - the path of a .java file or a folder containing .java
+	 *                     files
+	 * @return the dedicated ClassLoader that loaded the compiled jar
+	 */
 	public ClassLoader evalJavaFile(String javaFilePath) throws Exception {
 		if (CommonTools.isBlank(javaFilePath)) {
 			throw new Exception("evalJavaFile: blank Java file path.");
@@ -413,14 +469,19 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Folder / file form of evalJavaFile - see the String overload. A folder is scanned
-	* recursively; the file list is sorted by path so the compile order stays stable across
-	* runs regardless of OS traversal order. The eval workspace key is the MD5 of the most
-	* recently modified .java file - a fresh edit to the newest file invalidates the cached
-	* jar and recompiles; untouched folders keep their cached jar.
-	* @param javaFile - a .java file or a folder containing .java files
-	* @return the dedicated ClassLoader that loaded the compiled jar
-	* */
+	 * Folder / file form of evalJavaFile - see the String overload. A folder is
+	 * scanned
+	 * recursively; the file list is sorted by path so the compile order stays
+	 * stable across
+	 * runs regardless of OS traversal order. The eval workspace key is the MD5 of
+	 * the most
+	 * recently modified .java file - a fresh edit to the newest file invalidates
+	 * the cached
+	 * jar and recompiles; untouched folders keep their cached jar.
+	 * 
+	 * @param javaFile - a .java file or a folder containing .java files
+	 * @return the dedicated ClassLoader that loaded the compiled jar
+	 */
 	public ClassLoader evalJavaFile(File javaFile) throws Exception {
 		if (javaFile == null || !javaFile.exists()) {
 			throw new Exception("evalJavaFile: Java file or folder not found: " + javaFile);
@@ -430,7 +491,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 				throw new Exception("evalJavaFile: not a .java file: " + javaFile);
 			}
 			String javaSource = new String(Files.readAllBytes(javaFile.toPath()), StandardCharsets.UTF_8);
-			return compileAndLoadJavaMulti(new String[]{javaSource}, CommonTools.md5(javaSource));
+			return compileAndLoadJavaMulti(new String[] { javaSource }, CommonTools.md5(javaSource));
 		}
 		List<String> found = CommonTools.findFiles(javaFile.getAbsolutePath(), ".java");
 		if (found.isEmpty()) {
@@ -454,31 +515,46 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Compiles a single Java source string with the JDK system compiler, packages the
-	* produced .class files into a content-addressed jar under <JS_PLUS_PATH>/.tmp/java/<evalKey>
-	* and loads that jar with a dedicated URLClassLoader. evalJavaSource keys the workspace by
-	* the source-content MD5; evalJavaFile keys a single file by that file's content MD5 and a
-	* folder by the MD5 of ALL its sources (so the key can never collide with a single-file
-	* call). Identical content reuses the compiled jar while every call still gets a fresh
-	* ClassLoader (so the same source evaluated twice yields two distinct Class objects).
-	* @param javaSource - the Java source code to compile
-	* @param evalKey - content MD5 used as the eval workspace directory name
-	* @return the dedicated ClassLoader that loaded the compiled jar
-	* */
+	 * Compiles a single Java source string with the JDK system compiler, packages
+	 * the
+	 * produced .class files into a content-addressed jar under
+	 * <JS_PLUS_PATH>/.tmp/java/<evalKey>
+	 * and loads that jar with a dedicated URLClassLoader. evalJavaSource keys the
+	 * workspace by
+	 * the source-content MD5; evalJavaFile keys a single file by that file's
+	 * content MD5 and a
+	 * folder by the MD5 of ALL its sources (so the key can never collide with a
+	 * single-file
+	 * call). Identical content reuses the compiled jar while every call still gets
+	 * a fresh
+	 * ClassLoader (so the same source evaluated twice yields two distinct Class
+	 * objects).
+	 * 
+	 * @param javaSource - the Java source code to compile
+	 * @param evalKey    - content MD5 used as the eval workspace directory name
+	 * @return the dedicated ClassLoader that loaded the compiled jar
+	 */
 	private ClassLoader compileAndLoadJava(String javaSource, String evalKey) throws Exception {
-		return compileAndLoadJavaMulti(new String[]{javaSource}, evalKey);
+		return compileAndLoadJavaMulti(new String[] { javaSource }, evalKey);
 	}
 
 	/**
-	* Multi-class form of the dynamic compiler - compiles every segment of the given
-	* source array in one javac task (one .java file per segment, named after the class),
-	* packages all produced .class files into a content-addressed jar and loads that jar
-	* with a single dedicated URLClassLoader. Classes may reference each other regardless
-	* of array order.
-	* @param javaSources - Java source code segments, one complete class per element
-	* @param evalKey - content MD5 of all joined sources, used as the eval workspace directory name
-	* @return the dedicated ClassLoader that loaded the compiled jar
-	* */
+	 * Multi-class form of the dynamic compiler - compiles every segment of the
+	 * given
+	 * source array in one javac task (one .java file per segment, named after the
+	 * class),
+	 * packages all produced .class files into a content-addressed jar and loads
+	 * that jar
+	 * with a single dedicated URLClassLoader. Classes may reference each other
+	 * regardless
+	 * of array order.
+	 * 
+	 * @param javaSources - Java source code segments, one complete class per
+	 *                    element
+	 * @param evalKey     - content MD5 of all joined sources, used as the eval
+	 *                    workspace directory name
+	 * @return the dedicated ClassLoader that loaded the compiled jar
+	 */
 	private ClassLoader compileAndLoadJavaMulti(String[] javaSources, String evalKey) throws Exception {
 		// 1) Resolve the package and the class name for every source segment.
 		List<String[]> resolved = new ArrayList<String[]>(); // {packageName, className, qualifiedName}
@@ -497,7 +573,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 				throw new Exception("evalJavaSource: cannot resolve a class name from one of the given sources.");
 			}
 			String qualifiedName = CommonTools.isBlank(packageName) ? className : packageName + "." + className;
-			resolved.add(new String[]{packageName == null ? "" : packageName, className, qualifiedName});
+			resolved.add(new String[] { packageName == null ? "" : packageName, className, qualifiedName });
 		}
 
 		// 2) Content-addressed eval workspace: <JS_PLUS_PATH>/.tmp/java/<evalKey>.
@@ -530,7 +606,8 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 				throw new Exception("evalJavaSource: no system Java compiler available (run on a JDK, not a JRE).");
 			}
 			DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-			StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
+			StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null,
+					StandardCharsets.UTF_8);
 			List<String> compileOptions = new ArrayList<String>();
 			compileOptions.add("-d");
 			compileOptions.add(classesDir.getAbsolutePath());
@@ -541,10 +618,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 			compileOptions.add("-Xlint:none");
 			StringWriter compilerOutput = new StringWriter();
 			boolean compiled = compiler.getTask(compilerOutput, fileManager, diagnostics, compileOptions, null,
-			        fileManager.getJavaFileObjects(sourceFiles)).call();
+					fileManager.getJavaFileObjects(sourceFiles)).call();
 			fileManager.close();
 			if (!compiled) {
-				StringBuilder message = new StringBuilder("evalJavaSource: compilation failed for " + resolved.size() + " source(s)");
+				StringBuilder message = new StringBuilder(
+						"evalJavaSource: compilation failed for " + resolved.size() + " source(s)");
 				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
 					message.append(System.lineSeparator()).append(diagnostic);
 				}
@@ -552,7 +630,8 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 				deleteRecursively(evalDir);
 				throw new Exception(message.toString());
 			}
-			// Remove the compiled source files: the eval workspace keeps only the .class/jar cache.
+			// Remove the compiled source files: the eval workspace keeps only the
+			// .class/jar cache.
 			for (File sourceFile : sourceFiles) {
 				sourceFile.delete();
 			}
@@ -575,7 +654,8 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 				jarOutput.close();
 			}
 
-			// Keep only the content-addressed jar: drop the transient src/classes workspace.
+			// Keep only the content-addressed jar: drop the transient src/classes
+			// workspace.
 			File[] evalChildren = evalDir.listFiles();
 			if (evalChildren != null) {
 				for (File evalChild : evalChildren) {
@@ -586,24 +666,31 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 			}
 		}
 
-		// 6) Load the jar with a dedicated URLClassLoader and keep the loader referenced so the
-		//    evaluated classes stay usable for the life of this console. Load each class once to
-		//    verify the jar is intact; callers use the returned loader's loadClass() afterwards.
-		URLClassLoader classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, getClass().getClassLoader());
+		// 6) Load the jar with a dedicated URLClassLoader and keep the loader
+		// referenced so the
+		// evaluated classes stay usable for the life of this console. Load each class
+		// once to
+		// verify the jar is intact; callers use the returned loader's loadClass()
+		// afterwards.
+		URLClassLoader classLoader = new URLClassLoader(new URL[] { jarFile.toURI().toURL() },
+				getClass().getClassLoader());
 		evalJavaClassLoaders.add(classLoader);
 		Class<?>[] loadedClasses = new Class<?>[resolved.size()];
 		for (int i = 0; i < resolved.size(); i++) {
 			loadedClasses[i] = Class.forName(resolved.get(i)[2], true, classLoader);
 		}
-		log.info("evalJavaSource: compiled and loaded " + loadedClasses.length + " class(es) -> " + jarFile.getAbsolutePath());
+		log.info("evalJavaSource: compiled and loaded " + loadedClasses.length + " class(es) -> "
+				+ jarFile.getAbsolutePath());
 		return classLoader;
 	}
 
 	/**
-	* Recursively deletes a file or directory (used to drop the transient eval src/classes
-	* workspace, keeping only the content-addressed jar).
-	* @param file - the file or directory to delete
-	* */
+	 * Recursively deletes a file or directory (used to drop the transient eval
+	 * src/classes
+	 * workspace, keeping only the content-addressed jar).
+	 * 
+	 * @param file - the file or directory to delete
+	 */
 	private void deleteRecursively(File file) {
 		if (file == null || !file.exists()) {
 			return;
@@ -620,10 +707,13 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Builds the -classpath for dynamic compilation: the process classpath plus every jar under the
-	* runtime LibHome, so evaluated sources can reference framework classes and their dependencies.
-	* @return the joined classpath
-	* */
+	 * Builds the -classpath for dynamic compilation: the process classpath plus
+	 * every jar under the
+	 * runtime LibHome, so evaluated sources can reference framework classes and
+	 * their dependencies.
+	 * 
+	 * @return the joined classpath
+	 */
 	private String buildEvalClassPath() {
 		StringBuilder classPath = new StringBuilder();
 		String processClassPath = System.getProperty("java.class.path");
@@ -652,425 +742,447 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the executeViaGhost operation
-	* @param commands - the commands
-	* @return the executeViaGhost result
-	* */
-	public boolean executeViaGhost(String commands){
-	    return executeViaGhost(true,commands);
+	 * Performs the executeViaGhost operation
+	 * 
+	 * @param commands - the commands
+	 * @return the executeViaGhost result
+	 */
+	public boolean executeViaGhost(String commands) {
+		return executeViaGhost(true, commands);
 	}
 
 	/**
-	* Performs the executeViaGhost operation
-	* @param enableSystemOut - the enableSystemOut
-	* @param commands - the commands
-	* @return the executeViaGhost result
-	* */
-	public boolean executeViaGhost(boolean enableSystemOut,String commands){
-	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
-	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
+	 * Performs the executeViaGhost operation
+	 * 
+	 * @param enableSystemOut - the enableSystemOut
+	 * @param commands        - the commands
+	 * @return the executeViaGhost result
+	 */
+	public boolean executeViaGhost(boolean enableSystemOut, String commands) {
+		String commandEnd = consoleVariables.getString("CommandEnd", DEFAULT_CommandEnd);
+		String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$", "").trim();
 
 		if (executeCommand.trim().equals("")) {
 			System.out.println("ERROR: Invalid blank command");
 			return false;
 		}
 
-		Boolean writeHistory = consoleVariables.getBoolean("WriteHistory",DEFAULT_WriteHistory);
-        String commandHistory = consoleVariables.getString("CommandHistory", DEFAULT_CommandHistory);
+		Boolean writeHistory = consoleVariables.getBoolean("WriteHistory", DEFAULT_WriteHistory);
+		String commandHistory = consoleVariables.getString("CommandHistory", DEFAULT_CommandHistory);
 
-	    boolean isCancel = isCommandCancel(executeCommand);
+		boolean isCancel = isCommandCancel(executeCommand);
 
-	    if(isCancel) return true;
+		if (isCancel)
+			return true;
 
-	    try{
-	        log.debug(executeCommand);
+		try {
+			log.debug(executeCommand);
 
-		    if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-		        if(!CommonTools.isBlank(executeCommand))
-		            addHistory(executeCommand.trim());
-		    }
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				if (!CommonTools.isBlank(executeCommand))
+					addHistory(executeCommand.trim());
+			}
 
-	    	if (executeCommand.toUpperCase().equals("EXIT")) {
-				if(cacheDriverExecutor != null){
-                    if(!cacheDriverExecutor.isClosed()){
-                        System.out.println("ERROR: The connection is in use, please close the connection first.");
-                    }else{
-                        exitConsole(0);
-                        return true;
-                    }
-			    }
-			    if(cacheDriverExecutor == null)
-				    exitConsole(0);
+			if (executeCommand.toUpperCase().equals("EXIT")) {
+				if (cacheDriverExecutor != null) {
+					if (!cacheDriverExecutor.isClosed()) {
+						System.out.println("ERROR: The connection is in use, please close the connection first.");
+					} else {
+						exitConsole(0);
+						return true;
+					}
+				}
+				if (cacheDriverExecutor == null)
+					exitConsole(0);
 
-    				return true;
-    		}
+				return true;
+			}
 
-    		if(executeCommand.indexOf(commandHistory) == 0){
-			    String hiscmd = executeCommand.replaceFirst("^" + commandHistory,"");
-		        showHistory(hiscmd);
-		    }else if(executeCommand.toUpperCase().equals("CLEAR")){
-		        clear(true);
-		    }else if(executeCommand.toUpperCase().equals("JDBC")){
-    	        setUseJdbcEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd",";");
-    	        consoleVariables.putAndReturnSelf("Name","jdbc");
-		        System.out.println("Changed CommandEnd to ';'");
-        	}else if(executeCommand.toUpperCase().equals("SCRIPT")){
-    	        setUseScriptEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
-    	        set("Name",displayEngineName);
-		        System.out.println("Changed CommandEnd to '/'");
-        	} else if (executeCommand.matches(CONSOLE_VAR_REGEX)){
-			    String[] keyValue = executeCommand.split("=",2);
-			    if(keyValue.length == 2){
-			        String key = keyValue[0].trim().replaceFirst("^Console\\.","");
-			        String value = keyValue[1].trim();
-			        consoleVariables.putAndReturnSelf(key,value);
-			        if(enableSystemOut) System.out.println(String.format("Successfully Console.%s=%s",key,value));
-			    }else{
-			        if(enableSystemOut) System.out.println("ERROR: Invalid console variable");
-			    }
-			} else if (executeCommand.matches(CONSOLE_FUN_REGEX)){
-        	    Pattern pattern = Pattern.compile(CONSOLE_FUN_REGEX);
-                Matcher matcher = pattern.matcher(executeCommand);
-                if(matcher.find()){
-                    String fun = matcher.group(2);
-                    String paramsStr = matcher.group(3).trim();
-                    List<String> params = new ArrayList<String>();
-                    if(!CommonTools.isBlank(paramsStr)){
-                        params = Arrays.asList(paramsStr.split(","));
-                    }
-                    try{
-                        Method method = CmdConsole.class.getMethod(fun,List.class);
-                        Object msg = method.invoke(this,params);
-                        if(enableSystemOut) {
-                            if(msg != null){
-                                System.out.println(msg.toString());
-                            }
-                        }
-                    }catch(Exception e){
-                        log.error(e.getMessage(),e);
-                        if(enableSystemOut){
-                            System.out.println(String.format("ERROR: Invalid method '%s'",fun));
-                            System.out.println(error(e));
-                        }
-                    }
-                }
-			}else{
-	           if(ghostConsole == null){
-	               ghostConsole = new GhostConsole(this,consoleVariables.getString("GhostName","DefaultGhost"));
-	               ghostConsole.detect();
-	           }
-	           ghostConsole.submit(executeCommand);
-        	}
-	    }catch(Exception e){
-            System.out.println(error(e));
-            log.info(executeCommand);
-            log.error(e.getMessage(),e);
-            if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-                addHistory(" <INVALID");
-            }
-            return false;
-		}finally {
-    		if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-    	    	addHistory(System.lineSeparator());
-    		}
+			if (executeCommand.indexOf(commandHistory) == 0) {
+				String hiscmd = executeCommand.replaceFirst("^" + commandHistory, "");
+				showHistory(hiscmd);
+			} else if (executeCommand.toUpperCase().equals("CLEAR")) {
+				clear(true);
+			} else if (executeCommand.toUpperCase().equals("JDBC")) {
+				setUseJdbcEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", ";");
+				consoleVariables.putAndReturnSelf("Name", "jdbc");
+				System.out.println("Changed CommandEnd to ';'");
+			} else if (executeCommand.toUpperCase().equals("SCRIPT")) {
+				setUseScriptEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", "/");
+				set("Name", displayEngineName);
+				System.out.println("Changed CommandEnd to '/'");
+			} else if (executeCommand.matches(CONSOLE_VAR_REGEX)) {
+				String[] keyValue = executeCommand.split("=", 2);
+				if (keyValue.length == 2) {
+					String key = keyValue[0].trim().replaceFirst("^Console\\.", "");
+					String value = keyValue[1].trim();
+					consoleVariables.putAndReturnSelf(key, value);
+					if (enableSystemOut)
+						System.out.println(String.format("Successfully Console.%s=%s", key, value));
+				} else {
+					if (enableSystemOut)
+						System.out.println("ERROR: Invalid console variable");
+				}
+			} else if (executeCommand.matches(CONSOLE_FUN_REGEX)) {
+				Pattern pattern = Pattern.compile(CONSOLE_FUN_REGEX);
+				Matcher matcher = pattern.matcher(executeCommand);
+				if (matcher.find()) {
+					String fun = matcher.group(2);
+					String paramsStr = matcher.group(3).trim();
+					List<String> params = new ArrayList<String>();
+					if (!CommonTools.isBlank(paramsStr)) {
+						params = Arrays.asList(paramsStr.split(","));
+					}
+					try {
+						Method method = CmdConsole.class.getMethod(fun, List.class);
+						Object msg = method.invoke(this, params);
+						if (enableSystemOut) {
+							if (msg != null) {
+								System.out.println(msg.toString());
+							}
+						}
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+						if (enableSystemOut) {
+							System.out.println(String.format("ERROR: Invalid method '%s'", fun));
+							System.out.println(error(e));
+						}
+					}
+				}
+			} else {
+				if (ghostConsole == null) {
+					ghostConsole = new GhostConsole(this, consoleVariables.getString("GhostName", "DefaultGhost"));
+					ghostConsole.detect();
+				}
+				ghostConsole.submit(executeCommand);
+			}
+		} catch (Exception e) {
+			System.out.println(error(e));
+			log.info(executeCommand);
+			log.error(e.getMessage(), e);
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				addHistory(" <INVALID");
+			}
+			return false;
+		} finally {
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				addHistory(System.lineSeparator());
+			}
 		}
 		return true;
 	}
 
 	/**
-	* Performs the executeViaCmd operation
-	* @param enableSystemOut - the enableSystemOut
-	* @param commands - the commands
-	* @return the executeViaCmd result
-	* */
-	public boolean executeViaCmd(boolean enableSystemOut,String commands){
-	    return executeViaCmd(enableSystemOut,commands,null,null);
+	 * Performs the executeViaCmd operation
+	 * 
+	 * @param enableSystemOut - the enableSystemOut
+	 * @param commands        - the commands
+	 * @return the executeViaCmd result
+	 */
+	public boolean executeViaCmd(boolean enableSystemOut, String commands) {
+		return executeViaCmd(enableSystemOut, commands, null, null);
 	}
 
 	/**
-	* Performs the executeViaCmd operation
-	* @param enableSystemOut - the enableSystemOut
-	* @param commands - the commands
-	* @param successfullyRun - the successfullyRun
-	* @param faiiledRun - the faiiledRun
-	* @return the executeViaCmd result
-	* */
-	public boolean executeViaCmd(boolean enableSystemOut,String commands,Runnable successfullyRun,Runnable faiiledRun){
-	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
-	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
+	 * Performs the executeViaCmd operation
+	 * 
+	 * @param enableSystemOut - the enableSystemOut
+	 * @param commands        - the commands
+	 * @param successfullyRun - the successfullyRun
+	 * @param faiiledRun      - the faiiledRun
+	 * @return the executeViaCmd result
+	 */
+	public boolean executeViaCmd(boolean enableSystemOut, String commands, Runnable successfullyRun,
+			Runnable faiiledRun) {
+		String commandEnd = consoleVariables.getString("CommandEnd", DEFAULT_CommandEnd);
+		String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$", "").trim();
 
 		if (executeCommand.trim().equals("")) {
 			System.out.println("ERROR: Invalid blank command");
 			return false;
 		}
 
-		Boolean writeHistory = consoleVariables.getBoolean("WriteHistory",DEFAULT_WriteHistory);
-        String commandHistory = consoleVariables.getString("CommandHistory", DEFAULT_CommandHistory);
+		Boolean writeHistory = consoleVariables.getBoolean("WriteHistory", DEFAULT_WriteHistory);
+		String commandHistory = consoleVariables.getString("CommandHistory", DEFAULT_CommandHistory);
 
-	    boolean isCancel = isCommandCancel(executeCommand);
+		boolean isCancel = isCommandCancel(executeCommand);
 
-	    if(isCancel) return true;
+		if (isCancel)
+			return true;
 
-	    try{
-	        log.debug(executeCommand);
+		try {
+			log.debug(executeCommand);
 
-		    if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-		        if(!CommonTools.isBlank(executeCommand))
-		            addHistory(executeCommand.trim());
-		    }
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				if (!CommonTools.isBlank(executeCommand))
+					addHistory(executeCommand.trim());
+			}
 
-	    	if (executeCommand.toUpperCase().equals("EXIT")) {
-				if(cacheDriverExecutor != null){
-                    if(!cacheDriverExecutor.isClosed()){
-                        System.out.println("ERROR: The connection is in use, please close the connection first.");
-                    }else{
-                        exitConsole(0);
-                        return true;
-                    }
-			    }
-			    if(cacheDriverExecutor == null)
-				    exitConsole(0);
+			if (executeCommand.toUpperCase().equals("EXIT")) {
+				if (cacheDriverExecutor != null) {
+					if (!cacheDriverExecutor.isClosed()) {
+						System.out.println("ERROR: The connection is in use, please close the connection first.");
+					} else {
+						exitConsole(0);
+						return true;
+					}
+				}
+				if (cacheDriverExecutor == null)
+					exitConsole(0);
 
-    				return true;
-    		}
+				return true;
+			}
 
-    		if(executeCommand.indexOf(commandHistory) == 0){
-			    String hiscmd = executeCommand.replaceFirst("^" + commandHistory,"");
-		        showHistory(hiscmd);
-		    }else if(executeCommand.toUpperCase().equals("CLEAR")){
-		        clear(true);
-		    }else if(executeCommand.toUpperCase().equals("JDBC")){
-    	        setUseJdbcEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd",";");
-    	        consoleVariables.putAndReturnSelf("Name","jdbc");
-    	        if(enableSystemOut) {
-		            System.out.println("Changed CommandEnd to ';'");
-    	        }
-        	}else if(executeCommand.toUpperCase().equals("SCRIPT")){
-    	        setUseScriptEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
-    	        set("Name",displayEngineName);
-    	        if(enableSystemOut) {
-		            System.out.println("Changed CommandEnd to '/'");
-    	        }
-        	}else if(executeCommand.toUpperCase().equals("GHOST")){
-    	        setUseGhostEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
-    	        set("Name","ghost");
-    	        if(enableSystemOut) {
-		            System.out.println("Changed CommandEnd to '/'");
-    	        }
-        	} else if (executeCommand.matches(CONSOLE_VAR_REGEX)){
-			    String[] keyValue = executeCommand.split("=",2);
-			    if(keyValue.length == 2){
-			        String key = keyValue[0].trim().replaceFirst("^Console\\.","");
-			        String value = keyValue[1].trim();
-			        consoleVariables.putAndReturnSelf(key,value);
-			        if(enableSystemOut) System.out.println(String.format("Successfully Console.%s=%s",key,value));
-			    }else{
-			        if(enableSystemOut) System.out.println("ERROR: Invalid console variable");
-			    }
-			} else if (executeCommand.matches(CONSOLE_FUN_REGEX)){
-        	    Pattern pattern = Pattern.compile(CONSOLE_FUN_REGEX);
-                Matcher matcher = pattern.matcher(executeCommand);
-                if(matcher.find()){
-                    String fun = matcher.group(2);
-                    String paramsStr = matcher.group(3).trim();
-                    List<String> params = new ArrayList<String>();
-                    if(!CommonTools.isBlank(paramsStr)){
-                        params = Arrays.asList(paramsStr.split(","));
-                    }
-                    try{
-                        Method method = CmdConsole.class.getMethod(fun,List.class);
-                        Object msg = method.invoke(this,params);
-                        if(enableSystemOut) {
-                            if(msg != null){
-                                System.out.println(msg.toString());
-                            }
-                        }
-                    }catch(Exception e){
-                        log.error(e.getMessage(),e);
-                        if(enableSystemOut){
-                            System.out.println(String.format("ERROR: Invalid method '%s'",fun));
-                            System.out.println(error(e));
-                        }
-                    }
-                }
-			}else{
-	           if(cmdConsole == null){
-	               cmdConsole = new CmdConsole(enableSystemOut);
-	           }
-	           Process process = cmdConsole.submit(executeCommand,successfullyRun,faiiledRun);
-	           if(process != null){
-	               System.out.println(String.format("Current PID '%s'.",process.pid()));
-	           }
-        	}
-	    }catch(Exception e){
-            System.out.println(error(e));
-            log.error(executeCommand);
-            log.error(e.getMessage(),e);
-            if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-                addHistory(" <INVALID");
-            }
-            return false;
-		}finally {
-    		if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-    	    	addHistory(System.lineSeparator());
-    		}
+			if (executeCommand.indexOf(commandHistory) == 0) {
+				String hiscmd = executeCommand.replaceFirst("^" + commandHistory, "");
+				showHistory(hiscmd);
+			} else if (executeCommand.toUpperCase().equals("CLEAR")) {
+				clear(true);
+			} else if (executeCommand.toUpperCase().equals("JDBC")) {
+				setUseJdbcEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", ";");
+				consoleVariables.putAndReturnSelf("Name", "jdbc");
+				if (enableSystemOut) {
+					System.out.println("Changed CommandEnd to ';'");
+				}
+			} else if (executeCommand.toUpperCase().equals("SCRIPT")) {
+				setUseScriptEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", "/");
+				set("Name", displayEngineName);
+				if (enableSystemOut) {
+					System.out.println("Changed CommandEnd to '/'");
+				}
+			} else if (executeCommand.toUpperCase().equals("GHOST")) {
+				setUseGhostEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", "/");
+				set("Name", "ghost");
+				if (enableSystemOut) {
+					System.out.println("Changed CommandEnd to '/'");
+				}
+			} else if (executeCommand.matches(CONSOLE_VAR_REGEX)) {
+				String[] keyValue = executeCommand.split("=", 2);
+				if (keyValue.length == 2) {
+					String key = keyValue[0].trim().replaceFirst("^Console\\.", "");
+					String value = keyValue[1].trim();
+					consoleVariables.putAndReturnSelf(key, value);
+					if (enableSystemOut)
+						System.out.println(String.format("Successfully Console.%s=%s", key, value));
+				} else {
+					if (enableSystemOut)
+						System.out.println("ERROR: Invalid console variable");
+				}
+			} else if (executeCommand.matches(CONSOLE_FUN_REGEX)) {
+				Pattern pattern = Pattern.compile(CONSOLE_FUN_REGEX);
+				Matcher matcher = pattern.matcher(executeCommand);
+				if (matcher.find()) {
+					String fun = matcher.group(2);
+					String paramsStr = matcher.group(3).trim();
+					List<String> params = new ArrayList<String>();
+					if (!CommonTools.isBlank(paramsStr)) {
+						params = Arrays.asList(paramsStr.split(","));
+					}
+					try {
+						Method method = CmdConsole.class.getMethod(fun, List.class);
+						Object msg = method.invoke(this, params);
+						if (enableSystemOut) {
+							if (msg != null) {
+								System.out.println(msg.toString());
+							}
+						}
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+						if (enableSystemOut) {
+							System.out.println(String.format("ERROR: Invalid method '%s'", fun));
+							System.out.println(error(e));
+						}
+					}
+				}
+			} else {
+				if (cmdConsole == null) {
+					cmdConsole = new CmdConsole(enableSystemOut);
+				}
+				Process process = cmdConsole.submit(executeCommand, successfullyRun, faiiledRun);
+				if (process != null) {
+					System.out.println(String.format("Current PID '%s'.", process.pid()));
+				}
+			}
+		} catch (Exception e) {
+			System.out.println(error(e));
+			log.error(executeCommand);
+			log.error(e.getMessage(), e);
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				addHistory(" <INVALID");
+			}
+			return false;
+		} finally {
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				addHistory(System.lineSeparator());
+			}
 		}
 		return true;
 	}
 
 	/**
-	* Performs the executeViaScript operation
-	* @param commands - the commands
-	* @return the executeViaScript result
-	* */
-	public boolean executeViaScript(String commands){
-	    String commandEnd = consoleVariables.getString("CommandEnd",DEFAULT_CommandEnd);
-	    String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$","").trim();
+	 * Performs the executeViaScript operation
+	 * 
+	 * @param commands - the commands
+	 * @return the executeViaScript result
+	 */
+	public boolean executeViaScript(String commands) {
+		String commandEnd = consoleVariables.getString("CommandEnd", DEFAULT_CommandEnd);
+		String executeCommand = commands.toString().replaceFirst("(" + commandEnd + "){1,}[\s]*$", "").trim();
 
 		if (executeCommand.trim().equals("")) {
 			System.out.println("ERROR: Invalid blank command");
 			return false;
 		}
 
-		Boolean writeHistory = consoleVariables.getBoolean("WriteHistory",DEFAULT_WriteHistory);
-        String commandHistory = consoleVariables.getString("CommandHistory", DEFAULT_CommandHistory);
+		Boolean writeHistory = consoleVariables.getBoolean("WriteHistory", DEFAULT_WriteHistory);
+		String commandHistory = consoleVariables.getString("CommandHistory", DEFAULT_CommandHistory);
 
-	    boolean isCancel = isCommandCancel(executeCommand);
+		boolean isCancel = isCommandCancel(executeCommand);
 
-	    if(isCancel) return true;
+		if (isCancel)
+			return true;
 
-	    try{
-	        log.debug(executeCommand);
+		try {
+			log.debug(executeCommand);
 
-		    if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-		        if(!CommonTools.isBlank(executeCommand))
-		            addHistory(executeCommand.trim());
-		    }
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				if (!CommonTools.isBlank(executeCommand))
+					addHistory(executeCommand.trim());
+			}
 
-	    	if (executeCommand.toUpperCase().equals("EXIT")) {
-				if(cacheDriverExecutor != null){
-                    if(!cacheDriverExecutor.isClosed()){
-                        System.out.println("ERROR: The connection is in use, please close the connection first.");
-                    }else{
-                        exitConsole(0);
-                        return true;
-                    }
-			    }
-			    if(cacheDriverExecutor == null)
-				    exitConsole(0);
+			if (executeCommand.toUpperCase().equals("EXIT")) {
+				if (cacheDriverExecutor != null) {
+					if (!cacheDriverExecutor.isClosed()) {
+						System.out.println("ERROR: The connection is in use, please close the connection first.");
+					} else {
+						exitConsole(0);
+						return true;
+					}
+				}
+				if (cacheDriverExecutor == null)
+					exitConsole(0);
 
-    				return true;
-    		}
+				return true;
+			}
 
-    		if(executeCommand.indexOf(commandHistory) == 0){
-			    String hiscmd = executeCommand.replaceFirst("^" + commandHistory,"");
-		        showHistory(hiscmd);
-		    }else if(executeCommand.toUpperCase().equals("CLEAR")){
-		        clear(true);
-		    }else if(executeCommand.toUpperCase().equals("JDBC")){
-    	        setUseJdbcEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd",";");
-    	        consoleVariables.putAndReturnSelf("Name","jdbc");
-		        System.out.println("Changed CommandEnd to ';'");
-        	}else if(executeCommand.toUpperCase().equals("CMD")){
-    	        setUseCmdEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
-    	        consoleVariables.putAndReturnSelf("Name","cmd");
-		        System.out.println("Changed CommandEnd to '/'");
-        	}else if(executeCommand.toUpperCase().equals("GHOST")){
-    	        setUseGhostEnv();
-    	        consoleVariables.putAndReturnSelf("CommandEnd","/");
-    	        consoleVariables.putAndReturnSelf("Name","ghost");
-		        System.out.println("Changed CommandEnd to '/'");
-        	}else{
-        		if(jsPlusContext == null){
-        		    initScriptEngineManager();
-        		}
-	            evalScript(executeCommand);
-        	}
-	    }catch(Exception e){
-            System.out.println(error(e));
-            log.debug(executeCommand);
-            log.error(e.getMessage(),e);
-            if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-                addHistory(" <INVALID");
-            }
-            return false;
-		}finally {
-    		if(writeHistory && executeCommand.indexOf(commandHistory) != 0){
-    	    	addHistory(System.lineSeparator());
-    		}
+			if (executeCommand.indexOf(commandHistory) == 0) {
+				String hiscmd = executeCommand.replaceFirst("^" + commandHistory, "");
+				showHistory(hiscmd);
+			} else if (executeCommand.toUpperCase().equals("CLEAR")) {
+				clear(true);
+			} else if (executeCommand.toUpperCase().equals("JDBC")) {
+				setUseJdbcEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", ";");
+				consoleVariables.putAndReturnSelf("Name", "jdbc");
+				System.out.println("Changed CommandEnd to ';'");
+			} else if (executeCommand.toUpperCase().equals("CMD")) {
+				setUseCmdEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", "/");
+				consoleVariables.putAndReturnSelf("Name", "cmd");
+				System.out.println("Changed CommandEnd to '/'");
+			} else if (executeCommand.toUpperCase().equals("GHOST")) {
+				setUseGhostEnv();
+				consoleVariables.putAndReturnSelf("CommandEnd", "/");
+				consoleVariables.putAndReturnSelf("Name", "ghost");
+				System.out.println("Changed CommandEnd to '/'");
+			} else {
+				if (jsPlusContext == null) {
+					initScriptEngineManager();
+				}
+				evalScript(executeCommand);
+			}
+		} catch (Exception e) {
+			System.out.println(error(e));
+			log.debug(executeCommand);
+			log.error(e.getMessage(), e);
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				addHistory(" <INVALID");
+			}
+			return false;
+		} finally {
+			if (writeHistory && executeCommand.indexOf(commandHistory) != 0) {
+				addHistory(System.lineSeparator());
+			}
 		}
 		return true;
-    }
-
- 	/**
- 	* Performs the execute operation
- 	* @param commands - the commands
- 	* @return the execute result
- 	* */
- 	public boolean execute(String commands) {
- 	    if(isUseScriptEnv()) return executeViaScript(commands);
-
- 	    if(isUseJdbcEnv()) return executeViaJdbc(commands);
-
- 	    if(isUseCmdEnv()) return executeViaCmd(commands);
-
- 	    return false;
 	}
 
 	/**
-	* Performs the executeViaCmd operation
-	* @param commands - the commands
-	* @return the executeViaCmd result
-	* */
+	 * Performs the execute operation
+	 * 
+	 * @param commands - the commands
+	 * @return the execute result
+	 */
+	public boolean execute(String commands) {
+		if (isUseScriptEnv())
+			return executeViaScript(commands);
+
+		if (isUseJdbcEnv())
+			return executeViaJdbc(commands);
+
+		if (isUseCmdEnv())
+			return executeViaCmd(commands);
+
+		return false;
+	}
+
+	/**
+	 * Performs the executeViaCmd operation
+	 * 
+	 * @param commands - the commands
+	 * @return the executeViaCmd result
+	 */
 	public boolean executeViaCmd(String commands) {
 		return executeViaCmd(true, commands);
 	}
 
 	/**
-	* Performs the executeViaCmd operation
-	* @param enableSystemOut - the enableSystemOut
-	* @param commands - the commands
-	* @param successfullyRun - the successfullyRun
-	* @param faiiledRun - the faiiledRun
-	* @return the executeViaCmd result
-	* */
-	public boolean executeViaCmd(Boolean enableSystemOut,String commands,Runnable successfullyRun,Runnable faiiledRun) {
-		return executeViaCmd(enableSystemOut, commands,successfullyRun,faiiledRun);
+	 * Performs the executeViaCmd operation
+	 * 
+	 * @param enableSystemOut - the enableSystemOut
+	 * @param commands        - the commands
+	 * @param successfullyRun - the successfullyRun
+	 * @param faiiledRun      - the faiiledRun
+	 * @return the executeViaCmd result
+	 */
+	public boolean executeViaCmd(Boolean enableSystemOut, String commands, Runnable successfullyRun,
+			Runnable faiiledRun) {
+		return executeViaCmd(enableSystemOut, commands, successfullyRun, faiiledRun);
 	}
 
 	/**
-	* Performs the executeBatch operation
-	* @param batchFile - the batchFile
-	* @return the executeBatch result
-	* */
+	 * Performs the executeBatch operation
+	 * 
+	 * @param batchFile - the batchFile
+	 * @return the executeBatch result
+	 */
 	public Object executeBatch(String batchFile) throws Exception {
-	    if(isUseScriptEnv()){
-		    return eval(batchFile);
-	    }
-	    if(isUseJdbcEnv()){
-		    return executeJdbcBatch(batchFile);
-	    }
-	    if(isUseCmdEnv()){
-		    return executeCmdBatch(batchFile);
-	    }
-	    return null;
+		if (isUseScriptEnv()) {
+			return eval(batchFile);
+		}
+		if (isUseJdbcEnv()) {
+			return executeJdbcBatch(batchFile);
+		}
+		if (isUseCmdEnv()) {
+			return executeCmdBatch(batchFile);
+		}
+		return null;
 	}
 
 	/**
-	* Performs the executeCmdBatch operation
-	* @param _batchFile - the _batchFile
-	* @return the executeCmdBatch result
-	* */
+	 * Performs the executeCmdBatch operation
+	 * 
+	 * @param _batchFile - the _batchFile
+	 * @return the executeCmdBatch result
+	 */
 	protected String executeCmdBatch(String _batchFile) throws Exception {
 		try {
-		    File batchFile = new File(_batchFile);
+			File batchFile = new File(_batchFile);
 			if (!batchFile.exists()) {
 				return String.format("ERROR: Batch file not found '%s'", batchFile);
 			}
@@ -1084,7 +1196,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 						String command = cl.trim();
 						if (command.indexOf("#") != 0) {
 							System.out.println(
-									String.format("%s) %s",row,command));
+									String.format("%s) %s", row, command));
 
 							executeViaCmd(true, command);
 						}
@@ -1100,38 +1212,39 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the task operation
-	* */
+	 * Performs the task operation
+	 */
 	protected void task() throws Exception {
-        String task = consoleVariables.getString("Task", DEFAULT_Task);
+		String task = consoleVariables.getString("Task", DEFAULT_Task);
 		Long taskTimer = consoleVariables.getMilliSeconds("TaskTimer", DEFAULT_TaskTimer);
-		task(task,taskTimer);
+		task(task, taskTimer);
 	}
 
 	/**
-	* Performs the task operation
-	* @param task - the task
-	* @param taskTimer - the taskTimer
-	* */
-	protected void task(String task,Long taskTimer) throws Exception {
+	 * Performs the task operation
+	 * 
+	 * @param task      - the task
+	 * @param taskTimer - the taskTimer
+	 */
+	protected void task(String task, Long taskTimer) throws Exception {
 		String commandLines = null;
 		if (!CommonTools.isBlank(task)) {
 			long timeout = new java.util.Date().getTime() - preExecuteTime;
 			if (timeout >= taskTimer) {
 				preExecuteTime = new java.util.Date().getTime();
 				task = task.trim();
-				//check task content script "(...js...)"
-				if(task.indexOf("(") == 0){
+				// check task content script "(...js...)"
+				if (task.indexOf("(") == 0) {
 					commandLines = task;
-				}else{
+				} else {
 					String taskFilePath = null;
-					if(Files.exists(Paths.get(task))){
+					if (Files.exists(Paths.get(task))) {
 						taskFilePath = task;
-					}else{
+					} else {
 						taskFilePath = getJsPlusPath() + "/" + task;
 					}
 					File taskFile = new File(taskFilePath);
-					if(!taskFile.exists()){
+					if (!taskFile.exists()) {
 						throw new FileNotFoundException(String.format("The task file '%s' missing."));
 					}
 					commandLines = decryptScript(taskFile);
@@ -1144,7 +1257,7 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 					for (int i = 0; i < lineSize; i++) {
 						String command = lines[i].trim();
 						if (showTaskLog) {
-							System.out.println(String.format("%s) %s",i, command));
+							System.out.println(String.format("%s) %s", i, command));
 						}
 
 						if (command.indexOf("-") == 0)
@@ -1153,11 +1266,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 						executeViaJdbc(showTaskLog, command);
 					}
 				}
-				if(!CommonTools.isBlank(commandLines) && useScriptEnv){
-				    executeViaScript(commandLines);
+				if (!CommonTools.isBlank(commandLines) && useScriptEnv) {
+					executeViaScript(commandLines);
 				}
-				if(!CommonTools.isBlank(commandLines) && useGhostEnv){
-				    executeViaGhost(commandLines);
+				if (!CommonTools.isBlank(commandLines) && useGhostEnv) {
+					executeViaGhost(commandLines);
 				}
 			}
 			if (taskTimer <= 0) {
@@ -1167,43 +1280,46 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the setTask operation
-	* @param taskTimer - the taskTimer
-	* @param task - the task
-	* */
-	public void setTask(String taskTimer,String task){
-	    set("Task",task);
-	    set("TaskTimer",taskTimer);
+	 * Performs the setTask operation
+	 * 
+	 * @param taskTimer - the taskTimer
+	 * @param task      - the task
+	 */
+	public void setTask(String taskTimer, String task) {
+		set("Task", task);
+		set("TaskTimer", taskTimer);
 	}
 
 	/**
-	* Performs the setTask operation
-	* @param task - the task
-	* */
-	public void setTask(String task){
-	    set("Task",task);
-	    set("TaskTimer","0ms");
+	 * Performs the setTask operation
+	 * 
+	 * @param task - the task
+	 */
+	public void setTask(String task) {
+		set("Task", task);
+		set("TaskTimer", "0ms");
 	}
 
 	/**
-	* Performs the setTaskTimer operation
-	* @param taskTimer - the taskTimer
-	* */
-	public void setTaskTimer(String taskTimer){
-	    set("TaskTimer",taskTimer);
+	 * Performs the setTaskTimer operation
+	 * 
+	 * @param taskTimer - the taskTimer
+	 */
+	public void setTaskTimer(String taskTimer) {
+		set("TaskTimer", taskTimer);
 	}
 
 	/**
-	* Performs the taskExecute operation
-	* */
+	 * Performs the taskExecute operation
+	 */
 	public void taskExecute() {
 		taskExecuted = true;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		executor.execute(new Runnable() {
 
 			/*
-			* Performs the run operation
-			* */
+			 * Performs the run operation
+			 */
 			@Override
 			public void run() {
 
@@ -1232,138 +1348,144 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 		});
 	}
 
-    /**
-    * Performs the startSchedule operation
-    * */
-    public synchronized void startSchedule() {
-        if (scheduleExecutor == null) {
-            scheduleExecutor = Executors.newSingleThreadScheduledExecutor();
-            scheduleNextMinute();
-        }
-    }
-
-    /**
-    * Performs the scheduleNextMinute operation
-    * */
-    private void scheduleNextMinute() {
-        long delay = getDelayToNextMinute();
-        scheduleExecutor.schedule(new Runnable() {
-            /*
-            * Performs the run operation
-            * */
-            @Override
-            public void run() {
-                try {
-                    executeTasks();
-                } finally {
-                    scheduleNextMinute();
-                }
-            }
-        }, delay, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-    * Performs the executeTasks operation
-    * */
-    private void executeTasks() {
-        try{
-            List<String> nameList = new ArrayList<String>(scheduleMap.keySet());
-            for (String name : nameList) {
-                Thread.currentThread().setName("executeTasks-" + name);
-                Map<String, Object> taskMap = scheduleMap.get(name);
-                String cronRules = (String) taskMap.get("cronRules");
-                Runnable runnable = (Runnable) taskMap.get("runnable");
-                Clock clock = new Clock();
-                Date date = clock.getDate();
-                String currentMinsStr = new SimpleDateFormat("mm").format(date).toUpperCase();
-                String currentTimeStr = new SimpleDateFormat("HH:mm").format(date).toUpperCase();
-                String currentDayTimeStr = new SimpleDateFormat("E HH:mm").format(date).toUpperCase();
-                List<String> cronRulesList = Arrays.asList(cronRules.trim().toUpperCase().split(",|;"));
-                int currentMins = Integer.parseInt(currentMinsStr);
-                boolean haveStar = cronRules.indexOf("*") >= 0;
-                boolean matchedStar = false;
-                if(haveStar && cronRulesList.size() == 1){
-                    String minStr = cronRules.replaceFirst("^\\*","");
-                    if(CommonTools.isBlank(minStr)){
-                        minStr = "1";
-                    }
-                    int min = Integer.parseInt(minStr);
-                    matchedStar = (currentMins <= 0 || currentMins % min <= 0);
-                }
-                boolean matched = cronRulesList.contains(currentTimeStr)
-                               || cronRulesList.contains(currentDayTimeStr)
-                               || cronRulesList.contains(currentMinsStr)
-                               || matchedStar;
-                if (matched) {
-                    try {
-                        if (runnable != null) {
-                            Executors.newSingleThreadExecutor().execute(runnable);
-                        }
-                    } catch (Exception e) {
-                        log.error(e.getMessage(), e);
-                    }
-                }
-            }
-        }catch(Exception e){
-            log.error(e.getMessage(), e);
-        }
-    }
-
 	/**
-	* Performs the addSchedule operation
-	* @param name - the name
-	* @param cronRules - the cronRules
-	* @param runnable - the runnable
-	* */
-	public void addSchedule(String name,String cronRules,Runnable runnable) {
-	    clearSchedule(name);
-	    final Map<String,Object> map = new HashMap<String,Object>();
-	    map.put("cronRules",cronRules);
-	    map.put("runnable",runnable);
-	    scheduleMap.put(name,map);
+	 * Performs the startSchedule operation
+	 */
+	public synchronized void startSchedule() {
+		if (scheduleExecutor == null) {
+			scheduleExecutor = Executors.newSingleThreadScheduledExecutor();
+			scheduleNextMinute();
+		}
 	}
 
 	/**
-	* Performs the clearSchedule operation
-	* @param name - the name
-	* */
+	 * Performs the scheduleNextMinute operation
+	 */
+	private void scheduleNextMinute() {
+		long delay = getDelayToNextMinute();
+		scheduleExecutor.schedule(new Runnable() {
+			/*
+			 * Performs the run operation
+			 */
+			@Override
+			public void run() {
+				try {
+					executeTasks();
+				} finally {
+					scheduleNextMinute();
+				}
+			}
+		}, delay, TimeUnit.MILLISECONDS);
+	}
+
+	/**
+	 * Performs the executeTasks operation
+	 */
+	private void executeTasks() {
+		try {
+			List<String> nameList = new ArrayList<String>(scheduleMap.keySet());
+			for (String name : nameList) {
+				Thread.currentThread().setName("executeTasks-" + name);
+				Map<String, Object> taskMap = scheduleMap.get(name);
+				String cronRules = (String) taskMap.get("cronRules");
+				Runnable runnable = (Runnable) taskMap.get("runnable");
+				Clock clock = new Clock();
+				Date date = clock.getDate();
+				String currentMinsStr = new SimpleDateFormat("mm").format(date).toUpperCase();
+				String currentTimeStr = new SimpleDateFormat("HH:mm").format(date).toUpperCase();
+				String currentDayTimeStr = new SimpleDateFormat("E HH:mm").format(date).toUpperCase();
+				List<String> cronRulesList = Arrays.asList(cronRules.trim().toUpperCase().split(",|;"));
+				int currentMins = Integer.parseInt(currentMinsStr);
+				boolean haveStar = cronRules.indexOf("*") >= 0;
+				boolean matchedStar = false;
+				if (haveStar && cronRulesList.size() == 1) {
+					String minStr = cronRules.replaceFirst("^\\*", "");
+					if (CommonTools.isBlank(minStr)) {
+						minStr = "1";
+					}
+					int min = Integer.parseInt(minStr);
+					matchedStar = (currentMins <= 0 || currentMins % min <= 0);
+				}
+				boolean matched = cronRulesList.contains(currentTimeStr)
+						|| cronRulesList.contains(currentDayTimeStr)
+						|| cronRulesList.contains(currentMinsStr)
+						|| matchedStar;
+				if (matched) {
+					try {
+						if (runnable != null) {
+							Executors.newSingleThreadExecutor().execute(runnable);
+						}
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Performs the addSchedule operation
+	 * 
+	 * @param name      - the name
+	 * @param cronRules - the cronRules
+	 * @param runnable  - the runnable
+	 */
+	public void addSchedule(String name, String cronRules, Runnable runnable) {
+		clearSchedule(name);
+		final Map<String, Object> map = new HashMap<String, Object>();
+		map.put("cronRules", cronRules);
+		map.put("runnable", runnable);
+		scheduleMap.put(name, map);
+	}
+
+	/**
+	 * Performs the clearSchedule operation
+	 * 
+	 * @param name - the name
+	 */
 	public void clearSchedule(String name) {
-	    scheduleMap.remove(name);
+		scheduleMap.remove(name);
 	}
 
 	/**
-	* Performs the clearAllSchedule operation
-	* @param name - the name
-	* */
+	 * Performs the clearAllSchedule operation
+	 * 
+	 * @param name - the name
+	 */
 	public void clearAllSchedule(String name) {
-	    scheduleMap.clear();
+		scheduleMap.clear();
 	}
 
 	/**
-	* Returns a copy of the scheduled-task registry (name -> task config).
-	* @return the schedule map
-	* */
-	public Map<String,Map<String,Object>> getScheduleMap() {
-	    return new HashMap<String, Map<String,Object>>(scheduleMap);
+	 * Returns a copy of the scheduled-task registry (name -> task config).
+	 * 
+	 * @return the schedule map
+	 */
+	public Map<String, Map<String, Object>> getScheduleMap() {
+		return new HashMap<String, Map<String, Object>>(scheduleMap);
 	}
 
-    /**
-    * Performs the getDelayToNextMinute operation
-    * @return the getDelayToNextMinute result
-    * */
-    private long getDelayToNextMinute() {
-        long now = System.currentTimeMillis();
-        long nextMinute = ((now / 60000) + 1) * 60000;
-        long delay = nextMinute - now;
-        return delay > 0 ? delay : 60000;
-    }
+	/**
+	 * Performs the getDelayToNextMinute operation
+	 * 
+	 * @return the getDelayToNextMinute result
+	 */
+	private long getDelayToNextMinute() {
+		long now = System.currentTimeMillis();
+		long nextMinute = ((now / 60000) + 1) * 60000;
+		long delay = nextMinute - now;
+		return delay > 0 ? delay : 60000;
+	}
 
 	/* For base console */
 	/**
-	* Performs the version operation
-	* @param params - the params
-	* @return the version result
-	* */
+	 * Performs the version operation
+	 * 
+	 * @param params - the params
+	 * @return the version result
+	 */
 	public Object version(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.version()'";
@@ -1377,10 +1499,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the help operation
-	* @param params - the params
-	* @return the help result
-	* */
+	 * Performs the help operation
+	 * 
+	 * @param params - the params
+	 * @return the help result
+	 */
 	public Object help(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.help()'";
@@ -1394,10 +1517,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the exit operation
-	* @param params - the params
-	* @return the exit result
-	* */
+	 * Performs the exit operation
+	 * 
+	 * @param params - the params
+	 * @return the exit result
+	 */
 	public Object exit(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.exit()'";
@@ -1411,10 +1535,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the reset operation
-	* @param params - the params
-	* @return the reset result
-	* */
+	 * Performs the reset operation
+	 * 
+	 * @param params - the params
+	 * @return the reset result
+	 */
 	public Object reset(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.reset()'";
@@ -1424,14 +1549,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the setCacheApi operation
-	* @param params - the params
-	* @return the setCacheApi result
-	* */
+	 * Performs the setCacheApi operation
+	 * 
+	 * @param params - the params
+	 * @return the setCacheApi result
+	 */
 	public Object setCacheApi(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() > 1) {
 			return "ERROR: Invalid params, eg.'Console.setCacheApi(apiClass)'";
 		}
@@ -1446,14 +1572,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the when operation
-	* @param params - the params
-	* @return the when result
-	* */
+	 * Performs the when operation
+	 * 
+	 * @param params - the params
+	 * @return the when result
+	 */
 	public Object when(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0 || params.size() > 3) {
 			return "ERROR: Invalid params, eg.'Console.when(variableName,compareValue,batchFile)'";
 		}
@@ -1478,14 +1605,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the into operation
-	* @param params - the params
-	* @return the into result
-	* */
+	 * Performs the into operation
+	 * 
+	 * @param params - the params
+	 * @return the into result
+	 */
 	public Object into(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() > 1) {
 			return "ERROR: Invalid params, eg.'Console.into(variableName)'";
 		}
@@ -1495,42 +1623,44 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the batch operation
-	* @param params - the params
-	* @return the batch result
-	* */
+	 * Performs the batch operation
+	 * 
+	 * @param params - the params
+	 * @return the batch result
+	 */
 	public Object batch(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0 || params.size() > 1) {
 			return "ERROR: Invalid params, eg.'Console.batch(path)'";
 		}
 		if (params.size() == 1) {
-		    try{
-    			String batFile = formatCommand(params.get(0));
-    			if (CommonTools.isBlank(batFile)) {
-    				return "ERROR: Invalid params, eg.'Console.batch(path)'";
-    			}
-    			Object msg = executeBatch(batFile);
-    			return msg;
-		    }catch(Exception e){
-    			log.error(e.getMessage(), e);
-    			return ScriptConsoleBase.error(e);
-		    }
+			try {
+				String batFile = formatCommand(params.get(0));
+				if (CommonTools.isBlank(batFile)) {
+					return "ERROR: Invalid params, eg.'Console.batch(path)'";
+				}
+				Object msg = executeBatch(batFile);
+				return msg;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				return ScriptConsoleBase.error(e);
+			}
 		}
 		return "Successfully";
 	}
 
 	/**
-	* Performs the sleep operation
-	* @param params - the params
-	* @return the sleep result
-	* */
+	 * Performs the sleep operation
+	 * 
+	 * @param params - the params
+	 * @return the sleep result
+	 */
 	public Object sleep(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0 || params.size() > 1) {
 			return "ERROR: Invalid params, eg.'Console.sleep(10s)'";
 		}
@@ -1548,14 +1678,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the hostname operation
-	* @param params - the params
-	* @return the hostname result
-	* */
+	 * Performs the hostname operation
+	 * 
+	 * @param params - the params
+	 * @return the hostname result
+	 */
 	public Object hostname(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.hostname()'";
 		}
@@ -1568,14 +1699,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the startTask operation
-	* @param params - the params
-	* @return the startTask result
-	* */
+	 * Performs the startTask operation
+	 * 
+	 * @param params - the params
+	 * @return the startTask result
+	 */
 	public Object startTask(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0 || params.size() > 2) {
 			return "ERROR: Invalid params, eg.'Console.startTask(10s,path) or startTask(path)'";
 		}
@@ -1593,14 +1725,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the stopTask operation
-	* @param params - the params
-	* @return the stopTask result
-	* */
+	 * Performs the stopTask operation
+	 * 
+	 * @param params - the params
+	 * @return the stopTask result
+	 */
 	public Object stopTask(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0) {
 			stopTask();
 			return "Successfully";
@@ -1610,14 +1743,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the set operation
-	* @param params - the params
-	* @return the set result
-	* */
+	 * Performs the set operation
+	 * 
+	 * @param params - the params
+	 * @return the set result
+	 */
 	public Object set(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0 || params.size() > 2) {
 			return "ERROR: Invalid params, eg.'Console.set(variableName,value)'";
 		}
@@ -1630,14 +1764,15 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the show operation
-	* @param params - the params
-	* @return the show result
-	* */
+	 * Performs the show operation
+	 * 
+	 * @param params - the params
+	 * @return the show result
+	 */
 	public Object show(List<String> params) {
-	    if(isUseScriptEnv()){
-	        return "ERROR: JDBC or CMD environment is supported.";
-	    }
+		if (isUseScriptEnv()) {
+			return "ERROR: JDBC or CMD environment is supported.";
+		}
 		if (params.size() == 0 || params.size() > 1) {
 			return "ERROR: Invalid params, eg.'Console.show(variableName)'";
 		}
@@ -1649,10 +1784,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	}
 
 	/**
-	* Performs the showAll operation
-	* @param params - the params
-	* @return the showAll result
-	* */
+	 * Performs the showAll operation
+	 * 
+	 * @param params - the params
+	 * @return the showAll result
+	 */
 	public Object showAll(List<String> params) {
 		if (params.size() > 0) {
 			return "ERROR: Invalid params, eg.'Console.showAll()'";

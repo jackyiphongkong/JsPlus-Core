@@ -347,6 +347,25 @@ public class ConfigProperties extends Properties {
 	}
 
 	/**
+	* Stores the value by reference instead of toString(),
+	* for cross-thread / cross-context hand-off of live Java objects
+	* (e.g. an AtomicBoolean stop flag passed into ScriptConsolePool.runAsync).
+	* Memory-only: the entry is not a String, so store() / save() must not be
+	* called on an instance that holds objects.
+	* @param key - the key
+	* @param value - the value, stored as-is (null removes the key)
+	* @return the putObjectAndReturnSelf result
+	* */
+	public ConfigProperties putObjectAndReturnSelf(String key, Object value) {
+		if (value == null) {
+			remove(key);
+		} else {
+			put(key, value);
+		}
+		return this;
+	}
+
+	/**
 	* Performs the removeAndReturnSelf operation
 	* @param key - the key
 	* @return the removeAndReturnSelf result
@@ -519,6 +538,15 @@ public class ConfigProperties extends Properties {
 			return defaultValue;
 		}
 		return o.trim();
+	}
+
+	/**
+	* Performs the getObject operation
+	* @param key - the key
+	* @return the getObject result (as-is, never String.valueOf'd)
+	* */
+	public Object getObject(String key) {
+		return get(key);
 	}
 
 	/**

@@ -15,6 +15,7 @@ var File = Java.type("java.io.File");
 var Files = Java.type("java.nio.file.Files");
 var Paths = Java.type("java.nio.file.Paths");
 var ArrayList = Java.type("java.util.ArrayList");
+var AtomicBoolean = Java.type("java.util.concurrent.atomic.AtomicBoolean");
 var JsString = Java.type("com.killcoding.jsplus.JsString");
 var ConfigProperties = Java.type("com.killcoding.tool.ConfigProperties");
 
@@ -309,6 +310,33 @@ try {
         objective: "load(File) works end-to-end",
         objectiveZh: "load(File) 可端到端讀檔",
         command: "cp17.load(new File(path)); cp17.getString('filekey')"
+    });
+
+    // C18: putObjectAndReturnSelf()/getObject() keep the live Java object,
+    // while putAndReturnSelf() still stringifies it (the documented contrast).
+    var cp18 = new ConfigProperties();
+    var flag18 = new AtomicBoolean(false);
+    cp18.putObjectAndReturnSelf("flag", flag18);
+    var back18 = cp18.getObject("flag");
+    var before18 = back18.get();
+    flag18.set(true);
+    var live18 = back18.get();
+    cp18.putAndReturnSelf("flagStr", flag18);
+    var str18 = cp18.getObject("flagStr");
+    // putAndReturnSelf() stores toString(); an AtomicBoolean has .get(), a String does not
+    var isStr18 = ("" + str18) === "true" && typeof str18.get !== "function";
+    cp18.putObjectAndReturnSelf("nilKey", null);
+    var noNil18 = cp18.containsKey("nilKey") === false;
+    Logger.systemMark("TestConfigProperties.js", "C18");
+    check({
+        caseId: "C18",
+        name: "putObjectAndReturnSelf()/getObject() preserve a live Java object by reference",
+        ok: before18 === false && live18 === true && isStr18 && noNil18,
+        detail: "before=" + before18 + " afterSet=true? " + live18
+            + " putAndReturnSelf='" + str18 + "' nullRemovesKey=" + noNil18,
+        objective: "getObject returns the same AtomicBoolean instance, its later mutation is visible, putAndReturnSelf still stringifies, null removes the key",
+        objectiveZh: "getObject 取回同一個 AtomicBoolean 實例、後續變更可見；putAndReturnSelf 仍字串化；null 會刪除鍵",
+        command: "cp.putObjectAndReturnSelf('flag', flag); cp.getObject('flag') === flag"
     });
 
 } catch (e) {
