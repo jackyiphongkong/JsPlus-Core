@@ -54,6 +54,8 @@ import java.util.Date;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.FileAlreadyExistsException;
 import com.killcoding.cache.CacheArray;
 import com.killcoding.cache.CacheArrayFilter;
 import com.killcoding.tool.CodeEscape;
@@ -1290,6 +1292,7 @@ public class DriverExecutor {
 			final long maxFileSize = configProperties.getFileSize("SqlLogMaxFileSize", 1024 * 1024 * 10L);
 			final int archiveDays = configProperties.getInteger("SqlLogArchiveDays", 31);
 			final int logParamMaxLength = configProperties.getInteger("SqlLogParamMaxLength", 20);
+			final boolean includePid = configProperties.getBoolean("SqlLogIncludePid", false);
 
 			final String logFolderKey = Paths.get(logFolderPath).normalize().toAbsolutePath().toString();
 			CacheArray sqlLogCacheArray = sqlLogCacheArrayMap.get(logFolderKey);
@@ -1312,7 +1315,8 @@ public class DriverExecutor {
 						try {
 							String msg = sbf.toString();
 							String dateStr = df.format(new Timestamp(System.currentTimeMillis()));
-							File sqlLogFile = new File(String.format("%s/%s.csv", logFolderPath, dateStr));
+							String sqlLogFilePrefix = includePid ? String.format("%s.%s", dateStr, currentPid()) : dateStr;
+							File sqlLogFile = new File(logFolderPath, String.format("%s.csv", sqlLogFilePrefix));
 							File sqlLogFolder = new File(sqlLogFile.getParent());
 
 							if (sqlLogFolder.exists()) {
@@ -1320,7 +1324,7 @@ public class DriverExecutor {
 									throw new IOException(String.format("Can not write to log folder '%s'",
 											sqlLogFolder.getAbsolutePath()));
 							} else {
-								sqlLogFolder.mkdirs();
+								Files.createDirectories(sqlLogFolder.toPath());
 							}
 
 							if (sqlLogFile.exists()) {
@@ -1329,21 +1333,18 @@ public class DriverExecutor {
 											sqlLogFile.getAbsolutePath()));
 							}
 
-							int suffixIndex = sqlLogFile.getName().lastIndexOf(".");
-							String logFileNamePrefix = sqlLogFile.getName().substring(0, suffixIndex);
-							long logSize = FileTools.size(sqlLogFile);
 							if (!sqlLogFile.exists()) {
 								FileTools.write(sqlLogFile, header, false);
 							}
+							long logSize = FileTools.size(sqlLogFile);
 							if (logSize < maxFileSize) {
 								FileTools.write(sqlLogFile, msg, true);
 							} else {
-								int logIndex = getLogFileIndex(configProperties, sqlLogFolder, logFileNamePrefix,
-										"csv");
+								int logIndex = getLogFileIndex(configProperties, sqlLogFolder, sqlLogFilePrefix, "csv");
 								if (logIndex == 0) {
 									FileTools.write(sqlLogFile, String.format("%s%s", header, msg), false);
 								} else {
-									backupLog(sqlLogFolder, sqlLogFile, logFileNamePrefix, logIndex, header, msg);
+									backupLog(sqlLogFolder, sqlLogFile, sqlLogFilePrefix, logIndex, header, msg);
 								}
 							}
 							archiveLog(archiveDays, sqlLogFolder);
@@ -1401,25 +1402,60 @@ public class DriverExecutor {
 	}
 
 	/**
-	* Backup log file
+	* Backup log file: rotates the active file to the first free backup index.
+	* <p>
+	* The SqlLog folder is shared by every process writing into it, so rotation
+	* is a cross-process race: another process may move the active file between
+	* {@code getLogFileIndex} and {@code Files.move}. "Source already gone"
+	* therefore means another process won the rotation - not an error - and this
+	* batch is appended to the active file that process created.
+	*
 	* @param logFolder - the log folder
 	* @param logFile - the active log file being rotated
 	* @param logFileNamePrefix - file-name prefix used for the backup
 	* @param logIndex - rotation index (older backups are deleted beyond the max)
-	* @param header - header text written into the new active file
-	* @param msg - message text written into the new active file
+	* @param header - header text written into a fresh active file
+	* @param msg - message text written into the active file
 	* */
-	private synchronized static void backupLog(File logFolder, File logFile, String logFileNamePrefix, int logIndex, String header,
-			String msg) {
-		try{
-    		String backupLogFileName = String.format("%s/%s.%s.csv", logFolder.getAbsolutePath(), logFileNamePrefix,
-    				logIndex);
-    		Path source = Paths.get(logFile.getAbsolutePath());
-    		Path target = Paths.get(backupLogFileName);
-    		Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
-    		FileTools.write(logFile, String.format("%s%s", header, msg), false);
-		}catch(Exception e){
-		    LoggerFactory.getLogger(DriverExecutor.class).error(e.getMessage(),e);
+	private synchronized static void backupLog(File logFolder, File logFile, String logFileNamePrefix, int logIndex,
+			String header, String msg) {
+		Path source = Paths.get(logFile.getAbsolutePath());
+		Path target = Paths.get(
+				String.format("%s/%s.%s.csv", logFolder.getAbsolutePath(), logFileNamePrefix, logIndex));
+		try {
+			Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+		} catch (NoSuchFileException e) {
+			LoggerFactory.getLogger(DriverExecutor.class).debug(
+					"Sql log '{}' was already rotated by another process.", logFile.getAbsolutePath());
+		} catch (FileAlreadyExistsException e) {
+			LoggerFactory.getLogger(DriverExecutor.class).debug(
+					"Sql log backup '%s' was already written by another process.", target);
+		} catch (Exception e) {
+			LoggerFactory.getLogger(DriverExecutor.class).warn(
+					String.format("Failed to rotate sql log '%s': %s", logFile.getAbsolutePath(), e.getMessage()), e);
+		}
+		try {
+			if (logFile.exists()) {
+				FileTools.write(logFile, msg, true);
+			} else {
+				FileTools.write(logFile, String.format("%s%s", header, msg), false);
+			}
+		} catch (Exception e) {
+			LoggerFactory.getLogger(DriverExecutor.class).warn(
+					String.format("Failed to write sql log '%s': %s", logFile.getAbsolutePath(), e.getMessage()), e);
+		}
+	}
+
+
+	/**
+	* Current process id, used for per-process sql log file names.
+	* @return the process id as text
+	* */
+	private static String currentPid() {
+		try {
+			return Long.toString(ProcessHandle.current().pid());
+		} catch (Exception e) {
+			return "0";
 		}
 	}
 

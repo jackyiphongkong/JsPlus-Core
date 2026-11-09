@@ -3799,3 +3799,8 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/tool/ConfigProperties.java (M)
 - build: automatic version bump
 
+
+## 6.1.293 (2026.11.09 14:19:33)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- build: automatic version bump
+
