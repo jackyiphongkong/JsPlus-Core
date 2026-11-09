@@ -23,42 +23,44 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.jsplus;
 
-import com.killcoding.tool.ConfigProperties;
-import java.util.Arrays;
-import java.util.List;
-import com.killcoding.tool.CommonTools;
-import java.text.SimpleDateFormat;
 import java.io.File;
-import java.util.Map;
-import java.util.ArrayList;
-import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import com.killcoding.cache.CacheArray;
-import com.killcoding.cache.CacheArrayFilter;
 import java.io.FileNotFoundException;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ScheduledExecutorService;
-import com.killcoding.datasource.Clock;
 import java.io.FileOutputStream;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+
+import com.killcoding.cache.CacheArray;
+import com.killcoding.cache.CacheArrayFilter;
+import com.killcoding.datasource.Clock;
+import com.killcoding.tool.CommonTools;
+import com.killcoding.tool.ConfigProperties;
 
 /**
  * Script console: executes .js / .txt script files and inline scripts through
@@ -1229,11 +1231,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 	protected void task(String task, Long taskTimer) throws Exception {
 		String commandLines = null;
 		if (!CommonTools.isBlank(task)) {
-			long timeout = new java.util.Date().getTime() - preExecuteTime;
+			long timeout = new Clock().getTime() - preExecuteTime;
 			if (timeout >= taskTimer) {
-				preExecuteTime = new java.util.Date().getTime();
+				preExecuteTime = new Clock().getTime();
 				task = task.trim();
-				// check task content script "(...js...)"
+				// check task content script "(function(){...js...}())"
 				if (task.indexOf("(") == 0) {
 					commandLines = task;
 				} else {
@@ -1249,22 +1251,11 @@ public class ScriptConsole extends ScriptConsoleJdbcBase implements ConsoleImpl 
 					}
 					commandLines = decryptScript(taskFile);
 				}
-				String commandEnd = consoleVariables.getString("CommandEnd", DEFAULT_CommandEnd);
-				if (!CommonTools.isBlank(commandLines) && !useScriptEnv) {
-					Boolean showTaskLog = consoleVariables.getBoolean("ShowTaskLog", DEFAULT_ShowTaskLog);
-					String[] lines = commandLines.split("\\" + commandEnd + "[^\\S]*[\r]*\n{1,}");
-					int lineSize = lines.length;
-					for (int i = 0; i < lineSize; i++) {
-						String command = lines[i].trim();
-						if (showTaskLog) {
-							System.out.println(String.format("%s) %s", i, command));
-						}
-
-						if (command.indexOf("-") == 0)
-							continue;
-
-						executeViaJdbc(showTaskLog, command);
-					}
+				if (CommonTools.isBlank(commandLines)) {
+					log.info("The task content is empty.");
+				}				
+				if (!CommonTools.isBlank(commandLines) && useJdbcEnv) {
+					executeViaJdbc(commandLines);
 				}
 				if (!CommonTools.isBlank(commandLines) && useScriptEnv) {
 					executeViaScript(commandLines);

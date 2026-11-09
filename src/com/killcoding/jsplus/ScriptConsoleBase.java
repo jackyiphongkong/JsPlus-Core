@@ -178,7 +178,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
 	* @return the getJsPlusPath result
 	* */
 	public static String getJsPlusPath(){
-	    return System.getProperty(JS_PLUS_PATH_KEY);
+	    return CommonTools.normalizePath(System.getProperty(JS_PLUS_PATH_KEY));
 	}
 
 	/**
