@@ -18,6 +18,11 @@
 //            TestAll.bat/.sh therefore run TestDatasource.bat/.sh LAST,
 //            right before the StopH2/StopAll sweep, where the restart
 //            instability is contained to this suite only.
+//            TestSqlLog.js runs as the last listed suite: it drives
+//            DriverExecutor.writeSqlLog through real DriverConnections
+//            (its own temp SqlLogFolder per case) and restores
+//            SqlLogEnable=false before finishing, so nothing after it can
+//            observe the temporary log configuration.
 //            This entry point then prints an aggregate pass/fail summary and
 //            writes TestAll-Report.md / TestAll-Report.html / TestAll-CI-Summary.md.
 // NOTE     : Each suite calls beginTest() and reports its own counters, so
@@ -56,7 +61,7 @@ try {
 
 print("=== JsPlus-Core TestAll (unified entry) ===");
 print("JS_PLUS_PATH: " + System.getProperty("JS_PLUS_PATH"));
-print("Suites       : TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestLogger -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestScriptConsolePool -> TestJsString -> TestDBSync -> TestTextScript -> TestSimpleJsCompressor -> TestSimpleCssCompressor -> TestSimpleHtmlScanner -> TestWebClient");
+print("Suites       : TestCrud -> TestRemoteFile -> TestFind -> TestDiskFile -> TestClock -> TestIdentityCard -> TestXmlParser -> TestCommonTools -> TestDataObject -> TestResultMap -> TestConfigProperties -> TestLogger -> TestCipherTools -> TestEscapeTools -> TestFileTools -> TestCache -> TestCacheArray -> TestEvalJava -> TestScriptConsolePool -> TestJsString -> TestDBSync -> TestTextScript -> TestSimpleJsCompressor -> TestSimpleCssCompressor -> TestSimpleHtmlScanner -> TestWebClient -> TestSqlLog");
 print("               (TestDatasource runs LAST via TestAll.bat/.sh -> TestDatasource.bat/.sh: its H2 stop/restart case must not precede H2-dependent suites)");
 
 var suites = [
@@ -86,7 +91,11 @@ var suites = [
     { file: "TestSimpleJsCompressor.js", title: "TestSimpleJsCompressor" },
     { file: "TestSimpleCssCompressor.js", title: "TestSimpleCssCompressor" },
     { file: "TestSimpleHtmlScanner.js",   title: "TestSimpleHtmlScanner" },
-    { file: "TestWebClient.js",            title: "TestWebClient" }
+    { file: "TestWebClient.js",            title: "TestWebClient" },
+    // TestSqlLog runs last: it drives DriverExecutor.writeSqlLog through real
+    // DriverConnections and restores SqlLogEnable=false when done, so no
+    // suite after it can see the temporary log configuration.
+    { file: "TestSqlLog.js",              title: "TestSqlLog" }
 ];
 
 var totalPass = 0;

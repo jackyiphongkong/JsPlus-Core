@@ -162,7 +162,7 @@ Close the connection:
 
 For unit tests, start the corresponding suite's `bat` / `sh`, e.g. `test\TestTextScriptStress.bat` (Linux/macOS: `test\TestTextScriptStress.sh`).
 
-The test suites cover examples of every **Main features** item, e.g. `TestDatasource` (efficient datasource), `TestCache` / `TestCacheArray` (cache layer), `TestRemoteFile` (remote files), `TestDBSync` (database async sync), `TestTextScript` (template engine), `TestClock` (time-sync getter), `TestIdentityCard` (number generator), `TestCommonTools` etc. (daily toolkit).
+The test suites cover examples of every **Main features** item, e.g. `TestDatasource` (efficient datasource), `TestCache` / `TestCacheArray` (cache layer), `TestRemoteFile` (remote files), `TestDBSync` (database async sync), `TestTextScript` (template engine), `TestClock` (time-sync getter), `TestIdentityCard` (number generator), `TestSqlLog` (SQL log writing / rotation), `TestCommonTools` etc. (daily toolkit).
 
 ## AI-Agent collaborative development
 

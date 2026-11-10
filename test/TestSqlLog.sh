@@ -1,0 +1,155 @@
+#!/bin/bash
+set -e
+
+# ------------------------------------------------------------------
+# JsPlus-Core sql log writer test runner - TestSqlLog.sh
+# Flow:
+#   1) (Re)initialize the test database: apply dbscript/fallback.sql
+#      (DROP all) then dbscript/change.sql (CREATE all) to the embedded
+#      H2 file database <PROJECT_ROOT>/Database/testdb, then start the
+#      H2 TCP server on :3306 (same init + server steps as TestAll.sh,
+#      skipped when :3306 is already listening).
+#   2) Build the runtime classpath from every JAR under
+#      <PROJECT_ROOT>/LibHome (including jsplus-core-<version>.jar from
+#      'ant build').
+#   3) Run TestSqlLog.js in a standalone JsPlus console in THIS JVM
+#      with -DAPP_DATASOURCE=<PROJECT_ROOT>/JsPlus/config/TestDatasource.properties:
+#      the suite drives DriverExecutor.writeSqlLog through real
+#      DriverConnections (enable switch, per-pid file names, size rotation,
+#      cross-process rotation tolerance, directory creation, concurrent
+#      writers).
+#   4) Exit with the JVM's exit code (0 = all checks passed, 1 = failure),
+#      after stopping the H2 server started for this run.
+# Override via env (same convention as JsPlus-Tomcat / TestAll.sh):
+#      JsPlus_JavaDir_JsPlus-Core   - JDK directory under Java/ (default: default)
+#      JsPlus_JvmParams_JsPlus-Core - JVM params (default: -Xms256m -Xmx1024m -Xss256k)
+#      SCRIPT_ENGINE (arg $1)       - default: graalvm.js
+# ------------------------------------------------------------------
+
+if [ -z "$1" ]; then
+    SCRIPT_ENGINE=graalvm.js
+else
+    SCRIPT_ENGINE="$1"
+fi
+
+BIN_PATH="$(cd "$(dirname "$0")" && pwd)/"
+JS_PLUS_PATH_ORIGIN="${BIN_PATH}../JsPlus/"
+export JS_PLUS_PATH="${JS_PLUS_PATH_ORIGIN//\\//}"
+LIB_HOME="${JS_PLUS_PATH}../LibHome/"
+
+# CI checkouts often lose the executable bit on helper scripts - make every
+# helper executable up front (a no-op when the bit is already set).
+chmod +x "${JS_PLUS_PATH}bin/"*.sh "${BIN_PATH}"*.sh 2>/dev/null || true
+
+# ------------------------------------------------------------------
+# Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
+# build/test script runs StopAll up front). In the TestAll flow
+# (TESTALL_RUN=1) this is SKIPPED on purpose - TestAll.sh started the
+# shared H2 server and this runner reuses it.
+# ------------------------------------------------------------------
+if [ -z "${TESTALL_RUN:-}" ]; then
+    "${JS_PLUS_PATH}bin/StopAll.sh" || true
+fi
+
+DEPEND_LIBS="$(find "${LIB_HOME}" -type f -name '*.jar' | tr '\n' ':')"
+DEPEND_LIBS="${DEPEND_LIBS%:}"
+if [ -z "$DEPEND_LIBS" ]; then
+    echo "Error: No JARs found under LibHome. Run 'ant build' first (produces LibHome/jsplus/default/jsplus-core-<version>.jar)."
+    exit 1
+fi
+CORE_JAR="$(ls "${LIB_HOME}jsplus/default/"/jsplus-core-*.jar 2>/dev/null | head -n 1 || true)"
+if [ -z "$CORE_JAR" ]; then
+    echo "WARN: LibHome/jsplus/default/jsplus-core-*.jar not found. Run 'ant build' first."
+fi
+
+AppName="$(basename "$(cd "${JS_PLUS_PATH}/.." && pwd)")"
+JavaDirEnvName="JsPlus_JavaDir_${AppName}"
+JAVA_DIR="$(printenv "$JavaDirEnvName" || true)"
+JAVA_DIR="${JAVA_DIR:-default}"
+JAVA_BIN="${JS_PLUS_PATH}../Java/${JAVA_DIR}/bin/java"
+
+if [ ! -f "$JAVA_BIN" ]; then
+    echo "WARN: Bundled Java not found at $JAVA_BIN, falling back to system Java..."
+    if [ -n "$JAVA_HOME" ]; then
+        JAVA_BIN="$JAVA_HOME/bin/java"
+    else
+        JAVA_BIN="java"
+    fi
+fi
+
+JvmParamsName="JsPlus_JvmParams_${AppName}"
+JvmParams="$(printenv "$JvmParamsName" || true)"
+
+if [ -z "$JvmParams" ]; then
+    JvmParams="-Xms256m -Xmx1024m -Xss256k"
+    echo "WARN: Missing ${JvmParamsName} then using default params"
+else
+    echo "Using System Env JVM Params"
+fi
+
+echo "Using \"$JvmParams\""
+
+# ------------------------------------------------------------------
+# Step 1: H2 server on :3306 via BG_StartH2 (skipped when already listening).
+# The TCP probe beats a bare netstat match: a dying socket can still
+# report LISTEN for a moment (CI runners recycle processes slowly), and
+# "reusing" it would hand the suite a refused connection.
+# ------------------------------------------------------------------
+if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1 \
+    && (echo > /dev/tcp/127.0.0.1/3306) 2>/dev/null; then
+    echo "[TestSqlLog] H2 already listening on :3306."
+else
+    # A leftover socket from StopAll (standalone runs) may still be
+    # closing; wait until :3306 is fully released before starting ours.
+    for _ in $(seq 1 15); do
+        if ! netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+    echo "[TestSqlLog] Initializing database (fallback.sql -> change.sql)..."
+    mkdir -p "${JS_PLUS_PATH}../Database"
+    "${JS_PLUS_PATH}bin/StartH2Console.sh" init testdb
+    echo "[TestSqlLog] Starting H2 server (port 3306)..."
+    "${JS_PLUS_PATH}bin/BG_StartH2.sh" "$SCRIPT_ENGINE"
+fi
+
+echo "[TestSqlLog] Waiting for H2 :3306..."
+H2_READY=""
+for _ in $(seq 1 45); do
+    # netstat alone can match a closing socket; require an actual TCP
+    # connect so the suite never starts against a half-dead listener.
+    if netstat -an 2>/dev/null | grep -E ":3306\s+.*LISTEN(ING)?" >/dev/null 2>&1 \
+        && (echo > /dev/tcp/127.0.0.1/3306) 2>/dev/null; then
+        H2_READY=1
+        break
+    fi
+    sleep 2
+done
+if [ -z "$H2_READY" ]; then
+    echo "[TestSqlLog] ERROR: H2 did not start on port 3306."
+    exit 1
+fi
+echo "[TestSqlLog] H2 ready."
+
+# ------------------------------------------------------------------
+# Step 2: Run TestSqlLog.js with the dedicated datasource configuration
+# (config/TestDatasource.properties via -DAPP_DATASOURCE).
+# JSPLUS_TEST_EXIT=1 lets the suite System.exit(0) after finishing.
+# ------------------------------------------------------------------
+export JSPLUS_TEST_EXIT=1
+set +e
+"$JAVA_BIN" $JvmParams -DAPP_REMOTE_FILE="${JS_PLUS_PATH}config/RemoteFile.properties" -DAPP_CLOCK="${JS_PLUS_PATH}config/Clock.properties" -DAPP_IDENTITY_CARD="${JS_PLUS_PATH}config/IdentityCard.properties" -DAPP_DATASOURCE="${JS_PLUS_PATH}config/TestDatasource.properties" -cp "$DEPEND_LIBS" com.killcoding.jsplus.Main -ScriptEngine "$SCRIPT_ENGINE" -Env script -WriteHistory false -Task "${JS_PLUS_PATH}../test/TestSqlLog.js" < /dev/null
+RC=$?
+set -e
+echo "TestSqlLog exit code: $RC"
+
+# ------------------------------------------------------------------
+# Step 3: stop the H2 server started for this run. In the TestAll flow
+# (TESTALL_RUN=1) the H2 is TestAll's shared server and its teardown step
+# owns it, so this step is skipped.
+# ------------------------------------------------------------------
+if [ -z "${TESTALL_RUN:-}" ]; then
+    "${JS_PLUS_PATH}bin/StopH2.sh" || true
+fi
+exit "$RC"
