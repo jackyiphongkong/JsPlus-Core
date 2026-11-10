@@ -1914,18 +1914,31 @@ public final class Logger {
 	private static void log(String level, String clazzName, Map<String, Object> map) {
 		map.put("level", level);
 
-		StackTraceElement[] threadStacks = Thread.currentThread().getStackTrace();
-		for (StackTraceElement stack : threadStacks) {
-			String className = stack.getClassName();
-			if (className.equals(clazzName)) {
-				String fileName = stack.getFileName();
-				String methodName = stack.getMethodName();
-				int lineNumber = stack.getLineNumber();
-				map.put("log_file_name", fileName);
-				map.put("log_class_name", className);
-				map.put("log_method_name", methodName);
-				map.put("log_line_number", lineNumber);
-				break;
+		String messageFormat = DEFAULT_MESSAGE_FORMAT;
+		if (LoggerFactory.getConfigProperties() != null) {
+			messageFormat = LoggerFactory.getConfigProperties().getString("MessageFormat", DEFAULT_MESSAGE_FORMAT);
+		}
+
+		// Walk the call stack only when the active format actually references one of
+		// the stack-derived fields. Otherwise clazzName already is log_class_name and
+		// constructing the whole trace array on every record is pure waste.
+		boolean needStack = messageFormat.contains(":log_method_name")
+				|| messageFormat.contains(":log_file_name")
+				|| messageFormat.contains(":log_line_number");
+		if (needStack) {
+			StackTraceElement[] threadStacks = Thread.currentThread().getStackTrace();
+			for (StackTraceElement stack : threadStacks) {
+				String className = stack.getClassName();
+				if (className.equals(clazzName)) {
+					String fileName = stack.getFileName();
+					String methodName = stack.getMethodName();
+					int lineNumber = stack.getLineNumber();
+					map.put("log_file_name", fileName);
+					map.put("log_class_name", className);
+					map.put("log_method_name", methodName);
+					map.put("log_line_number", lineNumber);
+					break;
+				}
 			}
 		}
 
@@ -1988,10 +2001,6 @@ public final class Logger {
 
 		map.remove("exception");
 
-		String messageFormat = DEFAULT_MESSAGE_FORMAT;
-		if (LoggerFactory.getConfigProperties() != null) {
-			messageFormat = LoggerFactory.getConfigProperties().getString("MessageFormat", DEFAULT_MESSAGE_FORMAT);
-		}
 		String msg = LogRecord.format(messageFormat, map);
 		System.out.println(msg);
 	}

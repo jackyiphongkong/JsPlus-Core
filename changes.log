@@ -3851,3 +3851,9 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/tool/ConfigProperties.java (M)
 - build: automatic version bump
 
+
+## 6.1.303 (2026.11.10 14:48:41)
+- found diffed: com/killcoding/log/LogRecord.java (M)
+- found diffed: com/killcoding/log/Logger.java (M)
+- build: automatic version bump
+

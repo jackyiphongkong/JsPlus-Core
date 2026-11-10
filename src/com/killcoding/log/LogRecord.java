@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -214,6 +215,26 @@ public final class LogRecord {
 		return context.first(sql, params);
 	}
 
+	private final static Pattern PLACEHOLDER = Pattern.compile(":[a-z0-9_]+");
+
+	/** messageFormat -> { javaFormatString, String[] keys } */
+	private final static Map<String, Object[]> FORMAT_CACHE = new ConcurrentHashMap<String, Object[]>();
+
+	private static Object[] compileFormat(String messageFormat) {
+		Matcher matcher = PLACEHOLDER.matcher(messageFormat);
+		StringBuilder sb = new StringBuilder(messageFormat.length() + 16);
+		List<String> keys = new ArrayList<String>();
+		int last = 0;
+		while (matcher.find()) {
+			sb.append(messageFormat, last, matcher.start());
+			sb.append("%s");
+			keys.add(matcher.group().substring(1));
+			last = matcher.end();
+		}
+		sb.append(messageFormat, last, messageFormat.length());
+		return new Object[] { sb.toString(), keys.toArray(new String[keys.size()]) };
+	}
+
 	/**
 	* Performs the format operation
 	* @param messageFormat - the messageFormat
@@ -221,15 +242,17 @@ public final class LogRecord {
 	* @return the format result
 	* */
 	public static String format(String messageFormat, Map<String, Object> row) {
-		List<Object> params = new ArrayList<Object>();
-		Pattern pattern = Pattern.compile(":[a-z0-9_]+");
-		Matcher matcher = pattern.matcher(messageFormat);
-		while (matcher.find()) {
-			String key = matcher.group().replaceFirst(":", "");
-			params.add(row.get(key));
+		Object[] compiled = FORMAT_CACHE.get(messageFormat);
+		if (compiled == null) {
+			compiled = compileFormat(messageFormat);
+			FORMAT_CACHE.put(messageFormat, compiled);
 		}
-		String mf = messageFormat.replaceAll(":[a-z0-9_]+", "%s");
-		String msg = String.format(mf, params.toArray()).trim();
+		String[] keys = (String[]) compiled[1];
+		Object[] params = new Object[keys.length];
+		for (int i = 0; i < keys.length; i++) {
+			params[i] = row.get(keys[i]);
+		}
+		String msg = String.format((String) compiled[0], params).trim();
 		return msg;
 	}
 
