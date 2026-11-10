@@ -45,8 +45,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.killcoding.tool.CommonTools;
 import com.killcoding.tool.ConfigProperties;
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import com.killcoding.tool.FileTools;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,6 +64,8 @@ import java.sql.Timestamp;
 import java.sql.Clob;
 import java.io.InputStream;
 import java.sql.CallableStatement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
 * This class is execute sql base class.
@@ -91,6 +91,18 @@ public class DriverExecutor {
 	protected boolean closed = true;
 	protected Connection connection = null;
 	private static ConcurrentHashMap<String, CacheArray> sqlLogCacheArrayMap = new ConcurrentHashMap<String, CacheArray>();
+
+	/** Csv header of the sql log file: constant text, built once instead of per row. */
+	private final static String SQL_LOG_HEADER = String.format(
+			"LOG_DATE,LOG_HOUR,LOG_MI,LOG_SEC,LOG_MS,LOG_HOST,LOG_THREAD,LOG_DS,LOG_CONN_ID,LOG_EXEC_ID,LOG_TYPE,LOG_SEQ,LOG_SQL,LOG_PARAMS%s",
+			System.lineSeparator());
+
+	/** Date formatters are thread-safe, unlike SimpleDateFormat, so a single shared instance is enough. */
+	private final static DateTimeFormatter SQL_LOG_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+	private final static DateTimeFormatter SQL_LOG_DATETIME_FMT = DateTimeFormatter.ofPattern("yyyyMMdd,HH,mm,ss,SSS");
+
+	/** Cache 'SqlLogFolder' text -> normalized absolute key, to skip Paths.normalize on every row. */
+	private final static Map<String,String> SQL_LOG_FOLDER_KEY_CACHE = new ConcurrentHashMap<String,String>();
 
 	/**
 	* New a DriverExecutor object
@@ -1267,34 +1279,39 @@ public class DriverExecutor {
 	protected synchronized static boolean writeSqlLog(int deHashCode,Connection connection, String type, long seq, String sql,
 			Object params) {
 		if (connection instanceof DriverConnection) {
-			if (!checkSqlLogAvailable(connection, sql))
-				return false;
-
-			final String header = String.format(
-					"LOG_DATE,LOG_HOUR,LOG_MI,LOG_SEC,LOG_MS,LOG_HOST,LOG_THREAD,LOG_DS,LOG_CONN_ID,LOG_EXEC_ID,LOG_TYPE,LOG_SEQ,LOG_SQL,LOG_PARAMS%s",
-					System.lineSeparator());
-			final DateFormat df = new SimpleDateFormat("yyyyMMdd");
-			final DateFormat dtf = new SimpleDateFormat("yyyyMMdd,HH,mm,ss,SSS");
 			DriverConnection dc = (DriverConnection) connection;
-			Integer connHashCode = dc.getOriginConnectionHashCode();
 			DriverDataSource dds = dc.getDriverDataSource();
 			ConfigProperties configProperties = dds.getConfigProperties();
 
+			// Cheapest gate first: when the log is off (or the sql is filtered out)
+			// nothing below has to run, so skip the formatting and path work entirely.
 			boolean logEnable = configProperties.getBoolean("SqlLogEnable", false);
-			long overspend = configProperties.getMilliSeconds("SqlLogOverspend",0L);
-
 			if (!logEnable)
 				return false;
+			if (!checkSqlLogAvailable(connection, sql))
+				return false;
 
-			final String defaultLogFolderPath = String.format("%s/SqlLog/",
-					CommonTools.getJarPath(DriverExecutor.class));
-			final String logFolderPath = configProperties.getString("SqlLogFolder", defaultLogFolderPath);
+			final String header = SQL_LOG_HEADER;
+			long overspend = configProperties.getMilliSeconds("SqlLogOverspend",0L);
+			Integer connHashCode = dc.getOriginConnectionHashCode();
+
+			// Only build the jar-derived fallback when 'SqlLogFolder' is actually absent,
+			// so the usual configured case never pays CommonTools.getJarPath here.
+			String cfgedLogFolderPath = configProperties.getString("SqlLogFolder");
+			final String logFolderPath = CommonTools.isBlank(cfgedLogFolderPath)
+					? String.format("%s/SqlLog/", CommonTools.getJarPath(DriverExecutor.class))
+					: cfgedLogFolderPath;
 			final long maxFileSize = configProperties.getFileSize("SqlLogMaxFileSize", 1024 * 1024 * 10L);
 			final int archiveDays = configProperties.getInteger("SqlLogArchiveDays", 31);
 			final int logParamMaxLength = configProperties.getInteger("SqlLogParamMaxLength", 20);
 			final boolean includePid = configProperties.getBoolean("SqlLogIncludePid", false);
 
-			final String logFolderKey = Paths.get(logFolderPath).normalize().toAbsolutePath().toString();
+			String cachedFolderKey = SQL_LOG_FOLDER_KEY_CACHE.get(logFolderPath);
+			if (cachedFolderKey == null) {
+				cachedFolderKey = Paths.get(logFolderPath).normalize().toAbsolutePath().toString();
+				SQL_LOG_FOLDER_KEY_CACHE.put(logFolderPath, cachedFolderKey);
+			}
+			final String logFolderKey = cachedFolderKey;
 			CacheArray sqlLogCacheArray = sqlLogCacheArrayMap.get(logFolderKey);
 			if (sqlLogCacheArray == null) {
 
@@ -1314,7 +1331,7 @@ public class DriverExecutor {
 					    }
 						try {
 							String msg = sbf.toString();
-							String dateStr = df.format(new Timestamp(System.currentTimeMillis()));
+							String dateStr = SQL_LOG_DATE_FMT.format(LocalDateTime.now());
 							String sqlLogFilePrefix = includePid ? String.format("%s.%s", dateStr, currentPid()) : dateStr;
 							File sqlLogFile = new File(logFolderPath, String.format("%s.csv", sqlLogFilePrefix));
 							File sqlLogFolder = new File(sqlLogFile.getParent());
@@ -1358,7 +1375,7 @@ public class DriverExecutor {
 
 			if (logEnable) {
 				String hostname = CommonTools.getHostname();
-				String dateTimeStr = dtf.format(new Timestamp(System.currentTimeMillis()));
+				String dateTimeStr = SQL_LOG_DATETIME_FMT.format(LocalDateTime.now());
 				boolean isOverspend = false;
 				boolean isSpendSeq = sql.equals("spend");
 				if(isSpendSeq && params != null){

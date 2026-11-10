@@ -3820,3 +3820,34 @@ ${jr.diff.changes}- build: automatic version bump
 ## 6.1.297 (2026.11.10 11:33:40)
 - build: automatic version bump
 
+
+## 6.1.298 (2026.11.10 12:00:36)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- build: automatic version bump
+
+
+## 6.1.299 (2026.11.10 12:03:37)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- build: automatic version bump
+
+
+## 6.1.300 (2026.11.10 13:23:55)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- build: automatic version bump
+
+
+## 6.1.301 (2026.11.10 13:40:35)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: automatic version bump
+
+
+## 6.1.302 (2026.11.10 13:59:01)
+- found diffed: com/killcoding/cache/CacheArray.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- found diffed: com/killcoding/tool/ConfigProperties.java (M)
+- build: automatic version bump
+

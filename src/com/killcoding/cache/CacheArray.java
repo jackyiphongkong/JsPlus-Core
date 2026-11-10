@@ -29,12 +29,10 @@ import java.util.ArrayList;
 
 import com.killcoding.tool.CommonTools;
 
-import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.killcoding.log.LoggerFactory;
 import com.killcoding.log.Logger;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
 * Asynchronous cache-list for large results / large collections.
@@ -88,7 +86,7 @@ public class CacheArray implements java.io.Serializable {
 	/**
 	* All cache keys list
 	* */
-	private transient final List<String> cacheKeys = new CopyOnWriteArrayList<String>();
+	private transient final List<String> cacheKeys = new ArrayList<String>();
 
 	/**
 	* 'true' is completed
@@ -377,7 +375,7 @@ public class CacheArray implements java.io.Serializable {
 	* @return List
 	* */
 	public synchronized List<String> getCacheKeys() {
-		return new ArrayList<String>(Collections.synchronizedList(cacheKeys));
+		return new ArrayList<String>(cacheKeys);
 	}
 
 	/**
@@ -474,13 +472,11 @@ public class CacheArray implements java.io.Serializable {
 		if (count > cacheKeys.size()) {
 			count = cacheKeys.size();
 		}
-		List<String> removed = new ArrayList<String>(count);
 		for (int i = 0; i < count; i++) {
 			String key = cacheKeys.get(i);
 			StoredCache.remove(key);
-			removed.add(key);
 		}
-		cacheKeys.removeAll(removed);   // COW list: one snapshot pass, O(n), no per-item shift
+		cacheKeys.subList(0, count).clear();   // ArrayList: one arraycopy shift, replaces O(n*m) removeAll/contains scan
 		return count;
 	}
 

@@ -485,6 +485,23 @@ public class ConfigProperties extends Properties {
 	* @return the getArray result
 	* */
 	public List<String> getArray(String key, List<String> defaultValue) {
+		// Fast path: when no indexed key ('key[n]') is present, the compile below,
+		// the keySet traversal and the per-key matcher can only ever find nothing.
+		// Skipping them keeps hot callers (e.g. SqlLog filter, once per SQL)
+		// from paying a Pattern.compile + full key scan on every call.
+		String prefix = key + "[";
+		boolean hasIndexedKey = false;
+		for (Object _key : keySet()) {
+			String k = _key.toString();
+			int len = k.length();
+			if (len > prefix.length() + 1 && k.startsWith(prefix) && k.charAt(len - 1) == ']') {
+				hasIndexedKey = true;
+				break;
+			}
+		}
+		if (!hasIndexedKey) {
+			return defaultValue;
+		}
 		String[] list = null;
 		Map<Integer, String> listMap = new HashMap<Integer, String>();
 		List<Integer> listIndex = new ArrayList<Integer>();
