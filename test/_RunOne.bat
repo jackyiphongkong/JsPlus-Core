@@ -37,6 +37,8 @@ set BIN_PATH=%~dp0
 set JS_PLUS_PATH_ORIGIN=%BIN_PATH%..\JsPlus\
 SET "JS_PLUS_PATH=%JS_PLUS_PATH_ORIGIN:\=/%"
 set LIB_HOME=%JS_PLUS_PATH%../LibHome/
+set "H2_PORT=3306"
+if defined JsPlus_H2_PORT set "H2_PORT=%JsPlus_H2_PORT%"
 
 REM ------------------------------------------------------------------
 REM Step -1: pre-cleanup (align with TestAll.bat Step 0b/0c/0d)
@@ -94,7 +96,7 @@ REM Mirrors TestAll.bat Step 1/2: embedded (re)init of Database/testdb via
 REM StartH2Console, then the TCP server on top of it; InitDBSyncDB builds
 REM the dedicated dbsync SOURCE/TARGET file DBs.
 REM ------------------------------------------------------------------
-netstat -ano | findstr ":3306" | findstr "LISTENING" >nul 2>&1
+netstat -ano | findstr ":%H2_PORT%" | findstr "LISTENING" >nul 2>&1
 if not errorlevel 1 goto :h2_already
 
 echo [%TEST_NAME%] Initializing database (fallback.sql -^> change.sql)...
@@ -108,21 +110,21 @@ if errorlevel 1 (
     echo [%TEST_NAME%] ERROR: DBSync database initialization failed.
     exit /b 1
 )
-echo [%TEST_NAME%] Starting H2 server (port 3306)...
+echo [%TEST_NAME%] Starting H2 server (port %H2_PORT%)...
 call "%JS_PLUS_PATH_ORIGIN%bin\BG_StartH2.bat" %SCRIPT_ENGINE%
 
 :h2_already
-echo [%TEST_NAME%] Waiting for H2 :3306...
+echo [%TEST_NAME%] Waiting for H2 :%H2_PORT%...
 set "H2_READY="
 for /l %%i in (1,1,45) do (
-    netstat -ano | findstr ":3306" | findstr "LISTENING" >nul 2>&1
+    netstat -ano | findstr ":!H2_PORT!" | findstr "LISTENING" >nul 2>&1
     if not errorlevel 1 set "H2_READY=1"
     if defined H2_READY goto :h2_ready
     ping -n 2 127.0.0.1 >nul 2>&1
 )
 :h2_ready
 if not defined H2_READY (
-    echo [%TEST_NAME%] ERROR: H2 did not start on port 3306.
+    echo [%TEST_NAME%] ERROR: H2 did not start on port %H2_PORT%.
     exit /b 1
 )
 echo [%TEST_NAME%] H2 ready.

@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -120,6 +121,23 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 
 	private transient Set<java.util.Map.Entry<K, V>> entries = null;
 	private transient ArrayList<java.util.Map.Entry<K, V>> list;
+	/**
+	* Column count above which {@link #put} stops scanning the entry list and
+	* switches to {@link #index}. A result row carries one entry per selected
+	* column, and the linear scan made a 43-column row cost roughly 900
+	* {@code String.equals} calls; below this threshold the scan is cheaper than
+	* building a HashMap for a two or three column row.
+	* */
+	private static final int INDEX_THRESHOLD = 8;
+	/**
+	* Key to position in {@link #list}; {@code null} while the map is still
+	* below {@link #INDEX_THRESHOLD} and whenever the backing list is mutated
+	* through a path other than {@link #put} (iterator removal, clear). Rebuilt
+	* lazily by the next {@code put}. Keys must honour the {@code Map}
+	* {@code equals}/{@code hashCode} contract, which every caller satisfies
+	* since the key is a column name.
+	* */
+	private transient Map<K, Integer> index = null;
 
 	/**
 	* Constructs a new ResultMap
@@ -160,10 +178,29 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 				* */
 				public void clear() {
 					list.clear();
+					index = null;
 				}
 
 				public Iterator<java.util.Map.Entry<K, V>> iterator() {
-					return list.iterator();
+					final Iterator<java.util.Map.Entry<K, V>> it = list.iterator();
+					// Wrapped so that a removal through the iterator invalidates
+					// the position index; positions after the removed element
+					// shift by one and would otherwise point at the wrong entry.
+					return new Iterator<java.util.Map.Entry<K, V>>() {
+
+						public boolean hasNext() {
+							return it.hasNext();
+						}
+
+						public java.util.Map.Entry<K, V> next() {
+							return it.next();
+						}
+
+						public void remove() {
+							index = null;
+							it.remove();
+						}
+					};
 				}
 
 				/**
@@ -187,6 +224,23 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 	@Override
 	public V put(K key, V value) {
 		int size = list.size();
+		Map<K, Integer> idx = index;
+		if (idx == null && size >= INDEX_THRESHOLD) {
+			idx = index = buildIndex();
+		}
+		if (idx != null) {
+			Integer at = idx.get(key);
+			if (at != null) {
+				@SuppressWarnings("unchecked")
+				Entry<K, V> entry = (Entry<K, V>) (list.get(at.intValue()));
+				V oldValue = entry.getValue();
+				entry.setValue(value);
+				return oldValue;
+			}
+			list.add(new Entry<K, V>(key, value));
+			idx.put(key, size);
+			return null;
+		}
 		Entry<K, V> entry = null;
 		int i;
 		if (key == null) {
@@ -212,6 +266,21 @@ public class ResultMap<K, V> extends AbstractMap<K, V> implements Cloneable, Ser
 			list.add(new Entry<K, V>(key, value));
 		}
 		return oldValue;
+	}
+
+	/*
+	* Builds the key to position index over the current entries.
+	* @return the rebuilt index
+	* */
+	private Map<K, Integer> buildIndex() {
+		int size = list.size();
+		Map<K, Integer> idx = new HashMap<K, Integer>(Math.max(16, size * 2));
+		for (int i = 0; i < size; i++) {
+			@SuppressWarnings("unchecked")
+			Entry<K, V> entry = (Entry<K, V>) (list.get(i));
+			idx.put(entry.getKey(), i);
+		}
+		return idx;
 	}
 
 	@Override

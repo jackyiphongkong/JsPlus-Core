@@ -607,6 +607,8 @@ public class ScriptConsoleBase implements ConsoleImpl {
 		consoleVariables.putAndReturnSelf("ExportUpperOrLowerCase", DEFAULT_ExportUpperOrLowerCase);
 		consoleVariables.putAndReturnSelf("ExportSplit", DEFAULT_ExportSplit);
 		consoleVariables.putAndReturnSelf("ImportSplit", DEFAULT_ImportSplit);
+		consoleVariables.putAndReturnSelf("ImportBooleanTrueValues", DEFAULT_ImportBooleanTrueValues);
+		consoleVariables.putAndReturnSelf("ImportBooleanFalseValues", DEFAULT_ImportBooleanFalseValues);
 		consoleVariables.putAndReturnSelf("BatchSize", DEFAULT_BatchSize);
 		consoleVariables.putAndReturnSelf("Quote", DEFAULT_Quote);
 		consoleVariables.putAndReturnSelf("CallStoredProcedureFun", DEFAULT_CallStoredProcedureFun);

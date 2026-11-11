@@ -237,6 +237,91 @@ try {
         command: "rm12.put(null,'nulKey'); rm12.put('nulVal', null)"
     });
 
+    // C13: a wide row (more than INDEX_THRESHOLD columns) keeps order and value
+    var rm13 = new ResultMap();
+    var i13;
+    for (i13 = 1; i13 <= 43; i13++) {
+        rm13.put("col" + i13, "v" + i13);
+    }
+    var it13 = rm13.entrySet().iterator();
+    var n13 = 0;
+    var order13 = "";
+    while (it13.hasNext()) {
+        var e13 = it13.next();
+        order13 = order13 + ((n13 === 0) ? "" : ",") + String(e13.getKey());
+        n13 = n13 + 1;
+    }
+    var old13 = rm13.put("col20", "replaced");
+    var head13 = order13.indexOf("col1,col2,col3,col4,col5,col6,col7,col8") === 0;
+    var tail13 = order13.lastIndexOf("col43") === (order13.length - 5);
+    Logger.systemMark("TestResultMap.js", "C13");
+    check({
+        caseId: "C13",
+        name: "43-column row keeps insertion order, values and overwrite",
+        ok: n13 === 43 && head13 && tail13 && ("" + rm13.get("col43")) === "v43"
+            && ("" + old13) === "v20" && ("" + rm13.get("col20")) === "replaced"
+            && rm13.size() === 43,
+        detail: "count=" + n13 + " head=" + head13 + " tail=" + tail13
+            + " col43=" + rm13.get("col43") + " old20=" + old13
+            + " col20=" + rm13.get("col20") + " size=" + rm13.size(),
+        objective: "on a wide row the indexed put keeps order, values and overwrite semantics",
+        objectiveZh: "寬結果列在索引化 put 下仍保持順序、取值與覆寫語義",
+        command: "43 puts, iterate entrySet, then put('col20','replaced')"
+    });
+
+    // C14: removal through the iterator must not leave stale positions
+    var rm14 = new ResultMap();
+    var i14;
+    for (i14 = 1; i14 <= 43; i14++) {
+        rm14.put("col" + i14, "v" + i14);
+    }
+    var it14 = rm14.entrySet().iterator();
+    while (it14.hasNext()) {
+        var e14 = it14.next();
+        if (("" + e14.getKey()) === "col5") {
+            it14.remove();
+        }
+    }
+    rm14.put("tail", "tv");
+    Logger.systemMark("TestResultMap.js", "C14");
+    check({
+        caseId: "C14",
+        name: "iterator removal invalidates positions; the next put stays correct",
+        ok: rm14.size() === 43 && rm14.get("col5") === null
+            && ("" + rm14.get("col43")) === "v43"
+            && ("" + rm14.get("tail")) === "tv",
+        detail: "size=" + rm14.size() + " col5=" + rm14.get("col5")
+            + " col43=" + rm14.get("col43") + " tail=" + rm14.get("tail"),
+        objective: "after entrySet iterator remove() the index is rebuilt, not reused stale",
+        objectiveZh: "entrySet 迭代器移除後索引重建而非沿用舊位置",
+        command: "remove col5 via iterator, put('tail','tv')"
+    });
+
+    // C15: clear() drops the index and a later wide row rebuilds it
+    var rm15 = new ResultMap();
+    var i15;
+    for (i15 = 1; i15 <= 43; i15++) {
+        rm15.put("col" + i15, "v" + i15);
+    }
+    rm15.put("stale", "sv");
+    rm15.clear();
+    var i15b;
+    for (i15b = 1; i15b <= 20; i15b++) {
+        rm15.put("col" + i15b, "v" + i15b);
+    }
+    Logger.systemMark("TestResultMap.js", "C15");
+    check({
+        caseId: "C15",
+        name: "clear() drops the index; a later wide row reads back correctly",
+        ok: rm15.size() === 20 && ("" + rm15.get("col1")) === "v1"
+            && ("" + rm15.get("col20")) === "v20" && rm15.get("stale") === null,
+        detail: "size=" + rm15.size() + " col1=" + rm15.get("col1")
+            + " col20=" + rm15.get("col20") + " stale=" + rm15.get("stale"),
+        objective: "clear() resets the index so a rebuilt row has no stale keys",
+        objectiveZh: "clear() 清除索引，重建列不殘留舊鍵",
+        command: "43 puts, put('stale'), clear(), then 20 puts"
+    });
+
 } catch (e) {
     Logger.systemMark("TestResultMap.js", "C-ERR");
     check({

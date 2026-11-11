@@ -332,6 +332,10 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 		Object objectValue = null;
 
 		if (CommonTools.isBlank(encryptCell)) {
+			// 空單元格：布爾欄位返回 null，空字串送進 setObject 會被驅動以類型錯誤拒絕
+			if (javaType.equals(java.lang.Boolean.class.getName())) {
+				return null;
+			}
 			return "";
 		}
 
@@ -356,6 +360,10 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 
         if (javaType.equals(java.lang.String.class.getName())) {
             objectValue = unescapeCsv(cell);
+        } else if (javaType.equals(java.lang.Boolean.class.getName())) {
+            List<String> trueValues = getImportBooleanValues("ImportBooleanTrueValues", DEFAULT_ImportBooleanTrueValues);
+            List<String> falseValues = getImportBooleanValues("ImportBooleanFalseValues", DEFAULT_ImportBooleanFalseValues);
+            objectValue = parseBooleanCell(cell, trueValues, falseValues);
         } else if (javaType.equals(java.util.Date.class.getName())) {
             LocalDateTime ldt = LocalDateTime.parse(cell, dateTimeFormatter);
             objectValue = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
@@ -375,7 +383,20 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 		} else if (javaType.equals(java.lang.Short.class.getName())) {
 			objectValue = Short.parseShort(cell);
 		} else if (javaType.equals(java.lang.Integer.class.getName())) {
-			objectValue = Integer.parseInt(cell);
+			// 純數字走快路徑，只有非數字的布爾字面值才去讀配置
+			if (isNumericCell(cell)) {
+				objectValue = Integer.parseInt(cell);
+			} else {
+				List<String> trueValues = getImportBooleanValues("ImportBooleanTrueValues", DEFAULT_ImportBooleanTrueValues);
+				List<String> falseValues = getImportBooleanValues("ImportBooleanFalseValues", DEFAULT_ImportBooleanFalseValues);
+				if (isInValues(trueValues, cell)) {
+					objectValue = 1;
+				} else if (isInValues(falseValues, cell)) {
+					objectValue = 0;
+				} else {
+					objectValue = Integer.parseInt(cell);
+				}
+			}
 		} else if (javaType.equals(java.lang.Long.class.getName())) {
 			objectValue = Long.parseLong(cell);
 		} else if (javaType.equals(java.lang.Float.class.getName())) {
@@ -399,6 +420,98 @@ public class ScriptConsoleJdbcBase extends ScriptConsoleBase {
 			objectValue = null;
 		}
 		return objectValue;
+	}
+
+	/**
+	* Reads the boolean literal set of an import from console variables.
+	* Accepts either the indexed form (Key[0], Key[1], ...) or one comma
+	* separated string, so both configuration styles work.
+	* @param key - the console variable key
+	* @param defaultValue - the comma separated fallback
+	* @return the literal set, never null
+	* */
+	private List<String> getImportBooleanValues(String key, String defaultValue) {
+		// Scalar form first: one O(1) map lookup per cell. Only an indexed
+		// configuration (Key[0], Key[1], ...) returns null here and falls back
+		// to getArray, which has to walk the key set.
+		String raw = consoleVariables.getString(key);
+		if (raw == null) {
+			List<String> indexed = consoleVariables.getArray(key, new String[0]);
+			if (!indexed.isEmpty()) {
+				return indexed;
+			}
+			raw = defaultValue;
+		}
+		if (CommonTools.isBlank(raw)) {
+			return java.util.Collections.emptyList();
+		}
+		return Arrays.asList(raw.split(","));
+	}
+
+	/**
+	* Parses a cell text into a Boolean using the configured literal sets.
+	* @param cell - the cell text
+	* @param trueValues - the literals mapped to TRUE
+	* @param falseValues - the literals mapped to FALSE
+	* @return the parsed Boolean
+	* @exception Exception if the text is in neither set
+	* */
+	private Boolean parseBooleanCell(String cell, List<String> trueValues, List<String> falseValues) throws Exception {
+		String text = cell == null ? "" : cell.trim();
+		if (isInValues(trueValues, text)) {
+			return Boolean.TRUE;
+		}
+		if (isInValues(falseValues, text)) {
+			return Boolean.FALSE;
+		}
+		throw new Exception(String.format("Cell %s is not a boolean value, expected %s or %s",
+			text, String.join("/", trueValues), String.join("/", falseValues)));
+	}
+
+	/**
+	* Checks whether a cell text is a plain integer (optional sign + digits).
+	* Used to keep numeric columns on the fast path so they never pay a
+	* console variable lookup per cell.
+	* @param cell - the cell text
+	* @return true when the text is a plain integer
+	* */
+	private boolean isNumericCell(String cell) {
+		if (cell == null) {
+			return false;
+		}
+		String text = cell.trim();
+		if (text.isEmpty()) {
+			return false;
+		}
+		int start = (text.charAt(0) == '-' || text.charAt(0) == '+') ? 1 : 0;
+		if (text.length() <= start) {
+			return false;
+		}
+		for (int i = start; i < text.length(); i++) {
+			if (!Character.isDigit(text.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	* Checks whether a cell text is one of the configured literals (case insensitive).
+	* @param values - the literal set
+	* @param cell - the cell text
+	* @return true when the text is in the set
+	* */
+	private boolean isInValues(List<String> values, String cell) {
+		if (cell == null || values == null) {
+			return false;
+		}
+		String text = cell.trim();
+		for (String value : values) {
+			if (value != null && value.trim().equalsIgnoreCase(text)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -968,7 +1081,7 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 			Integer batchSize = consoleVariables.getInteger("BatchSize", DEFAULT_BatchSize);
 			String importSplit = consoleVariables.getString("ImportSplit", DEFAULT_ImportSplit);
 			batchSize = batchSize < 10 ? 10 : batchSize;
-			Map<String, Object> classes = cacheDriverExecutor.getColumnClasses(tableName);
+			Map<String, Object> classes = getCacheDriverExecutor(true).getColumnClasses(tableName);
 			inputStream = new FileInputStream(csv);
 			sc = new Scanner(inputStream, BaseFile.CHARSET);
 			int r = 0;
@@ -1016,14 +1129,14 @@ Map<String, Object> cacheRow = (Map<String, Object>) o;
 				}
 				int mod = r % batchSize;
 				if (r > 0 && mod == 0) {
-					updatedRows += cacheDriverExecutor.executeBatch(sql, records);
+					updatedRows += getCacheDriverExecutor(true).executeBatch(sql, records);
 					records.clear();
 				}
 				r++;
 			}
 
 			if (records.size() > 0) {
-				updatedRows += cacheDriverExecutor.executeBatch(sql, records);
+				updatedRows += getCacheDriverExecutor(true).executeBatch(sql, records);
 				records.clear();
 			}
 			long timeCostMs = new java.util.Date().getTime() - beginTime.getTime();

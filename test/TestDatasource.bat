@@ -37,6 +37,8 @@ set BIN_PATH=%~dp0
 set JS_PLUS_PATH_ORIGIN=%BIN_PATH%..\JsPlus\
 SET "JS_PLUS_PATH=%JS_PLUS_PATH_ORIGIN:\=/%"
 set LIB_HOME=%JS_PLUS_PATH%../LibHome/
+set "H2_PORT=3306"
+if defined JsPlus_H2_PORT set "H2_PORT=%JsPlus_H2_PORT%"
 
 REM ------------------------------------------------------------------
 REM Step 0: stop leftover JsPlus/H2 JVMs first (project convention: every
@@ -99,7 +101,7 @@ REM On a fresh run the database is first (re)built via the EMBEDDED
 REM local-file URL (StartH2Console init testdb, sa auto-created, change.sql
 REM adds sample_user) and only then the TCP server is started on top of it.
 REM ------------------------------------------------------------------
-netstat -ano | findstr ":3306" | findstr "LISTENING" >nul 2>&1
+netstat -ano | findstr ":%H2_PORT%" | findstr "LISTENING" >nul 2>&1
 if not errorlevel 1 goto :h2_already
 
 echo [TestDatasource] Initializing database (fallback.sql -^> change.sql)...
@@ -108,21 +110,21 @@ if errorlevel 1 (
     echo [TestDatasource] ERROR: Database initialization failed.
     exit /b 1
 )
-echo [TestDatasource] Starting H2 server (port 3306)...
+echo [TestDatasource] Starting H2 server (port %H2_PORT%)...
 call "%JS_PLUS_PATH_ORIGIN%bin\BG_StartH2.bat" %SCRIPT_ENGINE%
 
 :h2_already
-echo [TestDatasource] Waiting for H2 :3306...
+echo [TestDatasource] Waiting for H2 :%H2_PORT%...
 set "H2_READY="
 for /l %%i in (1,1,45) do (
-    netstat -ano | findstr ":3306" | findstr "LISTENING" >nul 2>&1
+    netstat -ano | findstr ":!H2_PORT!" | findstr "LISTENING" >nul 2>&1
     if not errorlevel 1 set "H2_READY=1"
     if defined H2_READY goto :h2_ready
     ping -n 2 127.0.0.1 >nul 2>&1
 )
 :h2_ready
 if not defined H2_READY (
-    echo [TestDatasource] ERROR: H2 did not start on port 3306.
+    echo [TestDatasource] ERROR: H2 did not start on port %H2_PORT%.
     exit /b 1
 )
 echo [TestDatasource] H2 ready.
@@ -148,7 +150,7 @@ REM never a wrapping cmd/powershell parent). In the TestAll flow
 REM (TESTALL_RUN=1) the H2 is TestAll's shared server and its Step 4d
 REM owns the teardown, so this step is skipped.
 if not defined TESTALL_RUN (
-    powershell -NoProfile -Command "$kw='script/StartH2.js'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
+    powershell -NoProfile -Command "$kw='script/StartH2.js'; $root='%JS_PLUS_PATH%'; $procs=Get-CimInstance Win32_Process -Filter \"Name='java.exe' OR Name='javaw.exe'\" | Where-Object { $_.CommandLine -like \"*$kw*\" -and $_.CommandLine -like \"*$root*\" }; if($procs){ $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }" >nul 2>&1
 )
 exit /b %RC%
 
