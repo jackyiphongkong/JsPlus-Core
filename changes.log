@@ -3939,3 +3939,19 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/jsplus/GhostConsole.java (M)
 - build: automatic version bump
 
+
+## 6.1.317 (2026.11.11 22:09:19)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- build: automatic version bump
+
+
+## 6.1.318 (2026.11.11 22:14:46)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- build: automatic version bump
+
+
+## 6.1.319 (2026.11.11 23:13:45)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- found diffed: com/killcoding/datasource/DriverExecutor.java (M)
+- build: automatic version bump
+

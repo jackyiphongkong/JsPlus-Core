@@ -96,8 +96,13 @@ public final class DriverDataSource implements DataSource {
 	private Boolean enableFullStatusLog = true;
 	private Integer statusLogArchiveDays = 30;
 	private String statusLogFolder = null;
-	private File statusLogFile = null;
+	private File statusLogDir = null;
 	private Integer maxAveUsageSize = 10000;
+	/**
+	* When on, Boolean parameters are bound as Boolean; otherwise they are
+	* rewritten to 1/0. Resolved from the {@code BooleanBinding} database config.
+	* */
+	private Boolean booleanAsIs = false;
 
     private final List<Double> aveUsageSum = new ArrayList<Double>();
 	private final List<String> urlList = new ArrayList<String>();
@@ -369,11 +374,58 @@ public final class DriverDataSource implements DataSource {
 	public void setStatusLogFolder(String _statusLogFolder) {
 		this.statusLogFolder = CommonTools.isBlank(_statusLogFolder) ? null : _statusLogFolder;
 		if (this.statusLogFolder == null) {
-			statusLogFile = new File(String.format("%s/DriverDataSource_Status/%s.log",
-					CommonTools.getJarPath(DriverDataSource.class), DATASOURCE_ID));
+			statusLogDir = new File(CommonTools.getJarPath(DriverDataSource.class), "DriverDataSource_Status");
 		} else {
-			statusLogFile = new File(String.format("%s/%s.log", statusLogFolder, DATASOURCE_ID));
+			statusLogDir = new File(this.statusLogFolder);
 		}
+	}
+
+	/**
+	* Set how Boolean parameters are bound
+	* @param booleanAsIs - 'true' keeps them Boolean; otherwise they become 1/0
+	* */
+	public void setBooleanAsIs(Boolean booleanAsIs) {
+		this.booleanAsIs = booleanAsIs == null ? false : booleanAsIs;
+	}
+
+	/**
+	* Get how Boolean parameters are bound
+	* @return Boolean - 'true' when Boolean parameters stay Boolean
+	* */
+	public Boolean isBooleanAsIs() {
+		return this.booleanAsIs;
+	}
+
+	/**
+	* Resolve the status log file name of this pool
+	*
+	* <p>Named {@code <poolName>.<pid>.log}: the pid keeps two JVMs (a live EA
+	* and a test run) apart, the pool name keeps the pools apart, and the name
+	* stays stable across restarts - the former
+	* {@code <startTime>.<pid>.<rand>.log} naming left one new file in the
+	* folder per launch.</p>
+	*
+	* @return File - status log file of this pool, or null when no status log
+	*         folder is configured
+	* */
+	private File getStatusLogFile() {
+		File dir = this.statusLogDir;
+		if (dir == null) {
+			return null;
+		}
+		String baseName = this.name;
+		if (CommonTools.isBlank(baseName)) {
+			baseName = Thread.currentThread().getName();
+		}
+		if (CommonTools.isBlank(baseName)) {
+			baseName = "unknown";
+		}
+		// A writer thread carries a "-manageConnectionPool-N" suffix; the pool
+		// name alone is enough and keeps the file name short
+		baseName = baseName.replaceFirst("-manageConnectionPool-\\d+$", "");
+		// Windows/Linux both reject these characters in a file name
+		String safeName = baseName.replaceAll("[\\\\/:*?\"<>|]", "_");
+		return new File(dir, String.format("%s.%s.log", safeName, PID));
 	}
 
 	/**
@@ -900,6 +952,13 @@ public final class DriverDataSource implements DataSource {
 		if (this.configProperties.containsKey("RefreshPoolTimer"))
 			setRefreshPoolTimer(this.configProperties.getMilliSeconds("RefreshPoolTimer", 1000L));
 
+		// BooleanBinding=boolean keeps Boolean parameters as-is; anything else (and
+		// the default) rewrites them to 1/0, matching the TINYINT columns built for
+		// boolean values
+		if (this.configProperties.containsKey("BooleanBinding"))
+			setBooleanAsIs("boolean".equalsIgnoreCase(
+					String.valueOf(this.configProperties.getString("BooleanBinding", "")).trim()));
+
 		if (this.configProperties.containsKey("DriverJar"))
 			setDriverJar(this.configProperties.getString("DriverJar", null));
 
@@ -995,12 +1054,11 @@ public final class DriverDataSource implements DataSource {
 	*  Archive log
 	* */
 	private void archiveLog() {
-		if (statusLogFile != null && statusLogArchiveDays != null) {
-			File statusLogFileParent = statusLogFile.getParentFile();
-			if (statusLogArchiveDays > 0 && statusLogFileParent != null) {
+		if (statusLogDir != null && statusLogArchiveDays != null) {
+			if (statusLogArchiveDays > 0) {
 				try {
 					long fileOutArchiveDaysMs = new Date().getTime() - (statusLogArchiveDays * 24 * 3600000L);
-					deleteFilesOlderThan(statusLogFileParent, fileOutArchiveDaysMs);
+					deleteFilesOlderThan(statusLogDir, fileOutArchiveDaysMs);
 				} catch (Exception e) {
 					log.warn(e);
 
@@ -1040,12 +1098,17 @@ public final class DriverDataSource implements DataSource {
 	* Write connection status log
 	* */
 	private synchronized void statusLogOutput() {
+		File statusLogFile = getStatusLogFile();
+		if (statusLogFile == null)
+			return;
 		File folder = statusLogFile.getParentFile();
-		if (folder.exists()) {
-			if (!folder.canWrite())
-				return;
-		} else {
-			folder.mkdirs();
+		if (folder != null) {
+			if (folder.exists()) {
+				if (!folder.canWrite())
+					return;
+			} else {
+				folder.mkdirs();
+			}
 		}
 		if (statusLogFile.exists()) {
 			if (!statusLogFile.canWrite())
@@ -1208,7 +1271,7 @@ public final class DriverDataSource implements DataSource {
 							}
 
 							countUsage(true);
-							if (enableStatusLog && statusLogFile != null) {
+							if (enableStatusLog && statusLogDir != null) {
 								statusLogOutput();
 								archiveLog();
 							}

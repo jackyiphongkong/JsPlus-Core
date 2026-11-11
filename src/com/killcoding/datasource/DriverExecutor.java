@@ -1100,6 +1100,24 @@ public class DriverExecutor {
 	}
 
 	/**
+	* Check how Boolean parameters are bound on this data source
+	*
+	* <p>Resolved from the {@code BooleanBinding} entry of the data source config:
+	* {@code boolean} keeps them Boolean (required by strict engines such as H2,
+	* whose {@code BOOLEAN} column rejects any integer), while anything else -
+	* including the default - rewrites them to 1/0.</p>
+	*
+	* @return boolean - 'true' when Boolean parameters are bound as-is
+	* */
+	protected boolean isBooleanAsIs() {
+		if (connection instanceof DriverConnection) {
+			DriverDataSource dataSource = ((DriverConnection) connection).getDriverDataSource();
+			return dataSource != null && Boolean.TRUE.equals(dataSource.isBooleanAsIs());
+		}
+		return false;
+	}
+
+	/**
 	* Get data source thread name
 	* @return String - DataSource thread name
 	* */
@@ -1135,6 +1153,9 @@ public class DriverExecutor {
 			paramKeys.add(key);
 		}
 
+		// Read the binding mode once, not per parameter
+		boolean booleanAsIs = isBooleanAsIs();
+
 		List<Object> params = new ArrayList<Object>();
 		for (String pk : paramKeys) {
 			Object pv = map.get(pk);
@@ -1148,6 +1169,10 @@ public class DriverExecutor {
 				java.util.Date utilDate = (java.util.Date) pv;
 				java.sql.Timestamp sqlDate = new java.sql.Timestamp(utilDate.getTime());
 				params.add(sqlDate);
+			} else if (!booleanAsIs && pv instanceof Boolean) {
+				// Default: booleans become 1/0 so they fit the TINYINT columns the
+				// framework builds for them; BooleanBinding=boolean keeps them as-is
+				params.add(((Boolean) pv) ? 1 : 0);
 			} else {
 				params.add(pv);
 			}

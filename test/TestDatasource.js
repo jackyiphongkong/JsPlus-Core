@@ -1387,6 +1387,64 @@ check({
     command: "DriverDataSource.of(new File(props)) x2; ds.closeAll(0); DriverDataSource.of(props); evictInstance(props); of(props)"
 });
 
+// ---------------------------------------------------------------------------
+// C22: BooleanBinding - Boolean params become 1/0 by default and stay Boolean
+//      only when the data source config says BooleanBinding=boolean
+// ---------------------------------------------------------------------------
+var c22Err = "";
+var c22Ok = false;
+var c22Detail = "";
+try {
+    var CacheDriverExecutor = Java.type("com.killcoding.datasource.CacheDriverExecutor");
+    var JHashMap = Java.type("java.util.HashMap");
+
+    // An extra pool would race the shared one for the same status log file
+    var c22Base = ("" + JFiles.readString(new JFile(c21Prop).toPath()))
+        .replace("EnableStatusLog=true", "EnableStatusLog=false");
+
+    // config key: absent -> 1/0, "boolean" -> as-is
+    var c22DsDefault = new DriverDataSource(c22Base);
+    var c22DefaultAsIs = c22DsDefault.isBooleanAsIs();
+    c22DsDefault.closeAll(0);
+
+    var c22DsAsIs = new DriverDataSource(c22Base + "\r\nBooleanBinding=boolean\r\n");
+    var c22AsIsFlag = c22DsAsIs.isBooleanAsIs();
+    c22DsAsIs.closeAll(0);
+
+    // binding: a Boolean param written into a TINYINT column lands as 1
+    var c22Conn = Console.getDataSource().getConnection();
+    var c22Exec = new CacheDriverExecutor(c22Conn);
+    c22Exec.execute("CREATE TABLE IF NOT EXISTS test_bool_bind (id INT, b TINYINT)");
+    c22Exec.execute("DELETE FROM test_bool_bind");
+
+    var c22Insert = new JHashMap();
+    c22Insert.put("id", 1);
+    c22Insert.put("b", true);
+    var c22Inserted = c22Exec.execute("INSERT INTO test_bool_bind (id, b) VALUES (:id, :b)", c22Insert);
+
+    var c22Find = new JHashMap();
+    c22Find.put("id", 1);
+    var c22Rows = c22Exec.find("SELECT b FROM test_bool_bind WHERE id = :id", c22Find);
+    var c22Bound = c22Rows.size() > 0 ? "" + c22Rows.get(0).get("b") : "none";
+    c22Exec.close();
+
+    c22Ok = c22DefaultAsIs === false && c22AsIsFlag === true && c22Bound === "1";
+    c22Detail = "default=" + c22DefaultAsIs + " asIs=" + c22AsIsFlag
+        + " insert=" + c22Inserted + " bound=" + c22Bound;
+} catch (e) {
+    c22Err = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C22");
+check({
+    name: "BooleanBinding keeps Boolean params as-is only when the config says so",
+    caseId: "C22",
+    ok: c22Ok && c22Err.length === 0,
+    detail: c22Err.length > 0 ? c22Err : c22Detail,
+    objective: "the BooleanBinding data source entry decides how Boolean parameters are bound: absent (and any value other than 'boolean') rewrites them to 1/0, so a Boolean written into a TINYINT column reads back as 1, while BooleanBinding=boolean keeps them Boolean for strict BOOLEAN columns",
+    objectiveZh: "BooleanBinding 資料源設定決定布林參數的綁定方式：未設定（或任何非 'boolean' 值）改寫成 1/0，布林值寫入 TINYINT 欄位後讀回為 1；設定 BooleanBinding=boolean 則原樣綁定布林，供嚴格 BOOLEAN 欄位使用",
+    command: "new DriverDataSource(props); ../BooleanBinding=boolean; execute('INSERT ... VALUES (:id, :b)', {id:1, b:true}); find('SELECT b ...')"
+});
+
 writeReport();
 writeMd();
 
