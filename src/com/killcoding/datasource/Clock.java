@@ -111,7 +111,7 @@ public final class Clock {
 					if (enable) {
 						dataSourcePath = configProperties.getString("DataSource");
 						if (!CommonTools.isBlank(dataSourcePath)) {
-							dataSource = new DriverDataSource(new File(dataSourcePath));
+							dataSource = DriverDataSource.of(new File(dataSourcePath));
 						}
 					}
 				}
@@ -138,7 +138,7 @@ public final class Clock {
 			}
 			if (enable && isReload) {
 				if (!CommonTools.isBlank(dataSourcePath)) {
-					dataSource = new DriverDataSource(new File(dataSourcePath));
+					dataSource = DriverDataSource.of(new File(dataSourcePath));
 				}
 			}
 		}

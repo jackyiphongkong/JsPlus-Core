@@ -111,7 +111,7 @@ public class GhostConsole extends ScriptConsole {
     private void init(String ghostDsPropFile) {
         try{
             config = new ConfigProperties();
-            ghostDs = new DriverDataSource(new File(ghostDsPropFile));
+            ghostDs = DriverDataSource.of(new File(ghostDsPropFile));
             config = ghostDs.getConfigProperties();
             ghostTable = config.getString("GhostTable","ghost_remote_command");
             ghostTimer = config.getMilliSeconds("GhostTimer",200L);

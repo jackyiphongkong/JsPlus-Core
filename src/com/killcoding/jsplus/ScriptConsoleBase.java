@@ -380,7 +380,7 @@ public class ScriptConsoleBase implements ConsoleImpl {
                 }
             }
     		if(datasourceConfigFile.exists()){
-	            ScriptConsoleBase.datasource = new DriverDataSource(datasourceConfigFile);
+	            ScriptConsoleBase.datasource = DriverDataSource.of(datasourceConfigFile);
     		}else{
     		    ScriptConsoleBase.datasource = new DriverDataSource();
     		    ScriptConsoleBase.datasource.setConfig(datasourceVariables);

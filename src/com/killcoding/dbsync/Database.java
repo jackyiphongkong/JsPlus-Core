@@ -88,7 +88,7 @@ public class Database {
 		this.maxUsage = this.porps.getDouble(maxUsageKey,DEFAULT_MAX_USAGE);
 		
 		String appDsFile = String.format("%s/config/%s", Enter.ROOT_PATH,appDataSource);
-		dataSource = new DriverDataSource(new File(appDsFile));
+		dataSource = DriverDataSource.of(new File(appDsFile));
 	}
 
 	/**

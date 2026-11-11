@@ -73,7 +73,7 @@ function dbVerifyTarget(sqlFn) {
     var sql;
     var result = { sql: "", columns: [], rows: [] };
     try {
-        dds = new DriverDataSourceType(new FileType(basePath + "/config/DBSyncTarget.properties"));
+        dds = DriverDataSourceType.of(new FileType(basePath + "/config/DBSyncTarget.properties"));
         sql = sqlFn();
         conn = dds.getConnection();
         stmt = conn.createStatement();
@@ -113,9 +113,10 @@ function dbVerifyTarget(sqlFn) {
         if (conn !== null && conn !== undefined) {
             try { conn.close(); } catch (e4) {}
         }
-        if (dds !== null && dds !== undefined) {
-            try { dds.closeAll(); } catch (e5) {}
-        }
+        // Datasource is now shared via DriverDataSource.of() with Database and with the
+        // sibling helper, so it must NOT be closed here: closeAll() would kill the very
+        // pool that Database keeps using (Connection is null on the next operation).
+        // The test JVM releases it when the process exits.
     }
 }
 
@@ -133,7 +134,7 @@ function dbVerifySource(sqlFn) {
     var sql;
     var result = { sql: "", columns: [], rows: [] };
     try {
-        dds = new DriverDataSourceType(new FileType(basePath + "/config/DBSyncSource.properties"));
+        dds = DriverDataSourceType.of(new FileType(basePath + "/config/DBSyncSource.properties"));
         sql = sqlFn();
         conn = dds.getConnection();
         stmt = conn.createStatement();
@@ -173,9 +174,10 @@ function dbVerifySource(sqlFn) {
         if (conn !== null && conn !== undefined) {
             try { conn.close(); } catch (e4) {}
         }
-        if (dds !== null && dds !== undefined) {
-            try { dds.closeAll(); } catch (e5) {}
-        }
+        // Datasource is now shared via DriverDataSource.of() with Database and with the
+        // sibling helper, so it must NOT be closed here: closeAll() would kill the very
+        // pool that Database keeps using (Connection is null on the next operation).
+        // The test JVM releases it when the process exits.
     }
 }
 

@@ -709,7 +709,9 @@ public final class LoggerContext {
 					return;
 				}
 				File appDataSource = new File(appDataSourcePath);
-				dataSource = new DriverDataSource(appDataSource);
+				// shared per properties file: the closeAll() above evicted the old entry,
+				// so of() builds a fresh pool here and never a second one for this path.
+				dataSource = DriverDataSource.of(appDataSource);
 			}
 		} catch (Exception e) {
 			lastInitFailAt = System.currentTimeMillis();

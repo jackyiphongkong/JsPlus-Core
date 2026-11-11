@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 import java.io.File;
 import java.net.URLClassLoader;
 import java.lang.reflect.Constructor;
-import java.net.URL;
 import java.sql.Driver;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -125,9 +124,18 @@ public final class DriverDataSource implements DataSource {
 	private String abortMode = "abort";
 	private String appDataSourcePath;
 
-	private boolean useExternalConfig = false;
 	private boolean loadedConfig = false;
-	private boolean closed = false;
+	private volatile boolean closed = false;
+
+	/**
+	* Cache key: md5 of the normalised properties file path, null when not built from a file
+	* */
+	private String instanceKey = null;
+
+	/**
+	* Live instances keyed by md5(appDataSource canonical path)
+	* */
+	private static final Map<String, DriverDataSource> INSTANCE_CACHE = new ConcurrentHashMap<String, DriverDataSource>();
 
 	private File appDataSource = null;
 	private String owner = null;
@@ -135,8 +143,6 @@ public final class DriverDataSource implements DataSource {
 
 	private final ConnectionPool connectionPool = new ConnectionPool();
 	private final ExecutorService connectionPoolExecutor = Executors.newFixedThreadPool(1);
-
-	private long dynamicReloadConfigTime = System.currentTimeMillis();
 
 	/**
 	* New a DriverDataSource object
@@ -160,12 +166,15 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	* New a DriverDataSource object
+	* New a DriverDataSource object. Protected on purpose: external callers must use
+	* {@link #of(File)}, so that one properties file maps to exactly one pool in the
+	* process. Only this class and its subclasses may build an uncached instance.
 	* @param appDataSource - It is file object (e.g. /your_path/DataSource.properties)
 	* */
-	public DriverDataSource(File appDataSource) {
+	protected DriverDataSource(File appDataSource) {
 		super();
 		this.appDataSource = appDataSource;
+		this.instanceKey = instanceKeyOf(appDataSource);
 
 		if (this.appDataSource != null) {
 		    if(!this.appDataSource.exists()){
@@ -197,6 +206,101 @@ public final class DriverDataSource implements DataSource {
 		super();
 		initDs();
 		setConfig(configProperties);
+	}
+
+	/**
+	* Acquire a shared DriverDataSource for the given properties file.
+	* The instance is cached by md5 of the normalised file path, so repeated requests for
+	* the same file return the same pool instead of building a new one. A closed or evicted
+	* instance is rebuilt on the next call.
+	* @param appDataSource - properties file (e.g. /your_path/DataSource.properties)
+	* @return DriverDataSource - cached or freshly built instance
+	* */
+	public static DriverDataSource of(File appDataSource) {
+		if (appDataSource == null) {
+			return new DriverDataSource((File) null);
+		}
+		String key = instanceKeyOf(appDataSource);
+		if (key == null) {
+			return new DriverDataSource(appDataSource);
+		}
+		DriverDataSource cached = INSTANCE_CACHE.get(key);
+		if (cached != null && !cached.isClosed()) {
+			return cached;
+		}
+		synchronized (INSTANCE_CACHE) {
+			cached = INSTANCE_CACHE.get(key);
+			if (cached != null && !cached.isClosed()) {
+				return cached;
+			}
+			DriverDataSource fresh = new DriverDataSource(appDataSource);
+			fresh.instanceKey = key;
+			INSTANCE_CACHE.put(key, fresh);
+			return fresh;
+		}
+	}
+
+	/**
+	* Build the cache key for a properties file
+	* @param appDataSource - properties file
+	* @return String - md5 of the canonical path, null when the file is null
+	* */
+	public static String instanceKeyOf(File appDataSource) {
+		if (appDataSource == null) {
+			return null;
+		}
+		String path;
+		try {
+			path = appDataSource.getCanonicalPath();
+		} catch (IOException e) {
+			path = appDataSource.getAbsolutePath();
+		}
+		if (path == null) {
+			return null;
+		}
+		return CommonTools.md5(path.replace('\\', '/'));
+	}
+
+	/**
+	* Check is closed
+	* @return boolean - true when the pool has been closed
+	* */
+	public boolean isClosed() {
+		return closed;
+	}
+
+	/**
+	* Get the cache key of this instance
+	* @return String - md5 of the properties file path, null when built from content
+	* */
+	public String getInstanceKey() {
+		return instanceKey;
+	}
+
+	/**
+	* Remove one cached instance
+	* @param appDataSource - properties file
+	* */
+	public static void evictInstance(File appDataSource) {
+		String key = instanceKeyOf(appDataSource);
+		if (key != null) {
+			INSTANCE_CACHE.remove(key);
+		}
+	}
+
+	/**
+	* Remove all cached instances
+	* */
+	public static void clearInstanceCache() {
+		INSTANCE_CACHE.clear();
+	}
+
+	/**
+	* Get cached instance count
+	* @return int - number of live instances
+	* */
+	public static int instanceCacheSize() {
+		return INSTANCE_CACHE.size();
 	}
 
 	/**
@@ -1395,6 +1499,9 @@ public final class DriverDataSource implements DataSource {
 	* */
 	public synchronized void closeAll(int waitSeconds) {
 		closed = true;
+		if (instanceKey != null) {
+			INSTANCE_CACHE.remove(instanceKey, this);
+		}
 
 		if(waitSeconds < 0) waitSeconds = 10;
 
@@ -1769,7 +1876,7 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	@Override
-	public java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException {
+	public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
 		return null;
 	}
 

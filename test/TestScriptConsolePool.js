@@ -197,38 +197,69 @@ public class ScriptConsolePoolProbe {
         ScriptConsolePool pool = new ScriptConsolePool();
         pool.setMaxPoolSize(size);
         pool.init();
-        final CountDownLatch start = new CountDownLatch(1);
-        final CountDownLatch done = new CountDownLatch(threads);
         final AtomicInteger ok = new AtomicInteger();
         final AtomicInteger full = new AtomicInteger();
         final AtomicInteger other = new AtomicInteger();
         final List<String> msgs = Collections.synchronizedList(new ArrayList<String>());
-        for (int t = 0; t < threads; t++) {
-            new Thread(new Runnable() {
+        // Phase 1: occupy every console and HOLD it, so the pool is genuinely
+        // exhausted while the extra thread probes it. Racing 11 threads at once
+        // is not deterministic: freed() returns consoles through FREED_SCHEDULER
+        // after getFreedDelayMs() (10 ms), so the 11th thread could arrive after
+        // an earlier one had already given its console back.
+        final CountDownLatch held = new CountDownLatch(size);
+        final CountDownLatch release = new CountDownLatch(1);
+        List<Thread> holders = new ArrayList<Thread>();
+        for (int t = 0; t < size; t++) {
+            Thread th = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        start.await();
                         pool.getConsole();
-                        ok.incrementAndGet();
+                        held.countDown();
+                        release.await(120, TimeUnit.SECONDS);
                     } catch (Throwable e) {
-                        String m = String.valueOf(e.getMessage());
-                        if (m != null && m.indexOf("Full ScriptConsole Pool") >= 0) {
-                            full.incrementAndGet();
-                        } else {
-                            other.incrementAndGet();
-                            if (msgs.size() < 3) {
-                                msgs.add(m);
-                            }
-                        }
+                        msgs.add(String.valueOf(e.getMessage()));
                     } finally {
-                        done.countDown();
                         pool.freed();
                     }
                 }
-            }).start();
+            });
+            holders.add(th);
+            th.start();
         }
-        start.countDown();
-        done.await(120, TimeUnit.SECONDS);
+        if (!held.await(120, TimeUnit.SECONDS)) {
+            release.countDown();
+            return "size=" + size + " threads=" + threads + " ok=-1 full=-1 other=-1 hold-timeout";
+        }
+        ok.addAndGet(size);
+        // Phase 2: with every console held, the extra thread must be rejected.
+        Thread extra = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    pool.getConsole();
+                    ok.incrementAndGet();
+                } catch (Throwable e) {
+                    String m = String.valueOf(e.getMessage());
+                    if (m != null && m.indexOf("Full ScriptConsole Pool") >= 0) {
+                        full.incrementAndGet();
+                    } else {
+                        other.incrementAndGet();
+                        if (msgs.size() < 3) {
+                            msgs.add(m);
+                        }
+                    }
+                } finally {
+                    pool.freed();
+                }
+            }
+        });
+        extra.start();
+        extra.join(120000);
+        release.countDown();
+        for (Thread th : holders) {
+            th.join(120000);
+        }
+        // freed() puts the consoles back asynchronously after getFreedDelayMs()
+        Thread.sleep(500);
         return "size=" + size + " threads=" + threads + " ok=" + ok.get()
              + " full=" + full.get() + " other=" + other.get()
              + " idle=" + pool.idleCount()
@@ -319,15 +350,15 @@ try {
     var ok5 = exhaustReport.indexOf("ok=10") >= 0
         && exhaustReport.indexOf("full=1") >= 0
         && exhaustReport.indexOf("other=0") >= 0
-        && exhaustReport.indexOf("idle=0") >= 0;
+        && exhaustReport.indexOf("idle=10") >= 0;
     Logger.systemMark("TestScriptConsolePool.js", "C5");
     check({
         caseId: "C5",
         name: "an exhausted pool rejects the extra thread with 'Full ScriptConsole Pool.'",
         ok: ok5,
         detail: exhaustReport,
-        objective: "10 pooled consoles let 10 threads in; the 11th fails with the documented message",
-        objectiveZh: "10 個池化 console 容納 10 個線程；第 11 個以文檔化訊息失敗",
+        objective: "10 pooled consoles let 10 threads in; the 11th fails with the documented message; after freed() settles every console is back in the pool (idle=10)",
+        objectiveZh: "10 個池化 console 容納 10 個線程；第 11 個以文檔化訊息失敗；freed() 的非同步歸還落定後 10 個 console 全部回到池中（idle=10）",
         command: "probe.exhaustHash(size=10, threads=11)"
     });
 

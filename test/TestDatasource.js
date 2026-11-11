@@ -1319,6 +1319,74 @@ check({
     command: "Console.importFrom('test_import_target', csv)"
 });
 
+// ---------------------------------------------------------------------------
+// C21: DriverDataSource.of - one pooled instance per properties file (md5 key)
+// ---------------------------------------------------------------------------
+var c21Err = "";
+var c21Ok = false;
+var c21Detail = "";
+try {
+    var DriverDataSource = Java.type("com.killcoding.datasource.DriverDataSource");
+    var c21Prop = System.getProperty("APP_DATASOURCE");
+    if (c21Prop === null || c21Prop === undefined || c21Prop.length === 0) {
+        c21Prop = basePath + "config/TestDatasource.properties";
+    }
+    var c21File = new JFile(c21Prop);
+
+    DriverDataSource.clearInstanceCache();
+    var c21Key1 = DriverDataSource.instanceKeyOf(c21File);
+    var c21Key2 = DriverDataSource.instanceKeyOf(new JFile(c21Prop));
+
+    // same file twice -> same instance
+    var c21Ds1 = DriverDataSource.of(c21File);
+    var c21H1 = System.identityHashCode(c21Ds1);
+    var c21Ds2 = DriverDataSource.of(new JFile(c21Prop));
+    var c21H2 = System.identityHashCode(c21Ds2);
+    var c21Size1 = DriverDataSource.instanceCacheSize();
+
+    // the shared pool still serves connections (this one is the console's pool too,
+    // because ScriptConsoleBase resolves APP_DATASOURCE to the same file - so it must
+    // stay open; only the instance built below is closed)
+    var c21Conn = c21Ds1.getConnection();
+    var c21ConnOk = c21Conn !== null && c21Conn !== undefined;
+    if (c21ConnOk) { c21Conn.close(); }
+
+    // evictInstance() drops the entry without closing the pool
+    DriverDataSource.evictInstance(c21File);
+    var c21Size2 = DriverDataSource.instanceCacheSize();
+
+    // next of() rebuilds it as a separate pool; the original one is still alive
+    var c21Ds3 = DriverDataSource.of(c21File);
+    var c21H3 = System.identityHashCode(c21Ds3);
+
+    // closeAll() evicts the entry as well
+    c21Ds3.closeAll(0);
+    var c21Size3 = DriverDataSource.instanceCacheSize();
+    var c21Ds4 = DriverDataSource.of(c21File);
+    var c21H4 = System.identityHashCode(c21Ds4);
+    c21Ds4.closeAll(0);
+    DriverDataSource.clearInstanceCache();
+
+    c21Ok = c21Key1 !== null && c21Key1 === c21Key2
+        && c21H1 === c21H2 && c21Size1 === 1 && c21Size2 === 0
+        && c21H3 !== c21H1 && c21Size3 === 0 && c21H4 !== c21H1 && c21ConnOk;
+    c21Detail = "key=" + c21Key1 + " h1=" + c21H1 + " h2=" + c21H2
+        + " cache=" + c21Size1 + "->" + c21Size2 + " h3=" + c21H3
+        + " evict=" + c21Size3 + " h4=" + c21H4 + " conn=" + c21ConnOk;
+} catch (e) {
+    c21Err = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C21");
+check({
+    name: "DriverDataSource.of returns one shared instance per properties file",
+    caseId: "C21",
+    ok: c21Ok && c21Err.length === 0,
+    detail: c21Err.length > 0 ? c21Err : c21Detail,
+    objective: "of(file) keys the instance cache by md5(canonical path): the same file returns the identical object twice, a different form of the same path hits the same key, closeAll() and evictInstance() both drop the entry and the next of() rebuilds it - while the shared pool still serves connections; the constructor is protected, so no caller can build a second pool behind of()'s back",
+    objectiveZh: "of(file) 以檔案路徑 md5 作快取鍵：同一檔案兩次取得同一實例、同路徑不同寫法命中同一鍵、closeAll() 與 evictInstance() 各自逐出後下次重建，共享池仍可正常取連線；構造器已改為 protected，呼叫方無法繞過 of() 另建第二個池",
+    command: "DriverDataSource.of(new File(props)) x2; ds.closeAll(0); DriverDataSource.of(props); evictInstance(props); of(props)"
+});
+
 writeReport();
 writeMd();
 

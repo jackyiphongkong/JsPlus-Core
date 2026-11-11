@@ -345,7 +345,7 @@ public final class IdentityCard {
 					if (enable) {
 						dataSourcePath = configProperties.getString("DataSource");
 						if (!CommonTools.isBlank(dataSourcePath)) {
-							dataSource = new DriverDataSource(new File(dataSourcePath));
+							dataSource = DriverDataSource.of(new File(dataSourcePath));
 						}
 					}
 				}
@@ -384,7 +384,7 @@ public final class IdentityCard {
 			}
 			if (enable && isReload) {
 				if (!CommonTools.isBlank(dataSourcePath)) {
-					dataSource = new DriverDataSource(new File(dataSourcePath));
+					dataSource = DriverDataSource.of(new File(dataSourcePath));
 				}
 			}
 		}

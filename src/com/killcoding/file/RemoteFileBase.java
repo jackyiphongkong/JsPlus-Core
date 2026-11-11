@@ -359,7 +359,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			**/
 			if (dataSourceReader == null || !dataSourceReaderPath.equals(reloadDataSourceReaderPath)) {
 				dataSourceReaderPath = reloadDataSourceReaderPath;
-				dataSourceReader = new DriverDataSource(new File(dataSourceReaderPath));
+				dataSourceReader = DriverDataSource.of(new File(dataSourceReaderPath));
 				DATASOURCE_REMOTE_FILE.put(readerDsKey, dataSourceReader);
 			}
 			/**
@@ -372,7 +372,7 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 			**/
 			if (dataSourceWriter == null || !dataSourceWriterPath.equals(reloadDataSourceWriterPath)) {
 				dataSourceWriterPath = reloadDataSourceWriterPath;
-				dataSourceWriter = new DriverDataSource(new File(dataSourceWriterPath));
+				dataSourceWriter = DriverDataSource.of(new File(dataSourceWriterPath));
 				DATASOURCE_REMOTE_FILE.put(writerDsKey, dataSourceWriter);
 			}
 
@@ -2923,11 +2923,11 @@ public abstract class RemoteFileBase extends BaseFile implements RemoteFileSQL {
 					DriverDataSource dmDataSourceWriter = DATASOURCE_REMOTE_FILE.get(dmDsWriterKey);
 					if (dmDataSourceReader == null) {
 						DATASOURCE_REMOTE_FILE.put(dmDsReaderKey,
-								new DriverDataSource(new File(dataSourceReaderFileOriginValue)));
+								DriverDataSource.of(new File(dataSourceReaderFileOriginValue)));
 					}
 					if (dmDataSourceWriter == null) {
 						DATASOURCE_REMOTE_FILE.put(dmDsWriterKey,
-								new DriverDataSource(new File(dataSourceWriterFileOriginValue)));
+								DriverDataSource.of(new File(dataSourceWriterFileOriginValue)));
 					}
 					String tableRangOriginValue = dmCp.getString(String.format("%s.TableRange", originKey), "0");
 					ConfigProperties shortCp = new ConfigProperties();
