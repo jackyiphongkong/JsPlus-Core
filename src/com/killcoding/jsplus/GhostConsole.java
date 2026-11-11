@@ -111,7 +111,21 @@ public class GhostConsole extends ScriptConsole {
     private void init(String ghostDsPropFile) {
         try{
             config = new ConfigProperties();
-            ghostDs = DriverDataSource.of(new File(ghostDsPropFile));
+            File ghostDsFile = new File(ghostDsPropFile);
+            if (!ghostDsFile.isFile()) {
+                // A deployment may ship only the shared datasource config. Fall back to
+                // it (same lookup order as ScriptConsoleBase.getDataSource()) so ghost
+                // mode still gets a working pool instead of an unconfigured one. In that
+                // case GhostTable/GhostTimer come from the defaults below.
+                File sharedDsFile = new File(ScriptConsole.getJsPlusPath() + "/config/DataSource.properties");
+                if (!sharedDsFile.isFile()) {
+                    sharedDsFile = new File(ScriptConsole.getJsPlusPath() + "/config/Datasource.properties");
+                }
+                Logger.systemWarn(GhostConsole.class, "GhostDataSource.properties not found: '" + ghostDsPropFile
+                        + "' - falling back to '" + sharedDsFile.getAbsolutePath() + "'");
+                ghostDsFile = sharedDsFile;
+            }
+            ghostDs = DriverDataSource.of(ghostDsFile);
             config = ghostDs.getConfigProperties();
             ghostTable = config.getString("GhostTable","ghost_remote_command");
             ghostTimer = config.getMilliSeconds("GhostTimer",200L);
