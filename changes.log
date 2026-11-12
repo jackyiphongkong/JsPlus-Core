@@ -3955,3 +3955,9 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/datasource/DriverExecutor.java (M)
 - build: automatic version bump
 
+
+## 6.1.320 (2026.11.11 23:54:48)
+- found diffed: com/killcoding/jsplus/ConsoleImpl.java (M)
+- found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
+- build: automatic version bump
+

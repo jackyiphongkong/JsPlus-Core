@@ -1409,6 +1409,24 @@ try {
 
     var c22DsAsIs = new DriverDataSource(c22Base + "\r\nBooleanBinding=boolean\r\n");
     var c22AsIsFlag = c22DsAsIs.isBooleanAsIs();
+
+    // binding on the as-is pool: the same Boolean keeps its type and lands in a
+    // real BOOLEAN column, where 1/0 would not be the native representation
+    var c22AsIsConn = c22DsAsIs.getConnection();
+    var c22AsIsExec = new CacheDriverExecutor(c22AsIsConn);
+    c22AsIsExec.execute("CREATE TABLE IF NOT EXISTS test_bool_as_is (id INT, b BOOLEAN)");
+    c22AsIsExec.execute("DELETE FROM test_bool_as_is");
+
+    var c22AsIsInsert = new JHashMap();
+    c22AsIsInsert.put("id", 1);
+    c22AsIsInsert.put("b", true);
+    var c22AsIsInserted = c22AsIsExec.execute("INSERT INTO test_bool_as_is (id, b) VALUES (:id, :b)", c22AsIsInsert);
+
+    var c22AsIsFind = new JHashMap();
+    c22AsIsFind.put("id", 1);
+    var c22AsIsRows = c22AsIsExec.find("SELECT b FROM test_bool_as_is WHERE id = :id", c22AsIsFind);
+    var c22AsIsBound = c22AsIsRows.size() > 0 ? "" + c22AsIsRows.get(0).get("b") : "none";
+    c22AsIsExec.close();
     c22DsAsIs.closeAll(0);
 
     // binding: a Boolean param written into a TINYINT column lands as 1
@@ -1428,9 +1446,11 @@ try {
     var c22Bound = c22Rows.size() > 0 ? "" + c22Rows.get(0).get("b") : "none";
     c22Exec.close();
 
-    c22Ok = c22DefaultAsIs === false && c22AsIsFlag === true && c22Bound === "1";
+    c22Ok = c22DefaultAsIs === false && c22AsIsFlag === true
+        && c22Bound === "1" && c22AsIsBound === "true";
     c22Detail = "default=" + c22DefaultAsIs + " asIs=" + c22AsIsFlag
-        + " insert=" + c22Inserted + " bound=" + c22Bound;
+        + " insert=" + c22Inserted + " bound=" + c22Bound
+        + " asIsInsert=" + c22AsIsInserted + " asIsBound=" + c22AsIsBound;
 } catch (e) {
     c22Err = "" + e;
 }
@@ -1440,9 +1460,109 @@ check({
     caseId: "C22",
     ok: c22Ok && c22Err.length === 0,
     detail: c22Err.length > 0 ? c22Err : c22Detail,
-    objective: "the BooleanBinding data source entry decides how Boolean parameters are bound: absent (and any value other than 'boolean') rewrites them to 1/0, so a Boolean written into a TINYINT column reads back as 1, while BooleanBinding=boolean keeps them Boolean for strict BOOLEAN columns",
-    objectiveZh: "BooleanBinding 資料源設定決定布林參數的綁定方式：未設定（或任何非 'boolean' 值）改寫成 1/0，布林值寫入 TINYINT 欄位後讀回為 1；設定 BooleanBinding=boolean 則原樣綁定布林，供嚴格 BOOLEAN 欄位使用",
-    command: "new DriverDataSource(props); ../BooleanBinding=boolean; execute('INSERT ... VALUES (:id, :b)', {id:1, b:true}); find('SELECT b ...')"
+    objective: "the BooleanBinding data source entry decides how Boolean parameters are bound, proven on both pools: absent (and any value other than 'boolean') rewrites them to 1/0, so a Boolean written into a TINYINT column reads back as 1, while BooleanBinding=boolean keeps them Boolean and the same Boolean lands in a real BOOLEAN column and reads back true",
+    objectiveZh: "BooleanBinding 資料源設定決定布林參數的綁定方式，並在兩個池上各自實證：未設定（或任何非 'boolean' 值）改寫成 1/0，布林值寫入 TINYINT 欄位後讀回為 1；設定 BooleanBinding=boolean 則原樣綁定布林，同一布林寫入真實 BOOLEAN 欄位後讀回為 true",
+    command: "new DriverDataSource(props) / props+BooleanBinding=boolean; insert {b:true} into TINYINT and BOOLEAN; read back 1 and true"
+});
+
+// ---------------------------------------------------------------------------
+// C23: Boolean CSV literals are configurable on EXPORT too - the default pair
+//      is true/false, an override is honoured, and the exported BOOLEAN column
+//      imports back with the same values (export/import stay closed)
+// ---------------------------------------------------------------------------
+var c23Err = "";
+var c23Ok = false;
+var c23Detail = "";
+try {
+    var JBool = Java.type("java.lang.Boolean");
+    var JArrayList = Java.type("java.util.ArrayList");
+
+    var c23Vars = Console.getConsoleVariables();
+    var c23OldTrue = "" + c23Vars.getString("ExportBooleanTrueValue", "true");
+    var c23OldFalse = "" + c23Vars.getString("ExportBooleanFalseValue", "false");
+
+    // defaults: the true/false convention
+    var c23TrueDefault = "" + Console.formatObjectValue(false, true, JBool.TRUE, "");
+    var c23FalseDefault = "" + Console.formatObjectValue(false, true, JBool.FALSE, "");
+
+    // override honoured, then restored
+    c23Vars.putAndReturnSelf("ExportBooleanTrueValue", "YES");
+    c23Vars.putAndReturnSelf("ExportBooleanFalseValue", "NO");
+    var c23TrueOverride = "" + Console.formatObjectValue(false, true, JBool.TRUE, "");
+    var c23FalseOverride = "" + Console.formatObjectValue(false, true, JBool.FALSE, "");
+    c23Vars.putAndReturnSelf("ExportBooleanTrueValue", c23OldTrue);
+    c23Vars.putAndReturnSelf("ExportBooleanFalseValue", c23OldFalse);
+
+    // round-trip: export a BOOLEAN column, import it back into a BOOLEAN column
+    var c23Conn = Console.getDataSource().getConnection();
+    var c23St = c23Conn.createStatement();
+    c23St.execute("DROP TABLE IF EXISTS test_bool_export");
+    c23St.execute("CREATE TABLE test_bool_export (id INT PRIMARY KEY, flag BOOLEAN)");
+    c23St.execute("INSERT INTO test_bool_export VALUES (1, TRUE)");
+    c23St.execute("INSERT INTO test_bool_export VALUES (2, FALSE)");
+    c23St.close();
+    c23Conn.close();
+
+    Console.setUseJdbcEnv();
+    Console.execute("select * from test_bool_export order by id");
+    JThread.sleep(500);
+    var c23Dir = basePath + "../docs/latest/export/";
+    JFiles.createDirectories(JPaths.get(c23Dir));
+    var c23Base = c23Dir + "test_bool_export";
+    var c23Ret = Console.exportTo(c23Base);
+
+    var c23Chunk = new JFile(c23Base + ".000000000.csv");
+    var c23Lines = new JArrayList();
+    for (var p23 = 0; p23 < 150; p23++) {
+        if (c23Chunk.exists()) {
+            var sc23 = new JScanner(c23Chunk, "UTF-8");
+            c23Lines.clear();
+            while (sc23.hasNextLine()) { c23Lines.add(sc23.nextLine()); }
+            sc23.close();
+            if (c23Lines.size() >= 3) break;
+        }
+        JThread.sleep(100);
+    }
+    var c23CsvRows = c23Lines.size() >= 3
+        ? "" + c23Lines.get(1) + "|" + c23Lines.get(2) : "none";
+
+    var c23tConn = Console.getDataSource().getConnection();
+    var c23tSt = c23tConn.createStatement();
+    c23tSt.execute("DROP TABLE IF EXISTS test_bool_import");
+    c23tSt.execute("CREATE TABLE test_bool_import (id INT PRIMARY KEY, flag BOOLEAN)");
+    c23tSt.close();
+    c23tConn.close();
+
+    var c23ImpRet = Console.importFrom(["test_bool_import", c23Chunk.getAbsolutePath()]);
+    Console.commit();
+
+    var c23ReadConn = Console.getDataSource().getConnection();
+    var c23Rs = c23ReadConn.createStatement()
+        .executeQuery("SELECT flag FROM test_bool_import WHERE id = 1");
+    var c23TrueBack = "none";
+    if (c23Rs.next()) { c23TrueBack = "" + c23Rs.getBoolean(1); }
+    c23Rs.close();
+    c23ReadConn.close();
+
+    c23Ok = c23TrueDefault === "true" && c23FalseDefault === "false"
+        && c23TrueOverride === "YES" && c23FalseOverride === "NO"
+        && c23TrueBack === "true";
+    c23Detail = "default=" + c23TrueDefault + "/" + c23FalseDefault
+        + " override=" + c23TrueOverride + "/" + c23FalseOverride
+        + " exportRet=" + c23Ret + " rows=" + c23CsvRows
+        + " importRet=" + c23ImpRet + " trueBack=" + c23TrueBack;
+} catch (e) {
+    c23Err = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C23");
+check({
+    name: "Boolean export literals are configurable and round-trip with import",
+    caseId: "C23",
+    ok: c23Ok && c23Err.length === 0,
+    detail: c23Err.length > 0 ? c23Err : c23Detail,
+    objective: "formatObjectValue writes Boolean as the configured literal instead of a hardcoded 1/0: the defaults are true/false, ExportBooleanTrueValue/ExportBooleanFalseValue override them, and a BOOLEAN column exported with the defaults imports back into a BOOLEAN column unchanged",
+    objectiveZh: "導出布林不再寫死 1/0，改由 ExportBooleanTrueValue / ExportBooleanFalseValue 決定（預設 true/false）；覆寫生效，且以預設值導出的 BOOLEAN 欄位可被 importFrom 原樣讀回",
+    command: "Console.formatObjectValue(...); override ExportBoolean*; exportTo BOOLEAN table; importFrom -> getBoolean"
 });
 
 writeReport();

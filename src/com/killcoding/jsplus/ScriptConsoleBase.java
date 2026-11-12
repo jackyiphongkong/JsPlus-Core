@@ -609,6 +609,8 @@ public class ScriptConsoleBase implements ConsoleImpl {
 		consoleVariables.putAndReturnSelf("ImportSplit", DEFAULT_ImportSplit);
 		consoleVariables.putAndReturnSelf("ImportBooleanTrueValues", DEFAULT_ImportBooleanTrueValues);
 		consoleVariables.putAndReturnSelf("ImportBooleanFalseValues", DEFAULT_ImportBooleanFalseValues);
+		consoleVariables.putAndReturnSelf("ExportBooleanTrueValue", DEFAULT_ExportBooleanTrueValue);
+		consoleVariables.putAndReturnSelf("ExportBooleanFalseValue", DEFAULT_ExportBooleanFalseValue);
 		consoleVariables.putAndReturnSelf("BatchSize", DEFAULT_BatchSize);
 		consoleVariables.putAndReturnSelf("Quote", DEFAULT_Quote);
 		consoleVariables.putAndReturnSelf("CallStoredProcedureFun", DEFAULT_CallStoredProcedureFun);
@@ -871,7 +873,11 @@ public class ScriptConsoleBase implements ConsoleImpl {
             value = ((java.sql.Time) objValue).toLocalTime().format(timeFormatter);
         }
 		else if (objValue instanceof Boolean) {
-			value = objValue.equals(true) ? "1" : "0";
+			// Configurable so an exported CSV can be read back by the matching
+			// ImportBoolean* entries; defaults to the true/false convention
+			value = ((Boolean) objValue).booleanValue()
+					? consoleVariables.getString("ExportBooleanTrueValue", DEFAULT_ExportBooleanTrueValue)
+					: consoleVariables.getString("ExportBooleanFalseValue", DEFAULT_ExportBooleanFalseValue);
 		} else if (objValue instanceof String) {
 			if (single)
 				value = toSingle((String) objValue);

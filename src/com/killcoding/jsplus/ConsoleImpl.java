@@ -70,6 +70,8 @@ public interface ConsoleImpl {
 	public final static String DEFAULT_ImportSplit = ",";
 	public final static String DEFAULT_ImportBooleanTrueValues = "true,1";
 	public final static String DEFAULT_ImportBooleanFalseValues = "false,0";
+	public final static String DEFAULT_ExportBooleanTrueValue = "true";
+	public final static String DEFAULT_ExportBooleanFalseValue = "false";
 
 	public final static String DEFAULT_Jdbc_Cipher_AesKey = "";
 	public final static String DEFAULT_Script_Cipher_AesKey = "";

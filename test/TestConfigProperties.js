@@ -339,6 +339,63 @@ try {
         command: "cp.putObjectAndReturnSelf('flag', flag); cp.getObject('flag') === flag"
     });
 
+    // C19: load(File, Runnable) hot-reloads a changed file into the SAME
+    //      instance (auto-load poll -> compareProperties -> reload).
+    //      NOTE: the updated Runnable must stay Java-side. A JS function runs
+    //      on the ConfigProperties auto-load thread ("AutoLoad-<file>") and
+    //      that thread cannot enter the GraalJS context bound to this console
+    //      -> PolyglotThreadAccessException ("Multi threaded access
+    //      requested"). This case therefore passes null and asserts on the
+    //      reloaded values, which is what hot-reload actually promises.
+    var Thread = Java.type("java.lang.Thread");
+    var Long = Java.type("java.lang.Long");
+
+    var tmpDir19 = Files.createTempDirectory("jsplus_cfg_hot_").toString();
+    var file19 = tmpDir19 + File.separator + "hot.properties";
+    Files.write(Paths.get(file19), JsString.valueOf("hotkey=before\nhotflag=false\n").getBytes("UTF-8"));
+
+    // shorten the poll first, so a freshly started auto-load thread uses it
+    var oldTimer19 = ConfigProperties.AUTO_LOAD_TIMER;
+    ConfigProperties.AUTO_LOAD_TIMER = Long.valueOf(200);
+
+    var cp19 = new ConfigProperties();
+    cp19.load(new File(file19), null);
+    var before19 = "" + cp19.getString("hotkey");
+
+    // let the first pass finish, then change the file: one value edited,
+    // one value flipped, one key added
+    Thread.sleep(300);
+    Files.write(Paths.get(file19), JsString.valueOf("hotkey=after\nhotflag=true\nhotadded=1\n").getBytes("UTF-8"));
+
+    var spins19 = 0;
+    while (spins19 < 60 && ("" + cp19.getString("hotkey")) !== "after") {
+        Thread.sleep(100);
+        spins19++;
+    }
+    var after19 = "" + cp19.getString("hotkey");
+    var flag19 = cp19.getBoolean("hotflag", false);
+    var added19 = "" + cp19.getString("hotadded", "none");
+
+    ConfigProperties.AUTO_LOAD_TIMER = oldTimer19;
+    try {
+        var d19 = new File(tmpDir19);
+        var fs19 = d19.listFiles();
+        if (fs19 !== null) { for (var i19 = 0; i19 < fs19.length; i19++) { fs19[i19].delete(); } }
+        d19.delete();
+    } catch (eClean19) {}
+
+    Logger.systemMark("TestConfigProperties.js", "C19");
+    check({
+        caseId: "C19",
+        name: "load(File, Runnable) hot-reloads a changed file into the same instance",
+        ok: before19 === "before" && after19 === "after" && flag19 === true && added19 === "1",
+        detail: "before=" + before19 + " after=" + after19 + " flag=" + flag19
+            + " added=" + added19 + " spins=" + spins19,
+        objective: "load(file, runner) registers the instance with the auto-load poll; after the file is rewritten on disk the poll sees a different property set and reloads it into the same instance - an edited key gets its new value, a flipped boolean is re-parsed, a newly added key appears - all without any explicit load() call",
+        objectiveZh: "load(file, runner) 會把實例註冊到自動載入輪詢；檔案在磁碟上改寫後，輪詢比對到屬性集不同，就把新內容重新載入同一實例：既有鍵換成新值、布林值重新解析、新增鍵出現，全程無需再顯式呼叫 load",
+        command: "cp.load(file, null); rewrite(file); wait(auto-load); cp.getString('hotkey') === 'after' && cp.getBoolean('hotflag') === true && cp.getString('hotadded') === '1'"
+    });
+
 } catch (e) {
     Logger.systemMark("TestConfigProperties.js", "C-ERR");
     check({
