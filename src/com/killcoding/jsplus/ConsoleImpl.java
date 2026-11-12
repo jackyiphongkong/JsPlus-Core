@@ -64,7 +64,7 @@ public interface ConsoleImpl {
 	public final static Long DEFAULT_ExportTimer = 1000L;
 	public final static String DEFAULT_Quote = "%s";
 	public final static String DEFAULT_CallStoredProcedureFun = "callAndReturnBoolean";
-	public final static String DEFAULT_ScriptEngine = "nashorn";
+	public final static String DEFAULT_ScriptEngine = "graalvm.js";
 	public final static String DEFAULT_ExportOrderBy = "";
 	public final static String DEFAULT_ExportSplit = ",";
 	public final static String DEFAULT_ImportSplit = ",";
