@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -507,6 +508,215 @@ public class Table {
 		    log.mark("Queuing table for remove - '{}'",this.name);
 			remover.syncTo(target);
 		}
+	}
+
+	/**
+	* Copies EVERY row of this source table into an existing target table in ONE
+	* pass - the initialisation / full-sync entry (as opposed to the periodic
+	* time-window workers started by syncTo(...)). Paging is cursor based: the
+	* order column is "created_at" when the source table has it, otherwise
+	* Table.PrimaryKey; Table.FullSync.OrderKey overrides that choice. The page
+	* size is Table.FullSync.Batch. When the order column is not the primary
+	* key a composite (order, primary) cursor is used, so rows sharing one order
+	* value are never skipped. No DDL is issued: the target table must already
+	* exist.
+	* @param target - the existing target Table facade
+	* @return the pass statistics (table/orderKey/read/written/batches/elapsedMs)
+	* */
+	public Map<String, Object> fullSyncTo(Table target) throws Exception {
+		if (target == null) {
+			throw new IllegalArgumentException("FullSync target table is null.");
+		}
+		long started = System.currentTimeMillis();
+		String orderKey = resolveFullSyncOrderKey();
+		boolean composite = !orderKey.equalsIgnoreCase(primaryKey);
+		int pageSize = porps.getInteger("Table.FullSync.Batch", 1000);
+		if (pageSize < 1) {
+			pageSize = 1;
+		}
+		boolean truncate = porps.getBoolean("Table.FullSync.Truncate", false);
+
+		if (truncate) {
+			int removed = target.execute(String.format("DELETE FROM %s", target.getQuoteName()), null);
+			log.info("FullSync truncate '{}' ({})", target.name, removed);
+		}
+
+		int read = 0;
+		int written = 0;
+		int batches = 0;
+		Object lastOrder = null;
+		Object lastPrimary = null;
+		while (true) {
+			boolean hasCursor = lastOrder != null;
+			String sql = buildFullSyncPageSql(orderKey, composite, hasCursor);
+			List<Object> params = buildFullSyncPageParams(composite, hasCursor, lastOrder, lastPrimary);
+			List<Map<String, Object>> page = find(sql, params, pageSize);
+			if (page.isEmpty()) {
+				break;
+			}
+			read += page.size();
+			written += insertFullSyncPage(target, page);
+			batches++;
+			Map<String, Object> lastRow = page.get(page.size() - 1);
+			Object nextOrder = getValueIgnoreCase(lastRow, orderKey);
+			if (nextOrder == null) {
+				log.mark("FullSync '{}' stopped at a null '{}' value (read={}).", name, orderKey, read);
+				break;
+			}
+			lastOrder = nextOrder;
+			if (composite) {
+				lastPrimary = getValueIgnoreCase(lastRow, primaryKey);
+			}
+			if (page.size() < pageSize) {
+				break;
+			}
+		}
+
+		long elapsed = System.currentTimeMillis() - started;
+		Map<String, Object> stat = new LinkedHashMap<String, Object>();
+		stat.put("table", name);
+		stat.put("orderKey", orderKey);
+		stat.put("read", Integer.valueOf(read));
+		stat.put("written", Integer.valueOf(written));
+		stat.put("batches", Integer.valueOf(batches));
+		stat.put("elapsedMs", Long.valueOf(elapsed));
+		log.mark("FullSync '{}' -> '{}' read={} written={} batches={} ({} ms)", name, target.name, read, written,
+				batches, elapsed);
+		return stat;
+	}
+
+	/**
+	* Resolves the column a full sync pages by: Table.FullSync.OrderKey when set,
+	* otherwise "created_at" when the source table has it, otherwise PrimaryKey.
+	* @return the order column name
+	* */
+	private String resolveFullSyncOrderKey() throws Exception {
+		String configured = porps.getString("Table.FullSync.OrderKey", "");
+		if (!CommonTools.isBlank(configured)) {
+			return configured.trim();
+		}
+		if (hasColumn("created_at")) {
+			return "created_at";
+		}
+		return primaryKey;
+	}
+
+	/**
+	* Whether this source table exposes the given column - probed with a
+	* "SELECT <col> FROM <t> WHERE 1=0" statement so no row is fetched and the
+	* check stays portable across H2/MySQL/PostgreSQL.
+	* @param column - the column name to probe
+	* @return true when the column exists
+	* */
+	private boolean hasColumn(String column) {
+		try {
+			find(String.format("SELECT %s FROM %s WHERE 1=0", quote(column), getQuoteName()),
+					new ArrayList<Object>(), 1);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	* Builds the cursor page SELECT for a full sync; the composite form
+	* (order, primary) keeps rows with a duplicated order value from being skipped.
+	* @param orderKey - the page order column
+	* @param composite - true when the order column is not the primary key
+	* @param hasCursor - true when a cursor row has already been read
+	* @return the SELECT statement
+	* */
+	private String buildFullSyncPageSql(String orderKey, boolean composite, boolean hasCursor) {
+		String order = quote(orderKey);
+		String pk = quote(primaryKey);
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT * FROM ").append(getQuoteName());
+		if (hasCursor) {
+			if (composite) {
+				sql.append(" WHERE (").append(order).append(" > ?) OR (").append(order).append(" = ? AND ")
+						.append(pk).append(" > ?)");
+			} else {
+				sql.append(" WHERE ").append(order).append(" > ?");
+			}
+		}
+		sql.append(" ORDER BY ").append(order);
+		if (composite) {
+			sql.append(",").append(pk);
+		}
+		return sql.toString();
+	}
+
+	/**
+	* Binds the cursor parameters matching buildFullSyncPageSql(...).
+	* @param composite - true when the order column is not the primary key
+	* @param hasCursor - true when a cursor row has already been read
+	* @param lastOrder - the last order value read
+	* @param lastPrimary - the last primary value read
+	* @return the bound parameter list (empty on the first page)
+	* */
+	private List<Object> buildFullSyncPageParams(boolean composite, boolean hasCursor, Object lastOrder,
+			Object lastPrimary) {
+		List<Object> params = new ArrayList<Object>();
+		if (!hasCursor) {
+			return params;
+		}
+		params.add(lastOrder);
+		if (composite) {
+			params.add(lastOrder);
+			params.add(lastPrimary);
+		}
+		return params;
+	}
+
+	/**
+	* Writes one page of source rows into the target table through the batched
+	* INSERT path (column set taken from the first row of the page).
+	* @param target - the target Table facade
+	* @param page - the source rows of this page
+	* @return the affected row count reported by the target
+	* */
+	private int insertFullSyncPage(Table target, List<Map<String, Object>> page) throws Exception {
+		Map<String, Object> firstItem = page.get(0);
+		List<String> keys = new ArrayList<String>(firstItem.keySet());
+		List<String> columns = new ArrayList<String>();
+		for (String key : keys) {
+			columns.add(target.quote(key));
+		}
+		String columnStr = String.join(",", columns);
+		String valueStr = String.join(",", Collections.nCopies(keys.size(), "?"));
+		String sql = String.format("INSERT INTO %s(%s) VALUES (%s)", target.getQuoteName(), columnStr, valueStr);
+		List<List<Object>> records = new ArrayList<List<Object>>();
+		for (Map<String, Object> item : page) {
+			List<Object> params = new ArrayList<Object>();
+			for (String key : keys) {
+				params.add(getValueIgnoreCase(item, key));
+			}
+			records.add(params);
+		}
+		return target.batch(sql, records);
+	}
+
+	/**
+	* Reads a row value by column name without depending on the driver's map key
+	* casing.
+	* @param row - the row map
+	* @param key - the column name
+	* @return the value, or null when the column is absent
+	* */
+	private Object getValueIgnoreCase(Map<String, Object> row, String key) {
+		if (row == null || key == null) {
+			return null;
+		}
+		if (row.containsKey(key)) {
+			return row.get(key);
+		}
+		for (Map.Entry<String, Object> entry : row.entrySet()) {
+			String name = entry.getKey();
+			if (name != null && name.equalsIgnoreCase(key)) {
+				return entry.getValue();
+			}
+		}
+		return null;
 	}
 
 }

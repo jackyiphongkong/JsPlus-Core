@@ -32,7 +32,9 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.sql.DataSource;
 
 
@@ -222,6 +224,78 @@ public class Database {
 		}
 		syncingTables.clear();
 		log.mark("Stopped sync workers");
+	}
+
+	/**
+	* Runs a full (one-pass) copy of every configured table into the same-named
+	* table of the target database - the initialisation entry. Unlike syncTo(...)
+	* this starts no worker: it reads all source rows through a cursor and returns
+	* when the whole pass is done. The target tables must already exist (no DDL is
+	* issued here); a table missing from the target configuration is reported in
+	* the "failed" list instead of aborting the pass.
+	* @param target - the target Database facade
+	* @return the aggregate statistics (tables/synced/read/written/failed/entries/elapsedMs)
+	* */
+	public Map<String, Object> fullSyncTo(Database target) throws Exception {
+		if (target == null) {
+			throw new IllegalArgumentException("FullSync target database is null.");
+		}
+		long started = System.currentTimeMillis();
+		List<Table> tables = getTables();
+		List<Map<String, Object>> entries = new ArrayList<Map<String, Object>>();
+		List<String> failed = new ArrayList<String>();
+		int tableCount = 0;
+		int read = 0;
+		int written = 0;
+
+		if (tables != null) {
+			tableCount = tables.size();
+			for (Table table : tables) {
+				if (table == null) {
+					continue;
+				}
+				try {
+					Table targetTable = target.getTable(table.name);
+					if (targetTable == null) {
+						failed.add(table.name);
+						log.error("FullSync target table not configured: {}", table.name);
+						continue;
+					}
+					Map<String, Object> stat = table.fullSyncTo(targetTable);
+					entries.add(stat);
+					read += toInt(stat.get("read"));
+					written += toInt(stat.get("written"));
+				} catch (Exception e) {
+					failed.add(table.name);
+					log.error(e.getMessage(), e);
+				}
+			}
+		}
+
+		long elapsed = System.currentTimeMillis() - started;
+		Map<String, Object> stat = new LinkedHashMap<String, Object>();
+		stat.put("tables", Integer.valueOf(tableCount));
+		stat.put("synced", Integer.valueOf(entries.size()));
+		stat.put("read", Integer.valueOf(read));
+		stat.put("written", Integer.valueOf(written));
+		stat.put("failed", failed);
+		stat.put("entries", entries);
+		stat.put("elapsedMs", Long.valueOf(elapsed));
+		log.mark("FullSync database -> '{}' tables={} read={} written={} failed={} ({} ms)",
+				target.getSourceOrTarget(), tableCount, read, written, failed.size(), elapsed);
+		return stat;
+	}
+
+	/**
+	* Converts a statistics value to int (0 for anything non-numeric).
+	* @param value - the value to convert
+	* @return the int value
+	* */
+	private int toInt(Object value) {
+		if (value instanceof Number) {
+			return ((Number) value).intValue();
+		}
+		return 0;
 	}
 
 }

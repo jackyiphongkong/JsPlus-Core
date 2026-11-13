@@ -916,6 +916,194 @@ try {
         ]
     });
 
+    // C18: FULL sync - a whole table copied in ONE pass, including rows whose
+    // created_at is far OLDER than any incremental sync window. The periodic
+    // inserter starts at now-period (default 24h), so the ~90-day-old rows
+    // below would never be pushed by syncTo(); Database.fullSyncTo() reads
+    // them through a created_at cursor instead.
+    var TBL_FULL_A = "dbsync_full_a";
+    var cpFA = loadCp(TBL_FULL_A, { inserter: false, updater: false, deleter: false, remover: false });
+    cpFA.setProperty("Table.FullSync.Batch", "1000");
+    cpFA.setProperty("Table.FullSync.Truncate", "false");
+    var dbFA_S = new DatabaseType("Source", cpFA);
+    var dbFA_T = new DatabaseType("Target", cpFA);
+    var tblFA_S = dbFA_S.getTable(TBL_FULL_A);
+    var tblFA_T = dbFA_T.getTable(TBL_FULL_A);
+    var createFA = "CREATE TABLE IF NOT EXISTS " + TBL_FULL_A
+        + " (id VARCHAR(64) PRIMARY KEY, name VARCHAR(64), created_at TIMESTAMP)";
+    tblFA_S.execute(createFA, null);
+    tblFA_T.execute(createFA, null);
+    tblFA_S.execute("DELETE FROM " + TBL_FULL_A, null);
+    tblFA_T.execute("DELETE FROM " + TBL_FULL_A, null);
+
+    var FULL_A_N = 30000;
+    var FULL_A_CHUNK = 500;
+    var fullABase = new Date().getTime() - 90 * 24 * 3600 * 1000;
+    for (var fa = 1; fa <= FULL_A_N; fa += FULL_A_CHUNK) {
+        var faEnd = Math.min(fa + FULL_A_CHUNK - 1, FULL_A_N);
+        var faVals = [];
+        for (var fb = fa; fb <= faEnd; fb++) {
+            var faTs = new TimestampType(fullABase + fb * 1000).toString();
+            faVals.push("('fu-" + fb + "','row-" + fb + "',TIMESTAMP '" + faTs + "')");
+        }
+        tblFA_S.execute("INSERT INTO " + TBL_FULL_A + " (id,name,created_at) VALUES " + faVals.join(","), null);
+    }
+
+    var fullAStat = dbFA_S.fullSyncTo(dbFA_T);
+    var fullACount = selectCount(tblFA_T, "SELECT COUNT(*) AS c FROM " + TBL_FULL_A);
+    // orderKey lives in the per-table entries of the aggregate stat, not at the top level.
+    var fullAEntries = fullAStat.get("entries");
+    var fullAEntry = (fullAEntries !== null && fullAEntries.size() > 0) ? fullAEntries.get(0) : null;
+    var fullAOrderKey = fullAEntry === null ? "none" : ("" + mapGetIgnoreCase(fullAEntry, "orderKey"));
+    var fullARead = parseInt("" + mapGetIgnoreCase(fullAStat, "read"));
+    var fullAWritten = parseInt("" + mapGetIgnoreCase(fullAStat, "written"));
+    var dbvFullAT = dbVerifyTarget(function () {
+        return "SELECT * FROM " + TBL_FULL_A + " WHERE id IN ('fu-1','fu-15000','fu-30000') ORDER BY id";
+    });
+    var fullAOk = fullACount === FULL_A_N
+        && fullARead === FULL_A_N
+        && fullAWritten === FULL_A_N
+        && fullAOrderKey === "created_at"
+        && dbvFullAT.indexOf("fu-1") >= 0
+        && dbvFullAT.indexOf("fu-30000") >= 0;
+    Logger.systemMark("TestDBSync.js", "C18");
+    check({
+        caseId: "C18",
+        name: "Full sync: 30000 rows ~90 days old copied in one pass (created_at cursor)",
+        ok: fullAOk,
+        detail: "targetCount=" + fullACount + "/" + FULL_A_N + " read=" + fullARead + " written=" + fullAWritten
+            + " orderKey=" + fullAOrderKey + " stat=" + fullAStat,
+        objective: "Database.fullSyncTo() copies every source row once, ignoring the 24h incremental window",
+        objectiveZh: "Database.fullSyncTo() 一次性複製全部來源資料，不受 24 小時增量視窗限制",
+        command: "dbS.fullSyncTo(dbT) on dbsync_full_a (30000 rows, created_at = now-90d)",
+        dbvList: [
+            { label: "Target (dbsync_target)", result: dbvTargetResult }
+        ]
+    });
+
+    // C19: a table WITHOUT created_at falls back to the primary-key cursor, and
+    // Table.FullSync.Truncate=true clears pre-existing target rows first.
+    var TBL_FULL_B = "dbsync_full_b";
+    var cpFB = loadCp(TBL_FULL_B, { inserter: false, updater: false, deleter: false, remover: false });
+    cpFB.setProperty("Table.FullSync.Batch", "500");
+    cpFB.setProperty("Table.FullSync.Truncate", "true");
+    var dbFB_S = new DatabaseType("Source", cpFB);
+    var dbFB_T = new DatabaseType("Target", cpFB);
+    var tblFB_S = dbFB_S.getTable(TBL_FULL_B);
+    var tblFB_T = dbFB_T.getTable(TBL_FULL_B);
+    var createFB = "CREATE TABLE IF NOT EXISTS " + TBL_FULL_B + " (id VARCHAR(64) PRIMARY KEY, name VARCHAR(64))";
+    tblFB_S.execute(createFB, null);
+    tblFB_T.execute(createFB, null);
+    tblFB_S.execute("DELETE FROM " + TBL_FULL_B, null);
+    tblFB_T.execute("DELETE FROM " + TBL_FULL_B, null);
+
+    var FULL_B_N = 5000;
+    for (var fba = 1; fba <= FULL_B_N; fba += 500) {
+        var fbaEnd = Math.min(fba + 499, FULL_B_N);
+        var fbaVals = [];
+        for (var fbb = fba; fbb <= fbaEnd; fbb++) {
+            fbaVals.push("('fb-" + fbb + "','row-" + fbb + "')");
+        }
+        tblFB_S.execute("INSERT INTO " + TBL_FULL_B + " (id,name) VALUES " + fbaVals.join(","), null);
+    }
+    var dirtyVals = [];
+    for (var dz = 1; dz <= 200; dz++) {
+        dirtyVals.push("('dirty-" + dz + "','stale-" + dz + "')");
+    }
+    tblFB_T.execute("INSERT INTO " + TBL_FULL_B + " (id,name) VALUES " + dirtyVals.join(","), null);
+
+    var fullBStat = dbFB_S.fullSyncTo(dbFB_T);
+    var fullBCount = selectCount(tblFB_T, "SELECT COUNT(*) AS c FROM " + TBL_FULL_B);
+    var fullBDirty = selectCount(tblFB_T, "SELECT COUNT(*) AS c FROM " + TBL_FULL_B + " WHERE id LIKE 'dirty-%'");
+    var fullBEntries = fullBStat.get("entries");
+    var fullBEntry = (fullBEntries !== null && fullBEntries.size() > 0) ? fullBEntries.get(0) : null;
+    var fullBOrderKey = fullBEntry === null ? "none" : ("" + mapGetIgnoreCase(fullBEntry, "orderKey"));
+    var fullBWritten = parseInt("" + mapGetIgnoreCase(fullBStat, "written"));
+    var fullBOk = fullBCount === FULL_B_N
+        && fullBDirty === 0
+        && fullBWritten === FULL_B_N
+        && fullBOrderKey === "id";
+    Logger.systemMark("TestDBSync.js", "C19");
+    check({
+        caseId: "C19",
+        name: "Full sync without created_at uses the primary-key cursor; Truncate clears stale target rows",
+        ok: fullBOk,
+        detail: "targetCount=" + fullBCount + "/" + FULL_B_N + " staleRowsLeft=" + fullBDirty
+            + " written=" + fullBWritten + " orderKey=" + fullBOrderKey + " stat=" + fullBStat,
+        objective: "Order column falls back to Table.PrimaryKey when created_at is absent; Truncate=true deletes target rows first",
+        objectiveZh: "沒有 created_at 時改用 Table.PrimaryKey 排序；Truncate=true 先清空目標表",
+        command: "dbS.fullSyncTo(dbT) on dbsync_full_b (5000 rows, no created_at, target preloaded with 200 stale rows)"
+    });
+
+    // C20: Enter.fullSync(configFile) - the one-key FULL sync entry. It loads the
+    // static EnterTest.properties, copies EVERY row of dbsync_ent_a in one pass
+    // and returns; it starts NO worker, so stop() afterwards must be a harmless
+    // no-op. The seeded rows carry a ~90-day-old created_at, i.e. far outside the
+    // 24h window the Inserter worker configured in that file would ever scan.
+    var cpEntF = new ConfigPropertiesType();
+    cpEntF.setProperty("Source.Database.DataSource", "DBSyncSource.properties");
+    cpEntF.setProperty("Source.Database.Schema", "PUBLIC");
+    cpEntF.setProperty("Source.Database.Quote.Enable", "false");
+    cpEntF.setProperty("Target.Database.DataSource", "DBSyncTarget.properties");
+    cpEntF.setProperty("Target.Database.Schema", "PUBLIC");
+    cpEntF.setProperty("Target.Database.Quote.Enable", "false");
+    cpEntF.setProperty("Table.GetTables.List", "dbsync_ent_a");
+    cpEntF.setProperty("Table.PrimaryKey", "id");
+    cpEntF.setProperty("Table.Timer", "200ms");
+
+    var dbEntFS = new DatabaseType("Source", cpEntF);
+    var dbEntFT = new DatabaseType("Target", cpEntF);
+    var tblEntFS = dbEntFS.getTable("dbsync_ent_a");
+    var tblEntFT = dbEntFT.getTable("dbsync_ent_a");
+    tblEntFS.execute("DELETE FROM dbsync_ent_a", null); // source table owned by dbscript/change_sync.sql
+    tblEntFT.execute("DELETE FROM dbsync_ent_a", null); // both file DBs owned by dbscript/change_sync.sql
+
+    var ENT_F_N = 5;
+    var entFBase = new Date().getTime() - 90 * 24 * 3600 * 1000;
+    for (var ef = 1; ef <= ENT_F_N; ef++) {
+        var efTs = new TimestampType(entFBase + ef * 1000);
+        tblEntFS.execute("INSERT INTO dbsync_ent_a (id, name, created_at) VALUES (?, ?, ?)",
+            ["entf-" + ef, "row-" + ef, efTs]);
+    }
+
+    // config is static: JsPlus/config/EnterTest.properties (no dynamic generation)
+    var entF = new EnterType();
+    var entFStat = entF.fullSync("EnterTest.properties");
+
+    var entFCount = selectCount(tblEntFT, "SELECT COUNT(*) AS c FROM dbsync_ent_a");
+    var entFEntries = entFStat.get("entries");
+    var entFEntry = (entFEntries !== null && entFEntries.size() > 0) ? entFEntries.get(0) : null;
+    var entFOrderKey = entFEntry === null ? "none" : ("" + mapGetIgnoreCase(entFEntry, "orderKey"));
+    var entFRead = parseInt("" + mapGetIgnoreCase(entFStat, "read"));
+    var entFWritten = parseInt("" + mapGetIgnoreCase(entFStat, "written"));
+    entF.stop(); // no worker was started, so this must be a harmless no-op
+    var entFAfterStop = selectCount(tblEntFT, "SELECT COUNT(*) AS c FROM dbsync_ent_a");
+    var dbvEntF = dbVerifyTarget(function () {
+        return "SELECT * FROM dbsync_ent_a ORDER BY id";
+    });
+    var entFOk = entFCount === ENT_F_N
+        && entFAfterStop === ENT_F_N
+        && entFRead === ENT_F_N
+        && entFWritten === ENT_F_N
+        && entFOrderKey === "created_at"
+        && dbvEntF.indexOf("entf-1") >= 0
+        && dbvEntF.indexOf("entf-5") >= 0;
+    Logger.systemMark("TestDBSync.js", "C20");
+    check({
+        caseId: "C20",
+        name: "Enter.fullSync(configFile) one-key FULL sync + stop() is a no-op afterwards",
+        ok: entFOk,
+        detail: "targetCount=" + entFCount + "/" + ENT_F_N + " afterStop=" + entFAfterStop
+            + " read=" + entFRead + " written=" + entFWritten + " orderKey=" + entFOrderKey
+            + " stat=" + entFStat,
+        objective: "Enter.fullSync loads the config file, copies every table row in one pass and starts no worker",
+        objectiveZh: "Enter.fullSync 讀取設定檔、一次性複製全部資料列，不啟動任何 worker",
+        command: "ent.fullSync('EnterTest.properties') on dbsync_ent_a (5 rows, created_at = now-90d); ent.stop() stays a no-op",
+        dbvList: [
+            { label: "Target (dbsync_target)", result: dbvTargetResult }
+        ]
+    });
+
 } catch (e) {
     Logger.systemMark("TestDBSync.js", "C-ERR");
     check({

@@ -1513,7 +1513,10 @@ try {
 
     var c23Chunk = new JFile(c23Base + ".000000000.csv");
     var c23Lines = new JArrayList();
-    for (var p23 = 0; p23 < 150; p23++) {
+    // exportTo writes the chunk asynchronously; under a full TestAll run (many
+    // suites before this one) it can take well over 15s to land, so the wait is
+    // bounded at 60s rather than the previous 15s.
+    for (var p23 = 0; p23 < 600; p23++) {
         if (c23Chunk.exists()) {
             var sc23 = new JScanner(c23Chunk, "UTF-8");
             c23Lines.clear();

@@ -425,7 +425,8 @@ public final class DriverDataSource implements DataSource {
 		baseName = baseName.replaceFirst("-manageConnectionPool-\\d+$", "");
 		// Windows/Linux both reject these characters in a file name
 		String safeName = baseName.replaceAll("[\\\\/:*?\"<>|]", "_");
-		return new File(dir, String.format("%s.%s.log", safeName, PID));
+		// return new File(dir, String.format("%s.%s.log", safeName, PID));
+		return new File(dir, String.format("%s.log", safeName));
 	}
 
 	/**
@@ -1143,9 +1144,10 @@ public final class DriverDataSource implements DataSource {
 				countAbortedTimeout, System.lineSeparator()));
 		countInfoSb.append(String.format("CountAbortedLifeCycleEnded: %s\tCountAbortedInvalid: %s%s",
 				countAbortedLifeCycle, countAbortedInvalid, System.lineSeparator()));
-		countInfoSb.append(String.format("MaxUsage: %.2f%%\tCurrentUsage: %.2f%%\tAveUsage: %.2f%%\tCounter: %s/%s%s", maxUsage * 100,
-				getUsage() * 100,getAveUsage() * 100, aveUsageSum.size(),maxAveUsageSize,System.lineSeparator()));
-
+		// countInfoSb.append(String.format("MaxUsage: %.2f%%\tCurrentUsage: %.2f%%\tAveUsage: %.2f%%\tCounter: %s/%s%s", maxUsage * 100,
+		// 		getUsage() * 100,getAveUsage() * 100, aveUsageSum.size(),maxAveUsageSize,System.lineSeparator()));
+		countInfoSb.append(String.format("MaxUsage: %.2f%%\tCurrentUsage: %.2f%%\tAveUsage: %.2f%%%s", maxUsage * 100,
+				getUsage() * 100,getAveUsage() * 100,System.lineSeparator()));
 		String urlInfo = String.format("URL: %s%s", this.url, System.lineSeparator());
 		String usernameInfo = String.format("User: %s%s", this.username, System.lineSeparator());
 		String header = String.format("%sLine\tHashCode\tCreatedTime\tChangedTime\tStatus\tLastUsingBy%s",
@@ -1222,10 +1224,11 @@ public final class DriverDataSource implements DataSource {
 			FileTools.write(statusLogFile, msg, false);
 
 			if (isFull && enableFullStatusLog) {
-				SimpleDateFormat timeFullFormat = new SimpleDateFormat("yyyyMMddHHmm");
-				File fullStatusLogFile = new File(String.format("%s_full_%s", statusLogFile.getAbsolutePath(),
-						timeFullFormat.format(new Date())));
-				FileTools.write(fullStatusLogFile, msg, false);
+				// SimpleDateFormat timeFullFormat = new SimpleDateFormat("yyyyMMddHHmm");
+				// File fullStatusLogFile = new File(String.format("%s_full_%s", statusLogFile.getAbsolutePath(),
+				// 		timeFullFormat.format(new Date())));
+				// FileTools.write(fullStatusLogFile, msg, false);
+				log.error(msg);
 
 			}
 		} catch (IOException e) {

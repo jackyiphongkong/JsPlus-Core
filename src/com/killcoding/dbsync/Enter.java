@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -192,6 +193,29 @@ public class Enter {
 		}
 		started.clear();
 		log.mark("Enter stopped");
+	}
+
+	/**
+	* Runs a single full (initialisation) copy driven by the given config file:
+	* loads the enter config, builds Source/Target databases and copies EVERY row
+	* of each configured table into the target, returning the statistics when the
+	* pass is done. No periodic worker is started, so stop() is not needed
+	* afterwards. The target tables must already exist (no DDL is issued).
+	* @param enterCnf - enter config file name (resolved under ROOT_PATH/config)
+	* @return the aggregate statistics from Database.fullSyncTo(...)
+	* */
+	public Map<String, Object> fullSync(String enterCnf) {
+		try {
+			load(enterCnf);
+			Database source = new Database("Source", ENTER_PORPS);
+			Database target = new Database("Target", ENTER_PORPS);
+			Map<String, Object> stat = source.fullSyncTo(target);
+			log.mark("Enter fullSync finished: {}", enterCnf);
+			return stat;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new RuntimeException("DBSync fullSync failed: " + e.getMessage(), e);
+		}
 	}
 
 }

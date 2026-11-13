@@ -3961,3 +3961,18 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/jsplus/ScriptConsoleBase.java (M)
 - build: automatic version bump
 
+
+## 6.1.321 (2026.11.13 13:34:53)
+- found diffed: com/killcoding/dbsync/Database.java (M)
+- found diffed: com/killcoding/dbsync/Enter.java (M)
+- found diffed: com/killcoding/dbsync/Table.java (M)
+- build: automatic version bump
+
+
+## 6.1.322 (2026.11.13 17:08:44)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- found diffed: com/killcoding/dbsync/Database.java (M)
+- found diffed: com/killcoding/dbsync/Enter.java (M)
+- found diffed: com/killcoding/dbsync/Table.java (M)
+- build: automatic version bump
+
