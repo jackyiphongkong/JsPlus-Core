@@ -15,8 +15,10 @@
 //            keytool when missing. Covers: plain GET with charset fallback
 //            (no Content-Type), POST body echo (UTF-8 Chinese), gzip response
 //            decoding, error body (404), missing-Content-Type NPE guard,
-//            strict HTTPS default (rejects the self-signed cert), and
-//            trust-all + relaxed hostname verification (connects).
+//            strict HTTPS default (rejects the self-signed cert),
+//            trust-all + relaxed hostname verification (connects), and
+//            request headers (setUserAgent / setHeader / addHeader /
+//            clearHeaders, on both GET and POST).
 // NOTE     : Every java.lang.String crossing the GraalJS boundary is wrapped
 //            with com.killcoding.jsplus.JsString (project convention); no regex
 //            literals (GraalVM JS has no TRegex); server handlers run on the
@@ -82,6 +84,7 @@ import com.sun.net.httpserver.HttpsServer;
  *   GET  /gzip     200 gzip-compressed body         (Content-Encoding: gzip)
  *   GET  /notfound 404 "not found body"             (error stream)
  *   GET  /no-ctype 200 body with no Content-Type    (NPE guard)
+ *   ANY  /headers  echoes User-Agent + X-Test       (request-header cases)
  *   GET  /secure   HTTPS only: 200 "secure ok"      (self-signed cert)
  * The self-signed PKCS12 keystore is generated once into java.io.tmpdir via
  * the JDK keytool when missing; the HTTPS listener starts only on success.
@@ -134,6 +137,15 @@ public class WebTestServer {
                 OutputStream os = ex.getResponseBody();
                 os.write(body);
                 os.close();
+            }
+        });
+        http.createContext("/headers", new HttpHandler() {
+            public void handle(HttpExchange ex) throws IOException {
+                String ua = ex.getRequestHeaders().getFirst("User-Agent");
+                String xt = ex.getRequestHeaders().getFirst("X-Test");
+                String body = "ua=" + (ua == null ? "none" : ua)
+                        + " xt=" + (xt == null ? "none" : xt);
+                respond(ex, 200, body.getBytes("UTF-8"), "text/plain; charset=UTF-8");
             }
         });
         http.start();
@@ -321,6 +333,136 @@ try {
         objective: "getCharset() returns UTF-8 when the response has no Content-Type",
         objectiveZh: "響應無 Content-Type 時 getCharset() 回退 UTF-8，getResponseText() 不拋 NPE",
         command: "new WebClient(base + '/no-ctype').get() + getResponseText()"
+    });
+
+    // C8: custom User-Agent on GET - the requirement for sites that reject the
+    // JVM default UA (Wikipedia answers "Java/<version>" with 403)
+    var ua = str(WebClient.DEFAULT_BROWSER_USER_AGENT);
+    var c8 = new WebClient(base + "/headers");
+    c8.setUserAgent(ua);
+    var c8code = c8.get();
+    var c8body = str(c8.getResponseText());
+    Logger.systemMark("TestWebClient.js", "C8");
+    check({
+        caseId: "C8",
+        name: "setUserAgent sends the configured User-Agent on GET",
+        ok: c8code === 200 && c8body.indexOf("ua=" + ua) === 0,
+        detail: "code=" + c8code + " body=" + c8body.substring(0, 90),
+        objective: "setUserAgent() writes a User-Agent header so servers that reject the JVM default accept the request",
+        objectiveZh: "setUserAgent() 送出 User-Agent 標頭，讓拒絕 JVM 預設 UA 的站點接受請求",
+        command: "wc.setUserAgent(WebClient.DEFAULT_BROWSER_USER_AGENT); wc.get()"
+    });
+
+    // C9: an arbitrary custom header reaches the server
+    var c9 = new WebClient(base + "/headers");
+    c9.setHeader("X-Test", "alpha");
+    var c9code = c9.get();
+    var c9body = str(c9.getResponseText());
+    Logger.systemMark("TestWebClient.js", "C9");
+    check({
+        caseId: "C9",
+        name: "setHeader sends an arbitrary header",
+        ok: c9code === 200 && c9body.indexOf("xt=alpha") > 0,
+        detail: "code=" + c9code + " body=" + c9body.substring(0, 90),
+        objective: "setHeader(name, value) applies any request header before the connection opens",
+        objectiveZh: "setHeader(name, value) 在連線開啟前送出任意請求標頭",
+        command: "wc.setHeader('X-Test', 'alpha'); wc.get()"
+    });
+
+    // C10: headers also apply to POST (they must be set before the body is written)
+    var c10 = new WebClient(base + "/headers", "k=v");
+    c10.setUserAgent(ua);
+    c10.setHeader("X-Test", "beta");
+    var c10code = c10.post();
+    var c10body = str(c10.getResponseText());
+    Logger.systemMark("TestWebClient.js", "C10");
+    check({
+        caseId: "C10",
+        name: "headers apply to POST before the body is written",
+        ok: c10code === 200 && c10body.indexOf("ua=" + ua) === 0 && c10body.indexOf("xt=beta") > 0,
+        detail: "code=" + c10code + " body=" + c10body.substring(0, 90),
+        objective: "applyHeaders() runs before writeBody(), so a POST carries the same headers as a GET",
+        objectiveZh: "applyHeaders() 在 writeBody() 之前執行，POST 與 GET 帶相同標頭",
+        command: "wc.setUserAgent(ua); wc.setHeader('X-Test', 'beta'); wc.post()"
+    });
+
+    // C11: setHeader replaces - only the last value is sent
+    var c11 = new WebClient(base + "/headers");
+    c11.setUserAgent("first-agent");
+    c11.setUserAgent("second-agent");
+    var c11code = c11.get();
+    var c11body = str(c11.getResponseText());
+    var c11get = str(c11.getUserAgent());
+    Logger.systemMark("TestWebClient.js", "C11");
+    check({
+        caseId: "C11",
+        name: "setHeader replaces the previous value (last one wins)",
+        ok: c11code === 200 && c11body.indexOf("ua=second-agent") === 0
+            && c11body.indexOf("first-agent") < 0 && c11get === "second-agent",
+        detail: "code=" + c11code + " body=" + c11body.substring(0, 60) + " getUserAgent=" + c11get,
+        objective: "setUserAgent()/setHeader() overwrite instead of appending, and getHeader() reports the live value",
+        objectiveZh: "setUserAgent()/setHeader() 覆蓋而非追加，getHeader() 反映最新值",
+        command: "wc.setUserAgent('first-agent'); wc.setUserAgent('second-agent'); wc.get()"
+    });
+
+    // C12: clearHeaders() drops everything
+    var c12 = new WebClient(base + "/headers");
+    c12.setHeader("X-Test", "keep");
+    c12.clearHeaders();
+    var c12code = c12.get();
+    var c12body = str(c12.getResponseText());
+    var c12get = c12.getHeader("X-Test");
+    Logger.systemMark("TestWebClient.js", "C12");
+    check({
+        caseId: "C12",
+        name: "clearHeaders removes every configured header",
+        ok: c12code === 200 && c12body.indexOf("xt=none") > 0
+            && c12body.indexOf("keep") < 0 && c12get === null,
+        detail: "code=" + c12code + " body=" + c12body.substring(0, 60) + " getHeader=" + c12get,
+        objective: "clearHeaders() leaves no custom header on the wire and getHeader() returns null",
+        objectiveZh: "clearHeaders() 後線上不再有自訂標頭，getHeader() 回傳 null",
+        command: "wc.setHeader('X-Test','keep'); wc.clearHeaders(); wc.get()"
+    });
+
+    // C13: a response header is readable after the request
+    var c13 = new WebClient(base + "/headers");
+    var c13code = c13.get();
+    var c13ctype = str(c13.getResponseHeader("Content-Type"));
+    Logger.systemMark("TestWebClient.js", "C13");
+    check({
+        caseId: "C13",
+        name: "getResponseHeader reads a response header",
+        ok: c13code === 200 && c13ctype.indexOf("text/plain") === 0 && c13ctype.indexOf("UTF-8") > 0,
+        detail: "code=" + c13code + " Content-Type=" + c13ctype,
+        objective: "getResponseHeader(name) exposes the server response headers instead of dropping them",
+        objectiveZh: "getResponseHeader(name) 讀取伺服器響應標頭，而非丟棄",
+        command: "wc.get(); wc.getResponseHeader('Content-Type')"
+    });
+
+    // C14: the whole response header map is available
+    var c14 = new WebClient(base + "/headers");
+    c14.get();
+    var c14map = c14.getResponseHeaders();
+    var c14keys = c14map.keySet().toArray();
+    var c14n = c14map.size();
+    // Header names keep the server's original casing (HTTP names are
+    // case-insensitive), so match the known one case-insensitively.
+    var c14has = false;
+    for (var k14 = 0; k14 < c14keys.length; k14++) {
+        if (str(c14keys[k14]).toLowerCase().indexOf("content-type") === 0) {
+            c14has = true;
+        }
+    }
+    var c14ctype = str(c14map.get(c14keys[0]).get(0));
+    Logger.systemMark("TestWebClient.js", "C14");
+    check({
+        caseId: "C14",
+        name: "getResponseHeaders returns every response header",
+        ok: c14has === true && c14n >= 2 && c14ctype.length > 0,
+        detail: "hasContentType=" + c14has + " size=" + c14n + " firstValue=" + c14ctype,
+        objective: "getResponseHeaders() returns a name->values map of the response, excluding the status line",
+        objectiveZh: "getResponseHeaders() 回傳 name->values 響應標頭映射，不含狀態行",
+        command: "wc.get(); wc.getResponseHeaders()"
     });
 
     if (httpsAvailable) {

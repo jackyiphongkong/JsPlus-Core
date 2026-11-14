@@ -23,9 +23,15 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Locale;
 
+
 /**
 * Minifies HTML while repairing broken tags, with no DOM library and no
 * third-party jar - the drop-in replacement for the jsoup-based compressor.
+* <p>
+* It lives in {@code com.killcoding.tpl} - next to {@link SimpleHtmlScanner}
+* {@link SimpleJsCompressor} and {@link SimpleCssCompressor} - because it is
+* the last stage of that pipeline: scan, repair, then minify the
+* {@code script} and {@code style} bodies.
 *
 * <p>
 * Unlike {@link SimpleHtmlScanner}, which deliberately never builds structure

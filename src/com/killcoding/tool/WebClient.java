@@ -29,6 +29,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -64,6 +68,11 @@ import java.util.regex.Pattern;
  *       {@code Content-Encoding} is {@code gzip}, {@code x-gzip} or
  *       {@code deflate}; no explicit {@code Accept-Encoding} header is sent,
  *       but servers that compress unconditionally are handled correctly.</li>
+ *   <li><b>No browser identity</b> - every request carries the JVM default
+ *       {@code User-Agent} ({@code Java/<version>}), which sites such as
+ *       Wikipedia reject with {@code 403 Forbidden}; identity and any other
+ *       header are configured through {@link #setUserAgent(String)} and
+ *       {@link #setHeader(String, String)} before connecting.</li>
  * </ul>
  * A request is executed with {@link #get()} or {@link #post()}, which open
  * the connection and return the HTTP status; the body is then read with
@@ -82,6 +91,31 @@ public class WebClient {
 	protected String url;
 	/** Query string sent as the POST body or appended to a GET URL; may be {@code null}. */
 	protected String qs;
+
+	/**
+	 * Request headers applied to every connection this client opens, in insertion
+	 * order. A single name may hold several values (see
+	 * {@link #addHeader(String, String)}); the first value is the one reported by
+	 * {@link #getHeader(String)}.
+	 */
+	protected final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
+
+	/**
+	 * A browser-like {@code User-Agent}, for sites that reject the JVM default
+	 * ({@code Java/<version>}): Wikipedia answers such requests with 403
+	 * {@code Forbidden}. It is not applied automatically - pass it to
+	 * {@link #setUserAgent(String)} before calling {@link #get()} or
+	 * {@link #post()}:
+	 *
+	 * <pre>
+	 * WebClient wc = new WebClient(url);
+	 * wc.setUserAgent(WebClient.DEFAULT_BROWSER_USER_AGENT);
+	 * wc.get();
+	 * </pre>
+	 */
+	public static final String DEFAULT_BROWSER_USER_AGENT =
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+			+ "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 	/**
 	 * When {@code true}, accepts any server certificate chain (self-signed,
@@ -166,6 +200,7 @@ public class WebClient {
 			conn = httpsConn;
 			initConn();
 			applySslOptions(httpsConn);
+			applyHeaders(httpsConn);
 			httpsConn.setRequestMethod(method);
 			httpsConn.setDoInput(true);
 			httpsConn.setUseCaches(false);
@@ -180,6 +215,7 @@ public class WebClient {
 			if (method.equals("POST")) {
 				conn = (HttpURLConnection) connUrl.openConnection();
 				initConn();
+				applyHeaders(conn);
 				conn.setRequestMethod(method);
 				conn.setUseCaches(false);
 				conn.setDoInput(true);
@@ -192,6 +228,7 @@ public class WebClient {
 						+ (qs == null ? "" : "?" + qs));
 				conn = (HttpURLConnection) connUrl.openConnection();
 				initConn();
+				applyHeaders(conn);
 				conn.setRequestMethod(method);
 				conn.setUseCaches(false);
 				conn.setDoInput(true);
@@ -268,6 +305,150 @@ public class WebClient {
 	}
 
 	/**
+	 * Sets (replaces) a request header. Headers are applied to the connection
+	 * before it is opened, so they must be configured before {@link #get()} or
+	 * {@link #post()}. Passing a {@code null} value removes the header.
+	 *
+	 * @param name  header name, applied verbatim (case-insensitive per HTTP)
+	 * @param value header value; {@code null} removes the header
+	 */
+	public void setHeader(String name, String value) {
+		if (name == null) {
+			return;
+		}
+		if (value == null) {
+			headers.remove(name);
+			return;
+		}
+		List<String> values = new ArrayList<String>();
+		values.add(value);
+		headers.put(name, values);
+	}
+
+	/**
+	 * Appends a value to a request header, keeping the values already configured
+	 * for that name. Useful for headers that legitimately repeat
+	 * ({@code Accept}, {@code Cookie} fragments).
+	 *
+	 * @param name  header name
+	 * @param value header value
+	 */
+	public void addHeader(String name, String value) {
+		if (name == null || value == null) {
+			return;
+		}
+		List<String> values = headers.get(name);
+		if (values == null) {
+			values = new ArrayList<String>();
+			headers.put(name, values);
+		}
+		values.add(value);
+	}
+
+	/**
+	 * Copies every entry of the given map into the request headers, replacing
+	 * values already configured under the same names.
+	 *
+	 * @param map header name to value; {@code null} is ignored
+	 */
+	public void setHeaders(Map<String, String> map) {
+		if (map == null) {
+			return;
+		}
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			setHeader(entry.getKey(), entry.getValue());
+		}
+	}
+
+	/** Removes every configured request header. */
+	public void clearHeaders() {
+		headers.clear();
+	}
+
+	/**
+	 * Returns the first value configured for a request header.
+	 *
+	 * @param name header name
+	 * @return the first value, or {@code null} when the header is not set
+	 */
+	public String getHeader(String name) {
+		if (name == null) {
+			return null;
+		}
+		List<String> values = headers.get(name);
+		if (values == null || values.isEmpty()) {
+			return null;
+		}
+		return values.get(0);
+	}
+
+	/**
+	 * Returns a snapshot of the configured request headers.
+	 *
+	 * @return a copy of the header map, values copied as well
+	 */
+	public Map<String, List<String>> getHeaders() {
+		Map<String, List<String>> copy = new LinkedHashMap<String, List<String>>();
+		for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+			copy.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+		}
+		return copy;
+	}
+
+	/**
+	 * Sets the {@code User-Agent} header, the usual requirement for sites that
+	 * refuse the JVM default ({@code Java/<version>}); see
+	 * {@link #DEFAULT_BROWSER_USER_AGENT}.
+	 *
+	 * @param userAgent the user agent string, or {@code null} to remove it
+	 */
+	public void setUserAgent(String userAgent) {
+		setHeader("User-Agent", userAgent);
+	}
+
+	/**
+	 * Returns the configured {@code User-Agent} header.
+	 *
+	 * @return the user agent, or {@code null} when not set
+	 */
+	public String getUserAgent() {
+		return getHeader("User-Agent");
+	}
+
+	/**
+	 * Applies the configured request headers to the connection. Called by
+	 * {@link #connect()} after the connection object exists and before the body
+	 * is written - {@link HttpURLConnection} forbids setting headers once the
+	 * connection is open.
+	 *
+	 * @param c the connection to configure
+	 */
+	protected void applyHeaders(HttpURLConnection c) {
+		if (c == null) {
+			return;
+		}
+		for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+			String name = entry.getKey();
+			List<String> values = entry.getValue();
+			if (name == null || values == null || values.isEmpty()) {
+				continue;
+			}
+			boolean first = true;
+			for (String value : values) {
+				if (value == null) {
+					continue;
+				}
+				if (first) {
+					c.setRequestProperty(name, value);
+					first = false;
+				} else {
+					c.addRequestProperty(name, value);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Sets the HTTP method, upper-cased.
 	 *
 	 * @param method {@code "GET"} or {@code "POST"}
@@ -313,6 +494,45 @@ public class WebClient {
 		} else {
 			return "UTF-8";
 		}
+	}
+
+	/**
+	 * Returns one response header field, case-insensitively, as sent by the server.
+	 * Only meaningful after {@link #get()} or {@link #post()} has returned.
+	 *
+	 * @param name header name (e.g. {@code Content-Type}, {@code Location})
+	 * @return the first value, or {@code null} when absent or not yet connected
+	 */
+	public String getResponseHeader(String name) {
+		if (conn == null || name == null) {
+			return null;
+		}
+		return conn.getHeaderField(name);
+	}
+
+	/**
+	 * Returns all response headers received by the last request. The HTTP status
+	 * line, which {@link HttpURLConnection} stores under a {@code null} key, is
+	 * excluded; use {@link #connect()} for the status code.
+	 *
+	 * @return a copy of the response headers, or an empty map before connecting
+	 */
+	public Map<String, List<String>> getResponseHeaders() {
+		Map<String, List<String>> copy = new LinkedHashMap<String, List<String>>();
+		if (conn == null) {
+			return copy;
+		}
+		Map<String, List<String>> raw = conn.getHeaderFields();
+		if (raw == null) {
+			return copy;
+		}
+		for (Map.Entry<String, List<String>> entry : raw.entrySet()) {
+			if (entry.getKey() == null) {
+				continue;
+			}
+			copy.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+		}
+		return copy;
 	}
 
 	/**

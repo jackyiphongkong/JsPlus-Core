@@ -4073,3 +4073,33 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (A)
 - build: automatic version bump
 
+
+## 6.1.341 (2026.11.14 20:23:53)
+- found diffed: com/killcoding/jsplus/SimpleHtmlCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (M)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (D)
+- build: automatic version bump
+
+
+## 6.1.342 (2026.11.14 23:33:33)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (M)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (M)
+- build: automatic version bump
+
+
+## 6.1.343 (2026.11.14 23:40:43)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (M)
+- build: automatic version bump
+
+
+## 6.1.344 (2026.11.14 23:54:20)
+- found diffed: com/killcoding/tool/WebClient.java (M)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (M)
+- build: automatic version bump
+
+
+## 6.1.345 (2026.11.14 23:58:51)
+- found diffed: com/killcoding/tool/WebClient.java (M)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (M)
+- build: automatic version bump
+
