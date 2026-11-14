@@ -4020,3 +4020,29 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
 - build: automatic version bump
 
+
+## 6.1.332 (2026.11.14 11:43:40)
+- found diffed: com/killcoding/jsplus/ScriptConsolePool.java (M)
+- build: automatic version bump
+
+
+## 6.1.333 (2026.11.14 11:53:50)
+- found diffed: com/killcoding/jsplus/AbstractConsolePool.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsolePool.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: automatic version bump
+
+
+## 6.1.334 (2026.11.14 11:56:01)
+- found diffed: com/killcoding/jsplus/AbstractConsolePool.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsolePool.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: automatic version bump
+
+
+## 6.1.335 (2026.11.14 12:02:16)
+- found diffed: com/killcoding/jsplus/AbstractConsolePool.java (A)
+- found diffed: com/killcoding/jsplus/ScriptConsolePool.java (M)
+- found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
+- build: automatic version bump
+

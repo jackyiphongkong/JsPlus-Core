@@ -19,25 +19,21 @@ THE SOFTWARE.
 *****************************************************************************/
 package com.killcoding.jsplus;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import com.killcoding.log.Logger;
 import com.killcoding.log.LoggerFactory;
-import com.killcoding.tool.CommonTools;
-import com.killcoding.tool.ConfigProperties;
 
 /**
 * Thread-confined {@link TextScript} console pool: a fixed pool of
 * {@link ScriptConsole} instances (one per concurrent renderer) with a master
 * console that owns the data source, script-engine init and JVM-wide settings.
 * Mirrors JsPlus-Tomcat {@code TomcatScriptConsole}.
+* <p>
+* The pool mechanics - acquisition, delayed return, external config, sizing -
+* live in {@link AbstractConsolePool} and are shared with
+* {@link ScriptConsolePool}. This class keeps its own consoles, its own
+* external-config prefix ({@code jsplus.textscript.*}) and the TextScript
+* rendering API on top.
 * <p>
 * Architecture: <b>this class is the pool itself</b> - each instance is one
 * independent pool, and the {@code allowAllAccess} security policy is fixed per
@@ -68,12 +64,9 @@ import com.killcoding.tool.ConfigProperties;
 * values below are applied when the <b>default pool</b> initialises and take
 * precedence over the code-level defaults/arguments:
 * <ul>
-* <li>pool size: {@code JSPLUS_TEXSCRIPT_POOLSIZE} env (read first) or
-*     {@code -Djsplus.textscript.poolsize=n};</li>
-* <li>engine name: {@code JSPLUS_TEXSCRIPT_ENGINE} env or
-*     {@code -Djsplus.textscript.engine=...};</li>
-* <li>allow-all-access: {@code JSPLUS_TEXSCRIPT_ALLOWALLACCESS} env or
-*     {@code -Djsplus.textscript.allowallaccess=true|false}.</li>
+* <li>pool size: {@code jsplus.textscript.poolsize};</li>
+* <li>engine name: {@code jsplus.textscript.engine};</li>
+* <li>allow-all-access: {@code jsplus.textscript.allowallaccess=true|false}.</li>
 * </ul>
 * Pre-built strategy pools ({@link AllowAllAccessPool} /
 * {@link NotAllowAccessPool}) and any pool built via
@@ -86,83 +79,11 @@ import com.killcoding.tool.ConfigProperties;
 * GraalVM context simultaneously - each TextScript is bound to the acquiring
 * thread's own context via {@link TextScript#setContext(JsPlusContext)}.
 */
-public class TextScriptConsole {
-
-	private static final Logger log = LoggerFactory.getLogger(TextScriptConsole.class);
-
-	/** External pool-size key: read as env var first, then as system property
-	 *  (Core JS_PLUS_PATH-style lookup). Value is a positive integer. */
-	private static final String POOL_SIZE_KEY = "jsplus.textscript.poolsize";
-
-	/** External engine-name key: read as env var first, then as system
-	 *  property (same standard as {@link #POOL_SIZE_KEY}). Applied at pool
-	 *  init and takes precedence over code-level defaults/arguments. */
-	private static final String ENGINE_NAME_KEY = "jsplus.textscript.engine";
-
-	/** External allow-all-access key: read as env var first, then as system
-	 *  property (same standard as {@link #POOL_SIZE_KEY}). Applied when the
-	 *  default pool initialises; subclass pools fix their own policy in their
-	 *  constructor and are never overridden by this value. */
-	private static final String ALLOW_ALL_ACCESS_KEY = "jsplus.textscript.allowallaccess";
-
-	/** Shared daemon scheduler for delayed console return (freed): fixed-size,
-	 *  non-leaking (never grows per call), and never blocks JVM exit. Every
-	 *  pool instance posts its returns here; the scheduled task captures the
-	 *  owning pool so consoles always come back to their own pool. */
-	private static final ScheduledExecutorService FREED_SCHEDULER = Executors.newScheduledThreadPool(
-			Math.max(2, Runtime.getRuntime().availableProcessors()),
-			r -> {
-				Thread t = new Thread(r, "jsplus-textscript-console-freed");
-				t.setDaemon(true);
-				return t;
-			});
+public class TextScriptConsole extends AbstractConsolePool {
 
 	/** The shared default pool backing the static API (external config applies
-	 *  to this one). TextScript() without an explicit pool uses this pool. */
+	*  to this one). TextScript() without an explicit pool uses this pool. */
 	private static final TextScriptConsole DEFAULT = new TextScriptConsole();
-
-	// ---- instance pool state (each TextScriptConsole is one independent pool) ----
-
-	private final Map<Integer, ScriptConsole> consolesPool = new ConcurrentHashMap<Integer, ScriptConsole>();
-	private final Map<Long, ScriptConsole> consolesUsingMark = new ConcurrentHashMap<Long, ScriptConsole>();
-	private final Map<Long, Integer> consolesThreadMark = new ConcurrentHashMap<Long, Integer>();
-
-	private int poolSize = 100;
-
-	private int currentPoolSize = 0;
-
-	private long freedDelayMs = 10L;
-
-	/** Monotonic generation counter for delayed returns. A pending return only
-	 *  fires when its generation is still the newest one for that thread; a
-	 *  larger value means the thread reclaimed its console in the meantime.
-	 *  Guarded by {@code synchronized(this)}, so a plain long is enough. */
-	private long freedGenerationSeq = 0L;
-
-	/** Per-thread generation of the pending delayed return, keyed by thread id. */
-	private final Map<Long,Long> consolesFreedGeneration = new ConcurrentHashMap<Long,Long>();
-
-	/** When this thread first reclaimed a console it had already freed, used to
-	 *  bound how long one thread may keep reusing it (wall clock, ms). */
-	private final Map<Long,Long> consolesHoldStart = new ConcurrentHashMap<Long,Long>();
-
-	/** How long one thread may keep reclaiming its own console before the pool
-	 *  forces a real return (ms); {@code <= 0} removes the bound. Bounds both
-	 *  starvation of other threads and how long a console stays out of the idle
-	 *  set - without it, a hot thread would pin its console forever. */
-	private long reclaimHoldMs = 50L;
-
-	private final String defaultEngineName = "graalvm.js";
-
-	private String engineName = "graalvm.js";
-
-	private boolean allowAllAccess = true;
-
-	/** true for code-constructed strategy pools: the security policy is fixed
-	 *  at construction and cannot be changed afterwards. */
-	private final boolean allowAllAccessLocked;
-
-	private ScriptConsole MasterConsole = null;
 
 	/**
 	* Constructs the shared default pool. The external configuration
@@ -186,301 +107,13 @@ public class TextScriptConsole {
 	}
 
 	private TextScriptConsole(boolean allowAllAccess, boolean applyExternalConfig) {
-		this.allowAllAccess = allowAllAccess;
-		this.allowAllAccessLocked = !applyExternalConfig;
+		super("jsplus.textscript", "TextScriptConsole", "Full Console Pool.",
+				LoggerFactory.getLogger(TextScriptConsole.class), allowAllAccess, applyExternalConfig);
 	}
 
 	/** Returns the shared default pool (backs the static API). */
 	public static TextScriptConsole getDefaultPool() {
 		return DEFAULT;
-	}
-
-	/** Whether this pool's master console (and thus its script engine) is
-	 *  initialized. */
-	public synchronized boolean isEngineLoaded() {
-		return MasterConsole != null;
-	}
-
-	/** Applies the external engine name ({@code JSPLUS_TEXSCRIPT_ENGINE} env
-	 *  var or {@code -Djsplus.textscript.engine} system property) when present;
-	 *  blank values are rejected and the current name is kept. Called only
-	 *  while the pool initialises, after the code-level default/argument has
-	 *  been applied, so the external deployment config wins. */
-	private void applyExternalEngineName() {
-		try {
-			String v = System.getenv(ENGINE_NAME_KEY) == null
-					? System.getProperty(ENGINE_NAME_KEY)
-					: System.getenv(ENGINE_NAME_KEY);
-			if (v != null && !v.trim().isEmpty()) {
-				engineName = v.trim();
-				Logger.systemMark(TextScriptConsole.class,
-						"TextScriptConsole engine name from '{}' = '{}'.", ENGINE_NAME_KEY, engineName);
-			}
-		} catch (Exception e) {
-			log.warn("Invalid {} value - keeping engine name {}.", ENGINE_NAME_KEY, engineName);
-		}
-	}
-
-	/** Applies the external pool size ({@code JSPLUS_TEXSCRIPT_POOLSIZE} env
-	 *  var or {@code -Djsplus.textscript.poolsize} system property) when
-	 *  present; malformed or non-positive values are rejected with a warning
-	 *  and the configured/current value is kept. Called only while the pool
-	 *  initialises, so it never races {@link #setMaxPoolSize(int)}. */
-	private void applyExternalPoolSize() {
-		try {
-			String v = System.getenv(POOL_SIZE_KEY) == null
-					? System.getProperty(POOL_SIZE_KEY)
-					: System.getenv(POOL_SIZE_KEY);
-			if (v != null && !v.trim().isEmpty()) {
-				int n = Integer.parseInt(v.trim());
-				if (n > 0) {
-					poolSize = n;
-					Logger.systemMark(TextScriptConsole.class,
-							"TextScriptConsole pool size from '{}' = '{}'.", POOL_SIZE_KEY, n);
-				} else {
-					log.warn("Ignoring non-positive {} value '{}' - keeping pool size {}.", POOL_SIZE_KEY, v, poolSize);
-				}
-			}
-		} catch (NumberFormatException e) {
-			log.warn("Invalid {} value - keeping pool size {}.", POOL_SIZE_KEY, poolSize);
-		}
-	}
-
-	/** Applies the external allow-all-access flag ({@code JSPLUS_TEXSCRIPT_ALLOWALLACCESS}
-	 *  env var or {@code -Djsplus.textscript.allowallaccess} system property)
-	 *  when present; malformed values are rejected with a warning and the
-	 *  configured/current value is kept. Only the shared default pool applies
-	 *  this (subclass pools fix their policy in the constructor). */
-	private void applyExternalAllowAllAccess() {
-		try {
-			String v = System.getenv(ALLOW_ALL_ACCESS_KEY) == null
-					? System.getProperty(ALLOW_ALL_ACCESS_KEY)
-					: System.getenv(ALLOW_ALL_ACCESS_KEY);
-			if (v != null && !v.trim().isEmpty()) {
-				boolean b = Boolean.parseBoolean(v.trim());
-				allowAllAccess = b;
-				Logger.systemMark(TextScriptConsole.class,
-						"TextScriptConsole allowAllAccess from '{}' = '{}'.", ALLOW_ALL_ACCESS_KEY, b);
-			}
-		} catch (Exception e) {
-			log.warn("Invalid {} value - keeping allowAllAccess {}.", ALLOW_ALL_ACCESS_KEY, allowAllAccess);
-		}
-	}
-
-	/**
-	* Initializes this pool's master console with the configured engine and
-	* pre-warms the console pool (at least 10 consoles, growing to
-	* {@code poolSize}).
-	*/
-	public synchronized void init() throws Exception {
-		init(getEngine());
-	}
-
-	/**
-	* Initializes this pool's master console with the given engine name, then
-	* builds the initial console pool. No-op when already initialized.
-	*
-	* @param initEngineName engine id (e.g. {@code graalvm.js}); blank falls
-	*                        back to the default engine
-	*/
-	public synchronized void init(String initEngineName) throws Exception {
-		if (MasterConsole == null) {
-			ConfigProperties consoleVariables = new ConfigProperties();
-			if (!CommonTools.isBlank(initEngineName)) {
-				engineName = initEngineName;
-			} else if (CommonTools.isBlank(engineName)) {
-				engineName = defaultEngineName;
-			}
-			if (!allowAllAccessLocked) {
-				applyExternalPoolSize();
-				applyExternalEngineName();
-				applyExternalAllowAllAccess();
-			}
-			consoleVariables.putAndReturnSelf("ScriptEngine", engineName);
-			MasterConsole = new ScriptConsole();
-			MasterConsole.setUseScriptEnv();
-			MasterConsole.setConsoleVariables(consoleVariables);
-			MasterConsole.initScriptEngineManager(allowAllAccess);
-			currentPoolSize = getMaxPoolSize();
-
-			if (currentPoolSize < 10)
-				currentPoolSize = 10;
-
-			for (int i = 0; i < currentPoolSize; i++) {
-				consolesPool.put(i, MasterConsole.newBuilder(allowAllAccess));
-			}
-		}
-	}
-
-	/**
-	* Acquires a console for the current thread (one console per thread, tracked
-	* by thread id). Grows the pool when {@code poolSize} was raised; throws when
-	* every console is in use.
-	*
-	* @return the console bound to the current thread
-	* @throws Exception when the pool is exhausted
-	*/
-	private synchronized ScriptConsole getConsole() throws Exception {
-		int newPoolSize = getMaxPoolSize();
-		if (newPoolSize > currentPoolSize) {
-			Logger.systemMark(TextScriptConsole.class, "TextScriptConsole changed pool size to '{}'.", newPoolSize);
-			for (int i = currentPoolSize; i < newPoolSize; i++) {
-				consolesPool.put(i, MasterConsole.newBuilder(allowAllAccess));
-			}
-			currentPoolSize = newPoolSize;
-		}
-		long tid = Thread.currentThread().getId();
-
-		// A console freed by this same thread is still bound to it during the
-		// freedDelayMs grace window. Reclaiming it beats allocating a fresh one:
-		// no idle-set scan, and the engine context (plus its inline caches) stays
-		// warm. isHoldExpired() keeps a hot thread from pinning it forever.
-		ScriptConsole held = consolesUsingMark.get(tid);
-		if (held != null) {
-			if (isHoldExpired(tid)) {
-				Integer heldIndex = consolesThreadMark.get(tid);
-				consolesFreedGeneration.remove(tid);
-				consolesThreadMark.remove(tid);
-				consolesUsingMark.remove(tid);
-				consolesHoldStart.remove(tid);
-				if (heldIndex != null) {
-					consolesPool.put(heldIndex, held);
-				}
-			} else {
-				consolesFreedGeneration.remove(tid);
-				if (!consolesHoldStart.containsKey(tid)) {
-					consolesHoldStart.put(tid, Long.valueOf(System.currentTimeMillis()));
-				}
-				return held;
-			}
-		}
-
-		Integer threadMark = consolesThreadMark.get(tid);
-		if (threadMark == null) {
-			List<Integer> list = list();
-			int idleSize = list.size();
-			double usage = usageOf(idleSize);
-			if (usage >= 0.8D) {
-				log.warn("The console pool usage has reached {} ({}/{}).", "80%", (currentPoolSize - idleSize), currentPoolSize);
-			}
-			if (idleSize > 0) {
-				Integer first = list.get(0);
-				ScriptConsole sc = consolesPool.get(first);
-				consolesUsingMark.put(tid, sc);
-				consolesThreadMark.put(tid, first);
-				consolesPool.remove(first);
-			} else {
-				throw new Exception("Full Console Pool.");
-			}
-		}
-		return consolesUsingMark.get(tid);
-	}
-
-	/** Whether the current thread has held its reclaimed console long enough
-	 *  that the pool should force a real return. */
-	private boolean isHoldExpired(long tid) {
-		long limit = reclaimHoldMs;
-		if (limit <= 0L) {
-			return false;
-		}
-		Long start = consolesHoldStart.get(tid);
-		return start != null && (System.currentTimeMillis() - start.longValue()) > limit;
-	}
-
-	/** Pool usage ratio (0.0 = all idle, 1.0 = all in use). */
-	/** Pool usage ratio from an idle count the caller already computed - avoids
-	 *  a second idle-set scan inside {@link #getConsole()} (the scan streams,
-	 *  sorts and collects every idle key, so doing it twice per acquire is
-	 *  wasteful). */
-	private double usageOf(int idleSize) {
-		if (currentPoolSize <= 0) {
-			return 0.0D;
-		}
-		return (currentPoolSize - idleSize) / (currentPoolSize * 1.0D);
-	}
-
-	public synchronized double usage() {
-		int idleSize = list().size();
-		double usage = usageOf(idleSize);
-		return usage;
-	}
-
-	/** Idle console indices, ascending. */
-	private synchronized List<Integer> list() {
-		List<Integer> list = new ArrayList<Integer>();
-		List<Integer> klist = consolesPool.keySet()
-				.stream()
-				.sorted()
-				.collect(Collectors.toList());
-		for (Object k : klist) {
-			list.add((Integer) k);
-		}
-		return list;
-	}
-
-	/**
-	* Returns the current thread's console to this pool after
-	* {@code freedDelayMs}; no-op when the thread never held a console.
-	*/
-	public synchronized void freed() {
-		try {
-			long tid = Thread.currentThread().getId();
-			final ScriptConsole sc = consolesUsingMark.get(tid);
-			if (sc == null) {
-				return;
-			}
-			// Clear this thread's bindings through the console already held.
-			// Going back through getConsole() here would count as a reclaim and
-			// inflate the hold window.
-			sc.getContext().remove();
-
-			final Integer useIndex = consolesThreadMark.get(tid);
-			final long gen = ++freedGenerationSeq;
-			consolesFreedGeneration.put(tid, Long.valueOf(gen));
-			long delayMs = getFreedDelayMs();
-			FREED_SCHEDULER.schedule(new Runnable() {
-				@Override
-				public void run() {
-					synchronized (TextScriptConsole.this) {
-						Long current = consolesFreedGeneration.get(tid);
-						if (current == null || current.longValue() != gen) {
-							// The owning thread reclaimed the console (or freed it
-							// again, which posted a newer generation) - there is
-							// nothing left to return.
-							return;
-						}
-						consolesFreedGeneration.remove(tid);
-						consolesThreadMark.remove(tid);
-						consolesUsingMark.remove(tid);
-						consolesHoldStart.remove(tid);
-						if (useIndex != null) {
-							try {
-								consolesPool.put(useIndex, sc);
-							} catch (Exception e) {
-								log.info(e.getMessage(), e);
-							}
-						}
-					}
-				}
-			}, delayMs, TimeUnit.MILLISECONDS);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-	}
-
-	/** Puts a value into the current thread's console context. */
-	public void putValue(Object params) throws Exception {
-		getConsole().getContext().put(params);
-	}
-
-	/** Clears the current thread's console context. */
-	public void clearValue() throws Exception {
-		getConsole().getContext().remove();
-	}
-
-	/** Reads the current thread's console context. */
-	public Object getValue() throws Exception {
-		return getConsole().getContext().get();
 	}
 
 	/**
@@ -535,84 +168,6 @@ public class TextScriptConsole {
 		} finally {
 			freed();
 		}
-	}
-
-	/** This pool's master console - owns the data source and engine init. */
-	public ScriptConsole getMasterConsole() {
-		return MasterConsole;
-	}
-
-	/** Sets how long a freed console stays out of this pool before return (ms). */
-	public void setFreedDelayMs(long freedDelayMs){
-		this.freedDelayMs = freedDelayMs;
-	}
-
-	/** Returns the freed-console return delay (ms). */
-	public long getFreedDelayMs(){
-		return this.freedDelayMs;
-	}
-
-	/** Sets how long one thread may keep reclaiming its own console before the
-	 *  pool forces a real return (ms); {@code <= 0} removes the bound. */
-	public void setReclaimHoldMs(long reclaimHoldMs){
-		this.reclaimHoldMs = reclaimHoldMs;
-	}
-
-	/** Returns the reclaim hold bound (ms). */
-	public long getReclaimHoldMs(){
-		return this.reclaimHoldMs;
-	}
-
-	/** Sets this pool's maximum console size (grows on demand up to this). A
-	 *  positive external value ({@code jsplus.textscript.poolsize}) applied
-	 *  during {@link #init(String)} takes precedence over a value set before
-	 *  init; raising it after init grows the pool on next acquire. */
-	public void setMaxPoolSize(int poolSize) {
-		this.poolSize = poolSize;
-	}
-
-	/** Returns this pool's configured maximum console size. */
-	public int getMaxPoolSize() {
-		return poolSize;
-	}
-
-	/** Actual number of consoles currently idle in this pool (vs the
-	 *  configured max) - a hard number for tests to confirm the pool returns
-	 *  to full after traffic. */
-	public int idleCount() {
-		return consolesPool.size();
-	}
-
-	/** Sets the script-engine id used to init this pool's master console. A
-	 *  non-blank external value ({@code jsplus.textscript.engine}) applied
-	 *  during {@link #init(String)} takes precedence over this. */
-	public void setEngine(String engineName) {
-		this.engineName = engineName;
-	}
-
-	/** Returns the script-engine id (e.g. {@code graalvm.js}). */
-	public String getEngine() {
-		return this.engineName;
-	}
-
-	/** Sets the allow-all-access security flag applied to this pool's master
-	 *  console and every pooled console when the pool initialises. Ignored on
-	 *  subclass pools ({@link AllowAllAccessPool} / {@link NotAllowAccessPool})
-	 *  whose policy is fixed in the constructor. An external value
-	 *  ({@code jsplus.textscript.allowallaccess}) applied during
-	 *  {@link #init(String)} takes precedence over this. */
-	public void setAllowAllAccess(boolean allowAllAccess) {
-		if (allowAllAccessLocked) {
-			log.warn("AllowAllAccess is fixed for this pool type - ignoring setAllowAllAccess({}).", allowAllAccess);
-			return;
-		}
-		this.allowAllAccess = allowAllAccess;
-	}
-
-	/** Returns this pool's allow-all-access security flag (default {@code true}).
-	 *  Mirrors {@link com.killcoding.jsplus.JsPlusContext#isAllowAllAccess()}. */
-	public boolean isAllowAllAccess() {
-		return allowAllAccess;
 	}
 
 	// ================= static facade over the shared default pool =================
