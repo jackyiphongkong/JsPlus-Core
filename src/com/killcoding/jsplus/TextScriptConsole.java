@@ -133,6 +133,25 @@ public class TextScriptConsole {
 
 	private long freedDelayMs = 10L;
 
+	/** Monotonic generation counter for delayed returns. A pending return only
+	 *  fires when its generation is still the newest one for that thread; a
+	 *  larger value means the thread reclaimed its console in the meantime.
+	 *  Guarded by {@code synchronized(this)}, so a plain long is enough. */
+	private long freedGenerationSeq = 0L;
+
+	/** Per-thread generation of the pending delayed return, keyed by thread id. */
+	private final Map<Long,Long> consolesFreedGeneration = new ConcurrentHashMap<Long,Long>();
+
+	/** When this thread first reclaimed a console it had already freed, used to
+	 *  bound how long one thread may keep reusing it (wall clock, ms). */
+	private final Map<Long,Long> consolesHoldStart = new ConcurrentHashMap<Long,Long>();
+
+	/** How long one thread may keep reclaiming its own console before the pool
+	 *  forces a real return (ms); {@code <= 0} removes the bound. Bounds both
+	 *  starvation of other threads and how long a console stays out of the idle
+	 *  set - without it, a hot thread would pin its console forever. */
+	private long reclaimHoldMs = 50L;
+
 	private final String defaultEngineName = "graalvm.js";
 
 	private String engineName = "graalvm.js";
@@ -311,11 +330,36 @@ public class TextScriptConsole {
 			currentPoolSize = newPoolSize;
 		}
 		long tid = Thread.currentThread().getId();
+
+		// A console freed by this same thread is still bound to it during the
+		// freedDelayMs grace window. Reclaiming it beats allocating a fresh one:
+		// no idle-set scan, and the engine context (plus its inline caches) stays
+		// warm. isHoldExpired() keeps a hot thread from pinning it forever.
+		ScriptConsole held = consolesUsingMark.get(tid);
+		if (held != null) {
+			if (isHoldExpired(tid)) {
+				Integer heldIndex = consolesThreadMark.get(tid);
+				consolesFreedGeneration.remove(tid);
+				consolesThreadMark.remove(tid);
+				consolesUsingMark.remove(tid);
+				consolesHoldStart.remove(tid);
+				if (heldIndex != null) {
+					consolesPool.put(heldIndex, held);
+				}
+			} else {
+				consolesFreedGeneration.remove(tid);
+				if (!consolesHoldStart.containsKey(tid)) {
+					consolesHoldStart.put(tid, Long.valueOf(System.currentTimeMillis()));
+				}
+				return held;
+			}
+		}
+
 		Integer threadMark = consolesThreadMark.get(tid);
 		if (threadMark == null) {
 			List<Integer> list = list();
 			int idleSize = list.size();
-			double usage = usage();
+			double usage = usageOf(idleSize);
 			if (usage >= 0.8D) {
 				log.warn("The console pool usage has reached {} ({}/{}).", "80%", (currentPoolSize - idleSize), currentPoolSize);
 			}
@@ -332,10 +376,32 @@ public class TextScriptConsole {
 		return consolesUsingMark.get(tid);
 	}
 
+	/** Whether the current thread has held its reclaimed console long enough
+	 *  that the pool should force a real return. */
+	private boolean isHoldExpired(long tid) {
+		long limit = reclaimHoldMs;
+		if (limit <= 0L) {
+			return false;
+		}
+		Long start = consolesHoldStart.get(tid);
+		return start != null && (System.currentTimeMillis() - start.longValue()) > limit;
+	}
+
 	/** Pool usage ratio (0.0 = all idle, 1.0 = all in use). */
+	/** Pool usage ratio from an idle count the caller already computed - avoids
+	 *  a second idle-set scan inside {@link #getConsole()} (the scan streams,
+	 *  sorts and collects every idle key, so doing it twice per acquire is
+	 *  wasteful). */
+	private double usageOf(int idleSize) {
+		if (currentPoolSize <= 0) {
+			return 0.0D;
+		}
+		return (currentPoolSize - idleSize) / (currentPoolSize * 1.0D);
+	}
+
 	public synchronized double usage() {
 		int idleSize = list().size();
-		double usage = (currentPoolSize - idleSize) / (currentPoolSize * 1.0D);
+		double usage = usageOf(idleSize);
 		return usage;
 	}
 
@@ -359,26 +425,44 @@ public class TextScriptConsole {
 	public synchronized void freed() {
 		try {
 			long tid = Thread.currentThread().getId();
-			if (consolesUsingMark.get(tid) != null) {
-				clearValue();
-			}
 			final ScriptConsole sc = consolesUsingMark.get(tid);
-			if (sc != null) {
-				final Integer useIndex = consolesThreadMark.get(tid);
-				consolesThreadMark.remove(tid);
-				consolesUsingMark.remove(tid);
-				long delayMs = getFreedDelayMs();
-				FREED_SCHEDULER.schedule(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							consolesPool.put(useIndex, sc);
-						} catch (Exception e) {
-							log.info(e.getMessage(), e);
+			if (sc == null) {
+				return;
+			}
+			// Clear this thread's bindings through the console already held.
+			// Going back through getConsole() here would count as a reclaim and
+			// inflate the hold window.
+			sc.getContext().remove();
+
+			final Integer useIndex = consolesThreadMark.get(tid);
+			final long gen = ++freedGenerationSeq;
+			consolesFreedGeneration.put(tid, Long.valueOf(gen));
+			long delayMs = getFreedDelayMs();
+			FREED_SCHEDULER.schedule(new Runnable() {
+				@Override
+				public void run() {
+					synchronized (TextScriptConsole.this) {
+						Long current = consolesFreedGeneration.get(tid);
+						if (current == null || current.longValue() != gen) {
+							// The owning thread reclaimed the console (or freed it
+							// again, which posted a newer generation) - there is
+							// nothing left to return.
+							return;
+						}
+						consolesFreedGeneration.remove(tid);
+						consolesThreadMark.remove(tid);
+						consolesUsingMark.remove(tid);
+						consolesHoldStart.remove(tid);
+						if (useIndex != null) {
+							try {
+								consolesPool.put(useIndex, sc);
+							} catch (Exception e) {
+								log.info(e.getMessage(), e);
+							}
 						}
 					}
-				}, delayMs, TimeUnit.MILLISECONDS);
-			}
+				}
+			}, delayMs, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -466,6 +550,17 @@ public class TextScriptConsole {
 	/** Returns the freed-console return delay (ms). */
 	public long getFreedDelayMs(){
 		return this.freedDelayMs;
+	}
+
+	/** Sets how long one thread may keep reclaiming its own console before the
+	 *  pool forces a real return (ms); {@code <= 0} removes the bound. */
+	public void setReclaimHoldMs(long reclaimHoldMs){
+		this.reclaimHoldMs = reclaimHoldMs;
+	}
+
+	/** Returns the reclaim hold bound (ms). */
+	public long getReclaimHoldMs(){
+		return this.reclaimHoldMs;
 	}
 
 	/** Sets this pool's maximum console size (grows on demand up to this). A
