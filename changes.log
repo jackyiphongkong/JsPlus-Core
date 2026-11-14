@@ -4046,3 +4046,30 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/jsplus/TextScriptConsole.java (M)
 - build: automatic version bump
 
+
+## 6.1.336 (2026.11.14 15:28:42)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (A)
+- build: automatic version bump
+
+
+## 6.1.337 (2026.11.14 15:32:22)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (A)
+- build: automatic version bump
+
+
+## 6.1.338 (2026.11.14 16:15:55)
+- found diffed: com/killcoding/tpl/HtmlCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (M)
+- build: automatic version bump
+
+
+## 6.1.339 (2026.11.14 19:26:30)
+- found diffed: com/killcoding/tpl/HtmlCompressor.java (A)
+- found diffed: com/killcoding/tpl/SimpleHtmlScanner.java (M)
+- build: automatic version bump
+
+
+## 6.1.340 (2026.11.14 19:28:06)
+- found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (A)
+- build: automatic version bump
+
