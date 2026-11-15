@@ -28,10 +28,29 @@ import java.util.Locale;
 * Minifies HTML while repairing broken tags, with no DOM library and no
 * third-party jar - the drop-in replacement for the jsoup-based compressor.
 * <p>
-* It lives in {@code com.killcoding.tpl} - next to {@link SimpleHtmlScanner}
+* It lives in {@code com.killcoding.tpl} - next to {@link SimpleHtmlScanner},
 * {@link SimpleJsCompressor} and {@link SimpleCssCompressor} - because it is
 * the last stage of that pipeline: scan, repair, then minify the
 * {@code script} and {@code style} bodies.
+*
+* <p>
+* It is the drop-in replacement for the tree-based
+* {@code com.killcoding.tpl.HtmlCompressor} that the framework used while jsoup
+* was on the classpath: {@code HtmlCompressor(String)}, {@link #getSource()},
+* {@link #compressor()}, {@link #compressor(boolean, String)} and the static
+* {@link #compressor(String)} keep the same shapes, so a caller such as
+* {@code Tpl.htmlCompressor(String)} switches over without changing its call.
+* What is deliberately <em>not</em> copied from the tree version:
+* <ul>
+* <li>{@code <script>}, {@code <style>} and {@code <link>} are minified
+*     <b>in place</b> instead of being appended to the end of {@code <head>};
+*     element order is preserved, so the cascade and the script order stay
+*     exactly as the page author wrote them;</li>
+* <li>attribute names are lower-cased and values double-quoted instead of being
+*     kept byte-identical to the template;</li>
+* <li>the static {@link #compressor(String)} collapses whitespace, while the
+*     tree version's static overload passed {@code enable=false}.</li>
+* </ul>
 *
 * <p>
 * Unlike {@link SimpleHtmlScanner}, which deliberately never builds structure
@@ -130,11 +149,35 @@ public class SimpleHtmlCompressor {
 	* @throws Exception propagated from a body compressor
 	*/
 	public String compressor() throws Exception {
-		return compress(source);
+		return compress(source, true);
 	}
 
 	/**
-	* Convenience one-shot over the given source.
+	* Compresses the given source with an explicit whitespace mode. This is the
+	* signature of the tree-based {@code com.killcoding.tpl.HtmlCompressor} this
+	* class replaces, so a caller can be switched over without touching its call
+	* shape.
+	* <p>
+	* {@code enable} controls only the whitespace treatment, never the repairs:
+	* tags are always balanced, attribute values are always normalised and
+	* {@code script}/{@code style} bodies are always minified. When
+	* {@code enable} is {@code false} the original whitespace runs are written
+	* back verbatim; when {@code true} a run touching a tag is dropped if it
+	* contains a line break and collapsed to one space otherwise.
+	*
+	* @param enable {@code true} to collapse whitespace around tags
+	* @param source HTML text to compress and repair
+	* @return the minified, balanced HTML, or {@code null} when the source is {@code null}
+	* @throws Exception propagated from a body compressor
+	*/
+	public String compressor(boolean enable, String source) throws Exception {
+		return compress(source, enable);
+	}
+
+	/**
+	* Convenience one-shot over the given source, with whitespace collapsing
+	* enabled - the shape of the tree-based compressor's static overload, whose
+	* own default was {@code enable=false}.
 	*
 	* @param source HTML text to compress and repair
 	* @return the minified, balanced HTML, or {@code null} when the source is {@code null}
@@ -148,10 +191,11 @@ public class SimpleHtmlCompressor {
 	* Runs the scan.
 	*
 	* @param src source text
+	* @param collapseWhitespace {@code true} to drop/collapse whitespace around tags
 	* @return minified, balanced text
 	* @throws Exception propagated from a body compressor
 	*/
-	private String compress(String src) throws Exception {
+	private String compress(String src, boolean collapseWhitespace) throws Exception {
 		if (src == null) {
 			return null;
 		}
@@ -169,13 +213,13 @@ public class SimpleHtmlCompressor {
 					i++;
 					continue;
 				}
-				flushBeforeText(out, ws);
+				flushBeforeText(out, ws, collapseWhitespace);
 				out.append(c);
 				i++;
 				continue;
 			}
 
-			flushBeforeTag(out, ws);
+			flushBeforeTag(out, ws, collapseWhitespace);
 
 			if (src.startsWith("<!--", i)) {
 				// Comments carry no rendering effect; dropping them is part of the minification.
@@ -253,7 +297,11 @@ public class SimpleHtmlCompressor {
 			if (isRawText(name)) {
 				int close = indexOfIgnoreCase(src, "</" + name, i);
 				if (close < 0) {
+					// No end tag anywhere: keep the minified body and close the
+					// element right here, so the output stays balanced instead of
+					// dangling an unterminated <script>, <style>, <pre> or <textarea>.
 					out.append(rawBody(name, src.substring(i)));
+					emitClose(out, name);
 					i = n;
 				} else {
 					out.append(rawBody(name, src.substring(i, close)));
@@ -266,7 +314,7 @@ public class SimpleHtmlCompressor {
 			stack.addLast(name);
 		}
 
-		flush(out, ws, true);
+		flush(out, ws, true, collapseWhitespace);
 		while (!stack.isEmpty()) {
 			emitClose(out, stack.removeLast());
 		}
@@ -605,9 +653,10 @@ public class SimpleHtmlCompressor {
 	*
 	* @param out output buffer
 	* @param ws pending whitespace
+	* @param collapse {@code true} to apply the minification rules
 	*/
-	private static void flushBeforeTag(StringBuilder out, StringBuilder ws) {
-		flush(out, ws, true);
+	private static void flushBeforeTag(StringBuilder out, StringBuilder ws, boolean collapse) {
+		flush(out, ws, true, collapse);
 	}
 
 	/**
@@ -615,21 +664,30 @@ public class SimpleHtmlCompressor {
 	*
 	* @param out output buffer
 	* @param ws pending whitespace
+	* @param collapse {@code true} to apply the minification rules
 	*/
-	private static void flushBeforeText(StringBuilder out, StringBuilder ws) {
+	private static void flushBeforeText(StringBuilder out, StringBuilder ws, boolean collapse) {
 		boolean afterTag = out.length() > 0 && out.charAt(out.length() - 1) == '>';
-		flush(out, ws, afterTag);
+		flush(out, ws, afterTag, collapse);
 	}
 
 	/**
-	* Applies the whitespace rules to one pending run.
+	* Applies the whitespace rules to one pending run. With {@code collapse}
+	* disabled the run is written back exactly as it was read, which is the
+	* {@code enable=false} mode of the tree-based compressor this class replaces.
 	*
 	* @param out output buffer
 	* @param ws pending whitespace
 	* @param abutsTag whether the run touches a tag boundary
+	* @param collapse {@code true} to drop/collapse, {@code false} to keep verbatim
 	*/
-	private static void flush(StringBuilder out, StringBuilder ws, boolean abutsTag) {
+	private static void flush(StringBuilder out, StringBuilder ws, boolean abutsTag, boolean collapse) {
 		if (ws.length() == 0) {
+			return;
+		}
+		if (!collapse) {
+			out.append(ws);
+			ws.setLength(0);
 			return;
 		}
 		boolean hasBreak = ws.indexOf("\n") >= 0 || ws.indexOf("\r") >= 0;

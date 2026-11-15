@@ -321,6 +321,76 @@ try {
         command: "SimpleHtmlCompressor.compressor('<a><b><c></a></b>')"
     });
 
+    // C21: enable=false keeps the original whitespace (tree-compressor parity)
+    var ws21 = "<div>\n  <p>hi</p>\n</div>";
+    var v21 = str(new SimpleHtmlCompressor(ws21).compressor(false, ws21));
+    Logger.systemMark("TestSimpleHtmlCompressor.js", "C21");
+    check({
+        caseId: "C21",
+        name: "compressor(false, source) keeps the original whitespace",
+        ok: v21 === ws21,
+        detail: "out=" + v21,
+        objective: "the enable=false mode repairs tags but writes every whitespace run back verbatim",
+        objectiveZh: "enable=false 模式只修 tag，原樣寫回每一段空白",
+        command: "new SimpleHtmlCompressor(html).compressor(false, html)"
+    });
+
+    // C22: enable=true is the same path as compressor() and the static one-shot
+    var v22a = str(new SimpleHtmlCompressor(ws21).compressor(true, ws21));
+    var v22b = str(SimpleHtmlCompressor.compressor(ws21));
+    Logger.systemMark("TestSimpleHtmlCompressor.js", "C22");
+    check({
+        caseId: "C22",
+        name: "compressor(true, source) equals the collapsing overloads",
+        ok: v22a === "<div><p>hi</p></div>" && v22a === v22b,
+        detail: "explicit=" + v22a + " static=" + v22b,
+        objective: "enable=true shares the code path of compressor() and the static one-shot",
+        objectiveZh: "enable=true 與 compressor()、靜態一次性入口走同一條路徑",
+        command: "new SimpleHtmlCompressor(html).compressor(true, html)"
+    });
+
+    // C23: enable=false still minifies script/style bodies
+    var js23 = "<script>var a = 1;\nvar b = 2;</script>";
+    var v23 = str(new SimpleHtmlCompressor(js23).compressor(false, js23));
+    Logger.systemMark("TestSimpleHtmlCompressor.js", "C23");
+    check({
+        caseId: "C23",
+        name: "script/style bodies are minified even with whitespace collapsing off",
+        ok: v23.indexOf("var a = 1;var b = 2;") >= 0 && v23.indexOf("var a = 1;\n") < 0,
+        detail: "out=" + v23,
+        objective: "enable controls only whitespace around tags; body minification always runs",
+        objectiveZh: "enable 只控制 tag 周圍空白，body 壓縮永遠執行",
+        command: "new SimpleHtmlCompressor(html).compressor(false, html)"
+    });
+
+    // C24: an unterminated script is closed at end of input
+    var js24 = "<div><script>var a = 1;";
+    var v24 = str(new SimpleHtmlCompressor(js24).compressor());
+    Logger.systemMark("TestSimpleHtmlCompressor.js", "C24");
+    check({
+        caseId: "C24",
+        name: "an unterminated script gets its end tag at end of input",
+        ok: v24 === "<div><script>var a = 1;</script></div>",
+        detail: "out=" + v24,
+        objective: "a raw-text element with no end tag is closed where the input ends, and its body is still minified",
+        objectiveZh: "raw text 元素缺少結束標籤時在輸入末尾補上，body 仍照常壓縮",
+        command: "new SimpleHtmlCompressor('<div><script>var a = 1;').compressor()"
+    });
+
+    // C25: an unterminated textarea is closed, body left verbatim
+    var ta25 = "<textarea>  a\n b";
+    var v25 = str(new SimpleHtmlCompressor(ta25).compressor());
+    Logger.systemMark("TestSimpleHtmlCompressor.js", "C25");
+    check({
+        caseId: "C25",
+        name: "an unterminated textarea keeps its body and gains an end tag",
+        ok: v25 === "<textarea>  a\n b</textarea>",
+        detail: "out=" + v25,
+        objective: "pre/textarea bodies stay verbatim, and the missing end tag is supplied",
+        objectiveZh: "pre/textarea 的 body 原樣保留，缺的結束標籤補上",
+        command: "new SimpleHtmlCompressor('<textarea>  a\\n b').compressor()"
+    });
+
 } catch (e) {
     Logger.systemMark("TestSimpleHtmlCompressor.js", "C-ERR");
     check({
