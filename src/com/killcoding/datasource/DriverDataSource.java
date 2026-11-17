@@ -104,6 +104,13 @@ public final class DriverDataSource implements DataSource {
 	* */
 	private Boolean booleanAsIs = false;
 
+	/**
+	* When on, this data source may take part in a cross-database full sync.
+	* Resolved from the {@code SyncDataSourceEnable} database config; it stays
+	* on when the key is absent, so an unconfigured source behaves as before.
+	* */
+	private Boolean syncDataSourceEnable = true;
+
     private final List<Double> aveUsageSum = new ArrayList<Double>();
 	private final List<String> urlList = new ArrayList<String>();
 
@@ -394,6 +401,22 @@ public final class DriverDataSource implements DataSource {
 	* */
 	public Boolean isBooleanAsIs() {
 		return this.booleanAsIs;
+	}
+
+	/**
+	* Set whether this data source may take part in a cross-database full sync
+	* @param syncDataSourceEnable - 'false' excludes this source from syncing
+	* */
+	public void setSyncDataSourceEnable(Boolean syncDataSourceEnable) {
+		this.syncDataSourceEnable = syncDataSourceEnable == null ? true : syncDataSourceEnable;
+	}
+
+	/**
+	* Get whether this data source may take part in a cross-database full sync
+	* @return Boolean - 'true' when this source may be synced
+	* */
+	public Boolean isSyncDataSourceEnable() {
+		return this.syncDataSourceEnable;
 	}
 
 	/**
@@ -922,6 +945,9 @@ public final class DriverDataSource implements DataSource {
 
 		if (this.configProperties.containsKey("EnableFullStatusLog"))
 			setEnableFullStatusLog(this.configProperties.getBoolean("EnableFullStatusLog", true));
+
+		if (this.configProperties.containsKey("SyncDataSourceEnable"))
+			setSyncDataSourceEnable(this.configProperties.getBoolean("SyncDataSourceEnable", true));
 
 		if (this.configProperties.containsKey("StatusLogArchiveDays"))
 			setStatusLogArchiveDays(this.configProperties.getInteger("StatusLogArchiveDays", 30));

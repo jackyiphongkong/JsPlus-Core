@@ -4113,3 +4113,13 @@ ${jr.diff.changes}- build: automatic version bump
 - found diffed: com/killcoding/tpl/SimpleHtmlCompressor.java (M)
 - build: automatic version bump
 
+
+## 6.1.348 (2026.11.17 21:55:59)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- build: automatic version bump
+
+
+## 6.1.349 (2026.11.17 22:16:33)
+- found diffed: com/killcoding/datasource/DriverDataSource.java (M)
+- build: automatic version bump
+

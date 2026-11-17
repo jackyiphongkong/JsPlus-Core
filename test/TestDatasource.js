@@ -1568,6 +1568,41 @@ check({
     command: "Console.formatObjectValue(...); override ExportBoolean*; exportTo BOOLEAN table; importFrom -> getBoolean"
 });
 
+// ---------------------------------------------------------------------------
+// C24: SyncDataSourceEnable - a source opts out of a cross-database full sync
+//      with SyncDataSourceEnable=false; absent keeps it on
+// ---------------------------------------------------------------------------
+var c24Err = "";
+var c24Ok = false;
+var c24Detail = "";
+try {
+    var c24Base = ("" + JFiles.readString(new JFile(c21Prop).toPath()))
+        .replace("EnableStatusLog=true", "EnableStatusLog=false");
+
+    var c24DsDefault = new DriverDataSource(c24Base);
+    var c24DefaultFlag = c24DsDefault.isSyncDataSourceEnable();
+    c24DsDefault.closeAll(0);
+
+    var c24DsOff = new DriverDataSource(c24Base + "SyncDataSourceEnable=false\r\n");
+    var c24OffFlag = c24DsOff.isSyncDataSourceEnable();
+    c24DsOff.closeAll(0);
+
+    c24Ok = c24DefaultFlag === true && c24OffFlag === false;
+    c24Detail = "default=" + c24DefaultFlag + " explicitFalse=" + c24OffFlag;
+} catch (e) {
+    c24Err = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C24");
+check({
+    name: "SyncDataSourceEnable excludes a data source from syncing when false",
+    caseId: "C24",
+    ok: c24Ok && c24Err.length === 0,
+    detail: c24Err.length > 0 ? c24Err : c24Detail,
+    objective: "the SyncDataSourceEnable data source entry is on when absent, so an existing source keeps taking part in a full sync, and off when set to false, so a source can opt out without changing any code",
+    objectiveZh: "SyncDataSourceEnable 資料源設定未設定時預設為開，既有資料源照舊可參與全量同步；設為 false 則該資料源退出同步，無需改動任何程式碼",
+    command: "new DriverDataSource(props) -> isSyncDataSourceEnable(); props+SyncDataSourceEnable=false -> false"
+});
+
 writeReport();
 writeMd();
 
