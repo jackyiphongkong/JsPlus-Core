@@ -1886,6 +1886,15 @@ public class DriverExecutor {
 			DriverConnection masterDriverConn = (DriverConnection) masterConn;
 			Integer masterConnHashCode = masterDriverConn.getOriginConnectionHashCode();
 
+			DriverDataSource dds = masterDriverConn.getDriverDataSource();
+			// SyncDataSourceEnable=false on the owner: this source never replicates
+			// to any target, so the whole sync is skipped before any marker is set.
+			if (dds != null && !Boolean.TRUE.equals(dds.isSyncDataSourceEnable())) {
+				LoggerFactory.getLogger(DriverExecutor.class)
+						.warn("Skip sync - data source '{}' has SyncDataSourceEnable=false.", dds.getName());
+				return false;
+			}
+
 			boolean isExist = SYNC_EXECUTOR_MARK.containsKey(masterConnHashCode);
 
 			if (isExist) {
@@ -1894,7 +1903,6 @@ public class DriverExecutor {
 				SYNC_EXECUTOR_MARK.put(masterConnHashCode, new ArrayList<DriverExecutor>());
 			}
 
-			DriverDataSource dds = masterDriverConn.getDriverDataSource();
 			if (dds != null) {
 				List<DriverDataSource> sdsl = dds.getSyncDataSourceList(dds.getName());
 				if (sdsl != null) {

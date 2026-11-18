@@ -1583,24 +1583,82 @@ try {
     var c24DefaultFlag = c24DsDefault.isSyncDataSourceEnable();
     c24DsDefault.closeAll(0);
 
-    var c24DsOff = new DriverDataSource(c24Base + "SyncDataSourceEnable=false\r\n");
-    var c24OffFlag = c24DsOff.isSyncDataSourceEnable();
-    c24DsOff.closeAll(0);
+    var c24DsOn = new DriverDataSource(c24Base + "SyncDataSourceEnable=true\r\n");
+    var c24OnFlag = c24DsOn.isSyncDataSourceEnable();
+    c24DsOn.closeAll(0);
 
-    c24Ok = c24DefaultFlag === true && c24OffFlag === false;
-    c24Detail = "default=" + c24DefaultFlag + " explicitFalse=" + c24OffFlag;
+    c24Ok = c24DefaultFlag === false && c24OnFlag === true;
+    c24Detail = "default=" + c24DefaultFlag + " explicitTrue=" + c24OnFlag;
 } catch (e) {
     c24Err = "" + e;
 }
 Logger.systemMark("TestDatasource.js", "C24");
 check({
-    name: "SyncDataSourceEnable excludes a data source from syncing when false",
+    name: "SyncDataSourceEnable is off by default and on when configured true",
     caseId: "C24",
     ok: c24Ok && c24Err.length === 0,
     detail: c24Err.length > 0 ? c24Err : c24Detail,
-    objective: "the SyncDataSourceEnable data source entry is on when absent, so an existing source keeps taking part in a full sync, and off when set to false, so a source can opt out without changing any code",
-    objectiveZh: "SyncDataSourceEnable 資料源設定未設定時預設為開，既有資料源照舊可參與全量同步；設為 false 則該資料源退出同步，無需改動任何程式碼",
-    command: "new DriverDataSource(props) -> isSyncDataSourceEnable(); props+SyncDataSourceEnable=false -> false"
+    objective: "the SyncDataSourceEnable data source entry is off when absent, so a source that never asked to replicate takes no part in a full sync, and on when set to true, which declares participation",
+    objectiveZh: "SyncDataSourceEnable 資料源設定未設定時視為關閉，未曾要求複寫的資料源不參與全量同步；設為 true 即宣告參與同步",
+    command: "new DriverDataSource(props) -> isSyncDataSourceEnable(); props+SyncDataSourceEnable=true -> true"
+});
+
+// ---------------------------------------------------------------------------
+// C25: SyncDataSourceEnable=true without any SyncDataSource is a contradictory
+//      config - the replication entry point fails fast with SQLException 99907
+// ---------------------------------------------------------------------------
+var c25Err = "";
+var c25Ok = false;
+var c25Detail = "";
+try {
+    var c25Base = ("" + JFiles.readString(new JFile(c21Prop).toPath()))
+        .replace("EnableStatusLog=true", "EnableStatusLog=false");
+
+    var c25Ds = new DriverDataSource(c25Base + "SyncDataSourceEnable=true\r\n");
+
+    // getSyncDataSourceList is protected: reach it reflectively, exactly the
+    // method the replication path calls, without going through a business path
+    var c25Methods = DriverDataSource.class.getDeclaredMethods();
+    var c25Method = null;
+    for (var mi = 0; mi < c25Methods.length; mi++) {
+        if ("" + c25Methods[mi].getName() === "getSyncDataSourceList") {
+            c25Method = c25Methods[mi];
+            break;
+        }
+    }
+    if (c25Method === null) {
+        c25Detail = "method not found";
+    } else {
+        c25Method.setAccessible(true);
+        try {
+            c25Method.invoke(c25Ds, "test");
+            c25Detail = "no exception";
+        } catch (ee) {
+            var c25Cause = ee;
+            try {
+                if (("" + ee.getClass().getName()).indexOf("InvocationTargetException") >= 0) {
+                    c25Cause = ee.getCause();
+                }
+            } catch (e2) {
+            }
+            var c25Msg = "" + c25Cause;
+            c25Ok = c25Msg.indexOf("SyncDataSource is required when SyncDataSourceEnable=true") >= 0;
+            c25Detail = c25Msg;
+        }
+    }
+    c25Ds.closeAll(0);
+} catch (e) {
+    c25Err = "" + e;
+}
+Logger.systemMark("TestDatasource.js", "C25");
+check({
+    name: "SyncDataSourceEnable=true without SyncDataSource fails fast with 99907",
+    caseId: "C25",
+    ok: c25Ok && c25Err.length === 0,
+    detail: c25Err.length > 0 ? c25Err : c25Detail,
+    objective: "declaring participation (SyncDataSourceEnable=true) while leaving SyncDataSource empty is a contradictory configuration: getSyncDataSourceList raises SQLException 99907 instead of silently replicating nowhere",
+    objectiveZh: "宣告參與同步（SyncDataSourceEnable=true）卻沒有設定任何 SyncDataSource，屬自相矛盾的設定：getSyncDataSourceList 拋出 SQLException 99907，而不是靜默地不同步到任何地方",
+    command: "props+SyncDataSourceEnable=true (no SyncDataSource) -> getSyncDataSourceList -> SQLException 99907"
 });
 
 writeReport();

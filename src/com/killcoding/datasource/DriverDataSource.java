@@ -105,11 +105,13 @@ public final class DriverDataSource implements DataSource {
 	private Boolean booleanAsIs = false;
 
 	/**
-	* When on, this data source may take part in a cross-database full sync.
-	* Resolved from the {@code SyncDataSourceEnable} database config; it stays
-	* on when the key is absent, so an unconfigured source behaves as before.
+	* When on, this data source declares itself part of a cross-database sync:
+	* {@code SyncDataSource} must then list at least one target, otherwise
+	* {@link #getSyncDataSourceList(String)} throws SQLException with error code
+	* 99907. Off when the key is absent, so a data source that never asked to
+	* replicate takes no part in it.
 	* */
-	private Boolean syncDataSourceEnable = true;
+	private Boolean syncDataSourceEnable = false;
 
     private final List<Double> aveUsageSum = new ArrayList<Double>();
 	private final List<String> urlList = new ArrayList<String>();
@@ -404,11 +406,12 @@ public final class DriverDataSource implements DataSource {
 	}
 
 	/**
-	* Set whether this data source may take part in a cross-database full sync
-	* @param syncDataSourceEnable - 'false' excludes this source from syncing
+	* Set whether this data source takes part in a cross-database full sync
+	* @param syncDataSourceEnable - 'true' declares participation and therefore
+	*        requires a non-empty {@code SyncDataSource} list
 	* */
 	public void setSyncDataSourceEnable(Boolean syncDataSourceEnable) {
-		this.syncDataSourceEnable = syncDataSourceEnable == null ? true : syncDataSourceEnable;
+		this.syncDataSourceEnable = syncDataSourceEnable == null ? false : syncDataSourceEnable;
 	}
 
 	/**
@@ -947,7 +950,7 @@ public final class DriverDataSource implements DataSource {
 			setEnableFullStatusLog(this.configProperties.getBoolean("EnableFullStatusLog", true));
 
 		if (this.configProperties.containsKey("SyncDataSourceEnable"))
-			setSyncDataSourceEnable(this.configProperties.getBoolean("SyncDataSourceEnable", true));
+			setSyncDataSourceEnable(this.configProperties.getBoolean("SyncDataSourceEnable", false));
 
 		if (this.configProperties.containsKey("StatusLogArchiveDays"))
 			setStatusLogArchiveDays(this.configProperties.getInteger("StatusLogArchiveDays", 30));
@@ -1856,8 +1859,39 @@ public final class DriverDataSource implements DataSource {
 			syncDriverDataSource = new ArrayList<DriverDataSource>();
 			List<String> syncDsPropList = configProperties.getArray("SyncDataSource");
 
-			if (syncDsPropList == null)
+			// getArray() answers an empty list (never null) for a missing key, so the
+			// decision is on "no usable target" rather than on null alone.
+			boolean hasSyncTarget = false;
+			if (syncDsPropList != null) {
+				for (String candidate : syncDsPropList) {
+					if (!CommonTools.isBlank(candidate)) {
+						hasSyncTarget = true;
+						break;
+					}
+				}
+			}
+
+			if (!hasSyncTarget) {
+				// SyncDataSourceEnable=true is a declaration of participation: a
+				// source that says it replicates must name at least one target,
+				// otherwise the configuration is contradictory and fails fast.
+				if (Boolean.TRUE.equals(syncDataSourceEnable)) {
+					int errorCode = 99907;
+					String errorMsg = String.format(
+							"SyncDataSource is required when SyncDataSourceEnable=true - %s .", this.name);
+					throw new SQLException(errorMsg) {
+						/*
+						* Performs the getErrorCode operation
+						* @return the getErrorCode result
+						* */
+						@Override
+						public int getErrorCode() {
+							return errorCode;
+						}
+					};
+				}
 				return null;
+			}
 
 			for (String syncDsProp : syncDsPropList) {
 
@@ -1868,6 +1902,14 @@ public final class DriverDataSource implements DataSource {
 				if (_appDsFile.exists()) {
 					DriverDataSource dds = new DriverDataSource(_appDsFile);
 					dds.owner = owner;
+					// SyncDataSourceEnable=false opts this target out of replication:
+					// skip it and release the pool its constructor just started.
+					if (!Boolean.TRUE.equals(dds.isSyncDataSourceEnable())) {
+						LoggerFactory.getLogger(DriverDataSource.class)
+								.warn("Skip sync data source '{}' - SyncDataSourceEnable=false.", syncDsProp);
+						dds.closeAll(0);
+						continue;
+					}
 					syncDriverDataSource.add(dds);
 				} else {
 					int errorCode = 99905;
